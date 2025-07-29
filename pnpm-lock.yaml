@@ -628,9 +628,27 @@ importers:
 
   packages/react:
     dependencies:
+      '@ai-sdk/react':
+        specifier: '>=0.0.0'
+        version: 1.2.10(react@19.1.0)(zod@3.25.76)
       '@helperai/client':
         specifier: workspace:*
         version: link:../client
+      '@tanstack/react-query':
+        specifier: ^5.0.0
+        version: 5.74.11(react@19.1.0)
+      react-markdown:
+        specifier: ^9.1.0
+        version: 9.1.0(@types/react@19.1.2)(react@19.1.0)
+      rehype-raw:
+        specifier: ^7.0.0
+        version: 7.0.0
+      rehype-sanitize:
+        specifier: ^6.0.0
+        version: 6.0.0
+      unified:
+        specifier: ^11.0.5
+        version: 11.0.5
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.6.3

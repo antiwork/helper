@@ -1,6 +1,6 @@
+import { HelperClientProvider } from "@helperai/react";
 import { ConversationView } from "@/app/(dashboard)/widget/test/custom/[slug]/conversationView";
 import { generateSession } from "@/app/(dashboard)/widget/test/custom/generateSession";
-import { HelperClientProvider } from "@/app/(dashboard)/widget/test/custom/helperClientProvider";
 import { getBaseUrl } from "@/components/constants";
 import { env } from "@/lib/env";
 
@@ -17,11 +17,10 @@ export default async function ConversationPage({
     return <div>Only available in development</div>;
   }
 
-  const session = generateSession(await searchParams);
   const { slug } = await params;
 
   return (
-    <HelperClientProvider host={env.HELPER_HOST} session={session}>
+    <HelperClientProvider host={env.HELPER_HOST} session={generateSession(await searchParams)}>
       <ConversationView conversationSlug={slug} />
     </HelperClientProvider>
   );

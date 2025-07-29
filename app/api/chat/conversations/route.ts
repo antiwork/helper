@@ -1,22 +1,21 @@
 import { and, count, inArray } from "drizzle-orm";
+import { ConversationsResult } from "@helperai/client";
+import { getCustomerFilterForSearch } from "@/app/api/chat/customerFilter";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
 import { customerSearchSchema } from "@/lib/data/conversation/customerSearchSchema";
 import { searchConversations } from "@/lib/data/conversation/search";
-import { ConversationsResult } from "@/packages/client/dist";
-import { corsResponse, withWidgetAuth } from "../../widget/utils";
+import { corsOptions, corsResponse, withWidgetAuth } from "../../widget/utils";
 
 const PAGE_SIZE = 20;
+
+export const OPTIONS = () => corsOptions("GET");
 
 export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const url = new URL(request.url);
 
-  let customerFilter;
-  if (session.isAnonymous && session.anonymousSessionId) {
-    customerFilter = { anonymousSessionId: session.anonymousSessionId };
-  } else if (session.email) {
-    customerFilter = { customer: [session.email] };
-  } else {
+  const customerFilter = getCustomerFilterForSearch(session);
+  if (!customerFilter) {
     return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
   }
 
@@ -54,14 +53,16 @@ export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
     )
     .groupBy(conversationMessages.conversationId);
 
-  const conversations = results.map((conv) => ({
-    slug: conv.slug,
-    subject: conv.subject ?? "(no subject)",
-    createdAt: conv.createdAt.toISOString(),
-    latestMessage: conv.recentMessageText || null,
-    latestMessageAt: conv.recentMessageAt?.toISOString() || null,
-    messageCount: messageCounts.find((m) => m.conversationId === conv.id)?.count || 0,
-  }));
+  const conversations = results
+    .map((conv) => ({
+      slug: conv.slug,
+      subject: conv.subject ?? "(no subject)",
+      createdAt: conv.createdAt.toISOString(),
+      latestMessage: conv.recentMessageText || null,
+      latestMessageAt: conv.recentMessageAt?.toISOString() || null,
+      messageCount: messageCounts.find((m) => m.conversationId === conv.id)?.count || 0,
+    }))
+    .filter((conv) => conv.messageCount > 0);
 
   return corsResponse<ConversationsResult>({
     conversations,

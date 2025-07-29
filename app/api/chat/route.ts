@@ -11,6 +11,8 @@ import {
   generateConversationSubject,
   getConversationBySlugAndMailbox,
 } from "@/lib/data/conversation";
+import { publicConversationChannelId } from "@/lib/realtime/channels";
+import { publishToRealtime } from "@/lib/realtime/publish";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
 import { createClient } from "@/lib/supabase/server";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
@@ -46,9 +48,7 @@ const getConversation = async (conversationSlug: string, session: WidgetSessionP
   return conversation;
 };
 
-export function OPTIONS() {
-  return corsOptions();
-}
+export const OPTIONS = () => corsOptions("POST");
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const { message, conversationSlug, readPageTool, guideEnabled, tools }: ChatRequestBody = await request.json();
@@ -118,7 +118,15 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
         (isPromptConversation && !isFirstMessage && conversation.subject === messages[0]?.content) ||
         humanSupportRequested
       ) {
-        waitUntil(generateConversationSubject(conversation.id, messages, mailbox));
+        waitUntil(
+          generateConversationSubject(conversation.id, messages, mailbox).then((subject) =>
+            publishToRealtime({
+              channel: publicConversationChannelId(conversation.slug),
+              event: "conversation-subject",
+              data: { subject },
+            }),
+          ),
+        );
       } else if (isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) {
         waitUntil(
           db.update(conversations).set({ subject: message.content }).where(eq(conversations.id, conversation.id)),

@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { HelperProvider } from "@helperai/react";
+import { HelperWidgetScript } from "@helperai/react";
 import "./globals.css";
 import { RootProvider } from "fumadocs-ui/provider";
 import { cn, getBaseUrl } from "@/lib/utils";
@@ -55,11 +55,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <NuqsAdapter>
         <body className={cn(inter.className, "flex flex-col min-h-screen [&_.prose_a[href^='#']]:no-underline")}>
           <RootProvider>
-            <HelperProvider
+            <HelperWidgetScript
               host={getBaseUrl().includes("localhost") ? "https://helperai.dev" : "https://help.gumroad.com"}
-            >
-              <div className="flex flex-col min-h-screen">{children}</div>
-            </HelperProvider>
+            />
+            <div className="flex flex-col min-h-screen">{children}</div>
           </RootProvider>
         </body>
       </NuqsAdapter>

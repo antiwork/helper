@@ -110,31 +110,67 @@ interface ConversationsResult {
 const { conversations, nextCursor } = await client.conversations.list();
 ```
 
-#### `conversations.get(slug)`
+#### `conversations.unread()`
+
+Retrieves the count of unread conversations for the current session.
+
+**Returns:**
+
+```typescript
+interface UnreadConversationsCountResult {
+  count: number;
+}
+```
+
+**Example:**
+
+```typescript
+const { count } = await client.conversations.unread();
+```
+
+#### `conversations.get(slug, options?)`
 
 Retrieves a specific conversation by its slug.
 
 **Parameters:**
 
 - `slug` (string): The unique identifier for the conversation
+- `options` (object, optional): Additional options
+  - `markRead` (boolean, default: `true`): Whether to mark the conversation as read
 
 **Returns:**
 
 ```typescript
-interface ConversationResult {
+interface ConversationDetails {
   slug: string;
   subject: string | null;
+  isEscalated: boolean;
   messages: Array<{
     id: string;
     content: string;
-    role: "data" | "system" | "user" | "assistant";
+    role: "user" | "staff" | "assistant";
+    staffName: string | null;
+    reactionType: "thumbs-up" | "thumbs-down" | null;
+    reactionFeedback: string | null;
+    reactionCreatedAt: string | null;
+    createdAt: string;
+    publicAttachments: Array<{
+      name: string | null;
+      contentType: string | null;
+      url: string;
+    }>;
+    privateAttachments: Array<{
+      name: string | null;
+      contentType: string | null;
+      url: string;
+    }>;
   }>;
-  allAttachments: Array<{
-    messageId: string;
-    name: string;
-    presignedUrl: string | null;
+  experimental_guideSessions: Array<{
+    uuid: string;
+    title: string;
+    instructions: string | null;
+    createdAt: string;
   }>;
-  isEscalated: boolean;
 }
 ```
 
@@ -142,6 +178,7 @@ interface ConversationResult {
 
 ```typescript
 const conversation = await client.conversations.get("conv-abc123");
+const conversationWithoutRead = await client.conversations.get("conv-abc123", { markRead: false });
 ```
 
 #### `conversations.create(params?)`
@@ -205,6 +242,44 @@ const result = await client.conversations.update("conv-abc123", {
 });
 ```
 
+#### `conversations.listen(conversationSlug, callbacks)`
+
+Sets up real-time listeners for conversation events.
+
+**Parameters:**
+
+- `conversationSlug` (string): The conversation to listen to
+- `callbacks` (object): Event callback functions
+
+```typescript
+interface ChatListenCallbacks {
+  onHumanReply?: (message: { id: string; content: string; role: "assistant" }) => void;
+  onTyping?: (isTyping: boolean) => void;
+  onSubjectChanged?: (subject: string) => void;
+}
+```
+
+**Returns:** A cleanup function to stop listening.
+
+**Example:**
+
+```typescript
+const unlisten = client.conversations.listen("conv-abc123", {
+  onHumanReply: (message) => {
+    console.log("New message:", message.content);
+  },
+  onTyping: (isTyping) => {
+    console.log("Agent typing:", isTyping);
+  },
+  onSubjectChanged: (subject) => {
+    console.log("Subject changed:", subject);
+  },
+});
+
+// Later, stop listening
+unlisten();
+```
+
 ### Chat API
 
 #### `chat.handler(options)`
@@ -217,14 +292,14 @@ Optionally you can pass a `tools` object to allow the AI agent to perform action
 
 ```typescript
 interface ChatHandlerOptions {
-  conversation: ConversationResult;
+  conversation: ConversationDetails;
   tools?: Record<string, HelperTool>;
 }
 
 interface HelperTool<Args = any, Result = any> {
   description?: string;
   parameters: Record<string, {
-    type: "string" | "number" | "customerEmail";
+    type: "string" | "number";
     description?: string;
     optional?: boolean;
   }>;
@@ -268,38 +343,36 @@ const { messages, input, handleInputChange, handleSubmit } = useChat({
 });
 ```
 
-#### `chat.listen(conversationSlug, callbacks)`
+#### `chat.message(aiMessage)`
 
-Sets up real-time listeners for conversation events.
+Converts an AI SDK compatible message to Helper's message format.
 
 **Parameters:**
 
-- `conversationSlug` (string): The conversation to listen to
-- `callbacks` (object): Event callback functions
+- `aiMessage` (AIMessageCompat): Message from AI SDK
 
-```typescript
-interface ChatListenCallbacks {
-  onHumanReply?: (message: { id: string; content: string; role: "assistant" }) => void;
-  onTyping?: (isTyping: boolean) => void;
-}
-```
-
-**Returns:** A cleanup function to stop listening.
+**Returns:** A Helper `Message` object.
 
 **Example:**
 
 ```typescript
-const unlisten = client.chat.listen("conv-abc123", {
-  onHumanReply: (message) => {
-    console.log("New message:", message.content);
-  },
-  onTyping: (isTyping) => {
-    console.log("Agent typing:", isTyping);
-  },
-});
+const helperMessage = client.chat.message(aiMessage);
+```
 
-// Later, stop listening
-unlisten();
+#### `chat.messages(aiMessages)`
+
+Converts an array of AI SDK compatible messages to Helper's message format.
+
+**Parameters:**
+
+- `aiMessages` (AIMessageCompat[]): Array of messages from AI SDK
+
+**Returns:** An array of Helper `Message` objects.
+
+**Example:**
+
+```typescript
+const helperMessages = client.chat.messages(aiMessages);
 ```
 
 ### Tools
@@ -411,7 +484,7 @@ The Helper Client SDK is written in TypeScript and provides full type safety. Al
 
 ```typescript
 import {
-  ConversationResult,
+  ConversationDetails,
   CreateConversationParams,
   HelperClient,
   HelperTool,

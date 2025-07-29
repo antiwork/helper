@@ -542,10 +542,16 @@ const cleanupMessage = (message: string): string => {
   return strippedMessage.replace(/\s+/g, " ").trim();
 };
 
-const generateCleanedUpText = (html: string) => {
+export const generateCleanedUpText = (html: string) => {
   if (!html.trim()) return "";
 
-  const paragraphs = htmlToText(html, { wordwrap: false })
+  const paragraphs = htmlToText(html, {
+    formatters: {
+      image: (elem, _walk, builder) =>
+        builder.addInline(`![${elem.attribs?.alt || "image"}](${elem.attribs?.src})`, { noWordTransform: true }),
+    },
+    wordwrap: false,
+  })
     .split(/\s*\n\s*/)
     .filter((p) => p.trim().replace(/\s+/g, " "));
   return paragraphs.join("\n\n");

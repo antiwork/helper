@@ -4,24 +4,31 @@ import { useChat } from "@ai-sdk/react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ConversationResult } from "@helperai/client";
-import { useHelperClientContext } from "@/app/(dashboard)/widget/test/custom/helperClientProvider";
+import { ConversationDetails } from "@helperai/client";
+import { useConversation, useHelperClient } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export const ConversationView = ({ conversationSlug }: { conversationSlug: string }) => {
   const router = useRouter();
-  const [conversation, setConversation] = useState<ConversationResult | null>(null);
-  const { client } = useHelperClientContext();
+  const { data: conversation, isLoading, error } = useConversation(conversationSlug);
 
-  useEffect(() => {
-    const fetchConversation = async () => {
-      const conversation = await client.conversations.get(conversationSlug);
-      setConversation(conversation);
-    };
-    fetchConversation();
-  }, [conversationSlug]);
+  if (isLoading) {
+    return <div className="p-4">Loading conversation...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 text-red-500">
+        Error loading conversation: {error instanceof Error ? error.message : "Unknown error"}
+      </div>
+    );
+  }
+
+  if (!conversation) {
+    return <div className="p-4">Conversation not found</div>;
+  }
 
   return (
     <div className="flex flex-col h-screen">
@@ -30,16 +37,15 @@ export const ConversationView = ({ conversationSlug }: { conversationSlug: strin
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to conversations
         </Button>
-        <h2 className="font-semibold">{conversation?.subject || "Conversation"}</h2>
+        <h2 className="font-semibold">{conversation?.subject || "Chat"}</h2>
       </div>
-
-      {conversation && <ChatView conversation={conversation} />}
+      <ChatView conversation={conversation} />
     </div>
   );
 };
 
-const ChatView = ({ conversation }: { conversation: ConversationResult }) => {
-  const { client } = useHelperClientContext();
+const ChatView = ({ conversation }: { conversation: ConversationDetails }) => {
+  const { client } = useHelperClient();
   const [isTyping, setIsTyping] = useState(false);
   const { messages, setMessages, input, handleInputChange, handleSubmit } = useChat({
     ...client.chat.handler({
@@ -59,7 +65,7 @@ const ChatView = ({ conversation }: { conversation: ConversationResult }) => {
   });
 
   useEffect(() => {
-    const unlisten = client.chat.listen(conversation.slug, {
+    const unlisten = client.conversations.listen(conversation.slug, {
       onHumanReply: (message) => {
         setMessages((prev) => [...prev, message]);
       },

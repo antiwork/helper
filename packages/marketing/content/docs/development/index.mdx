@@ -59,7 +59,7 @@ This project uses Supabase Cron and Queues for background tasks.
 
 The app uses a local Certificate Authority (CA) to generate SSL certificates for the `https://helperai.dev` domain.
 
-The certificates will be automatically generated when you run `pnpm dev` for the first time, but if you need to regenerate them you can use:
+The certificates will be automatically generated when you run `pnpm dev` or `pnpm db:reset`, for the first time. If you need to regenerate them you can use:
 
 ```sh
 pnpm generate-ssl-certificates

@@ -9,12 +9,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-export function corsOptions(method: "POST" | "PATCH" = "POST") {
+export function corsOptions(...methods: ("GET" | "POST" | "PATCH")[]) {
   return new Response(null, {
     status: 204,
     headers: {
       ...corsHeaders,
-      "Access-Control-Allow-Methods": `${method}, OPTIONS`,
+      "Access-Control-Allow-Methods": `${methods.join(", ")}, OPTIONS`,
     },
   });
 }

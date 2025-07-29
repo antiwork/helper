@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { REALTIME_SUBSCRIBE_STATES, RealtimeChannel } from "@supabase/supabase-js";
 import { uniqBy } from "lodash-es";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import SuperJSON from "superjson";
 import { useRefToLatest } from "@/components/useRefToLatest";
 import { useSession } from "@/components/useSession";
@@ -21,21 +21,27 @@ const channels: Record<
   }
 > = {};
 
+// Workaround to ensure that the auth token is set correctly for the realtime client (otherwise we can't subscribe to private channels)
+const setAuth = () => supabase.realtime.setAuth();
+export const ensureRealtimeAuth = setAuth();
+
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
-export const listenToRealtimeEvent = <Data = any>(
-  channel: string | typeof DISABLED,
+export const listenToRealtimeEvent = async <Data = any>(
+  channel: { name: string; private: boolean } | typeof DISABLED,
   event: string,
   callback: (message: { id: string; data: Data }) => void,
-): (() => void) => {
+): Promise<() => void> => {
   if (channel === DISABLED) return () => {};
 
-  let channelObject = channels[channel];
+  await ensureRealtimeAuth;
+
+  let channelObject = channels[channel.name];
   if (!channelObject) {
     channelObject = {
-      channel: supabase.channel(channel),
+      channel: supabase.channel(channel.name, { config: { private: channel.private } }),
       eventListeners: {},
     };
-    channels[channel] = channelObject;
+    channels[channel.name] = channelObject;
     channelObject.channel.subscribe();
   }
 
@@ -64,7 +70,7 @@ export const listenToRealtimeEvent = <Data = any>(
   channelObject.eventListeners[event].push(listener);
 
   return () => {
-    const channelObject = channels[channel];
+    const channelObject = channels[channel.name];
     if (channelObject) {
       const index = channelObject.eventListeners[event]?.indexOf(listener);
 
@@ -78,7 +84,7 @@ export const listenToRealtimeEvent = <Data = any>(
 
       if (Object.keys(channelObject.eventListeners).length === 0) {
         supabase.removeChannel(channelObject.channel);
-        delete channels[channel];
+        delete channels[channel.name];
       }
     }
   };
@@ -86,7 +92,7 @@ export const listenToRealtimeEvent = <Data = any>(
 
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
 export const useRealtimeEvent = <Data = any>(
-  channel: string | typeof DISABLED,
+  channel: { name: string; private: boolean } | typeof DISABLED,
   event: string,
   callback: (message: { id: string; data: Data }) => void,
 ) => {
@@ -94,8 +100,10 @@ export const useRealtimeEvent = <Data = any>(
 
   useEffect(() => {
     const unlisten = listenToRealtimeEvent(channel, event, (message) => callbackRef.current(message));
-    return unlisten;
-  }, [channel, event]);
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [channel === DISABLED ? undefined : channel.name, channel === DISABLED ? undefined : channel.private, event]);
 };
 
 // This ensures that the callback is only called once regardless of how many instances of the component exist.
@@ -111,9 +119,10 @@ export const useRealtimeEventOnce: typeof useRealtimeEvent = (channel, event, ca
   });
 };
 
-export const broadcastRealtimeEvent = (channel: string, event: string, data: any) => {
+export const broadcastRealtimeEvent = async (channel: { name: string; private: boolean }, event: string, data: any) => {
+  await ensureRealtimeAuth;
   const serializedData = SuperJSON.stringify(data);
-  return supabase.channel(channel).send({
+  return supabase.channel(channel.name, { config: { private: channel.private } }).send({
     type: "broadcast",
     event,
     payload: { data: serializedData },
@@ -124,14 +133,14 @@ export const useBroadcastRealtimeEvent = () => {
   return broadcastRealtimeEvent;
 };
 
-export const useRealtimePresence = (roomName: string) => {
+export const useRealtimePresence = (channel: { name: string; private: boolean }) => {
   const { user } = useSession() ?? {};
   const [users, setUsers] = useState<{ id: string; name: string }[]>([]);
 
-  useEffect(() => {
+  const subscribe = useCallback(async () => {
     if (!user) return;
-
-    const room = supabase.channel(roomName);
+    await ensureRealtimeAuth;
+    const room = supabase.channel(channel.name, { config: { private: channel.private } });
     room
       .on("presence", { event: "sync" }, () => {
         const newState = room.presenceState<{ id: string; name: string }>();
@@ -149,10 +158,15 @@ export const useRealtimePresence = (roomName: string) => {
         await room.track({ id: user.id, name: getFullName(user) });
       });
 
+    return () => room.unsubscribe();
+  }, [user, channel.name, channel.private]);
+
+  useEffect(() => {
+    const unsubscribe = subscribe();
     return () => {
-      room.unsubscribe();
+      unsubscribe.then((fn) => fn?.());
     };
-  }, [user, roomName]);
+  }, [subscribe]);
 
   return { users };
 };

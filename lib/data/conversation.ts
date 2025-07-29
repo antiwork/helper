@@ -134,6 +134,7 @@ export const updateConversation = async (
 
     await triggerEvent("conversations/embedding.create", { conversationSlug: updatedConversation.slug });
   }
+
   if (updatedConversation && !skipRealtimeEvents) {
     const publishEvents = async () => {
       try {
@@ -196,6 +197,7 @@ export const serializeConversation = (
     lastUserEmailCreatedAt: conversation.lastUserEmailCreatedAt,
     assignedToId: conversation.assignedToId,
     assignedToAI: conversation.assignedToAI,
+    issueGroupId: conversation.issueGroupId,
     platformCustomer: platformCustomer
       ? {
           ...platformCustomer,
@@ -387,4 +389,5 @@ export const generateConversationSubject = async (
         ).text;
 
   await db.update(conversations).set({ subject }).where(eq(conversations.id, conversationId));
+  return subject;
 };

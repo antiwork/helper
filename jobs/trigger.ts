@@ -23,6 +23,7 @@ const events = {
       "mergeSimilarConversations",
       "publishNewConversationEvent",
       "notifyVipMessage",
+      "categorizeConversationToIssueGroup",
     ],
   },
   "conversations/email.enqueued": {
@@ -129,7 +130,8 @@ const events = {
       slackUserId: z.string().nullable(),
       statusMessageTs: z.string(),
       agentThreadId: z.number(),
-      confirmedReplyText: z.string().optional(),
+      confirmedReplyText: z.string().nullish(),
+      confirmedKnowledgeBaseEntry: z.string().nullish(),
     }),
     jobs: ["handleSlackAgentMessage"],
   },

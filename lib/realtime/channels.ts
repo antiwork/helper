@@ -1,7 +1,14 @@
-export const conversationsListChannelId = () => `conversations`;
+export const conversationsListChannelId = () => ({ name: `conversations`, private: true });
 
-export const conversationChannelId = (conversationSlug: string) => `conversation-${conversationSlug}`;
+export const conversationChannelId = (conversationSlug: string) => ({
+  name: `conversation-${conversationSlug}`,
+  private: true,
+});
 
-export const publicConversationChannelId = (conversationSlug: string) => `public:conversation-${conversationSlug}`;
+export const publicConversationChannelId = (conversationSlug: string) => ({
+  name: `public:conversation-${conversationSlug}`,
+  private: false,
+});
 
-export const dashboardChannelId = () => `dashboard`;
+export const issueGroupsChannelId = () => `issue-groups`;
+export const dashboardChannelId = () => ({ name: `dashboard`, private: true });

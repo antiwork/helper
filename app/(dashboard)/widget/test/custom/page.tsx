@@ -1,6 +1,6 @@
+import { HelperClientProvider } from "@helperai/react";
 import { CustomWidgetTest } from "@/app/(dashboard)/widget/test/custom/customWidgetTest";
 import { generateSession } from "@/app/(dashboard)/widget/test/custom/generateSession";
-import { HelperClientProvider } from "@/app/(dashboard)/widget/test/custom/helperClientProvider";
 import { getBaseUrl } from "@/components/constants";
 import { env } from "@/lib/env";
 

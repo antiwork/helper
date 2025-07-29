@@ -57,8 +57,21 @@ export const seedDatabase = async () => {
     });
 
     const supabase = createAdminClient();
+    const { data, error: listError } = await supabase.auth.admin.listUsers();
+    if (listError) {
+      throw listError;
+    }
+    const existingUsers = data?.users || [];
+
     const users = await Promise.all(
       env.INITIAL_USER_EMAILS.map(async (email) => {
+        const existingUser = existingUsers.find((user) => user.email === email);
+
+        if (existingUser) {
+          console.log(`User ${email} already exists, skipping creation.`);
+          return existingUser;
+        }
+
         const { data, error } = await supabase.auth.admin.createUser({
           email,
           password: "password",

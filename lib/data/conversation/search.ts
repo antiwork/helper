@@ -115,6 +115,11 @@ export const searchConversations = async (
     ...(filters.markedAsSpam
       ? { markedAsSpam: hasStatusChangeEvent("spam", filters.markedAsSpam, MARKED_AS_SPAM_BY_AGENT_MESSAGE) }
       : {}),
+    ...(filters.issueGroupId
+      ? {
+          issueGroup: eq(conversations.issueGroupId, filters.issueGroupId),
+        }
+      : {}),
   };
 
   const matches = filters.search ? await searchEmailsByKeywords(filters.search, Object.values(where)) : [];
@@ -147,7 +152,7 @@ export const searchConversations = async (
   const orderByField =
     filters.status?.length === 1 && filters.status[0] === "closed"
       ? conversations.closedAt
-      : conversations.lastUserEmailCreatedAt;
+      : sql`COALESCE(${conversations.lastUserEmailCreatedAt}, ${conversations.createdAt})`;
   const isOpenTicketsOnly = filters.status?.length === 1 && filters.status[0] === "open";
   const orderBy = isOpenTicketsOnly
     ? [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)]

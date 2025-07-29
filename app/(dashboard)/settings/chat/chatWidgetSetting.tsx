@@ -3,6 +3,7 @@
 import { ExternalLink, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { HelperWidgetScript } from "@helperai/react";
 import { useShowChatWidget } from "@/app/(dashboard)/clientLayout";
 import { getBaseUrl, getMarketingSiteUrl } from "@/components/constants";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
@@ -198,19 +199,18 @@ First, install the React package (use yarn, pnpm, etc instead if the current pro
 npm install @helperai/react
 \`\`\`
 
-Then, add the HelperProvider at the root of my app:
+Then, add the HelperWidgetScript at the root of my app:
 
 \`\`\`
 // app/layout.tsx or similar
-import { HelperProvider } from '@helperai/react';
+import { HelperWidgetScript } from '@helperai/react';
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html>
       <body>
-        <HelperProvider host="${getBaseUrl()}">
-          {children}
-        </HelperProvider>
+        <HelperWidgetScript host="${getBaseUrl()}" />
+        {children}
       </body>
     </html>
   );
@@ -466,15 +466,14 @@ ${WIDGET_SAMPLE_CODE}
             <p className="text-sm">Then add the provider at the root of your app:</p>
             <CodeBlock
               code={`// app/layout.tsx or similar
-import { HelperProvider } from '@helperai/react';
+import { HelperWidgetScript } from '@helperai/react';
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html>
       <body>
-        <HelperProvider host="${getBaseUrl()}">
-          {children}
-        </HelperProvider>
+        <HelperWidgetScript host="${getBaseUrl()}" />
+        {children}
       </body>
     </html>
   );
@@ -697,6 +696,8 @@ export default async function RootLayout({
           Try it out →
         </div>
       )}
+
+      <HelperWidgetScript host={typeof window !== "undefined" ? window.location.origin : ""} showToggleButton />
     </div>
   );
 };

@@ -2,6 +2,7 @@ import { isMacOS } from "@tiptap/core";
 import { CornerUpLeft } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Message } from "@helperai/client";
 import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
 import { EmailSignature } from "@/app/(dashboard)/[category]/emailSignature";
 import { DraftedEmail } from "@/app/types/global";
@@ -248,7 +249,7 @@ export const MessageActions = () => {
         ?.filter((m) => m.type === "message" && m.role === "user")
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
 
-      const { id: emailId } = await replyMutation.mutateAsync({
+      const { id: emailId, attachments } = await replyMutation.mutateAsync({
         conversationSlug,
         message: draftedEmail.message,
         fileSlugs: readyFiles.flatMap((f) => (f.slug ? [f.slug] : [])),
@@ -260,10 +261,17 @@ export const MessageActions = () => {
       });
 
       broadcastEvent(publicConversationChannelId(conversationSlug), "agent-reply", {
-        agentName: orgMembers?.find((m) => m.id === currentUser?.id)?.displayName?.split(" ")[0],
-        message: draftedEmail.message,
-        timestamp: Date.now(),
-      });
+        id: emailId.toString(),
+        role: "staff",
+        staffName: orgMembers?.find((m) => m.id === currentUser?.id)?.displayName?.split(" ")[0] ?? null,
+        content: draftedEmail.message,
+        createdAt: new Date().toISOString(),
+        reactionType: null,
+        reactionFeedback: null,
+        reactionCreatedAt: null,
+        publicAttachments: [],
+        privateAttachments: attachments,
+      } satisfies Message);
 
       // Clear the draft immediately after message is sent successfully
       setDraftedEmail((prev) => ({ ...prev, message: "", files: [], modified: false }));

@@ -2,10 +2,12 @@ import { CoreMessage, Tool, tool } from "ai";
 import { and, eq, inArray, isNull, notInArray, or, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { getBaseUrl } from "@/components/constants";
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, DRAFT_STATUSES, userProfiles } from "@/db/schema";
+import { conversationMessages, conversations, DRAFT_STATUSES, faqs, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
+import { triggerEvent } from "@/jobs/trigger";
 import { runAIQuery } from "@/lib/ai";
 import { O4_MINI_MODEL } from "@/lib/ai/core";
 import { getFullName } from "@/lib/auth/authUtils";
@@ -36,11 +38,19 @@ export const generateAgentResponse = async (
   slackUserId: string | null,
   showStatus: (status: string | null, tool?: { toolName: string; parameters: Record<string, unknown> }) => void,
   confirmedReplyText?: string | null,
+  confirmedKnowledgeBaseEntry?: string | null,
 ) => {
   if (confirmedReplyText) {
     messages.push({
       role: "user",
       content: `Reply to the ticket with the following message, then take any other requested actions: ${confirmedReplyText}`,
+    });
+  }
+
+  if (confirmedKnowledgeBaseEntry) {
+    messages.push({
+      role: "user",
+      content: `Save the following content to the knowledge base:\n\n${confirmedKnowledgeBaseEntry}`,
     });
   }
 
@@ -393,6 +403,60 @@ export const generateAgentResponse = async (
     });
   }
 
+  if (confirmedKnowledgeBaseEntry) {
+    tools.saveKnowledgeBaseEntry = tool({
+      description: "Save the confirmed knowledge base entry.",
+      parameters: z.object({
+        entry: z.string(),
+        reasoning: z.string(),
+      }),
+      execute: async ({ entry, reasoning }) => {
+        showStatus(`Saving knowledge base entry...`, {
+          toolName: "saveKnowledgeBaseEntry",
+          parameters: { entry, reasoning },
+        });
+        try {
+          const faq = await db
+            .insert(faqs)
+            .values({
+              content: entry,
+              enabled: true,
+            })
+            .returning()
+            .then(takeUniqueOrThrow);
+
+          await triggerEvent("faqs/embedding.create", { faqId: faq.id });
+
+          return {
+            message: "Knowledge base entry saved.",
+          };
+        } catch (_error) {
+          return { error: "Failed to save knowledge base entry" };
+        }
+      },
+    });
+  } else {
+    tools.confirmKnowledgeBaseEntry = tool({
+      description:
+        "Generate and confirm a knowledge base entry based on the current conversation context before adding it to the knowledge base",
+      parameters: z.object({
+        entry: z.string().describe("The complete entry content to be added to the knowledge base"),
+        reasoning: z.string().describe("Why this information should be added to the knowledge base"),
+      }),
+      // eslint-disable-next-line require-await
+      execute: async ({ entry, reasoning }) => {
+        showStatus(`Confirming knowledge base entry...`, {
+          toolName: "confirmKnowledgeBaseEntry",
+          parameters: { entry, reasoning },
+        });
+        return {
+          message:
+            "Confirmation needed before adding to knowledge base. DON'T TAKE ANY FURTHER ACTION and don't include the content in the response.",
+        };
+      },
+    });
+  }
+
   const user = slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null;
   const userPrompt = user
     ? `Current user ID: ${user.id}\nCurrent user name: ${getFullName(user)}\nCurrent user email: ${user.email}`
@@ -436,9 +500,14 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
     ?.flatMap((step) => step.toolCalls ?? [])
     .find((call) => call.toolName === "confirmReplyText");
 
+  const confirmKnowledgeBaseEntry = result.steps
+    ?.flatMap((step) => step.toolCalls ?? [])
+    .find((call) => call.toolName === "confirmKnowledgeBaseEntry");
+
   return {
     text: result.text.replace(/\[(.*?)\]\((.*?)\)/g, "<$2|$1>").replace(/\*\*/g, "*"),
     confirmReplyText,
+    confirmKnowledgeBaseEntry,
   };
 };
 
