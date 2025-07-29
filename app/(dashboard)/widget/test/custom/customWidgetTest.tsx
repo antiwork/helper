@@ -64,6 +64,7 @@ const ConversationTable = ({
     latestMessage: string | null;
     latestMessageAt: string | null;
     messageCount: number;
+    isUnread: boolean;
   }[];
   onSelectConversation: (slug: string) => void;
 }) => {
@@ -83,7 +84,10 @@ const ConversationTable = ({
           )}
           onClick={() => onSelectConversation(conversation.slug)}
         >
-          <div className="font-medium truncate">{conversation.subject || "No subject"}</div>
+          <div className="flex items-center gap-2">
+            <div className="font-medium truncate">{conversation.subject || "No subject"}</div>
+            {conversation.isUnread && <div className="h-[0.5rem] w-[0.5rem] rounded-full bg-blue-500 shrink-0" />}
+          </div>
           <div className="text-sm text-muted-foreground">{conversation.messageCount}</div>
           <div className="text-sm text-muted-foreground">
             {conversation.latestMessageAt
