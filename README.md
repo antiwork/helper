@@ -81,7 +81,7 @@ pnpm dev
 
 Access the application at [helperai.dev](https://helperai.dev) 🚀
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fantiwork%2Fhelper&env=OPENAI_API_KEY,ENCRYPT_COLUMN_SECRET&envDescription=See%20our%20deployment%20guide%20for%20details.&envLink=https%3A%2F%2Fhelper.ai%2Fdocs%2Fdeployment&project-name=helper&repository-name=helper&integration-ids=oac_VqOgBHqhEoFTPzGkPd7L0iH6)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fantiwork%2Fhelper&env=OPENAI_API_KEY&envDescription=See%20our%20deployment%20guide%20for%20details.&envLink=https%3A%2F%2Fhelper.ai%2Fdocs%2Fdeployment&project-name=helper&repository-name=helper&integration-ids=oac_VqOgBHqhEoFTPzGkPd7L0iH6)
 
 ## Docs
 
