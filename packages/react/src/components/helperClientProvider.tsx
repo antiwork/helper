@@ -1,10 +1,19 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React, { createContext, ReactNode, useContext, useMemo, useState } from "react";
+import React, { createContext, ReactNode, useContext, useMemo } from "react";
 import { HelperClient, SessionParams } from "@helperai/client";
 
 const HelperClientContext = createContext<{ client: HelperClient; queryClient: QueryClient } | null>(null);
+
+let globalQueryClient: QueryClient | null = null;
+
+const getGlobalQueryClient = () => {
+  if (!globalQueryClient) {
+    globalQueryClient = new QueryClient();
+  }
+  return globalQueryClient;
+};
 
 export const useHelperClient = () => {
   const context = useContext(HelperClientContext);
@@ -23,11 +32,11 @@ export interface HelperClientProviderProps {
 
 export const HelperClientProvider = ({ host, session, children, queryClient }: HelperClientProviderProps) => {
   const client = useMemo(() => new HelperClient({ host, ...session }), [host, JSON.stringify(session)]);
-  const [defaultQueryClient] = useState(() => new QueryClient());
+  const sharedQueryClient = queryClient || getGlobalQueryClient();
 
   return (
-    <QueryClientProvider client={queryClient || defaultQueryClient}>
-      <HelperClientContext.Provider value={{ client, queryClient: queryClient || defaultQueryClient }}>
+    <QueryClientProvider client={sharedQueryClient}>
+      <HelperClientContext.Provider value={{ client, queryClient: sharedQueryClient }}>
         {children}
       </HelperClientContext.Provider>
     </QueryClientProvider>
