@@ -14,6 +14,10 @@ export const env = createEnv({
   extends: [vercel()],
   shared: {
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    CI: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((v) => v === "true"),
     DISABLE_STRICT_MODE: z
       .enum(["true", "false"])
       .default("false")
@@ -127,6 +131,7 @@ export const env = createEnv({
    */
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    CI: process.env.CI,
     DISABLE_STRICT_MODE: process.env.DISABLE_STRICT_MODE,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,

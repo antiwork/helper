@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 60
     env:
       CI: true
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_API_KEY: test-openai-api-key
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
