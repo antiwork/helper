@@ -81,6 +81,8 @@ pnpm dev
 
 Access the application at [helperai.dev](https://helperai.dev) 🚀
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/antiwork/helper&env=OPENAI_API_KEY,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_PUBSUB_CLAIM_EMAIL,GOOGLE_PUBSUB_TOPIC_NAME,ENCRYPT_COLUMN_SECRET,RESEND_API_KEY,RESEND_FROM_ADDRESS,AUTH_URL,POSTGRES_URL,POSTGRES_URL_NON_POOLING,SUPABASE_SERVICE_ROLE_KEY,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY)
+
 ## Docs
 
 - [Project structure](https://helper.ai/docs/development/overview)
