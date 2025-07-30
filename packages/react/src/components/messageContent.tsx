@@ -132,27 +132,55 @@ interface MessageContentProps {
   allowHtml?: boolean;
 }
 
+class MarkdownErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.warn("Helper markdown rendering failed, falling back to plain text:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+
+    return this.props.children;
+  }
+}
+
 export const MessageContent = ({
   message,
   className,
   options: { remarkPlugins, rehypePlugins, components, ...options } = {},
 }: MessageContentProps) => {
   return (
-    <ReactMarkdown
-      {...options}
-      className={className}
-      remarkPlugins={[...(remarkPlugins || []), remarkAutolink]}
-      rehypePlugins={[...(rehypePlugins || []), rehypeAddWbrAfterSlash]}
-      components={{
-        a: ({ children, ...props }: any) => (
-          <a target="_blank" rel="noopener noreferrer" {...props}>
-            {children}
-          </a>
-        ),
-        ...components,
-      }}
-    >
-      {message.content}
-    </ReactMarkdown>
+    <MarkdownErrorBoundary fallback={<div className={className}>{message.content}</div>}>
+      <ReactMarkdown
+        {...options}
+        className={className}
+        remarkPlugins={[...(remarkPlugins || []), remarkAutolink]}
+        rehypePlugins={[...(rehypePlugins || []), rehypeAddWbrAfterSlash]}
+        components={{
+          a: ({ children, ...props }: any) => (
+            <a target="_blank" rel="noopener noreferrer" {...props}>
+              {children}
+            </a>
+          ),
+          ...components,
+        }}
+      >
+        {message.content}
+      </ReactMarkdown>
+    </MarkdownErrorBoundary>
   );
 };

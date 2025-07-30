@@ -213,6 +213,7 @@ export class HelperClient {
       );
 
       return {
+        maxSteps: Object.keys(tools).length ? 4 : undefined,
         initialMessages: allMessages,
         fetch: async (_input: RequestInfo | URL, init?: RequestInit) => {
           const token = await this.getToken();
