@@ -102,16 +102,11 @@ const ChatView = ({ conversation }: { conversation: ConversationDetails }) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const submitWithAttachments = (e: React.FormEvent<HTMLFormElement>) => {
-    const attachments = selectedFiles.map((file) => ({
-      name: file.name,
-      contentType: file.type,
-      url: URL.createObjectURL(file),
-    }));
+  const submitWithAttachments = (e: { preventDefault: () => void }) => {
+    const dataTransfer = new DataTransfer();
+    selectedFiles.forEach((file) => dataTransfer.items.add(file));
 
-    handleSubmit(e, {
-      experimental_attachments: attachments,
-    });
+    handleSubmit(e, { experimental_attachments: dataTransfer.files });
     setSelectedFiles([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -181,8 +176,7 @@ const ChatView = ({ conversation }: { conversation: ConversationDetails }) => {
             onChange={handleInputChange}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                submitWithAttachments(e as any);
+                submitWithAttachments(e);
               }
             }}
           />
