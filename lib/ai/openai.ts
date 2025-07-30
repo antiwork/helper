@@ -1,6 +1,6 @@
 import { createOpenAI } from "@ai-sdk/openai";
+import { createMockOpenAI, isMockingEnabled } from "@/lib/ai/mockOpenAI";
 import { env } from "@/lib/env";
-import { createMockOpenAI, isMockingEnabled } from "./mockOpenAI";
 
 const openai = isMockingEnabled()
   ? createMockOpenAI()
