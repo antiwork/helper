@@ -120,7 +120,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     const response = await POST(request, {
       context: { params: Promise.resolve({ slug: conversation.slug }) },
     });
-    const result = await response.json();
+    const _result = await response.json();
 
     expect(response.status).toBe(200);
     expect(createUserMessage).toHaveBeenCalledWith(
@@ -348,7 +348,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     const response = await POST(request, {
       context: { params: Promise.resolve({ slug: conversation.slug }) },
     });
-    const result = await response.json();
+    const _result = await response.json();
 
     expect(response.status).toBe(200);
     expect(createUserMessage).toHaveBeenCalledWith(
@@ -394,5 +394,29 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
 
     expect(response.status).toBe(400);
     expect(result.error).toContain("Too many attachments");
+  });
+
+  it("should return 401 for anonymous session with email but no anonymousSessionId", async () => {
+    const { mailbox } = await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create({
+      emailFrom: "test@example.com",
+    });
+
+    mockSession = { isAnonymous: true, email: "test@example.com" };
+    mockMailbox = mailbox;
+
+    const request = new Request("https://example.com/api", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: "Hello world" }),
+    });
+
+    const response = await POST(request, {
+      context: { params: Promise.resolve({ slug: conversation.slug }) },
+    });
+    const _result = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(_result.error).toBe("Not authorized - Invalid session");
   });
 });

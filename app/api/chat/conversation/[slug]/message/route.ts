@@ -22,7 +22,7 @@ const conversationMatcher = (slug: string, session: WidgetSessionPayload) => {
   let baseCondition;
   if (session.isAnonymous && session.anonymousSessionId) {
     baseCondition = eq(conversations.anonymousSessionId, session.anonymousSessionId);
-  } else if (session.email) {
+  } else if (!session.isAnonymous && session.email) {
     baseCondition = eq(conversations.emailFrom, session.email);
   }
   return baseCondition ? and(eq(conversations.slug, slug), baseCondition) : null;
