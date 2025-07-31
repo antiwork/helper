@@ -17,6 +17,7 @@ export const toolsFactory = {
       parameters: null,
       authenticationMethod: "bearer_token",
       authenticationToken: faker.string.alphanumeric(32),
+      authenticationTokenPlaintext: faker.string.alphanumeric(32),
       enabled: true,
       availableInChat: false,
       availableInAnonymousChat: false,

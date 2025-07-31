@@ -11,7 +11,9 @@ export const conversationMessagesFactory = {
       .values({
         conversationId,
         body: faker.lorem.paragraph(),
+        bodyPlaintext: faker.lorem.paragraph(),
         cleanedUpText: faker.lorem.sentence(),
+        cleanedUpTextPlaintext: faker.lorem.sentence(),
         role: "user",
         status: "sent",
         emailFrom: faker.internet.email(),
@@ -40,7 +42,9 @@ export const conversationMessagesFactory = {
         conversationId,
         responseToId,
         body,
+        bodyPlaintext: body,
         cleanedUpText: htmlToText(body),
+        cleanedUpTextPlaintext: htmlToText(body),
         role: "ai_assistant",
         status: "draft",
         emailCc: [],
@@ -60,6 +64,8 @@ export const conversationMessagesFactory = {
       .insert(conversationMessages)
       .values({
         conversationId,
+        body: faker.lorem.paragraph(),
+        bodyPlaintext: faker.lorem.paragraph(),
         role: "staff",
         status: "queueing",
         isPerfect: false,

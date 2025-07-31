@@ -14,6 +14,7 @@ export const conversationFactory = {
         emailFrom: faker.internet.email(),
         emailFromName: faker.person.fullName(),
         subject,
+        subjectPlaintext: subject,
         status: "open",
         slug: generateSlug(),
         conversationProvider: "gmail",
