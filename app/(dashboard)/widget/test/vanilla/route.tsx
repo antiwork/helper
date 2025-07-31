@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
 
 export const GET = () => {
-  const helperHost = env.HELPER_HOST;
+  const helperHost = env.NEXT_PUBLIC_DEV_HOST;
   const html = `<!doctype html>
 <html lang="en">
   <head>

@@ -133,7 +133,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <HelperWidgetScript host={process.env.NEXT_PUBLIC_HELPER_HOST!} />
+        <HelperWidgetScript host={process.env.NEXT_PUBLIC_NEXT_PUBLIC_DEV_HOST!} />
         {children}
       </body>
     </html>

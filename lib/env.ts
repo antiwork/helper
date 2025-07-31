@@ -64,9 +64,6 @@ export const env = createEnv({
     ),
     NEXT_RUNTIME: z.enum(["nodejs", "edge"]).default("nodejs"),
 
-    // Helper host URL configuration - overrides automatic detection
-    HELPER_HOST: z.string().url().optional().default("https://helperai.dev"),
-
     // Other optional integrations
 
     // Slack OAuth client credentials from https://api.slack.com/apps
@@ -125,6 +122,9 @@ export const env = createEnv({
     ),
 
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(), // Sentry DSN for error tracking
+
+    // Helper host URL configuration - overrides automatic detection in e2e tests
+    NEXT_PUBLIC_DEV_HOST: z.string().url().optional().default("https://helperai.dev"),
   },
   /**
    * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
@@ -136,6 +136,7 @@ export const env = createEnv({
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_DEV_HOST: process.env.NEXT_PUBLIC_DEV_HOST,
   },
   skipValidation: process.env.npm_lifecycle_event === "lint" || process.env.NODE_ENV === "test",
 });

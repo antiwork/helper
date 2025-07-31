@@ -13,7 +13,7 @@ export default async function WidgetTest({
 }: {
   searchParams: Promise<{ email?: string; isVip?: string; anonymous?: string }>;
 }) {
-  if (getBaseUrl() !== env.HELPER_HOST) {
+  if (getBaseUrl() !== env.NEXT_PUBLIC_DEV_HOST) {
     return <div>Only available in development</div>;
   }
 
@@ -45,7 +45,7 @@ export default async function WidgetTest({
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-white p-4">
-      <HelperWidgetScript host={env.HELPER_HOST} {...config} />
+      <HelperWidgetScript host={env.NEXT_PUBLIC_DEV_HOST} {...config} />
       <div className="my-auto w-full max-w-6xl rounded-lg bg-background p-6 shadow-md">
         <WidgetButtons />
 

@@ -11,12 +11,12 @@ export default async function WidgetTest({
 }: {
   searchParams: Promise<{ email?: string; isVip?: string; anonymous?: string }>;
 }) {
-  if (getBaseUrl() !== env.HELPER_HOST) {
+  if (getBaseUrl() !== env.NEXT_PUBLIC_DEV_HOST) {
     return <div>Only available in development</div>;
   }
 
   return (
-    <HelperClientProvider host={env.HELPER_HOST} session={generateSession(await searchParams)}>
+    <HelperClientProvider host={env.NEXT_PUBLIC_DEV_HOST} session={generateSession(await searchParams)}>
       <CustomWidgetTest />
     </HelperClientProvider>
   );
