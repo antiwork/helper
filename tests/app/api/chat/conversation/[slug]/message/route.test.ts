@@ -46,7 +46,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     });
 
     const response = await POST(request, {
-      context: { params: Promise.resolve({ slug: conversation.slug }) },
+      params: Promise.resolve({ slug: conversation.slug }),
     });
     const result = await response.json();
 
@@ -79,7 +79,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     });
 
     const response = await POST(request, {
-      context: { params: Promise.resolve({ slug: conversation.slug }) },
+      params: Promise.resolve({ slug: conversation.slug }),
     });
     const result = await response.json();
 
@@ -118,9 +118,9 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     });
 
     const response = await POST(request, {
-      context: { params: Promise.resolve({ slug: conversation.slug }) },
+      params: Promise.resolve({ slug: conversation.slug }),
     });
-    const _result = await response.json();
+    await response.json();
 
     expect(response.status).toBe(200);
     expect(createUserMessage).toHaveBeenCalledWith(
@@ -153,7 +153,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     });
 
     const response = await POST(request, {
-      context: { params: Promise.resolve({ slug: conversation.slug }) },
+      params: Promise.resolve({ slug: conversation.slug }),
     });
     const result = await response.json();
 
@@ -177,7 +177,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     });
 
     const response = await POST(request, {
-      context: { params: Promise.resolve({ slug: conversation.slug }) },
+      params: Promise.resolve({ slug: conversation.slug }),
     });
     const result = await response.json();
 
@@ -201,7 +201,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     });
 
     const response = await POST(request, {
-      context: { params: Promise.resolve({ slug: conversation.slug }) },
+      params: Promise.resolve({ slug: conversation.slug }),
     });
     const result = await response.json();
 
@@ -222,7 +222,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     });
 
     const response = await POST(request, {
-      context: { params: Promise.resolve({ slug: "non-existent-slug" }) },
+      params: Promise.resolve({ slug: "non-existent-slug" }),
     });
     const result = await response.json();
 
@@ -246,7 +246,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     });
 
     const response = await POST(request, {
-      context: { params: Promise.resolve({ slug: conversation.slug }) },
+      params: Promise.resolve({ slug: conversation.slug }),
     });
     const result = await response.json();
 
@@ -279,7 +279,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     });
 
     const response = await POST(request, {
-      context: { params: Promise.resolve({ slug: conversation.slug }) },
+      params: Promise.resolve({ slug: conversation.slug }),
     });
     const result = await response.json();
 
@@ -312,7 +312,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     });
 
     const response = await POST(request, {
-      context: { params: Promise.resolve({ slug: conversation.slug }) },
+      params: Promise.resolve({ slug: conversation.slug }),
     });
     const result = await response.json();
 
@@ -346,9 +346,9 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     });
 
     const response = await POST(request, {
-      context: { params: Promise.resolve({ slug: conversation.slug }) },
+      params: Promise.resolve({ slug: conversation.slug }),
     });
-    const _result = await response.json();
+    await response.json();
 
     expect(response.status).toBe(200);
     expect(createUserMessage).toHaveBeenCalledWith(
@@ -388,7 +388,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     });
 
     const response = await POST(request, {
-      context: { params: Promise.resolve({ slug: conversation.slug }) },
+      params: Promise.resolve({ slug: conversation.slug }),
     });
     const result = await response.json();
 
@@ -412,11 +412,11 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     });
 
     const response = await POST(request, {
-      context: { params: Promise.resolve({ slug: conversation.slug }) },
+      params: Promise.resolve({ slug: conversation.slug }),
     });
-    const _result = await response.json();
+    const result = await response.json();
 
     expect(response.status).toBe(401);
-    expect(_result.error).toBe("Not authorized - Invalid session");
+    expect(result.error).toBe("Not authorized - Invalid session");
   });
 });
