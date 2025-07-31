@@ -38,6 +38,6 @@ export const decryptFieldValue = (value: unknown): string => {
   throw new Error(`Unexpected value type: ${typeof value}`);
 };
 
-export const plaintextField = (dbName?: string) => {
+export const plaintextField = (dbName: string) => {
   return text(dbName);
 };

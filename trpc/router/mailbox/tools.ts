@@ -34,6 +34,7 @@ export const toolsRouter = {
               customerEmailParameter: true,
               parameters: true,
               toolApiId: true,
+              authenticationTokenPlaintext: true,
             },
             orderBy: [desc(toolsTable.enabled), asc(toolsTable.id)],
           },
@@ -54,6 +55,7 @@ export const toolsRouter = {
                 .replace(/^\/+|\/+$/g, ""),
               toolApiId: api.id,
               unused_mailboxId: ctx.mailbox.id,
+              authenticationTokenPlaintext: tool.authenticationTokenPlaintext,
             }) satisfies ToolFormatted,
         ),
       }));
