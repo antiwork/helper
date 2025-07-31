@@ -365,6 +365,8 @@ export const createConversationMessage = async (
     .values({
       isPinned: false,
       ...conversationMessage,
+      bodyPlaintext: conversationMessage.body,
+      cleanedUpTextPlaintext: conversationMessage.cleanedUpText,
     })
     .returning()
     .then(takeUniqueOrThrow);

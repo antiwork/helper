@@ -42,6 +42,7 @@ export const createConversation = async (
     const conversationValues = {
       ...conversation,
       conversationProvider: "chat" as const,
+      subjectPlaintext: conversation.subject,
     };
 
     const [newConversation] = await tx.insert(conversations).values(conversationValues).returning();
