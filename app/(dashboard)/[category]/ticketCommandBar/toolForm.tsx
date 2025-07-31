@@ -64,7 +64,7 @@ export const ToolForm = ({ tool, onOpenChange }: ToolFormProps) => {
       if (param.type === "number") {
         acc[param.name] = Number(parameters[param.name]);
       } else {
-        acc[param.name] = parameters[param.name];
+        acc[param.name] = parameters[param.name] ?? "";
       }
       return acc;
     }, {});
