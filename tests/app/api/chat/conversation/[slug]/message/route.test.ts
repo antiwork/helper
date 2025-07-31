@@ -230,7 +230,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     expect(result.error).toBe("Conversation not found");
   });
 
-  it("should return 401 for unauthorized access to conversation", async () => {
+  it("should return 404 for unauthorized access to conversation", async () => {
     const { mailbox } = await mailboxFactory.create();
     const { conversation } = await conversationFactory.create({
       emailFrom: "other@example.com",
@@ -250,8 +250,8 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     });
     const result = await response.json();
 
-    expect(response.status).toBe(401);
-    expect(result.error).toBe("Not authorized - Invalid session");
+    expect(response.status).toBe(404);
+    expect(result.error).toBe("Conversation not found");
   });
 
   it("should return 400 for attachment with missing URL", async () => {
@@ -284,7 +284,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     const result = await response.json();
 
     expect(response.status).toBe(400);
-    expect(result.error).toBe("Attachment test.png is missing URL");
+    expect(result.error).toBe("test.png: Missing URL");
   });
 
   it("should return 400 for attachment with invalid URL format", async () => {
@@ -317,7 +317,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     const result = await response.json();
 
     expect(response.status).toBe(400);
-    expect(result.error).toBe("Attachment test.png has invalid URL format");
+    expect(result.error).toBe("test.png: Invalid data URL format");
   });
 
   it("should handle base64 data with commas correctly", async () => {
@@ -393,7 +393,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     const result = await response.json();
 
     expect(response.status).toBe(400);
-    expect(result.error).toContain("Too many attachments");
+    expect(result.error).toContain("Cannot upload more than 5 files total");
   });
 
   it("should return 401 for anonymous session with email but no anonymousSessionId", async () => {
