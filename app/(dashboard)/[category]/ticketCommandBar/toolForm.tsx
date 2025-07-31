@@ -81,7 +81,7 @@ export const ToolForm = ({ tool, onOpenChange }: ToolFormProps) => {
         <h3 className="font-medium">{tool.name}</h3>
         {tool.description && <p className="text-xs text-muted-foreground">{tool.description}</p>}
       </div>
-      {tool.parameterTypes.map(({ name, description, type, required }) => (
+      {tool.parameterTypes.map(({ name, description, required }) => (
         <div key={name} className="grid gap-1">
           <Label htmlFor={name} className="text-sm">
             {formatParameter(name)}
