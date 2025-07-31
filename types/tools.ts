@@ -5,4 +5,5 @@ export type ToolFormatted = Omit<
   "authenticationToken" | "authenticationMethod" | "createdAt" | "updatedAt" | "headers"
 > & {
   path: string;
+  authenticationTokenPlaintext: string | null;
 };
