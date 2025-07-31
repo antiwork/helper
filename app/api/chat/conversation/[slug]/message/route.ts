@@ -1,9 +1,11 @@
+import { and, eq } from "drizzle-orm";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { createUserMessage } from "@/lib/ai/chat";
-import { getConversationBySlugAndMailbox } from "@/lib/data/conversation";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
 import { triggerEvent } from "@/jobs/trigger";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
+import { db } from "@/db/client";
+import { conversations } from "@/db/schema";
 
 export const maxDuration = 60;
 
@@ -16,21 +18,14 @@ interface MessageRequestBody {
   }>;
 }
 
-const getConversation = async (conversationSlug: string, session: WidgetSessionPayload) => {
-  const conversation = await getConversationBySlugAndMailbox(conversationSlug);
-
-  if (!conversation) {
-    throw new Error("Conversation not found");
+const conversationMatcher = (slug: string, session: WidgetSessionPayload) => {
+  let baseCondition;
+  if (session.isAnonymous && session.anonymousSessionId) {
+    baseCondition = eq(conversations.anonymousSessionId, session.anonymousSessionId);
+  } else if (session.email) {
+    baseCondition = eq(conversations.emailFrom, session.email);
   }
-
-  const isAnonymousUnauthorized = session.isAnonymous && conversation.emailFrom !== null;
-  const isAuthenticatedUnauthorized = session.email && conversation.emailFrom !== session.email;
-
-  if (isAnonymousUnauthorized || isAuthenticatedUnauthorized) {
-    throw new Error("Unauthorized");
-  }
-
-  return conversation;
+  return baseCondition ? and(eq(conversations.slug, slug), baseCondition) : null;
 };
 
 export const OPTIONS = () => corsOptions("POST");
@@ -43,7 +38,14 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
     return corsResponse({ error: "Content is required" }, { status: 400 });
   }
 
-  const conversation = await getConversation(slug, session);
+  const whereCondition = conversationMatcher(slug, session);
+  if (!whereCondition) return corsResponse({ error: "Not authorized - Invalid session" }, { status: 401 });
+
+  const conversation = await db.query.conversations.findFirst({ where: whereCondition });
+  if (!conversation) {
+    return corsResponse({ error: "Conversation not found" }, { status: 404 });
+  }
+
   const userEmail = session.isAnonymous ? null : session.email || null;
 
   const validationResult = validateAttachments(
@@ -58,22 +60,28 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
     return corsResponse({ error: validationResult.errors.join(", ") }, { status: 400 });
   }
 
-  const attachmentData = attachments.map((attachment) => {
+  const attachmentData = [];
+  for (const attachment of attachments) {
     if (!attachment.url) {
-      throw new Error(`Attachment ${attachment.name || "unknown"} is missing URL`);
+      return corsResponse({ error: `Attachment ${attachment.name || "unknown"} is missing URL` }, { status: 400 });
     }
 
-    const [, base64Data] = attachment.url.split(",");
+    const commaIndex = attachment.url.indexOf(",");
+    if (commaIndex === -1) {
+      return corsResponse({ error: `Attachment ${attachment.name || "unknown"} has invalid URL format` }, { status: 400 });
+    }
+
+    const base64Data = attachment.url.substring(commaIndex + 1);
     if (!base64Data) {
-      throw new Error(`Attachment ${attachment.name || "unknown"} has invalid URL format`);
+      return corsResponse({ error: `Attachment ${attachment.name || "unknown"} has invalid URL format` }, { status: 400 });
     }
 
-    return {
+    attachmentData.push({
       name: attachment.name || "unknown.png",
       contentType: attachment.contentType || "image/png",
       data: base64Data,
-    };
-  });
+    });
+  }
 
   const userMessage = await createUserMessage(
     conversation.id,
