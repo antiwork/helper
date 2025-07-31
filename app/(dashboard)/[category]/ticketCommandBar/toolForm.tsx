@@ -32,7 +32,7 @@ export const ToolForm = ({ tool, onOpenChange }: ToolFormProps) => {
 
   const { isExecuting, handleToolExecution } = useToolExecution();
 
-  const updateParameters = (name: string, value: string | number | undefined) => {
+  const updateParameters = (name: string, value: string | undefined) => {
     if (value === undefined) {
       setParameters((prev) => {
         const { [name]: _, ...rest } = prev;
@@ -49,14 +49,27 @@ export const ToolForm = ({ tool, onOpenChange }: ToolFormProps) => {
   const handleExecute = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const invalidFields = tool.parameterTypes
-      .filter((param) => param.required && parameters[param.name] === undefined)
+      .filter(
+        (param) =>
+          (param.required && parameters[param.name] === undefined) ||
+          (param.type === "number" && isNaN(Number(parameters[param.name]))),
+      )
       .map((param) => param.name);
     if (invalidFields.length > 0) {
       setInvalidFields(invalidFields);
       return;
     }
 
-    const success = await handleToolExecution(tool.slug, tool.name, parameters);
+    const parameterValues = tool.parameterTypes.reduce<Record<string, string | number>>((acc, param) => {
+      if (param.type === "number") {
+        acc[param.name] = Number(parameters[param.name]);
+      } else {
+        acc[param.name] = parameters[param.name];
+      }
+      return acc;
+    }, {});
+
+    const success = await handleToolExecution(tool.slug, tool.name, parameterValues);
     if (success) {
       onOpenChange(false);
     }
@@ -78,10 +91,7 @@ export const ToolForm = ({ tool, onOpenChange }: ToolFormProps) => {
             id={name}
             value={parameters[name] ?? ""}
             onChange={(e) => {
-              updateParameters(
-                name,
-                e.target.value === "" ? undefined : type === "number" ? Number(e.target.value) : e.target.value,
-              );
+              updateParameters(name, e.target.value || undefined);
               setInvalidFields(invalidFields.filter((field) => field !== name));
             }}
             className={invalidFields.includes(name) ? "border-destructive" : ""}
