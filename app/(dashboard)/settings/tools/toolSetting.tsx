@@ -31,12 +31,11 @@ const ToolSetting = () => {
     <SectionWrapper
       title="Tools"
       description="Connect your API using an OpenAPI spec to let Helper take actions in your app when drafting replies."
-      data-testid="tools-section"
     >
       <div className="flex flex-col gap-8">
         {!showApiForm && (
           <div>
-            <Button variant="subtle" onClick={() => setShowApiForm(true)} data-testid="connect-api-button">
+            <Button variant="subtle" onClick={() => setShowApiForm(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Connect API
             </Button>

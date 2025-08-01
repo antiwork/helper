@@ -59,13 +59,13 @@ test.describe("Settings - Integrations", () => {
     await integrationsPage.expectApiForm();
 
     await integrationsPage.toggleToSchemaInput();
-    await expect(page.locator('[data-testid="api-schema-textarea"]')).toBeVisible();
+    await expect(page.locator('textarea')).toBeVisible();
 
     const testSchema = '{"products": {"GET": {"url": "/products/:id"}}}';
     await integrationsPage.fillApiSchema(testSchema);
 
     await integrationsPage.toggleToUrlInput();
-    await expect(page.locator('[data-testid="api-url-input"]')).toBeVisible();
+    await expect(page.locator('input[placeholder="https://yourapp.com/api"]')).toBeVisible();
 
     await integrationsPage.clickCancel();
   });

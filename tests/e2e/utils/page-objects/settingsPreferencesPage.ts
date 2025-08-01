@@ -2,11 +2,11 @@ import { expect, Page } from "@playwright/test";
 import { BasePage } from "./basePage";
 
 export class SettingsPreferencesPage extends BasePage {
-  private readonly preferencesSection = '[data-testid="preferences-section"]';
-  private readonly mailboxNameSetting = '[data-testid="mailbox-name-setting"]';
-  private readonly mailboxNameInput = '[data-testid="mailbox-name-input"]';
-  private readonly confettiSetting = '[data-testid="confetti-setting"]';
-  private readonly testConfettiButton = '[data-testid="test-confetti-button"]';
+  private readonly preferencesSection = 'main, [role="main"]';
+  private readonly mailboxNameSetting = 'section:has(h2:text("Mailbox name"))';
+  private readonly mailboxNameInput = 'input[placeholder="Enter mailbox name"]';
+  private readonly confettiSetting = 'section:has(h2:text("Confetti"))';
+  private readonly testConfettiButton = 'button:has-text("Test Confetti")';
 
   constructor(page: Page) {
     super(page);

@@ -44,7 +44,7 @@ test.describe("Settings - Preferences", () => {
 
     await preferencesPage.expectConfettiSetting();
 
-    const testButton = page.locator('[data-testid="test-confetti-button"]');
+    const testButton = page.locator('button:has-text("Test Confetti")');
     const isVisible = await testButton.isVisible().catch(() => false);
 
     if (isVisible) {

@@ -41,18 +41,9 @@ const MailboxNameSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["ge
       <div className="absolute top-2 right-4 z-10">
         <SavingIndicator state={savingIndicator.state} />
       </div>
-      <SectionWrapper
-        title="Mailbox name"
-        description="Change the name of your mailbox"
-        data-testid="mailbox-name-setting"
-      >
+      <SectionWrapper title="Mailbox name" description="Change the name of your mailbox">
         <div className="max-w-sm">
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter mailbox name"
-            data-testid="mailbox-name-input"
-          />
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter mailbox name" />
         </div>
       </SectionWrapper>
     </div>

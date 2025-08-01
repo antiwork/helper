@@ -45,13 +45,8 @@ const ConfettiSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
         description="Enable full-page confetti animation when closing a ticket"
         initialSwitchChecked={confettiEnabled}
         onSwitchChange={handleSwitchChange}
-        data-testid="confetti-setting"
       >
-        {confettiEnabled && (
-          <Button onClick={handleTestConfetti} data-testid="test-confetti-button">
-            Test Confetti
-          </Button>
-        )}
+        {confettiEnabled && <Button onClick={handleTestConfetti}>Test Confetti</Button>}
       </SwitchSectionWrapper>
     </div>
   );
