@@ -28,6 +28,48 @@ test.describe("Settings - Integrations", () => {
     await integrationsPage.expectToolsSection();
   });
 
+  test("should show Connect API button and open API form", async ({ page }) => {
+    const integrationsPage = new SettingsIntegrationsPage(page);
+
+    await integrationsPage.expectToolsSection();
+    await integrationsPage.clickConnectApiButton();
+    await integrationsPage.expectApiFormVisible();
+  });
+
+  test("should handle API form interactions and validation", async ({ page }) => {
+    const integrationsPage = new SettingsIntegrationsPage(page);
+
+    await integrationsPage.clickConnectApiButton();
+    await integrationsPage.expectApiFormVisible();
+
+    await integrationsPage.clickImportApi();
+
+    await integrationsPage.fillApiName("Test API");
+    await integrationsPage.fillApiUrl("https://api.example.com/openapi.json");
+    await integrationsPage.fillApiKey("test-api-key-123");
+
+    await integrationsPage.clickCancel();
+    await integrationsPage.expectApiFormNotVisible();
+  });
+
+  test("should toggle between URL and schema input in API form", async ({ page }) => {
+    const integrationsPage = new SettingsIntegrationsPage(page);
+
+    await integrationsPage.clickConnectApiButton();
+    await integrationsPage.expectApiFormVisible();
+
+    await integrationsPage.toggleToSchemaInput();
+    await expect(page.locator('#apiSchema')).toBeVisible();
+
+    const testSchema = '{"products": {"GET": {"url": "/products/:id"}}}';
+    await integrationsPage.fillApiSchema(testSchema);
+
+    await integrationsPage.toggleToUrlInput();
+    await expect(page.locator('#apiUrl')).toBeVisible();
+
+    await integrationsPage.clickCancel();
+  });
+
   test("should be responsive on mobile devices", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
 

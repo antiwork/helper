@@ -9,6 +9,15 @@ export class SettingsIntegrationsPage extends BasePage {
   private readonly slackSection = '[data-testid="slack-section"]';
   private readonly apiFormContainer = '[data-testid="api-form"]';
 
+  private readonly apiNameInput = '#apiName';
+  private readonly apiUrlInput = '#apiUrl';
+  private readonly apiKeyInput = '#apiKey';
+  private readonly importApiButton = 'button:has-text("Import API")';
+  private readonly cancelButton = 'button:has-text("Cancel")';
+  private readonly toggleSchemaButton = 'button:has-text("Enter OpenAPI schema instead")';
+  private readonly toggleUrlButton = 'button:has-text("Enter OpenAPI URL instead")';
+  private readonly apiSchemaTextarea = '#apiSchema';
+
   constructor(page: Page) {
     super(page);
     this.page = page;
@@ -45,7 +54,47 @@ export class SettingsIntegrationsPage extends BasePage {
     await expect(this.page.locator(this.apiFormContainer)).toBeVisible();
   }
 
+  async expectApiFormVisible() {
+    await expect(this.page.locator(this.apiFormContainer)).toBeVisible();
+  }
+
   async expectSlackSection() {
     await expect(this.page.locator(this.slackSection)).toBeVisible();
+  }
+
+  async fillApiName(name: string) {
+    await this.page.locator(this.apiNameInput).fill(name);
+  }
+
+  async fillApiUrl(url: string) {
+    await this.page.locator(this.apiUrlInput).fill(url);
+  }
+
+  async fillApiKey(key: string) {
+    await this.page.locator(this.apiKeyInput).fill(key);
+  }
+
+  async clickImportApi() {
+    await this.page.locator(this.importApiButton).click();
+  }
+
+  async clickCancel() {
+    await this.page.locator(this.cancelButton).click();
+  }
+
+  async toggleToSchemaInput() {
+    await this.page.locator(this.toggleSchemaButton).click();
+  }
+
+  async toggleToUrlInput() {
+    await this.page.locator(this.toggleUrlButton).click();
+  }
+
+  async fillApiSchema(schema: string) {
+    await this.page.locator(this.apiSchemaTextarea).fill(schema);
+  }
+
+  async expectApiFormNotVisible() {
+    await expect(this.page.locator(this.apiFormContainer)).not.toBeVisible();
   }
 }

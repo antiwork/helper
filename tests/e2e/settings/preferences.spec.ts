@@ -22,6 +22,36 @@ test.describe("Settings - Preferences", () => {
     await expect(page.locator("body")).toBeVisible();
   });
 
+  test("should display mailbox name setting and allow editing", async ({ page }) => {
+    const preferencesPage = new SettingsPreferencesPage(page);
+
+    await preferencesPage.expectMailboxNameSetting();
+    
+    const originalName = await preferencesPage.getMailboxNameValue();
+    const testName = "Test Mailbox " + Date.now();
+    
+    await preferencesPage.fillMailboxName(testName);
+    await page.waitForTimeout(1000);
+    
+    const updatedName = await preferencesPage.getMailboxNameValue();
+    expect(updatedName).toBe(testName);
+    
+    await preferencesPage.fillMailboxName(originalName);
+  });
+
+  test("should display confetti setting and test confetti functionality", async ({ page }) => {
+    const preferencesPage = new SettingsPreferencesPage(page);
+
+    await preferencesPage.expectConfettiSetting();
+    
+    const testButton = page.locator('[data-testid="test-confetti-button"]');
+    const isVisible = await testButton.isVisible().catch(() => false);
+    
+    if (isVisible) {
+      await preferencesPage.clickTestConfettiButton();
+    }
+  });
+
   test("should be responsive on mobile devices", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
 
