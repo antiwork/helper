@@ -66,6 +66,7 @@ const ApiForm = ({ onCancel, "data-testid": testId }: ApiFormProps) => {
           onChange={(e) => setApiName(e.target.value)}
           placeholder="Your App"
           disabled={importMutation.isPending}
+          data-testid="api-name-input"
         />
       </div>
       <div>
@@ -79,11 +80,12 @@ const ApiForm = ({ onCancel, "data-testid": testId }: ApiFormProps) => {
               onChange={(e) => setApiUrl(e.target.value)}
               placeholder="https://yourapp.com/api"
               hint={
-                <button className="underline" onClick={toggleInputType}>
+                <button className="underline" onClick={toggleInputType} data-testid="toggle-schema-button">
                   Enter OpenAPI schema instead
                 </button>
               }
               disabled={importMutation.isPending}
+              data-testid="api-url-input"
             />
           </>
         ) : (
@@ -103,8 +105,14 @@ const ApiForm = ({ onCancel, "data-testid": testId }: ApiFormProps) => {
 }`}
               rows={10}
               disabled={importMutation.isPending}
+              data-testid="api-schema-textarea"
             />
-            <button className="underline text-sm" onClick={toggleInputType} disabled={importMutation.isPending}>
+            <button 
+              className="underline text-sm" 
+              onClick={toggleInputType} 
+              disabled={importMutation.isPending}
+              data-testid="toggle-url-button"
+            >
               Enter OpenAPI URL instead
             </button>
           </>
@@ -119,13 +127,19 @@ const ApiForm = ({ onCancel, "data-testid": testId }: ApiFormProps) => {
           onChange={(e) => setApiKey(e.target.value)}
           disabled={importMutation.isPending}
           hint="This will be sent as a Bearer token in the Authorization header"
+          data-testid="api-key-input"
         />
       </div>
       <div className="flex justify-end gap-2">
-        <Button variant="ghost" onClick={onCancel} disabled={importMutation.isPending}>
+        <Button variant="ghost" onClick={onCancel} disabled={importMutation.isPending} data-testid="cancel-button">
           Cancel
         </Button>
-        <Button variant="bright" onClick={handleImport} disabled={importMutation.isPending}>
+        <Button
+          variant="bright"
+          onClick={handleImport}
+          disabled={importMutation.isPending}
+          data-testid="import-api-button"
+        >
           {importMutation.isPending ? "Importing API..." : "Import API"}
         </Button>
       </div>

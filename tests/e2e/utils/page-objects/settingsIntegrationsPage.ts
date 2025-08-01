@@ -2,25 +2,22 @@ import { expect, Page } from "@playwright/test";
 import { BasePage } from "./basePage";
 
 export class SettingsIntegrationsPage extends BasePage {
-  readonly page: Page;
-
   private readonly connectApiButton = '[data-testid="connect-api-button"]';
   private readonly toolsSection = '[data-testid="tools-section"]';
   private readonly slackSection = '[data-testid="slack-section"]';
   private readonly apiFormContainer = '[data-testid="api-form"]';
 
-  private readonly apiNameInput = '#apiName';
-  private readonly apiUrlInput = '#apiUrl';
-  private readonly apiKeyInput = '#apiKey';
-  private readonly importApiButton = 'button:has-text("Import API")';
-  private readonly cancelButton = 'button:has-text("Cancel")';
-  private readonly toggleSchemaButton = 'button:has-text("Enter OpenAPI schema instead")';
-  private readonly toggleUrlButton = 'button:has-text("Enter OpenAPI URL instead")';
-  private readonly apiSchemaTextarea = '#apiSchema';
+  private readonly apiNameInput = '[data-testid="api-name-input"]';
+  private readonly apiUrlInput = '[data-testid="api-url-input"]';
+  private readonly apiKeyInput = '[data-testid="api-key-input"]';
+  private readonly importApiButton = '[data-testid="import-api-button"]';
+  private readonly cancelButton = '[data-testid="cancel-button"]';
+  private readonly toggleSchemaButton = '[data-testid="toggle-schema-button"]';
+  private readonly toggleUrlButton = '[data-testid="toggle-url-button"]';
+  private readonly apiSchemaTextarea = '[data-testid="api-schema-textarea"]';
 
   constructor(page: Page) {
     super(page);
-    this.page = page;
   }
 
   async navigateToIntegrations() {
@@ -51,10 +48,6 @@ export class SettingsIntegrationsPage extends BasePage {
   }
 
   async expectApiForm() {
-    await expect(this.page.locator(this.apiFormContainer)).toBeVisible();
-  }
-
-  async expectApiFormVisible() {
     await expect(this.page.locator(this.apiFormContainer)).toBeVisible();
   }
 

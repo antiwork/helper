@@ -26,16 +26,16 @@ test.describe("Settings - Preferences", () => {
     const preferencesPage = new SettingsPreferencesPage(page);
 
     await preferencesPage.expectMailboxNameSetting();
-    
+
     const originalName = await preferencesPage.getMailboxNameValue();
     const testName = "Test Mailbox " + Date.now();
-    
+
     await preferencesPage.fillMailboxName(testName);
     await page.waitForTimeout(1000);
-    
+
     const updatedName = await preferencesPage.getMailboxNameValue();
     expect(updatedName).toBe(testName);
-    
+
     await preferencesPage.fillMailboxName(originalName);
   });
 
@@ -43,10 +43,10 @@ test.describe("Settings - Preferences", () => {
     const preferencesPage = new SettingsPreferencesPage(page);
 
     await preferencesPage.expectConfettiSetting();
-    
+
     const testButton = page.locator('[data-testid="test-confetti-button"]');
     const isVisible = await testButton.isVisible().catch(() => false);
-    
+
     if (isVisible) {
       await preferencesPage.clickTestConfettiButton();
     }

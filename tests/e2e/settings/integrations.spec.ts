@@ -33,14 +33,14 @@ test.describe("Settings - Integrations", () => {
 
     await integrationsPage.expectToolsSection();
     await integrationsPage.clickConnectApiButton();
-    await integrationsPage.expectApiFormVisible();
+    await integrationsPage.expectApiForm();
   });
 
   test("should handle API form interactions and validation", async ({ page }) => {
     const integrationsPage = new SettingsIntegrationsPage(page);
 
     await integrationsPage.clickConnectApiButton();
-    await integrationsPage.expectApiFormVisible();
+    await integrationsPage.expectApiForm();
 
     await integrationsPage.clickImportApi();
 
@@ -56,38 +56,37 @@ test.describe("Settings - Integrations", () => {
     const integrationsPage = new SettingsIntegrationsPage(page);
 
     await integrationsPage.clickConnectApiButton();
-    await integrationsPage.expectApiFormVisible();
+    await integrationsPage.expectApiForm();
 
     await integrationsPage.toggleToSchemaInput();
-    await expect(page.locator('#apiSchema')).toBeVisible();
+    await expect(page.locator('[data-testid="api-schema-textarea"]')).toBeVisible();
 
     const testSchema = '{"products": {"GET": {"url": "/products/:id"}}}';
     await integrationsPage.fillApiSchema(testSchema);
 
     await integrationsPage.toggleToUrlInput();
-    await expect(page.locator('#apiUrl')).toBeVisible();
+    await expect(page.locator('[data-testid="api-url-input"]')).toBeVisible();
 
     await integrationsPage.clickCancel();
   });
 
-  test("should be responsive on mobile devices", async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 667 });
+  test.describe("Responsiveness", () => {
+    const viewports = [
+      { name: "mobile", width: 375, height: 667 },
+      { name: "tablet", width: 768, height: 1024 },
+    ];
 
-    await page.goto("/settings/integrations");
-    await page.waitForLoadState("networkidle");
+    viewports.forEach(({ name, width, height }) => {
+      test(`should be responsive on ${name} devices`, async ({ page }) => {
+        await page.setViewportSize({ width, height });
 
-    await expect(page).toHaveURL(/\/settings\/integrations/);
-    await expect(page.locator("body")).toBeVisible();
-  });
+        const integrationsPage = new SettingsIntegrationsPage(page);
+        await integrationsPage.navigateToIntegrations();
 
-  test("should be responsive on tablet devices", async ({ page }) => {
-    await page.setViewportSize({ width: 768, height: 1024 });
-
-    await page.goto("/settings/integrations");
-    await page.waitForLoadState("networkidle");
-
-    await expect(page).toHaveURL(/\/settings\/integrations/);
-    await expect(page.locator("body")).toBeVisible();
+        await expect(page).toHaveURL(/\/settings\/integrations/);
+        await integrationsPage.expectToolsSection();
+      });
+    });
   });
 
   test("should maintain URL after page refresh", async ({ page }) => {
