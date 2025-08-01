@@ -64,7 +64,11 @@ const TeamSetting = () => {
                 <TeamSettingLoadingSkeleton />
               ) : filteredTeamMembers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6 text-muted-foreground" data-testid="empty-member-list">
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-6 text-muted-foreground"
+                    data-testid="empty-member-list"
+                  >
                     {searchTerm
                       ? `No team members found matching "${searchTerm}"`
                       : "No team members in your organization yet. Use the form above to invite new members."}

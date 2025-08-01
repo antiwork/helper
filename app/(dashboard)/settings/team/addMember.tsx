@@ -22,9 +22,9 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
 
   const { mutate: addMemberMutation, isPending: isAdding } = api.organization.addMember.useMutation({
     onSuccess: () => {
-      toast.success("Team member added", { 
+      toast.success("Team member added", {
         description: `${emailInput} can now log in`,
-        id: "invite-success-message" 
+        id: "invite-success-message",
       });
 
       setEmailInput("");
@@ -34,9 +34,9 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
       utils.mailbox.members.list.invalidate();
     },
     onError: (error) => {
-      toast.error("Failed to send invitation", { 
+      toast.error("Failed to send invitation", {
         description: error.message,
-        id: "invite-error-message" 
+        id: "invite-error-message",
       });
     },
   });
@@ -49,9 +49,9 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
     const existingMember = teamMembers.find((member) => member.email?.toLowerCase() === emailInput.toLowerCase());
 
     if (existingMember) {
-      toast.error("Member already exists", { 
+      toast.error("Member already exists", {
         description: "This user is already in your organization",
-        id: "duplicate-member-error" 
+        id: "duplicate-member-error",
       });
     } else {
       addMemberMutation({
@@ -127,8 +127,12 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
             <SelectValue placeholder="Permissions" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="member" data-testid="role-option-member">Member</SelectItem>
-            <SelectItem value="admin" data-testid="role-option-admin">Admin</SelectItem>
+            <SelectItem value="member" data-testid="role-option-member">
+              Member
+            </SelectItem>
+            <SelectItem value="admin" data-testid="role-option-admin">
+              Admin
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>

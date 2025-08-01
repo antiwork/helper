@@ -15,7 +15,15 @@ type SectionWrapperProps = {
   "data-testid"?: string;
 };
 
-const SectionWrapper = ({ title, description, fullWidth, className, action, children, "data-testid": dataTestId }: SectionWrapperProps) => {
+const SectionWrapper = ({
+  title,
+  description,
+  fullWidth,
+  className,
+  action,
+  children,
+  "data-testid": dataTestId,
+}: SectionWrapperProps) => {
   return (
     <section className="flex flex-col gap-4 border-b py-8 first:pt-4 lg:flex-row" data-testid={dataTestId}>
       <div className="flex w-full flex-col gap-3 lg:max-w-xs">

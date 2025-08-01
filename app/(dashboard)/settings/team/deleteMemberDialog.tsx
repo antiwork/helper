@@ -69,8 +69,8 @@ export default function DeleteMemberDialog({
       if (assignedConversationCount > 0) {
         if (!assignedTo) {
           toast.error("Please select a valid assignee", {
-        id: "reassign-validation-error",
-      });
+            id: "reassign-validation-error",
+          });
           setLoading(false);
           return;
         }
@@ -106,7 +106,9 @@ export default function DeleteMemberDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent data-testid="delete-member-dialog">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2" data-testid="delete-member-title">Remove Team Member</DialogTitle>
+          <DialogTitle className="flex items-center gap-2" data-testid="delete-member-title">
+            Remove Team Member
+          </DialogTitle>
           <DialogDescription data-testid="delete-member-description">{description}</DialogDescription>
         </DialogHeader>
 
@@ -136,7 +138,12 @@ export default function DeleteMemberDialog({
           </div>
         )}
 
-        <Button onClick={handleAssignSubmit} disabled={loading} variant="destructive" data-testid="confirm-remove-member">
+        <Button
+          onClick={handleAssignSubmit}
+          disabled={loading}
+          variant="destructive"
+          data-testid="confirm-remove-member"
+        >
           {loading ? "Removing member..." : "Confirm Removal"}
         </Button>
       </DialogContent>
