@@ -37,11 +37,12 @@ export const KnowledgeEditForm = ({
         onSubmit();
       }}
       className="border rounded-lg p-4 space-y-4"
+      data-testid="knowledge-edit-form"
     >
       {originalContent && (
         <div>
           <Label>Original Content</Label>
-          <div className="mt-2 p-3 bg-muted rounded-md">
+          <div className="mt-2 p-3 bg-muted rounded-md" data-testid="original-content">
             <ReactMarkdown className="prose prose-sm">{originalContent}</ReactMarkdown>
           </div>
         </div>
@@ -53,11 +54,12 @@ export const KnowledgeEditForm = ({
           onChange={(e) => onChange?.(e.target.value)}
           className={cn("min-h-[10rem]", originalContent && "border-bright")}
           onModEnter={onSubmit}
+          data-testid="knowledge-content-textarea"
         />
       </div>
       <div className={originalContent ? "grid grid-cols-2 gap-2" : "flex justify-end gap-2"}>
         {onCancel && (
-          <Button type="button" variant="subtle" onClick={onCancel}>
+          <Button type="button" variant="subtle" onClick={onCancel} data-testid="cancel-knowledge-button">
             {originalContent ? (
               <>
                 <X className="h-4 w-4 mr-2" />
@@ -68,7 +70,7 @@ export const KnowledgeEditForm = ({
             )}
           </Button>
         )}
-        <Button type="submit" disabled={isLoading}>
+        <Button type="submit" disabled={isLoading} data-testid="save-knowledge-button">
           {isLoading ? (
             "Saving..."
           ) : originalContent ? (
@@ -153,7 +155,7 @@ const KnowledgeBankItem = ({ faq, suggestedReplacement, onDelete }: KnowledgeBan
   };
 
   return (
-    <div className="py-4">
+    <div className="py-4" data-testid="knowledge-bank-item">
       {editingContent ? (
         <KnowledgeEditForm
           content={editingContent}
@@ -181,6 +183,7 @@ const KnowledgeBankItem = ({ faq, suggestedReplacement, onDelete }: KnowledgeBan
             }}
             disabled={updateMutation.isPending}
             className="mt-0.5"
+            data-testid="knowledge-toggle-switch"
           />
           <button
             className="flex-1 w-full text-left text-sm hover:underline"
@@ -188,6 +191,7 @@ const KnowledgeBankItem = ({ faq, suggestedReplacement, onDelete }: KnowledgeBan
               e.preventDefault();
               handleStartEditing();
             }}
+            data-testid="knowledge-content-button"
           >
             <ReactMarkdown className={cn("prose prose-sm", !faq.enabled && "text-muted-foreground")}>
               {truncate(faq?.content, { length: 125 })}
@@ -203,7 +207,7 @@ const KnowledgeBankItem = ({ faq, suggestedReplacement, onDelete }: KnowledgeBan
             onConfirm={onDelete}
             confirmLabel="Yes, delete"
           >
-            <Button variant="ghost" size="sm" iconOnly>
+            <Button variant="ghost" size="sm" iconOnly data-testid="delete-knowledge-button">
               <Trash className="h-4 w-4" />
               <span className="sr-only">Delete</span>
             </Button>

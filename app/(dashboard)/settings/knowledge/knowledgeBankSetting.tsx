@@ -77,6 +77,7 @@ const KnowledgeBankSetting = () => {
           Helper will suggest improvements to your knowledge bank to ensure it's up to date.
         </>
       }
+      data-testid="knowledge-bank-page"
     >
       <Input
         type="text"
@@ -84,16 +85,17 @@ const KnowledgeBankSetting = () => {
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className="mb-4"
+        data-testid="knowledge-search-input"
       />
       {suggestedFaqs.length > 0 && (
-        <Accordion type="single" collapsible>
+        <Accordion type="single" collapsible data-testid="suggested-knowledge-accordion">
           <AccordionItem value="suggested">
-            <AccordionTrigger className="hover:no-underline">
-              <Badge variant="bright">
+            <AccordionTrigger className="hover:no-underline" data-testid="suggested-knowledge-trigger">
+              <Badge variant="bright" data-testid="suggested-knowledge-badge">
                 {suggestedFaqs.length} suggested {suggestedFaqs.length === 1 ? "entry" : "entries"}
               </Badge>
             </AccordionTrigger>
-            <AccordionContent>
+            <AccordionContent data-testid="suggested-knowledge-content">
               <div className="space-y-2">
                 {suggestedFaqs.map((faq) => (
                   <SuggestedKnowledgeBankItem key={faq.id} faq={faq} />
@@ -103,11 +105,11 @@ const KnowledgeBankSetting = () => {
           </AccordionItem>
         </Accordion>
       )}
-      <div className="mb-4 divide-y divide-border">
+      <div className="mb-4 divide-y divide-border" data-testid="knowledge-list">
         {isLoading ? (
           <>
             {Array.from({ length: 2 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 py-4">
+              <div key={i} className="flex items-center gap-3 py-4" data-testid="knowledge-skeleton">
                 <div className="grow space-y-2">
                   <div className="h-4 w-32 rounded bg-secondary animate-skeleton" />
                   <div className="h-4 w-48 rounded bg-secondary animate-skeleton" />
@@ -133,7 +135,7 @@ const KnowledgeBankSetting = () => {
         )}
       </div>
       {showNewFaqForm ? (
-        <div className="mb-4">
+        <div className="mb-4" data-testid="new-knowledge-form-container">
           <KnowledgeEditForm
             content={newFaqContent}
             onChange={setNewFaqContent}
@@ -153,6 +155,7 @@ const KnowledgeBankSetting = () => {
             setNewFaqContent("");
             setShowNewFaqForm(true);
           }}
+          data-testid="add-knowledge-button"
         >
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Knowledge
