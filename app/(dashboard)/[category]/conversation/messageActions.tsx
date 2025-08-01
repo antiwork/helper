@@ -373,7 +373,7 @@ export const MessageActions = () => {
       <div className="flex items-center gap-4 md:flex-row-reverse">
         {(conversation?.status ?? searchParams.status) !== "spam" &&
           ((conversation?.status ?? searchParams.status) === "closed" ? (
-            <Button variant="outlined" onClick={() => updateStatus("open")}>
+            <Button variant="outlined" onClick={() => updateStatus("open")} data-testid="reopen-conversation-button">
               <CornerUpLeft className="mr-2 h-4 w-4" />
               Reopen
             </Button>
@@ -384,6 +384,7 @@ export const MessageActions = () => {
                 variant="outlined"
                 onClick={() => updateStatus("closed")}
                 disabled={conversation?.status === "closed"}
+                data-testid="close-conversation-button"
               >
                 Close
                 {isMacOS() && <KeyboardShortcut className="ml-2 text-sm border-primary/50">C</KeyboardShortcut>}
@@ -393,6 +394,7 @@ export const MessageActions = () => {
                 variant="outlined"
                 onClick={() => handleSend({ assign: false, close: false })}
                 disabled={sendDisabled}
+                data-testid="reply-button"
               >
                 Reply
                 {!sending && isMacOS() && (
@@ -403,6 +405,7 @@ export const MessageActions = () => {
                 size={isAboveMd ? "default" : "sm"}
                 onClick={() => handleSend({ assign: false })}
                 disabled={sendDisabled}
+                data-testid="reply-and-close-button"
               >
                 {sending ? "Replying..." : "Reply and close"}
                 {!sending && isMacOS() && (
@@ -446,6 +449,7 @@ export const MessageActions = () => {
           value={draftedEmail.cc}
           onChange={(cc) => updateDraftedEmail({ cc })}
           onModEnter={() => {}}
+          data-testid="cc-input"
         />
         <LabeledInput
           ref={bccRef}
@@ -453,6 +457,7 @@ export const MessageActions = () => {
           value={draftedEmail.bcc}
           onChange={(bcc) => updateDraftedEmail({ bcc })}
           onModEnter={() => {}}
+          data-testid="bcc-input"
         />
       </div>
       <TipTapEditor
@@ -462,6 +467,7 @@ export const MessageActions = () => {
         placeholder="Type your reply here..."
         defaultContent={initialMessageObject}
         editable={true}
+        data-testid="message-composer"
         onUpdate={(message, isEmpty) => {
           updateDraftedEmail({ message: isEmpty ? "" : message });
           if (!isEmpty && conversation?.slug) {

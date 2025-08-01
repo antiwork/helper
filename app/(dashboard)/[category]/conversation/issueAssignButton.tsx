@@ -104,7 +104,12 @@ export const IssueAssignButton = ({ initialIssueGroupId }: { initialIssueGroupId
   return (
     <>
       <Select value={selectedIssueId} onValueChange={handleAssign}>
-        <SelectTrigger variant="bare" className="w-full min-w-0 hover:underline" hideArrow>
+        <SelectTrigger
+          variant="bare"
+          className="w-full min-w-0 hover:underline"
+          hideArrow
+          data-testid="issue-assignment-select"
+        >
           <div className="flex items-center gap-1 min-w-0 overflow-hidden">
             <Layers className="h-4 w-4 flex-shrink-0" />
             <SelectValue placeholder="Assign to issue..." className="truncate min-w-0" />

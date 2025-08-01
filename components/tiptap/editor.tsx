@@ -41,6 +41,7 @@ type TipTapEditorProps = {
   isRecording: boolean;
   startRecording: () => void;
   stopRecording: () => void;
+  "data-testid"?: string;
 };
 
 declare module "@tiptap/core" {
@@ -97,6 +98,7 @@ const TipTapEditor = ({
   startRecording,
   stopRecording,
   ref,
+  "data-testid": dataTestId,
 }: TipTapEditorPropsWithRef) => {
   const { data: helpArticles = [] } = api.mailbox.websites.pages.useQuery();
   const { isAboveMd } = useBreakpoint("md");
@@ -383,7 +385,7 @@ const TipTapEditor = ({
   }
 
   return (
-    <div className={cn("relative flex flex-col gap-4", className)}>
+    <div className={cn("relative flex flex-col gap-4", className)} data-testid={dataTestId}>
       <div
         className={cn(
           "grow flex flex-col min-h-0 rounded border border-border bg-background",
