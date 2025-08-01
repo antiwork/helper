@@ -64,8 +64,8 @@ useEffect(() => {
     onSubjectChanged: (subject) => {
       setConversation((conversation) => (conversation ? { ...conversation, subject } : null));
     },
-    onHumanReply: (message) => {
-      setMessages((prev) => [...prev, message]);
+    onReply: ({ aiMessage }) => {
+      setMessages((prev) => [...prev, aiMessage]);
     },
   });
   return () => unlisten();

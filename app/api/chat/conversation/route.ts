@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { createConversationParamsSchema } from "@helperai/client";
+import { createConversationBodySchema } from "@helperai/client";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
@@ -12,7 +12,7 @@ const DEFAULT_INITIAL_STATUS = "closed";
 export const OPTIONS = () => corsOptions("POST");
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
-  const parsedParams = createConversationParamsSchema.safeParse(await request.json());
+  const parsedParams = createConversationBodySchema.safeParse(await request.json());
   if (parsedParams.error) return corsResponse({ error: parsedParams.error.message }, { status: 400 });
 
   const isVisitor = session.isAnonymous;

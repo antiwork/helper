@@ -5,7 +5,7 @@ import { db } from "@/db/client";
 import { BasicUserProfile, userProfiles } from "@/db/schema/userProfiles";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { createAdminClient } from "@/lib/supabase/server";
-import { getFullName } from "../auth/authUtils";
+import { getFirstName, getFullName } from "../auth/authUtils";
 import { getSlackUser } from "../slack/client";
 
 export const UserRoles = {
@@ -161,3 +161,9 @@ export const findUserViaSlack = cache(async (token: string, slackUserId: string)
   const user = await getBasicProfileByEmail(slackUser?.profile?.email ?? "");
   return user ?? null;
 });
+
+export const getStaffName = async (userId: string | null) => {
+  if (!userId) return null;
+  const user = await getBasicProfileById(userId);
+  return user ? getFirstName(user) : null;
+};
