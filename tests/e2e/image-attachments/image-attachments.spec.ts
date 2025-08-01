@@ -55,7 +55,6 @@ test.describe("Image Attachments E2E", () => {
 
   test("should support multiple image formats", async ({ page }) => {
     await page.goto("/settings/in-app-chat");
-    await page.goto("/settings/in-app-chat");
     await page.waitForLoadState("networkidle");
 
     const widgetIcon = page.locator(".helper-widget-icon").first();
