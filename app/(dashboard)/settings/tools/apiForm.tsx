@@ -107,9 +107,9 @@ const ApiForm = ({ onCancel, "data-testid": testId }: ApiFormProps) => {
               disabled={importMutation.isPending}
               data-testid="api-schema-textarea"
             />
-            <button 
-              className="underline text-sm" 
-              onClick={toggleInputType} 
+            <button
+              className="underline text-sm"
+              onClick={toggleInputType}
               disabled={importMutation.isPending}
               data-testid="toggle-url-button"
             >
