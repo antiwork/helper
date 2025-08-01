@@ -140,7 +140,10 @@ export const processGmailThreadWithClient = async (
       lastUserEmailCreatedAt = parsedEmail.date;
     }
   }
-  await db.update(conversations).set({ lastUserEmailCreatedAt }).where(eq(conversations.id, conversation.id));
+  await db
+    .update(conversations)
+    .set({ lastUserEmailCreatedAt, lastReadAt: new Date() })
+    .where(eq(conversations.id, conversation.id));
 
   return {
     gmailThreadId,
