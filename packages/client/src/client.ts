@@ -102,11 +102,18 @@ export class HelperClient {
     get: (slug: string, { markRead = true }: { markRead?: boolean } = {}): Promise<ConversationDetails> =>
       this.request<ConversationDetails>(`/api/chat/conversation/${slug}?markRead=${markRead}`),
 
-    create: (params: CreateConversationParams = {}): Promise<CreateConversationResult> =>
-      this.request<CreateConversationResult>("/api/chat/conversation", {
+    create: async ({ message, ...params }: CreateConversationParams = {}): Promise<CreateConversationResult> => {
+      const conversation = await this.request<CreateConversationResult>("/api/chat/conversation", {
         method: "POST",
         body: JSON.stringify(params),
-      }),
+      });
+
+      if (message) {
+        await this.messages.create(conversation.conversationSlug, message);
+      }
+
+      return conversation;
+    },
 
     update: (slug: string, params: UpdateConversationParams): Promise<UpdateConversationResult> =>
       this.request<UpdateConversationResult>(`/api/chat/conversation/${slug}`, {
@@ -179,9 +186,11 @@ export class HelperClient {
 
   readonly messages = {
     create: async (conversationSlug: string, params: CreateMessageParams): Promise<CreateMessageResult> => {
-      const prepareAttachment = (attachment: File | { name: string; base64Url: string; contentType: string }) => {
+      const prepareAttachment = (
+        attachment: File | { name: string; base64Url: string; contentType: string },
+      ): Promise<{ name: string; contentType: string; url: string }> => {
         if (attachment instanceof File) {
-          return new Promise<{ name: string; contentType: string; base64Url: string }>((resolve, reject) => {
+          return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => {
               const result = reader.result;
@@ -189,7 +198,7 @@ export class HelperClient {
                 resolve({
                   name: attachment.name,
                   contentType: attachment.type,
-                  base64Url: result,
+                  url: result,
                 });
               } else {
                 reject(new Error("Failed to read file as data URL"));
@@ -199,11 +208,11 @@ export class HelperClient {
             reader.readAsDataURL(attachment);
           });
         }
-        return {
+        return Promise.resolve({
           name: attachment.name,
           url: attachment.base64Url,
-          contentType: attachment.contentType,
-        };
+          contentType: attachment.contentType ?? "application/octet-stream",
+        });
       };
 
       return this.request<CreateMessageResult>(`/api/chat/conversation/${conversationSlug}/message`, {

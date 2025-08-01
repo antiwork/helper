@@ -113,6 +113,7 @@ export type CreateSessionResult = z.infer<typeof createSessionResultSchema>;
 export const createConversationParamsSchema = z.object({
   isPrompt: z.boolean().nullish(),
   subject: z.string().nullish(),
+  message: createMessageParamsSchema.optional(),
 });
 export type CreateConversationParams = z.infer<typeof createConversationParamsSchema>;
 
