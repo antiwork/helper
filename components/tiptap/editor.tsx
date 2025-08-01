@@ -402,6 +402,7 @@ const TipTapEditor = ({
             uploadFiles.current(files);
           }}
           ref={editorContentContainerRef}
+          data-testid="tiptap-editor-content"
         >
           <div className="grow">
             <EditorContent editor={editor} />

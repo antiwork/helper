@@ -63,7 +63,7 @@ export const ConversationListItem = ({
   }
 
   return (
-    <div className="px-1 md:px-2">
+    <div className="px-1 md:px-2" data-testid="conversation-list-item">
       <div
         className={cn(
           "flex w-full cursor-pointer flex-col  transition-colors border-b border-border py-3 md:py-4",
