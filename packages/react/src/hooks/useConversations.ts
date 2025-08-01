@@ -79,47 +79,47 @@ export const useCreateConversation = (
 
   return useMutation({
     mutationFn: (params: CreateConversationParams = {}) => client.conversations.create(params),
+    ...mutationOptions,
     onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       mutationOptions?.onSuccess?.(data, variables, context);
     },
-    ...mutationOptions,
   });
 };
 
 export const useUpdateConversation = (
   mutationOptions?: Partial<
-    UseMutationOptions<UpdateConversationResult, Error, { slug: string; params: UpdateConversationParams }>
+    UseMutationOptions<UpdateConversationResult, Error, UpdateConversationParams & { slug: string }>
   >,
 ) => {
   const { client, queryClient } = useHelperClient();
 
   return useMutation({
-    mutationFn: ({ slug, params }: { slug: string; params: UpdateConversationParams }) =>
+    mutationFn: ({ slug, ...params }: UpdateConversationParams & { slug: string }) =>
       client.conversations.update(slug, params),
+    ...mutationOptions,
     onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ["conversation", variables.slug] });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       mutationOptions?.onSuccess?.(data, variables, context);
     },
-    ...mutationOptions,
   });
 };
 
 export const useCreateMessage = (
   mutationOptions?: Partial<
-    UseMutationOptions<CreateMessageResult, Error, { conversationSlug: string; params: CreateMessageParams }>
+    UseMutationOptions<CreateMessageResult, Error, CreateMessageParams & { conversationSlug: string }>
   >,
 ) => {
   const { client, queryClient } = useHelperClient();
 
   return useMutation({
-    mutationFn: ({ conversationSlug, params }: { conversationSlug: string; params: CreateMessageParams }) =>
+    mutationFn: ({ conversationSlug, ...params }: CreateMessageParams & { conversationSlug: string }) =>
       client.messages.create(conversationSlug, params),
+    ...mutationOptions,
     onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ["conversation", variables.conversationSlug] });
       mutationOptions?.onSuccess?.(data, variables, context);
     },
-    ...mutationOptions,
   });
 };

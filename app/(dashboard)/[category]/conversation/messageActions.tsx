@@ -2,7 +2,6 @@ import { isMacOS } from "@tiptap/core";
 import { CornerUpLeft } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Message } from "@helperai/client";
 import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
 import { EmailSignature } from "@/app/(dashboard)/[category]/emailSignature";
 import { DraftedEmail } from "@/app/types/global";
@@ -17,8 +16,6 @@ import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import useKeyboardShortcut from "@/components/useKeyboardShortcut";
-import { useMembers } from "@/components/useMembers";
-import { useSession } from "@/components/useSession";
 import { parseEmailList } from "@/components/utils/email";
 import { publicConversationChannelId } from "@/lib/realtime/channels";
 import { useBroadcastRealtimeEvent } from "@/lib/realtime/hooks";
@@ -60,8 +57,6 @@ export const MessageActions = () => {
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
   const { isAboveMd } = useBreakpoint("md");
-  const { data: orgMembers } = useMembers();
-  const { user: currentUser } = useSession() ?? {};
 
   const broadcastEvent = useBroadcastRealtimeEvent();
   const lastTypingBroadcastRef = useRef<number>(0);
@@ -249,7 +244,7 @@ export const MessageActions = () => {
         ?.filter((m) => m.type === "message" && m.role === "user")
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
 
-      const { id: emailId, attachments } = await replyMutation.mutateAsync({
+      const { id: emailId } = await replyMutation.mutateAsync({
         conversationSlug,
         message: draftedEmail.message,
         fileSlugs: readyFiles.flatMap((f) => (f.slug ? [f.slug] : [])),
@@ -259,19 +254,6 @@ export const MessageActions = () => {
         shouldClose: close,
         responseToId: lastUserMessage?.id ?? null,
       });
-
-      broadcastEvent(publicConversationChannelId(conversationSlug), "agent-reply", {
-        id: emailId.toString(),
-        role: "staff",
-        staffName: orgMembers?.find((m) => m.id === currentUser?.id)?.displayName?.split(" ")[0] ?? null,
-        content: draftedEmail.message,
-        createdAt: new Date().toISOString(),
-        reactionType: null,
-        reactionFeedback: null,
-        reactionCreatedAt: null,
-        publicAttachments: [],
-        privateAttachments: attachments,
-      } satisfies Message);
 
       // Clear the draft immediately after message is sent successfully
       setDraftedEmail((prev) => ({ ...prev, message: "", files: [], modified: false }));

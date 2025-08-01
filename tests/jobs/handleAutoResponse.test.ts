@@ -51,6 +51,7 @@ describe("handleAutoResponse", () => {
     expect(aiChat.generateDraftResponse).toHaveBeenCalledWith(
       conversation.id,
       expect.objectContaining({ id: mailbox.id }),
+      undefined,
     );
     expect(result).toEqual({ message: "Draft response generated", draftId: 1 });
   });
