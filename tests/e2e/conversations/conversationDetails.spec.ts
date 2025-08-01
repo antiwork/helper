@@ -27,24 +27,27 @@ test.describe("Conversation details", () => {
     await expect(page.locator("h3:text-is(\"Customer\")")).toBeVisible();
 
     // Test navigating to the next conversation if controls are available
-    const previousButton = page.locator('button:has(svg.lucide-chevron-left)');
-    const nextButton = page.locator('button:has(svg.lucide-chevron-right)');
+    const previousButton = page.locator('[data-testid="conversation-previous-button"]');
+    const nextButton = page.locator('[data-testid="conversation-next-button"]');
 
     if (await nextButton.isVisible()) {
       const initialUrl = page.url();
 
       await nextButton.click();
+      await page.waitForLoadState("networkidle");
       await expect(page).not.toHaveURL(initialUrl);
       const nextUrl = page.url();
 
       if (await previousButton.isVisible()) {
         await previousButton.click();
+        await page.waitForLoadState("networkidle");
         await expect(page).toHaveURL(initialUrl);
       }
 
       // Navigate forward again to verify the next URL
       if (await nextButton.isVisible()) {
         await nextButton.click();
+        await page.waitForLoadState("networkidle");
         await expect(page).toHaveURL(nextUrl);
       }
     }

@@ -224,14 +224,14 @@ const ConversationHeader = ({
           <X className="h-4 w-4" />
         </Button>
         <div className="flex items-center ml-2">
-          <Button variant="ghost" size="sm" iconOnly onClick={moveToPreviousConversation}>
+          <Button variant="ghost" size="sm" iconOnly onClick={moveToPreviousConversation} data-testid="conversation-previous-button">
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="text-sm text-muted-foreground whitespace-nowrap text-center mx-1">
             {currentIndex + 1} of {currentTotal}
             {hasNextPage ? "+" : ""}
           </span>
-          <Button variant="ghost" size="sm" iconOnly onClick={moveToNextConversation}>
+          <Button variant="ghost" size="sm" iconOnly onClick={moveToNextConversation} data-testid="conversation-next-button">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
