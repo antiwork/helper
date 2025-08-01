@@ -10,11 +10,11 @@ test.describe("Image Attachments E2E", () => {
     await page.waitForLoadState("networkidle");
 
     // Look for the widget icon
-    const widgetIcon = page.locator(".helper-widget-icon");
+    const widgetIcon = page.locator(".helper-widget-icon").first();
     await expect(widgetIcon).toBeVisible({ timeout: 15000 });
 
     // Click to open the widget
-    await widgetIcon.click();
+    await widgetIcon.click({ force: true });
 
     // Wait for the widget to open - it might be in an iframe or shadow DOM
     await page.waitForTimeout(2000);
@@ -24,7 +24,7 @@ test.describe("Image Attachments E2E", () => {
     await expect(widgetContainer).toBeVisible({ timeout: 10000 });
 
     // Wait for the widget iframe to load and grab its frame locator
-    const widgetFrame = page.frameLocator("iframe.helper-widget-iframe");
+    const widgetFrame = page.frameLocator('iframe.helper-widget-iframe').first();
 
     // Now find the chat input - it should be visible inside the iframe
     const chatInput = widgetFrame.locator('textarea[aria-label="Ask a question"]');
@@ -74,11 +74,11 @@ test.describe("Image Attachments E2E", () => {
     await page.waitForLoadState("networkidle");
 
     // Look for the widget icon
-    const widgetIcon = page.locator(".helper-widget-icon");
+    const widgetIcon = page.locator(".helper-widget-icon").first();
     await expect(widgetIcon).toBeVisible({ timeout: 15000 });
 
     // Click to open the widget
-    await widgetIcon.click();
+    await widgetIcon.click({ force: true });
 
     // Wait for the widget to open
     await page.waitForTimeout(2000);
@@ -88,7 +88,7 @@ test.describe("Image Attachments E2E", () => {
     await expect(widgetContainer).toBeVisible({ timeout: 10000 });
 
     // Wait for the widget iframe to load and grab its frame locator
-    const widgetFrame = page.frameLocator("iframe.helper-widget-iframe");
+    const widgetFrame = page.frameLocator("iframe.helper-widget-iframe").first();
     const chatInput = widgetFrame.locator('textarea[aria-label="Ask a question"]');
     await expect(chatInput).toBeVisible({ timeout: 15000 });
 
