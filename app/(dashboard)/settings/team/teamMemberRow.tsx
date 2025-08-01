@@ -221,11 +221,13 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
   };
 
   return (
-    <TableRow>
+    <TableRow data-testid="member-row">
       <TableCell>
         <div className="flex items-center gap-3">
           <Avatar fallback={getAvatarFallback(member)} size="sm" />
-          <span className="truncate">{member.email || "No email"}</span>
+          <span className="truncate" data-testid="member-email">
+            {member.email || "No email"}
+          </span>
         </div>
       </TableCell>
       <TableCell>
@@ -235,40 +237,51 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
             onChange={(e) => handleDisplayNameChange(e.target.value)}
             placeholder="Enter display name"
             className="w-full max-w-lg"
+            data-testid="member-name-input"
           />
         ) : (
-          <span>{member.displayName || "No display name"}</span>
+          <span data-testid="member-name">{member.displayName || "No display name"}</span>
         )}
       </TableCell>
       <TableCell>
         {isAdmin ? (
           <Select value={permissions} onValueChange={handlePermissionsChange}>
-            <SelectTrigger className="w-[100px]">
+            <SelectTrigger className="w-[100px]" data-testid="member-permissions-selector">
               <SelectValue placeholder="Permissions" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="member">{PERMISSIONS_DISPLAY_NAMES.member}</SelectItem>
-              <SelectItem value="admin">{PERMISSIONS_DISPLAY_NAMES.admin}</SelectItem>
+              <SelectItem value="member" data-testid="permission-option-member">
+                {PERMISSIONS_DISPLAY_NAMES.member}
+              </SelectItem>
+              <SelectItem value="admin" data-testid="permission-option-admin">
+                {PERMISSIONS_DISPLAY_NAMES.admin}
+              </SelectItem>
             </SelectContent>
           </Select>
         ) : (
-          <span>{PERMISSIONS_DISPLAY_NAMES[member.permissions]}</span>
+          <span data-testid="member-permissions-display">{PERMISSIONS_DISPLAY_NAMES[member.permissions]}</span>
         )}
       </TableCell>
       <TableCell>
         {isAdmin ? (
           <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
-            <SelectTrigger className="w-[100px]">
+            <SelectTrigger className="w-[100px]" data-testid="support-role-selector">
               <SelectValue placeholder="Role" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
-              <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
-              <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
+              <SelectItem value="core" data-testid="role-option-core">
+                {ROLE_DISPLAY_NAMES.core}
+              </SelectItem>
+              <SelectItem value="nonCore" data-testid="role-option-noncore">
+                {ROLE_DISPLAY_NAMES.nonCore}
+              </SelectItem>
+              <SelectItem value="afk" data-testid="role-option-afk">
+                {ROLE_DISPLAY_NAMES.afk}
+              </SelectItem>
             </SelectContent>
           </Select>
         ) : (
-          <span>{ROLE_DISPLAY_NAMES[member.role]}</span>
+          <span data-testid="member-role-display">{ROLE_DISPLAY_NAMES[member.role]}</span>
         )}
       </TableCell>
       <TableCell>
@@ -279,10 +292,14 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
               onChange={(e) => handleKeywordsChange(e.target.value)}
               placeholder="Enter keywords separated by commas"
               className={role === "nonCore" ? "" : "invisible"}
+              data-testid="member-keywords-input"
             />
           </div>
         ) : (
-          <span className={`text-muted-foreground ${role === "nonCore" ? "" : "invisible"}`}>
+          <span
+            className={`text-muted-foreground ${role === "nonCore" ? "" : "invisible"}`}
+            data-testid="member-keywords-display"
+          >
             {member.keywords.length > 0 ? member.keywords.join(", ") : ""}
           </span>
         )}
@@ -298,7 +315,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
             }
             assignedConversationCount={count?.total || 0}
           >
-            <Button variant="ghost" size="sm" iconOnly>
+            <Button variant="ghost" size="sm" iconOnly data-testid="remove-member-button">
               <Trash className="h-4 w-4" />
               <span className="sr-only">Delete</span>
             </Button>
@@ -306,7 +323,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
         )}
       </TableCell>
       <TableCell className="min-w-[120px]">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" data-testid="member-status-indicators">
           <SavingIndicator state={displayNameSaving.state} />
           <SavingIndicator state={permissionsSaving.state} />
           <SavingIndicator state={roleSaving.state} />

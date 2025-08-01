@@ -31,8 +31,9 @@ const TeamSetting = () => {
       title="Manage Team Members"
       description="Add and organize team members for efficient ticket assignment"
       fullWidth
+      data-testid="team-settings-page"
     >
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-6" data-testid="team-settings-content">
         {user?.permissions === "admin" && <AddMember teamMembers={teamMembers} />}
 
         {(teamMembers.length > 0 || isLoading) && (
@@ -41,10 +42,11 @@ const TeamSetting = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             iconsPrefix={<Search className="h-4 w-4 text-muted-foreground" />}
+            data-testid="team-search-input"
           />
         )}
 
-        <div className="rounded-md border">
+        <div className="rounded-md border" data-testid="member-list">
           <Table>
             <TableHeader>
               <TableRow>
@@ -57,12 +59,12 @@ const TeamSetting = () => {
                 <TableHead className="w-[120px]">Status</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody data-testid="member-list-body">
               {isLoading ? (
                 <TeamSettingLoadingSkeleton />
               ) : filteredTeamMembers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-6 text-muted-foreground" data-testid="empty-member-list">
                     {searchTerm
                       ? `No team members found matching "${searchTerm}"`
                       : "No team members in your organization yet. Use the form above to invite new members."}
@@ -77,7 +79,7 @@ const TeamSetting = () => {
           </Table>
         </div>
 
-        <div className="text-sm text-muted-foreground space-y-1">
+        <div className="text-sm text-muted-foreground space-y-1" data-testid="team-settings-notes">
           <p>Note:</p>
           <ul className="list-disc list-inside space-y-1">
             <li>{ROLE_DISPLAY_NAMES.core} members are assigned tickets in a round-robin style.</li>

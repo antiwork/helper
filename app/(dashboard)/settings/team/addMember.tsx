@@ -22,7 +22,10 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
 
   const { mutate: addMemberMutation, isPending: isAdding } = api.organization.addMember.useMutation({
     onSuccess: () => {
-      toast.success("Team member added", { description: `${emailInput} can now log in` });
+      toast.success("Team member added", { 
+        description: `${emailInput} can now log in`,
+        id: "invite-success-message" 
+      });
 
       setEmailInput("");
       setDisplayNameInput("");
@@ -31,7 +34,10 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
       utils.mailbox.members.list.invalidate();
     },
     onError: (error) => {
-      toast.error("Failed to send invitation", { description: error.message });
+      toast.error("Failed to send invitation", { 
+        description: error.message,
+        id: "invite-error-message" 
+      });
     },
   });
 
@@ -43,7 +49,10 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
     const existingMember = teamMembers.find((member) => member.email?.toLowerCase() === emailInput.toLowerCase());
 
     if (existingMember) {
-      toast.error("Member already exists", { description: "This user is already in your organization" });
+      toast.error("Member already exists", { 
+        description: "This user is already in your organization",
+        id: "duplicate-member-error" 
+      });
     } else {
       addMemberMutation({
         email: emailInput,
@@ -57,7 +66,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
   const canAddMember = isValidEmail && displayNameInput.trim().length > 0 && !isAdding && permissions;
 
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-4" data-testid="invite-member-form">
       <div className="relative flex-1">
         <Label className="sr-only" htmlFor="email-input">
           Email Address
@@ -68,15 +77,22 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
           value={emailInput}
           onChange={(e) => setEmailInput(e.target.value)}
           disabled={isAdding}
+          data-testid="invite-email-input"
         />
         {emailInput && (
           <button
             className="absolute inset-y-0 right-0 flex items-center pr-3"
             onClick={() => setEmailInput("")}
             disabled={isAdding}
+            data-testid="clear-email-button"
           >
             <X className="h-4 w-4 text-gray-400" aria-hidden="true" />
           </button>
+        )}
+        {emailInput && !isValidEmail && (
+          <div className="text-xs text-red-500 mt-1" data-testid="email-validation-error">
+            Please enter a valid email address
+          </div>
         )}
       </div>
       <div className="relative flex-1">
@@ -89,12 +105,14 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
           value={displayNameInput}
           onChange={(e) => setDisplayNameInput(e.target.value)}
           disabled={isAdding}
+          data-testid="invite-name-input"
         />
         {displayNameInput && (
           <button
             className="absolute inset-y-0 right-0 flex items-center pr-3"
             onClick={() => setDisplayNameInput("")}
             disabled={isAdding}
+            data-testid="clear-name-button"
           >
             <X className="h-4 w-4 text-gray-400" aria-hidden="true" />
           </button>
@@ -105,16 +123,16 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
           Permissions
         </Label>
         <Select value={permissions} onValueChange={(value: string) => setPermissions(value as "member" | "admin")}>
-          <SelectTrigger>
+          <SelectTrigger data-testid="member-role-selector">
             <SelectValue placeholder="Permissions" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="member">Member</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="member" data-testid="role-option-member">Member</SelectItem>
+            <SelectItem value="admin" data-testid="role-option-admin">Admin</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      <Button onClick={inviteMember} disabled={!canAddMember}>
+      <Button onClick={inviteMember} disabled={!canAddMember} data-testid="invite-member-button">
         {isAdding ? (
           <>Adding...</>
         ) : (
