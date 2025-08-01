@@ -5,7 +5,6 @@ test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 test.describe("Image Attachments E2E", () => {
   test("should upload and attach images in chat widget", async ({ page }) => {
-
     await page.goto("/settings/in-app-chat");
     await page.waitForLoadState("networkidle");
 
@@ -19,7 +18,7 @@ test.describe("Image Attachments E2E", () => {
     const widgetContainer = page.locator('[class*="helper-widget"]').first();
     await expect(widgetContainer).toBeVisible({ timeout: 10000 });
 
-    const widgetFrame = page.frameLocator('iframe.helper-widget-iframe').first();
+    const widgetFrame = page.frameLocator("iframe.helper-widget-iframe").first();
 
     const chatInput = widgetFrame.locator('textarea[aria-label="Ask a question"]');
     await expect(chatInput).toBeVisible({ timeout: 15000 });
