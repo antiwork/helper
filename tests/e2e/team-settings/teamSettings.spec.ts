@@ -35,12 +35,7 @@ test.describe("Team Settings", () => {
       await expect(permissionSelectors.first()).toBeVisible();
     }
 
-    // 3. Admin should see remove buttons for other members (if any exist)
-    const removeButtons = page.getByTestId("remove-member-button");
-    const removeButtonCount = await removeButtons.count();
-    // Note: Remove buttons only appear for other members, not the current user
-
-    // 4. Admin can fill out the invite form (this would be disabled for members)
+    // 3. Admin can fill out the invite form (this would be disabled for members)
     const emailInput = page.getByTestId("invite-email-input");
     await expect(emailInput).toBeEnabled();
 
