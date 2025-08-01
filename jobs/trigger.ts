@@ -22,7 +22,7 @@ const events = {
       "indexConversationMessage",
       "generateConversationSummaryEmbeddings",
       "mergeSimilarConversations",
-      "publishNewConversationEvent",
+      "publishNewMessageEvent",
       "notifyVipMessage",
       "categorizeConversationToIssueGroup",
     ],

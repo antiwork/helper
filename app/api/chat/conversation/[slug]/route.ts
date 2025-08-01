@@ -1,14 +1,11 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
-import { htmlToText } from "html-to-text";
 import { ConversationDetails, updateConversationBodySchema, UpdateConversationResult } from "@helperai/client";
 import { getCustomerFilter } from "@/app/api/chat/customerFilter";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
-import { getFirstName } from "@/lib/auth/authUtils";
+import { conversationMessages, conversations, files } from "@/db/schema";
 import { updateConversation } from "@/lib/data/conversation";
-import { formatAttachments } from "@/lib/data/files";
-import { getBasicProfileById } from "@/lib/data/user";
+import { serializeMessageForWidget } from "@/lib/data/conversationMessage";
 
 export const OPTIONS = () => corsOptions("GET", "PATCH");
 
@@ -65,24 +62,7 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
   );
 
   const formattedMessages = await Promise.all(
-    conversation.messages.map(async (message) => {
-      const messageAttachments = await formatAttachments(attachments.filter((a) => a.messageId === message.id));
-      const hasPublicAttachments =
-        (message.metadata as MessageMetadata)?.hasAttachments ||
-        (message.metadata as MessageMetadata)?.includesScreenshot;
-      return {
-        id: message.id.toString(),
-        role: message.role === "ai_assistant" || message.role === "tool" ? ("assistant" as const) : message.role,
-        content: message.cleanedUpText || htmlToText(message.body ?? "", { wordwrap: false }),
-        createdAt: message.createdAt.toISOString(),
-        reactionType: message.reactionType,
-        reactionFeedback: message.reactionFeedback,
-        reactionCreatedAt: message.reactionCreatedAt?.toISOString() ?? null,
-        staffName: await getStaffName(message.userId),
-        publicAttachments: hasPublicAttachments ? messageAttachments : [],
-        privateAttachments: hasPublicAttachments ? [] : messageAttachments,
-      };
-    }),
+    conversation.messages.map((message) => serializeMessageForWidget(message, attachments)),
   );
 
   return corsResponse<ConversationDetails>({
@@ -123,9 +103,3 @@ export const PATCH = withWidgetAuth<{ slug: string }>(async ({ context: { params
 
   return corsResponse<UpdateConversationResult>({ success: true });
 });
-
-const getStaffName = async (userId: string | null) => {
-  if (!userId) return null;
-  const user = await getBasicProfileById(userId);
-  return user ? getFirstName(user) : null;
-};

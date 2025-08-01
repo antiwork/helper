@@ -128,11 +128,11 @@ export class HelperClient {
     listen: (
       conversationSlug: string,
       {
-        onHumanReply,
+        onReply,
         onTyping,
         onSubjectChanged,
       }: {
-        onHumanReply?: (message: { id: string; content: string; role: "assistant" }) => void;
+        onReply?: ({ message, aiMessage }: { message: Message; aiMessage: AIMessageCompat }) => void;
         onTyping?: (isTyping: boolean) => void;
         onSubjectChanged?: (subject: string) => void;
       },
@@ -157,10 +157,9 @@ export class HelperClient {
           "agent-reply",
           (event) => {
             onTyping?.(false);
-            onHumanReply?.({
-              id: `staff_${Date.now()}`,
-              content: event.data.message,
-              role: "assistant",
+            onReply?.({
+              message: event.data,
+              aiMessage: formatAIMessage(event.data),
             });
             this.conversations.update(conversationSlug, { markRead: true });
           },
@@ -237,7 +236,7 @@ export class HelperClient {
       conversation: ConversationDetails;
       tools?: Record<string, HelperTool>;
     }) => {
-      const formattedMessages = conversation.messages.map(formatMessage);
+      const formattedMessages = conversation.messages.map(formatAIMessage);
 
       const guideMessages = conversation.experimental_guideSessions.map((session) => ({
         id: `guide_session_${session.uuid}`,
@@ -347,7 +346,7 @@ export class HelperClient {
   };
 }
 
-const formatMessage = (message: Message): AIMessageCompat => ({
+const formatAIMessage = (message: Message): AIMessageCompat => ({
   id: message.id,
   content: message.content,
   role: message.role === "staff" || message.role === "assistant" ? ("assistant" as const) : message.role,

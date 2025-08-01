@@ -573,7 +573,7 @@ const callToolEndpoint = async (
     throw new Error("Tool does not have a server request URL");
   }
 
-  const requestBody = { email, parameters };
+  const requestBody = { email, parameters, requestTimestamp: Math.floor(Date.now() / 1000) };
   const hmacDigest = createHmacDigest(mailbox.widgetHMACSecret, { json: requestBody });
   const hmacSignature = hmacDigest.toString("base64");
 

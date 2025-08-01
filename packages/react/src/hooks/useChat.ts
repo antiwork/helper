@@ -2,8 +2,9 @@
 
 import { useChat as useAIChat } from "@ai-sdk/react";
 import { useEffect, useMemo, useState } from "react";
-import type { ConversationDetails, HelperTool, Message } from "@helperai/client";
+import type { ConversationDetails, HelperClient, HelperTool, Message } from "@helperai/client";
 import { useHelperClient } from "../components/helperClientProvider";
+import { useRefToLatest } from "./useRefToLatest";
 
 export interface UseChatProps {
   conversation: ConversationDetails;
@@ -38,8 +39,8 @@ export const useChat = ({
     if (enableRealtime === false) return;
 
     const unlisten = client.conversations.listen(conversation.slug, {
-      onHumanReply: (message: { id: string; content: string; role: "assistant" }) => {
-        setMessages((prev) => [...prev, message]);
+      onReply: ({ aiMessage }) => {
+        setMessages((prev) => [...prev, aiMessage]);
       },
       onTyping: (isTyping: boolean) => {
         setAgentTyping(isTyping);
@@ -56,4 +57,53 @@ export const useChat = ({
     agentTyping,
     ...rest,
   };
+};
+
+export const useRealtimeEvents = (
+  conversationSlug: string,
+  {
+    enabled = true,
+    updateQueries = true,
+    onTyping,
+    onReply,
+    onSubjectChanged,
+  }: { enabled?: boolean; updateQueries?: boolean } & Parameters<
+    InstanceType<typeof HelperClient>["conversations"]["listen"]
+  >[1] = {},
+) => {
+  const { client, queryClient } = useHelperClient();
+  const onTypingRef = useRefToLatest(onTyping);
+  const onReplyRef = useRefToLatest(onReply);
+  const onSubjectChangedRef = useRefToLatest(onSubjectChanged);
+  const updateQueriesRef = useRefToLatest(updateQueries);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const unlisten = client.conversations.listen(conversationSlug, {
+      onTyping: (isTyping) => {
+        onTypingRef.current?.(isTyping);
+      },
+      onReply: (params) => {
+        onReplyRef.current?.(params);
+        if (updateQueriesRef.current) {
+          queryClient.setQueryData(["conversation", conversationSlug], (old: ConversationDetails) => ({
+            ...old,
+            messages: [...old.messages, params.message],
+          }));
+        }
+      },
+      onSubjectChanged: (subject) => {
+        onSubjectChangedRef.current?.(subject);
+        if (updateQueriesRef.current) {
+          queryClient.setQueryData(["conversation", conversationSlug], (old: ConversationDetails) => ({
+            ...old,
+            subject,
+          }));
+        }
+      },
+    });
+
+    return unlisten;
+  }, [conversationSlug, client, queryClient]);
 };

@@ -70,7 +70,7 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
   await triggerEvent(
     "conversations/auto-response.create",
     { messageId: userMessage.id, tools },
-    { sleepSeconds: 5 * 60 },
+    // { sleepSeconds: 5 * 60 },
   );
 
   return corsResponse({
