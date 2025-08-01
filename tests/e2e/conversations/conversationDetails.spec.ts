@@ -23,8 +23,8 @@ test.describe("Conversation details", () => {
     await expect(page.locator("[data-message-item]").first()).toBeVisible();
 
     // Verify that the sidebar shows expected sections
-    await expect(page.locator("h3:has-text(\"Conversation\")")).toBeVisible();
-    await expect(page.locator("h3:has-text(\"Customer\")")).toBeVisible();
+    await expect(page.locator("h3:text-is(\"Conversation\")")).toBeVisible();
+    await expect(page.locator("h3:text-is(\"Customer\")")).toBeVisible();
 
     // Test navigating to the next conversation if controls are available
     const previousButton = page.locator('button:has(svg.lucide-chevron-left)');
