@@ -4,6 +4,10 @@ import { assertDefined } from "@/components/utils/assert";
 import { getMailbox } from "@/lib/data/mailbox";
 
 export async function POST(request: NextRequest) {
+  if (env.NODE_ENV !== "development") {
+    return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+  }
+
   const body = await request.json();
   const mailbox = assertDefined(await getMailbox());
 

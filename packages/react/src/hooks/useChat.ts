@@ -87,19 +87,27 @@ export const useRealtimeEvents = (
       onReply: (params) => {
         onReplyRef.current?.(params);
         if (updateQueriesRef.current) {
-          queryClient.setQueryData(["conversation", conversationSlug], (old: ConversationDetails) => ({
-            ...old,
-            messages: [...old.messages, params.message],
-          }));
+          queryClient.setQueryData(["conversation", conversationSlug], (old: ConversationDetails | undefined) =>
+            old
+              ? {
+                  ...old,
+                  messages: [...old.messages, params.message],
+                }
+              : old,
+          );
         }
       },
       onSubjectChanged: (subject) => {
         onSubjectChangedRef.current?.(subject);
         if (updateQueriesRef.current) {
-          queryClient.setQueryData(["conversation", conversationSlug], (old: ConversationDetails) => ({
-            ...old,
-            subject,
-          }));
+          queryClient.setQueryData(["conversation", conversationSlug], (old: ConversationDetails | undefined) =>
+            old
+              ? {
+                  ...old,
+                  subject,
+                }
+              : old,
+          );
         }
       },
     });
