@@ -80,8 +80,8 @@ export const ChatView = ({ conversation }: { conversation: ConversationDetails }
 
   useEffect(() => {
     const unlisten = client.conversations.listen(conversation.slug, {
-      onReply: (message) => {
-        setMessages((prev) => [...prev, message]);
+      onReply: ({ aiMessage }) => {
+        setMessages((prev) => [...prev, aiMessage]);
       },
       onTyping: (isTyping) => {
         setIsTyping(isTyping);
