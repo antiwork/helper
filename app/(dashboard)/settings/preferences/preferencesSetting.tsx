@@ -5,7 +5,7 @@ import MailboxNameSetting from "./mailboxNameSetting";
 
 const PreferencesSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="preferences-section">
       {mailbox ? (
         <>
           <MailboxNameSetting mailbox={mailbox} />
