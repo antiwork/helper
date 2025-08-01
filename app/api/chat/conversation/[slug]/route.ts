@@ -1,6 +1,7 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import { ConversationDetails, updateConversationParamsSchema, UpdateConversationResult } from "@helperai/client";
+import { getCustomerFilter } from "@/app/api/chat/customerFilter";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata } from "@/db/schema";
@@ -16,11 +17,11 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
   const url = new URL(request.url);
   const markRead = url.searchParams.get("markRead") !== "false";
 
-  const whereCondition = conversationMatcher(slug, session);
-  if (!whereCondition) return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
+  const customerFilter = getCustomerFilter(session);
+  if (!customerFilter) return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
 
   const conversation = await db.query.conversations.findFirst({
-    where: whereCondition,
+    where: and(eq(conversations.slug, slug), customerFilter),
     with: {
       messages: {
         where: inArray(conversationMessages.role, ["user", "ai_assistant", "staff"]),
@@ -106,10 +107,13 @@ export const PATCH = withWidgetAuth<{ slug: string }>(async ({ context: { params
     return corsResponse({ error: "markRead parameter is required" }, { status: 400 });
   }
 
-  const whereCondition = conversationMatcher(slug, session);
-  if (!whereCondition) return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
+  const customerFilter = getCustomerFilter(session);
+  if (!customerFilter) return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
 
-  const conversation = await db.query.conversations.findFirst({ columns: { id: true }, where: whereCondition });
+  const conversation = await db.query.conversations.findFirst({
+    columns: { id: true },
+    where: and(eq(conversations.slug, slug), customerFilter),
+  });
 
   if (!conversation) {
     return corsResponse({ error: "Conversation not found" }, { status: 404 });
@@ -124,14 +128,4 @@ const getStaffName = async (userId: string | null) => {
   if (!userId) return null;
   const user = await getBasicProfileById(userId);
   return user ? getFirstName(user) : null;
-};
-
-const conversationMatcher = (slug: string, session: any) => {
-  let baseCondition;
-  if (session.isAnonymous && session.anonymousSessionId) {
-    baseCondition = eq(conversations.anonymousSessionId, session.anonymousSessionId);
-  } else if (session.email) {
-    baseCondition = eq(conversations.emailFrom, session.email);
-  }
-  return baseCondition ? and(eq(conversations.slug, slug), baseCondition) : null;
 };

@@ -140,13 +140,11 @@ const events = {
 export type EventName = keyof typeof events;
 export type EventData<T extends EventName> = z.infer<(typeof events)[T]["data"]>;
 
-export const triggerEvent = <T extends EventName>(
+export const triggerEvent = async <T extends EventName>(
   event: T,
   data: EventData<T>,
   { sleepSeconds = 0 }: { sleepSeconds?: number } = {},
 ) => {
   const payloads = events[event].jobs.map((job) => ({ event, job, data: superjson.serialize(data) }));
-  return db.execute(
-    sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`,
-  );
+  await db.execute(sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`);
 };

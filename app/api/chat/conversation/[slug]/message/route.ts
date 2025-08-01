@@ -1,32 +1,22 @@
 import { and, eq } from "drizzle-orm";
+import { getCustomerFilter } from "@/app/api/chat/customerFilter";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
-import { createUserMessage } from "@/lib/ai/chat";
-import { validateAttachments } from "@/lib/shared/attachmentValidation";
-import { triggerEvent } from "@/jobs/trigger";
-import { WidgetSessionPayload } from "@/lib/widgetSession";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
+import { triggerEvent } from "@/jobs/trigger";
+import { createUserMessage } from "@/lib/ai/chat";
+import { validateAttachments } from "@/lib/shared/attachmentValidation";
 
 export const maxDuration = 60;
 
 interface MessageRequestBody {
   content: string;
-  attachments?: Array<{
+  attachments?: {
     name?: string;
     url: string;
     contentType?: string;
-  }>;
+  }[];
 }
-
-const conversationMatcher = (slug: string, session: WidgetSessionPayload) => {
-  let baseCondition;
-  if (session.isAnonymous && session.anonymousSessionId) {
-    baseCondition = eq(conversations.anonymousSessionId, session.anonymousSessionId);
-  } else if (!session.isAnonymous && session.email) {
-    baseCondition = eq(conversations.emailFrom, session.email);
-  }
-  return baseCondition ? and(eq(conversations.slug, slug), baseCondition) : null;
-};
 
 export const OPTIONS = () => corsOptions("POST");
 
@@ -38,10 +28,12 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
     return corsResponse({ error: "Content is required" }, { status: 400 });
   }
 
-  const whereCondition = conversationMatcher(slug, session);
-  if (!whereCondition) return corsResponse({ error: "Not authorized - Invalid session" }, { status: 401 });
+  const customerFilter = getCustomerFilter(session);
+  if (!customerFilter) return corsResponse({ error: "Not authorized - Invalid session" }, { status: 401 });
 
-  const conversation = await db.query.conversations.findFirst({ where: whereCondition });
+  const conversation = await db.query.conversations.findFirst({
+    where: and(eq(conversations.slug, slug), customerFilter),
+  });
   if (!conversation) {
     return corsResponse({ error: "Conversation not found" }, { status: 404 });
   }
@@ -66,14 +58,12 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
       return corsResponse({ error: `Attachment ${attachment.name || "unknown"} is missing URL` }, { status: 400 });
     }
 
-    const commaIndex = attachment.url.indexOf(",");
-    if (commaIndex === -1) {
-      return corsResponse({ error: `Attachment ${attachment.name || "unknown"} has invalid URL format` }, { status: 400 });
-    }
-
-    const base64Data = attachment.url.substring(commaIndex + 1);
+    const base64Data = attachment.url.split(",")[1];
     if (!base64Data) {
-      return corsResponse({ error: `Attachment ${attachment.name || "unknown"} has invalid URL format` }, { status: 400 });
+      return corsResponse(
+        { error: `Attachment ${attachment.name || "unknown"} has invalid URL format` },
+        { status: 400 },
+      );
     }
 
     attachmentData.push({
@@ -83,12 +73,7 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
     });
   }
 
-  const userMessage = await createUserMessage(
-    conversation.id,
-    userEmail,
-    content,
-    attachmentData,
-  );
+  const userMessage = await createUserMessage(conversation.id, userEmail, content, attachmentData);
 
   await triggerEvent("conversations/auto-response.create", { messageId: userMessage.id });
 

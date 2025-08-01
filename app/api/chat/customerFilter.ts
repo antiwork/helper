@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
 import { conversations } from "@/db/schema";
+import { WidgetSessionPayload } from "@/lib/widgetSession";
 
-export function getCustomerFilter(session: { isAnonymous: boolean; anonymousSessionId?: string; email?: string }) {
+export function getCustomerFilter(session: WidgetSessionPayload) {
   if (session.isAnonymous && session.anonymousSessionId) {
     return eq(conversations.anonymousSessionId, session.anonymousSessionId);
   } else if (session.email) {
@@ -10,11 +11,7 @@ export function getCustomerFilter(session: { isAnonymous: boolean; anonymousSess
   return null;
 }
 
-export function getCustomerFilterForSearch(session: {
-  isAnonymous: boolean;
-  anonymousSessionId?: string;
-  email?: string;
-}) {
+export function getCustomerFilterForSearch(session: WidgetSessionPayload) {
   if (session.isAnonymous && session.anonymousSessionId) {
     return { anonymousSessionId: session.anonymousSessionId };
   } else if (session.email) {

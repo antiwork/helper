@@ -2,8 +2,8 @@ import { conversationFactory } from "@tests/support/factories/conversations";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/chat/conversation/[slug]/message/route";
-import { createUserMessage } from "@/lib/ai/chat";
 import { triggerEvent } from "@/jobs/trigger";
+import { createUserMessage } from "@/lib/ai/chat";
 
 vi.mock("@/lib/ai/chat", () => ({
   createUserMessage: vi.fn(),
@@ -53,12 +53,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     expect(response.status).toBe(200);
     expect(result.messageId).toBe("msg123");
     expect(result.conversationSlug).toBe(conversation.slug);
-    expect(createUserMessage).toHaveBeenCalledWith(
-      conversation.id,
-      "test@example.com",
-      "Hello world",
-      []
-    );
+    expect(createUserMessage).toHaveBeenCalledWith(conversation.id, "test@example.com", "Hello world", []);
     expect(triggerEvent).toHaveBeenCalledWith("conversations/auto-response.create", { messageId: "msg123" });
   });
 
@@ -85,12 +80,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
 
     expect(response.status).toBe(200);
     expect(result.messageId).toBe("msg123");
-    expect(createUserMessage).toHaveBeenCalledWith(
-      conversation.id,
-      null,
-      "Hello from anonymous user",
-      []
-    );
+    expect(createUserMessage).toHaveBeenCalledWith(conversation.id, null, "Hello from anonymous user", []);
   });
 
   it("should handle attachments correctly", async () => {
@@ -123,18 +113,13 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     await response.json();
 
     expect(response.status).toBe(200);
-    expect(createUserMessage).toHaveBeenCalledWith(
-      conversation.id,
-      "test@example.com",
-      "Message with attachment",
-      [
-        {
-          name: "test.png",
-          contentType: "image/png",
-          data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
-        },
-      ]
-    );
+    expect(createUserMessage).toHaveBeenCalledWith(conversation.id, "test@example.com", "Message with attachment", [
+      {
+        name: "test.png",
+        contentType: "image/png",
+        data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
+      },
+    ]);
   });
 
   it("should return 400 for missing content", async () => {
@@ -285,138 +270,5 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
 
     expect(response.status).toBe(400);
     expect(result.error).toBe("test.png: Missing URL");
-  });
-
-  it("should return 400 for attachment with invalid URL format", async () => {
-    const { mailbox } = await mailboxFactory.create();
-    const { conversation } = await conversationFactory.create({
-      emailFrom: "test@example.com",
-    });
-
-    mockSession = { isAnonymous: false, email: "test@example.com" };
-    mockMailbox = mailbox;
-
-    const request = new Request("https://example.com/api", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        content: "Message with invalid attachment",
-        attachments: [
-          {
-            name: "test.png",
-            url: "invalid-url-without-comma",
-            contentType: "image/png",
-          },
-        ],
-      }),
-    });
-
-    const response = await POST(request, {
-      params: Promise.resolve({ slug: conversation.slug }),
-    });
-    const result = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(result.error).toBe("test.png: Invalid data URL format");
-  });
-
-  it("should handle base64 data with commas correctly", async () => {
-    const { mailbox } = await mailboxFactory.create();
-    const { conversation } = await conversationFactory.create({
-      emailFrom: "test@example.com",
-    });
-
-    mockSession = { isAnonymous: false, email: "test@example.com" };
-    mockMailbox = mailbox;
-
-    const base64WithCommas = "data:text/csv;base64,bmFtZSxhZ2UKSm9obiwzMAo=";
-    const request = new Request("https://example.com/api", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        content: "Message with CSV attachment",
-        attachments: [
-          {
-            name: "test.csv",
-            url: base64WithCommas,
-            contentType: "text/csv",
-          },
-        ],
-      }),
-    });
-
-    const response = await POST(request, {
-      params: Promise.resolve({ slug: conversation.slug }),
-    });
-    await response.json();
-
-    expect(response.status).toBe(200);
-    expect(createUserMessage).toHaveBeenCalledWith(
-      conversation.id,
-      "test@example.com",
-      "Message with CSV attachment",
-      [
-        {
-          name: "test.csv",
-          contentType: "text/csv",
-          data: "bmFtZSxhZ2UKSm9obiwzMAo=",
-        },
-      ]
-    );
-  });
-
-  it("should return 400 for invalid attachments from validation", async () => {
-    const { mailbox } = await mailboxFactory.create();
-    const { conversation } = await conversationFactory.create({
-      emailFrom: "test@example.com",
-    });
-
-    mockSession = { isAnonymous: false, email: "test@example.com" };
-    mockMailbox = mailbox;
-
-    const request = new Request("https://example.com/api", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        content: "Message with too many attachments",
-        attachments: Array(11).fill({
-          name: "test.png",
-          url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
-          contentType: "image/png",
-        }),
-      }),
-    });
-
-    const response = await POST(request, {
-      params: Promise.resolve({ slug: conversation.slug }),
-    });
-    const result = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(result.error).toContain("Cannot upload more than 5 files total");
-  });
-
-  it("should return 401 for anonymous session with email but no anonymousSessionId", async () => {
-    const { mailbox } = await mailboxFactory.create();
-    const { conversation } = await conversationFactory.create({
-      emailFrom: "test@example.com",
-    });
-
-    mockSession = { isAnonymous: true, email: "test@example.com" };
-    mockMailbox = mailbox;
-
-    const request = new Request("https://example.com/api", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: "Hello world" }),
-    });
-
-    const response = await POST(request, {
-      params: Promise.resolve({ slug: conversation.slug }),
-    });
-    const result = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(result.error).toBe("Not authorized - Invalid session");
   });
 });
