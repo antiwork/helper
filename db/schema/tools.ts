@@ -35,6 +35,7 @@ export const tools = pgTable(
     parameters: jsonb().default("[]").$type<ToolParameters>(),
     authenticationMethod: text().notNull().default("none").$type<ToolAuthenticationMethod>(),
     authenticationToken: encryptedField(),
+    authenticationTokenPlaintext: text("authentication_token_plaintext"),
     toolApiId: bigint({ mode: "number" }),
     enabled: boolean().notNull().default(true),
     availableInChat: boolean().notNull().default(false),

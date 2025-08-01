@@ -16,6 +16,7 @@ export const conversations = pgTable(
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     emailFrom: text(),
     subject: encryptedField("encrypted_subject"),
+    subjectPlaintext: text("subject_plaintext"),
     status: text().$type<"open" | "closed" | "spam">(),
     unused_mailboxId: bigint("mailbox_id", { mode: "number" })
       .notNull()

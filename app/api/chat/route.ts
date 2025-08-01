@@ -129,7 +129,10 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
         );
       } else if (isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) {
         waitUntil(
-          db.update(conversations).set({ subject: message.content }).where(eq(conversations.id, conversation.id)),
+          db
+            .update(conversations)
+            .set({ subject: message.content, subjectPlaintext: message.content })
+            .where(eq(conversations.id, conversation.id)),
         );
       }
     },
