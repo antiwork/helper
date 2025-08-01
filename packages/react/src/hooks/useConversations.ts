@@ -89,13 +89,13 @@ export const useCreateConversation = (
 
 export const useUpdateConversation = (
   mutationOptions?: Partial<
-    UseMutationOptions<UpdateConversationResult, Error, { slug: string; params: UpdateConversationParams }>
+    UseMutationOptions<UpdateConversationResult, Error, UpdateConversationParams & { slug: string }>
   >,
 ) => {
   const { client, queryClient } = useHelperClient();
 
   return useMutation({
-    mutationFn: ({ slug, params }: { slug: string; params: UpdateConversationParams }) =>
+    mutationFn: ({ slug, ...params }: UpdateConversationParams & { slug: string }) =>
       client.conversations.update(slug, params),
     onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ["conversation", variables.slug] });
@@ -108,13 +108,13 @@ export const useUpdateConversation = (
 
 export const useCreateMessage = (
   mutationOptions?: Partial<
-    UseMutationOptions<CreateMessageResult, Error, { conversationSlug: string; params: CreateMessageParams }>
+    UseMutationOptions<CreateMessageResult, Error, CreateMessageParams & { conversationSlug: string }>
   >,
 ) => {
   const { client, queryClient } = useHelperClient();
 
   return useMutation({
-    mutationFn: ({ conversationSlug, params }: { conversationSlug: string; params: CreateMessageParams }) =>
+    mutationFn: ({ conversationSlug, ...params }: CreateMessageParams & { conversationSlug: string }) =>
       client.messages.create(conversationSlug, params),
     onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ["conversation", variables.conversationSlug] });

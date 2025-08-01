@@ -4,11 +4,14 @@ export const createMessageParamsSchema = z.object({
   content: z.string(),
   attachments: z
     .array(
-      z.object({
-        name: z.string(),
-        base64Url: z.string(),
-        contentType: z.string(),
-      }),
+      z.union([
+        z.instanceof(File),
+        z.object({
+          name: z.string(),
+          base64Url: z.string(),
+          contentType: z.string(),
+        }),
+      ]),
     )
     .optional(),
 });

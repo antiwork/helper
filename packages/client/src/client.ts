@@ -178,18 +178,42 @@ export class HelperClient {
   };
 
   readonly messages = {
-    create: (conversationSlug: string, params: CreateMessageParams): Promise<CreateMessageResult> =>
-      this.request<CreateMessageResult>(`/api/chat/conversation/${conversationSlug}/message`, {
+    create: async (conversationSlug: string, params: CreateMessageParams): Promise<CreateMessageResult> => {
+      const prepareAttachment = (attachment: File | { name: string; base64Url: string; contentType: string }) => {
+        if (attachment instanceof File) {
+          return new Promise<{ name: string; contentType: string; base64Url: string }>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const result = reader.result;
+              if (typeof result === "string") {
+                resolve({
+                  name: attachment.name,
+                  contentType: attachment.type,
+                  base64Url: result,
+                });
+              } else {
+                reject(new Error("Failed to read file as data URL"));
+              }
+            };
+            reader.onerror = () => reject(new Error("Failed to read file"));
+            reader.readAsDataURL(attachment);
+          });
+        }
+        return {
+          name: attachment.name,
+          url: attachment.base64Url,
+          contentType: attachment.contentType,
+        };
+      };
+
+      return this.request<CreateMessageResult>(`/api/chat/conversation/${conversationSlug}/message`, {
         method: "POST",
         body: JSON.stringify({
           ...params,
-          attachments: params.attachments?.map((attachment) => ({
-            name: attachment.name,
-            url: attachment.base64Url,
-            contentType: attachment.contentType,
-          })),
+          attachments: await Promise.all((params.attachments ?? []).map(prepareAttachment)),
         }),
-      }),
+      });
+    },
   };
 
   readonly chat = {
