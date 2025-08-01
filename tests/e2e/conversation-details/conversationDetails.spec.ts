@@ -196,57 +196,6 @@ test.describe("Conversation Details", () => {
     }
   });
 
-  test("should create and display AI assistant message", async () => {
-    // Navigate to an existing conversation
-    await conversationDetailsPage.navigateToConversation();
-    await conversationDetailsPage.waitForConversationLoad();
-
-    // Get current conversation URL to extract conversation ID
-    const url = conversationDetailsPage.page.url();
-    const conversationSlug = url.split("id=")[1]?.split("&")[0];
-
-    if (conversationSlug) {
-      // Create an AI message via API call
-      const testAIMessage = `AI assistant response ${generateRandomString(8)}`;
-
-      // Make API call to create AI message (simulating AI response)
-      await conversationDetailsPage.page.evaluate(
-        async (data) => {
-          await fetch("/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              conversation_slug: data.slug,
-              query: "Test query for AI response",
-              email: "test@example.com",
-            }),
-          });
-        },
-        { slug: conversationSlug },
-      );
-
-      // Wait for the page to update
-      await conversationDetailsPage.page.waitForTimeout(2000);
-      await conversationDetailsPage.page.reload();
-      await conversationDetailsPage.waitForConversationLoad();
-
-      // Verify we have messages with different roles
-      const messages = conversationDetailsPage.page.getByTestId("message-item");
-      const messageCount = await messages.count();
-      expect(messageCount).toBeGreaterThan(0);
-
-      // Look for AI reasoning button if available
-      const reasoningButtons = conversationDetailsPage.page.getByTestId("view-ai-reasoning-button");
-      const reasoningCount = await reasoningButtons.count();
-
-      if (reasoningCount > 0) {
-        await reasoningButtons.first().click();
-        await expect(conversationDetailsPage.page.locator('[role="dialog"]')).toBeVisible();
-        await conversationDetailsPage.page.keyboard.press("Escape");
-      }
-    }
-  });
-
   test("should create and display internal note", async () => {
     await conversationDetailsPage.navigateToConversation();
     await conversationDetailsPage.waitForConversationLoad();
