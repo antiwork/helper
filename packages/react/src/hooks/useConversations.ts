@@ -7,6 +7,8 @@ import type {
   ConversationsResult,
   CreateConversationParams,
   CreateConversationResult,
+  CreateMessageParams,
+  CreateMessageResult,
   UnreadConversationsCountResult,
   UpdateConversationParams,
   UpdateConversationResult,
@@ -98,6 +100,24 @@ export const useUpdateConversation = (
     onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ["conversation", variables.slug] });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      mutationOptions?.onSuccess?.(data, variables, context);
+    },
+    ...mutationOptions,
+  });
+};
+
+export const useCreateMessage = (
+  mutationOptions?: Partial<
+    UseMutationOptions<CreateMessageResult, Error, { conversationSlug: string; params: CreateMessageParams }>
+  >,
+) => {
+  const { client, queryClient } = useHelperClient();
+
+  return useMutation({
+    mutationFn: ({ conversationSlug, params }: { conversationSlug: string; params: CreateMessageParams }) =>
+      client.messages.create(conversationSlug, params),
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({ queryKey: ["conversation", variables.conversationSlug] });
       mutationOptions?.onSuccess?.(data, variables, context);
     },
     ...mutationOptions,

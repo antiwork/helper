@@ -5,6 +5,8 @@ import {
   ConversationsResult,
   CreateConversationParams,
   CreateConversationResult,
+  CreateMessageParams,
+  CreateMessageResult,
   CreateSessionResult,
   HelperTool,
   Message,
@@ -173,6 +175,21 @@ export class HelperClient {
         promise.then((unlisten) => unlisten());
       };
     },
+  };
+
+  readonly messages = {
+    create: (conversationSlug: string, params: CreateMessageParams): Promise<CreateMessageResult> =>
+      this.request<CreateMessageResult>(`/api/chat/conversation/${conversationSlug}/message`, {
+        method: "POST",
+        body: JSON.stringify({
+          ...params,
+          attachments: params.attachments?.map((attachment) => ({
+            name: attachment.name,
+            url: attachment.base64Url,
+            contentType: attachment.contentType,
+          })),
+        }),
+      }),
   };
 
   readonly chat = {

@@ -1,5 +1,25 @@
 import { z } from "zod";
 
+export const createMessageParamsSchema = z.object({
+  content: z.string(),
+  attachments: z
+    .array(
+      z.object({
+        name: z.string(),
+        base64Url: z.string(),
+        contentType: z.string(),
+      }),
+    )
+    .optional(),
+});
+export type CreateMessageParams = z.infer<typeof createMessageParamsSchema>;
+
+export const createMessageResultSchema = z.object({
+  messageId: z.string(),
+  conversationSlug: z.string(),
+});
+export type CreateMessageResult = z.infer<typeof createMessageResultSchema>;
+
 export type HelperTool<Args = any, Result = any> = {
   description?: string;
   parameters: Record<string, { type: "string" | "number"; description?: string; optional?: boolean }>;
