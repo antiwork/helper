@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
-import { ConversationDetails, updateConversationParamsSchema, UpdateConversationResult } from "@helperai/client";
+import { ConversationDetails, updateConversationBodySchema, UpdateConversationResult } from "@helperai/client";
 import { getCustomerFilter } from "@/app/api/chat/customerFilter";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
@@ -102,7 +102,7 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
 export const PATCH = withWidgetAuth<{ slug: string }>(async ({ context: { params }, request }, { session }) => {
   const { slug } = await params;
 
-  const { error } = updateConversationParamsSchema.safeParse(await request.json());
+  const { error } = updateConversationBodySchema.safeParse(await request.json());
   if (error) {
     return corsResponse({ error: "markRead parameter is required" }, { status: 400 });
   }

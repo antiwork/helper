@@ -4,8 +4,10 @@ import {
   ConversationDetails,
   ConversationsResult,
   CreateConversationParams,
+  CreateConversationRequestBody,
   CreateConversationResult,
   CreateMessageParams,
+  CreateMessageRequestBody,
   CreateMessageResult,
   CreateSessionResult,
   HelperTool,
@@ -13,6 +15,7 @@ import {
   SessionParams,
   UnreadConversationsCountResult,
   UpdateConversationParams,
+  UpdateConversationRequestBody,
   UpdateConversationResult,
 } from "./types";
 
@@ -105,7 +108,7 @@ export class HelperClient {
     create: async ({ message, ...params }: CreateConversationParams = {}): Promise<CreateConversationResult> => {
       const conversation = await this.request<CreateConversationResult>("/api/chat/conversation", {
         method: "POST",
-        body: JSON.stringify(params),
+        body: JSON.stringify(params satisfies CreateConversationRequestBody),
       });
 
       if (message) {
@@ -118,7 +121,7 @@ export class HelperClient {
     update: (slug: string, params: UpdateConversationParams): Promise<UpdateConversationResult> =>
       this.request<UpdateConversationResult>(`/api/chat/conversation/${slug}`, {
         method: "PATCH",
-        body: JSON.stringify(params),
+        body: JSON.stringify(params satisfies UpdateConversationRequestBody),
       }),
 
     listen: (
@@ -220,7 +223,7 @@ export class HelperClient {
         body: JSON.stringify({
           ...params,
           attachments: await Promise.all((params.attachments ?? []).map(prepareAttachment)),
-        }),
+        } satisfies CreateMessageRequestBody),
       });
     },
   };

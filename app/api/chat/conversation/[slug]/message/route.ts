@@ -1,4 +1,5 @@
 import { and, eq } from "drizzle-orm";
+import { createMessageBodySchema } from "@helperai/client";
 import { getCustomerFilter } from "@/app/api/chat/customerFilter";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
@@ -9,20 +10,11 @@ import { validateAttachments } from "@/lib/shared/attachmentValidation";
 
 export const maxDuration = 60;
 
-interface MessageRequestBody {
-  content: string;
-  attachments?: {
-    name?: string;
-    url: string;
-    contentType?: string;
-  }[];
-}
-
 export const OPTIONS = () => corsOptions("POST");
 
 export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: { params } }, { session }) => {
   const { slug } = await params;
-  const { content, attachments = [] }: MessageRequestBody = await request.json();
+  const { content, attachments = [] } = createMessageBodySchema.parse(await request.json());
 
   if (!content || content.trim().length === 0) {
     return corsResponse({ error: "Content is required" }, { status: 400 });
