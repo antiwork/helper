@@ -58,16 +58,17 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
   return (
     <div className="relative">
       <div className="absolute top-2 right-4 z-10">
-        <SavingIndicator state={savingIndicator.state} />
+        <SavingIndicator state={savingIndicator.state} data-testid="saving-indicator" />
       </div>
       <SwitchSectionWrapper
         title="VIP Customers"
         description="Configure settings for high-value customers"
         initialSwitchChecked={isEnabled}
         onSwitchChange={setIsEnabled}
+        data-testid="vip-customers-section"
       >
         {isEnabled && (
-          <div className="space-y-8">
+          <div className="space-y-8" data-testid="vip-settings-content">
             <div className="space-y-4">
               <div className="max-w-2xl">
                 <Label htmlFor="vipThreshold" className="text-base font-medium">
@@ -85,6 +86,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
                   value={threshold}
                   onChange={(e) => setThreshold(e.target.value)}
                   className="mt-2 max-w-sm"
+                  data-testid="vip-threshold-input"
                 />
               </div>
 
@@ -103,6 +105,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
                     step="1"
                     value={responseHours}
                     onChange={(e) => setResponseHours(e.target.value)}
+                    data-testid="response-hours-input"
                   />
                   <span className="text-sm text-muted-foreground whitespace-nowrap">hours</span>
                 </div>
@@ -119,16 +122,17 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
                 <p className="mt-2 text-sm text-muted-foreground">
                   Choose a Slack channel to receive notifications about VIP customer messages
                 </p>
-                <div className="mt-4">
+                <div className="mt-4" data-testid="slack-notifications-section">
                   {mailbox.slackConnected ? (
                     <SlackChannels
                       id="vipChannel"
                       selectedChannelId={mailbox.vipChannelId ?? undefined}
                       mailbox={mailbox}
                       onChange={(vipChannelId) => update({ vipChannelId })}
+                      data-testid="slack-channels-selector"
                     />
                   ) : (
-                    <Alert>
+                    <Alert data-testid="slack-integration-alert">
                       <AlertDescription>
                         Slack integration is required for VIP channel notifications. Please configure Slack in the
                         Integrations tab.
