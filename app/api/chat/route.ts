@@ -5,7 +5,7 @@ import { ReadPageToolConfig } from "@helperai/sdk";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
-import { ClientProvidedTool, createUserMessage, respondWithAI } from "@/lib/ai/chat";
+import { createUserMessage, respondWithAI } from "@/lib/ai/chat";
 import {
   CHAT_CONVERSATION_SUBJECT,
   generateConversationSubject,
@@ -16,6 +16,7 @@ import { publishToRealtime } from "@/lib/realtime/publish";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
 import { createClient } from "@/lib/supabase/server";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
+import { ToolRequestBody } from "@/packages/client/dist";
 
 export const maxDuration = 60;
 
@@ -26,7 +27,7 @@ interface ChatRequestBody {
   readPageTool: ReadPageToolConfig | null;
   guideEnabled: boolean;
   isToolResult?: boolean;
-  tools?: ClientProvidedTool[];
+  tools?: Record<string, ToolRequestBody>;
 }
 
 const getConversation = async (conversationSlug: string, session: WidgetSessionPayload) => {

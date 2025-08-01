@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyHmac } from "@helperai/client/auth";
 import { assertDefined } from "@/components/utils/assert";
 import { getMailbox } from "@/lib/data/mailbox";
+import { env } from "@/lib/env";
 
 export async function POST(request: NextRequest) {
   if (env.NODE_ENV !== "development") {
