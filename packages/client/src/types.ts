@@ -15,7 +15,7 @@ export type HelperServerTool = HelperToolBase & {
 
 export type HelperTool<Args = any, Result = any> = HelperClientTool<Args, Result> | HelperServerTool;
 
-export const toolSchema = z.object({
+export const toolBodySchema = z.object({
   description: z.string().optional(),
   parameters: z.record(
     z.string(),
@@ -27,6 +27,7 @@ export const toolSchema = z.object({
   ),
   serverRequestUrl: z.string().optional(),
 });
+export type ToolRequestBody = z.infer<typeof toolBodySchema>;
 
 export const createMessageBodySchema = z.object({
   content: z.string(),
@@ -39,7 +40,7 @@ export const createMessageBodySchema = z.object({
       }),
     )
     .optional(),
-  tools: z.record(z.string(), toolSchema).optional(),
+  tools: z.record(z.string(), toolBodySchema).optional(),
 });
 export type CreateMessageRequestBody = z.infer<typeof createMessageBodySchema>;
 export type CreateMessageParams = Omit<CreateMessageRequestBody, "attachments" | "tools"> & {

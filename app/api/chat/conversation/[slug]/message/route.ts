@@ -14,7 +14,7 @@ export const OPTIONS = () => corsOptions("POST");
 
 export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: { params } }, { session }) => {
   const { slug } = await params;
-  const { content, attachments = [] } = createMessageBodySchema.parse(await request.json());
+  const { content, attachments = [], tools } = createMessageBodySchema.parse(await request.json());
 
   if (!content || content.trim().length === 0) {
     return corsResponse({ error: "Content is required" }, { status: 400 });
@@ -67,7 +67,11 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
 
   const userMessage = await createUserMessage(conversation.id, userEmail, content, attachmentData);
 
-  await triggerEvent("conversations/auto-response.create", { messageId: userMessage.id }, { sleepSeconds: 5 * 60 });
+  await triggerEvent(
+    "conversations/auto-response.create",
+    { messageId: userMessage.id, tools },
+    { sleepSeconds: 5 * 60 },
+  );
 
   return corsResponse({
     messageId: userMessage.id,

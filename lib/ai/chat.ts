@@ -20,6 +20,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { remark } from "remark";
 import remarkHtml from "remark-html";
 import { z } from "zod";
+import { ToolRequestBody } from "@helperai/client";
 import { ReadPageToolConfig } from "@helperai/sdk";
 import { db } from "@/db/client";
 import { conversationMessages, files, MessageMetadata } from "@/db/schema";
@@ -351,7 +352,7 @@ export const generateAIResponse = async ({
   seed?: number | undefined;
   evaluation?: boolean;
   dataStream?: DataStreamWriter;
-  tools?: ClientProvidedTool[];
+  tools?: Record<string, ToolRequestBody>;
 }) => {
   const lastMessage = messages.findLast((m: Message) => m.role === "user");
   const query = lastMessage?.content || "";
@@ -372,7 +373,7 @@ export const generateAIResponse = async ({
   }
 
   if (clientProvidedTools) {
-    clientProvidedTools.forEach((tool) => {
+    Object.entries(clientProvidedTools).forEach(([toolName, tool]) => {
       const toolDefinition: Tool = {
         description: tool.description,
         parameters: z.object(
@@ -396,7 +397,7 @@ export const generateAIResponse = async ({
           await callToolEndpoint(tool, email, params, mailbox);
       }
 
-      tools[tool.name] = toolDefinition;
+      tools[toolName] = toolDefinition;
     });
   }
 
@@ -562,15 +563,8 @@ const createAssistantMessage = (
   });
 };
 
-export interface ClientProvidedTool {
-  name: string;
-  description: string;
-  parameters: Record<string, { type: "string" | "number"; description?: string; optional?: boolean }>;
-  serverRequestUrl?: string;
-}
-
 const callToolEndpoint = async (
-  tool: ClientProvidedTool,
+  tool: ToolRequestBody,
   email: string | null,
   parameters: Record<string, any>,
   mailbox: Mailbox,
@@ -649,7 +643,7 @@ export const respondWithAI = async ({
   }) => void | Promise<void>;
   isHelperUser?: boolean;
   reasoningEnabled?: boolean;
-  tools?: ClientProvidedTool[];
+  tools?: Record<string, ToolRequestBody>;
 }) => {
   const previousMessages = await loadPreviousMessages(conversation.id, messageId);
   const messages = appendClientMessage({
@@ -847,7 +841,11 @@ const convertMarkdownToHtml = async (markdown: string): Promise<string> => {
   return result.toString();
 };
 
-export const generateDraftResponse = async (conversationId: number, mailbox: Mailbox) => {
+export const generateDraftResponse = async (
+  conversationId: number,
+  mailbox: Mailbox,
+  tools?: Record<string, ToolRequestBody>,
+) => {
   const lastUserMessage = await db.query.conversationMessages.findFirst({
     where: and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.role, "user")),
     orderBy: desc(conversationMessages.createdAt),
@@ -871,6 +869,7 @@ export const generateDraftResponse = async (conversationId: number, mailbox: Mai
     readPageTool: null,
     guideEnabled: false,
     addReasoning: false,
+    tools,
   });
   for await (const _ of result.textStream) {
     // awaiting result.text doesn't appear to work without this

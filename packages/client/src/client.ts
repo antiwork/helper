@@ -13,6 +13,7 @@ import {
   HelperTool,
   Message,
   SessionParams,
+  ToolRequestBody,
   UnreadConversationsCountResult,
   UpdateConversationParams,
   UpdateConversationRequestBody,
@@ -290,12 +291,16 @@ export class HelperClient {
           id,
           message: messages[messages.length - 1],
           conversationSlug: conversation.slug,
-          tools: Object.entries(tools).map(([name, tool]) => ({
-            name,
-            description: tool.description,
-            parameters: tool.parameters,
-            serverRequestUrl: "url" in tool ? tool.url : undefined,
-          })),
+          tools: Object.fromEntries(
+            Object.entries(tools).map(([name, tool]) => [
+              name,
+              {
+                description: tool.description,
+                parameters: tool.parameters,
+                serverRequestUrl: "url" in tool ? tool.url : undefined,
+              } satisfies ToolRequestBody,
+            ]),
+          ),
           requestBody,
         }),
         onToolCall: ({ toolCall }: { toolCall: { toolName: string; args: unknown } }) => {
