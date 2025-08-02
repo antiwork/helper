@@ -114,6 +114,7 @@ const createTool = (
   parameters: [...(operation.parameters || []).map(parseParameter), ...parseRequestBody(operation.requestBody)],
   authenticationMethod: "bearer_token",
   authenticationToken: apiToken,
+  authenticationTokenPlaintext: apiToken,
   enabled: true,
   availableInChat: false,
   availableInAnonymousChat: false,

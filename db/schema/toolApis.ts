@@ -16,7 +16,8 @@ const toolApis = pgTable(
       .$defaultFn(() => 0),
     baseUrl: text(),
     schema: text(),
-    authenticationToken: encryptedField(),
+    authenticationToken: encryptedField("encrypted_authentication_token"),
+    authenticationTokenPlaintext: text("authentication_token"),
   },
   (table) => [index("tool_apis_mailbox_id_idx").on(table.unused_mailboxId)],
 ).enableRLS();

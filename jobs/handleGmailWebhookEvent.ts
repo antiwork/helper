@@ -292,6 +292,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
             emailFrom: parsedEmailFrom.address,
             emailFromName: parsedEmailFrom.name,
             subject: parsedEmail.subject,
+            subjectPlaintext: parsedEmail.subject,
             status: shouldIgnore ? "closed" : "open",
             closedAt: shouldIgnore ? new Date() : null,
             conversationProvider: "gmail",
