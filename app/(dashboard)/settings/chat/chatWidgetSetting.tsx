@@ -290,7 +290,7 @@ ${NODE_HMAC_SAMPLE_CODE}
           </a>
         }
       >
-        <Tabs defaultValue="vanilla" className="w-full">
+        <Tabs defaultValue="vanilla" className="w-full" data-testid="widget-installation-tabs">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="vanilla">HTML/JavaScript</TabsTrigger>
             <TabsTrigger value="react">React/Next.js</TabsTrigger>
@@ -304,6 +304,7 @@ ${NODE_HMAC_SAMPLE_CODE}
                   <TooltipTrigger>
                     <Button
                       variant="subtle"
+                      data-testid="copy-ai-prompt-vanilla"
                       onClick={() => {
                         navigator.clipboard.writeText(plainJSPrompt);
                         setIsCopied(true);
@@ -446,6 +447,7 @@ ${WIDGET_SAMPLE_CODE}
                   <TooltipTrigger>
                     <Button
                       variant="subtle"
+                      data-testid="copy-ai-prompt-react"
                       onClick={() => {
                         navigator.clipboard.writeText(reactPrompt);
                         setIsCopied(true);
@@ -620,8 +622,12 @@ export default async function RootLayout({
             <div className="space-y-4">
               <div className="flex flex-col space-y-2">
                 <Label>Show chat icon for</Label>
-                <Select value={mode} onValueChange={(mode) => setMode(mode as WidgetMode)}>
-                  <SelectTrigger className="w-[350px]">
+                <Select
+                  value={mode}
+                  onValueChange={(mode) => setMode(mode as WidgetMode)}
+                  data-testid="chat-icon-visibility-select"
+                >
+                  <SelectTrigger className="w-[350px]" data-testid="chat-icon-visibility-select-trigger">
                     <SelectValue placeholder="Select when to show chat icon" />
                   </SelectTrigger>
                   <SelectContent>
@@ -641,6 +647,7 @@ export default async function RootLayout({
                     className="max-w-[200px]"
                     min="0"
                     step="1"
+                    data-testid="min-customer-value-input"
                   />
                 </div>
               )}
@@ -680,7 +687,11 @@ export default async function RootLayout({
           description="Automatically respond to emails as if the customer was using the chat widget."
         >
           <div className="space-y-4">
-            <Tabs value={autoRespond} onValueChange={(value) => setAutoRespond(value as "off" | "draft" | "reply")}>
+            <Tabs
+              value={autoRespond}
+              onValueChange={(value) => setAutoRespond(value as "off" | "draft" | "reply")}
+              data-testid="email-response-tabs"
+            >
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="off">Off</TabsTrigger>
                 <TabsTrigger value="draft">Draft</TabsTrigger>
@@ -697,7 +708,9 @@ export default async function RootLayout({
         </div>
       )}
 
-      <HelperWidgetScript host={typeof window !== "undefined" ? window.location.origin : ""} showToggleButton />
+      {showChatWidget && (
+        <HelperWidgetScript host={typeof window !== "undefined" ? window.location.origin : ""} showToggleButton />
+      )}
     </div>
   );
 };
