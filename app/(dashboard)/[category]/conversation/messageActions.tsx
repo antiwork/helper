@@ -462,6 +462,7 @@ export const MessageActions = () => {
         placeholder="Type your reply here..."
         defaultContent={initialMessageObject}
         editable={true}
+        data-testid="message-composer"
         onUpdate={(message, isEmpty) => {
           updateDraftedEmail({ message: isEmpty ? "" : message });
           if (!isEmpty && conversation?.slug) {

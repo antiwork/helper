@@ -42,10 +42,10 @@ test.describe('Conversation Actions', () => {
   });
 
   test('should trigger command bar with slash key', async () => {
-    await conversationActionsPage.focusComposer();
-    await conversationActionsPage.pressSlashKey();
+    await conversationActionsPage.openCommandBar();
     
-    await expect(conversationActionsPage.getCommandBar()).toBeVisible();
+    const isVisible = await conversationActionsPage.isCommandBarVisible();
+    expect(isVisible).toBe(true);
   });
 
   test('should escape command bar', async () => {

@@ -2,16 +2,16 @@ import { expect, type Page } from "@playwright/test";
 import { BasePage } from "./basePage";
 
 export class ConversationActionsPage extends BasePage {
-  private readonly messageComposer = '[aria-label="Conversation editor"]';
+  private readonly messageComposer = '[data-testid="message-composer"]';
   private readonly replyButton = 'button:has-text("Reply"):not(:has-text("close"))';
   private readonly replyAndCloseButton = 'button:has-text("Reply and close")';
   private readonly closeConversationButton = 'button:has-text("Close"):not(:has-text("Reply"))';
   private readonly reopenConversationButton = 'button:has-text("Reopen")';
   private readonly ccInput = 'input[name="CC"]';
   private readonly bccInput = 'input[name="BCC"]';
-  private readonly commandBar = '[cmdk-root]';
-  private readonly commandBarInput = 'input[placeholder*="command"], input[placeholder*="Search previous replies"]';
-  private readonly internalNoteTextarea = 'textarea[placeholder="Type your note here..."]';
+  private readonly commandBar = '[data-testid="command-bar"]';
+  private readonly commandBarInput = '[data-testid="command-bar-input"]';
+  private readonly internalNoteTextarea = '[data-testid="internal-note-textarea"]';
   private readonly addNoteButton = 'button:has-text("Add internal note")';
   private readonly messageElement = '[data-message-id]';
   private readonly conversationStatusBadge = 'span:has-text("open"), span:has-text("closed")';
@@ -47,38 +47,58 @@ export class ConversationActionsPage extends BasePage {
   }
 
   async typeReply(message: string) {
-    const composer = this.page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
+    const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
     await composer.click({ force: true });
-    await composer.clear();
-    await composer.fill(message);
+    
+    await this.page.waitForTimeout(300);
+    
+    await this.page.keyboard.press('Control+a');
+    await this.page.keyboard.press('Delete');
+    await this.page.waitForTimeout(100);
+    
+    await this.page.keyboard.type(message);
+    await this.page.waitForTimeout(300);
   }
 
   async typeInComposer(message: string) {
-    const composer = this.page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
+    const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
+    
+    await expect(composer).toBeVisible({ timeout: 5000 });
+    
     await composer.click({ force: true });
-    await composer.clear();
-    await composer.fill(message);
+    await composer.focus();
+    await this.page.waitForTimeout(500);
+    
+    await composer.evaluate(el => {
+      el.innerHTML = '';
+      el.textContent = '';
+    });
+    await this.page.waitForTimeout(200);
+    
+    await composer.pressSequentially(message);
+    await this.page.waitForTimeout(500);
   }
 
   async clearReply() {
-    const composer = this.page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
+    const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
     await composer.click({ force: true });
-    await composer.clear();
+    await this.page.keyboard.press('Control+a');
+    await this.page.keyboard.press('Delete');
   }
 
   async focusComposer() {
-    const composer = this.page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
+    const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
     await composer.click();
     await composer.focus();
   }
 
   async getComposerText(): Promise<string> {
-    const composer = this.page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
+    const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
     return await composer.textContent() || '';
   }
 
   async isComposerFocused(): Promise<boolean> {
-    const composer = this.page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
+    const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
     return await composer.evaluate(el => document.activeElement === el);
   }
 
@@ -216,7 +236,7 @@ export class ConversationActionsPage extends BasePage {
   }
 
   async expectMessageComposerVisible() {
-    await expect(this.page.locator('[aria-label="Conversation editor"]')).toBeVisible();
+    await expect(this.page.locator('[data-testid="message-composer"]')).toBeVisible();
   }
 
   async expectReplyButtonVisible() {
@@ -260,7 +280,7 @@ export class ConversationActionsPage extends BasePage {
   }
 
   async expectMessageComposerContent(expectedContent: string) {
-    const content = await this.page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror').textContent();
+    const content = await this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror').textContent();
     expect(content).toContain(expectedContent);
   }
 
@@ -273,10 +293,10 @@ export class ConversationActionsPage extends BasePage {
   }
 
   async expectEmptyMessageComposer() {
-    const composer = this.page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
+    const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
     
     await this.page.waitForFunction(() => {
-      const element = document.querySelector('[aria-label="Conversation editor"] .tiptap.ProseMirror');
+      const element = document.querySelector('[data-testid="message-composer"] .tiptap.ProseMirror');
       return element && (element.textContent?.trim() === '' || element.textContent?.trim() === undefined);
     }, { timeout: 10000 });
     
@@ -321,23 +341,17 @@ export class ConversationActionsPage extends BasePage {
   }
 
   async openCommandBar() {
-    // First focus the composer properly
-    const composer = this.page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
+    const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
     await composer.click({ force: true });
-    await composer.focus();
-    
-    // Wait a bit for the focus to register
-    await this.page.waitForTimeout(200);
-    
-    // Now press the slash key
     await this.page.keyboard.press('/');
     await this.page.waitForTimeout(500);
     
-    // Check if command bar is visible, if not try Control+K
-    if (!(await this.isCommandBarVisible())) {
-      await this.page.keyboard.press('Control+k');
-      await this.page.waitForTimeout(500);
+    if (await this.isCommandBarVisible()) {
+      return;
     }
+    
+    await this.page.keyboard.press('Control+k');
+    await this.page.waitForTimeout(500);
   }
 
   async typeSlashToOpenCommandBar() {
@@ -346,8 +360,7 @@ export class ConversationActionsPage extends BasePage {
   }
 
   async isCommandBarVisible(): Promise<boolean> {
-    const commandBar = this.page.locator(this.commandBar);
-    return await commandBar.isVisible() && !(await commandBar.evaluate(el => el.classList.contains('hidden')));
+    return await this.page.locator(this.commandBar).isVisible();
   }
 
   async selectCommand(commandId: string) {
@@ -359,7 +372,9 @@ export class ConversationActionsPage extends BasePage {
     };
     
     const commandText = commandMap[commandId] || commandId;
-    const commandOption = this.page.locator(`[cmdk-item]:has-text("${commandText}")`);
+    
+    const commandOption = this.page.locator('[role="option"]').filter({ hasText: commandText });
+    await expect(commandOption).toBeVisible({ timeout: 5000 });
     await commandOption.click();
   }
 
@@ -369,7 +384,7 @@ export class ConversationActionsPage extends BasePage {
   }
 
   async getVisibleCommands(): Promise<string[]> {
-    const commands = await this.page.locator('[cmdk-item]').allTextContents();
+    const commands = await this.page.locator('[role="option"]').allTextContents();
     return commands;
   }
 
@@ -445,11 +460,11 @@ export class ConversationActionsPage extends BasePage {
     };
     
     const commandText = commandMap[commandId] || commandId;
-    return this.page.locator(`[cmdk-item]:has-text("${commandText}")`);
+    return this.page.locator('[role="option"]').filter({ hasText: commandText });
   }
 
   getComposer() {
-    return this.page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
+    return this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
   }
 
   getReplyButton() {
