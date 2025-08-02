@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, gt, inArray } from "drizzle-orm";
 import { ToolRequestBody } from "@helperai/client";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
@@ -33,6 +33,17 @@ export const handleAutoResponse = async ({
 
   if (conversation.status === "spam") return { message: "Skipped - conversation is spam" };
   if (message.role === "staff") return { message: "Skipped - message is from staff" };
+
+  const newerMessage = await db.query.conversationMessages.findFirst({
+    columns: { id: true },
+    where: and(
+      eq(conversationMessages.conversationId, message.conversationId),
+      inArray(conversationMessages.role, ["user", "staff", "ai_assistant"]),
+      gt(conversationMessages.createdAt, message.createdAt),
+    ),
+  });
+
+  if (newerMessage) return { message: "Skipped - newer message exists" };
 
   await ensureCleanedUpText(message);
 
