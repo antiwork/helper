@@ -91,6 +91,7 @@ test.describe("In-App Chat Settings", () => {
       await settingsPage.waitForSettingsToSave();
 
       await page.reload();
+      await page.waitForLoadState('networkidle');
       await settingsPage.waitForSettingsToLoad();
 
       await expect(settingsPage.chatIconVisibilitySwitch).toBeChecked();
@@ -121,6 +122,7 @@ test.describe("In-App Chat Settings", () => {
       await settingsPage.waitForSettingsToSave();
 
       await page.reload();
+      await page.waitForLoadState('networkidle');
       await settingsPage.waitForSettingsToLoad();
 
       await expect(settingsPage.hostUrlInput).toHaveValue(testUrl);
@@ -151,6 +153,7 @@ test.describe("In-App Chat Settings", () => {
       await settingsPage.waitForSettingsToSave();
 
       await page.reload();
+      await page.waitForLoadState('networkidle');
       await settingsPage.waitForSettingsToLoad();
 
       await expect(settingsPage.emailResponseDraftTab).toHaveAttribute("data-state", "active");
@@ -186,13 +189,17 @@ test.describe("In-App Chat Settings", () => {
       await settingsPage.waitForSettingsToSave();
     });
 
-    test("should show saving indicators", async () => {
+    test("should show saving indicators", async ({ page }) => {
       await settingsPage.enableChatIconVisibility();
-      await settingsPage.setHostUrl("https://test.com");
-      await settingsPage.setEmailResponseMode("draft");
+      await page.waitForTimeout(100);
       
+      await settingsPage.setHostUrl("https://test.com");
+      await page.waitForTimeout(100);
+      
+      await settingsPage.setEmailResponseMode("draft");
       await settingsPage.waitForSettingsToSave();
       
+      await expect(page.getByText("Saved")).toBeVisible({ timeout: 5000 });
     });
   });
 
@@ -212,6 +219,7 @@ test.describe("In-App Chat Settings", () => {
       await expect(settingsPage.widgetPreviewIndicator).toBeVisible();
       
       await page.reload();
+      await page.waitForLoadState('networkidle');
       await settingsPage.waitForSettingsToLoad();
       
       await expect(settingsPage.chatIconVisibilitySwitch).toBeChecked();
