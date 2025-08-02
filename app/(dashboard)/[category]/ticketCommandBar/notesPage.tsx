@@ -70,7 +70,13 @@ const NotesPageContent = ({ onOpenChange }: NotesPageProps) => {
   return (
     <div className="flex-1 flex flex-col p-4">
       <h3 className="font-medium mb-4">Add Internal Note</h3>
-      <Textarea ref={textareaRef} className="min-h-24 mb-4 flex-1" placeholder="Type your note here..." autoFocus />
+      <Textarea
+        ref={textareaRef}
+        className="min-h-24 mb-4 flex-1"
+        placeholder="Type your note here..."
+        autoFocus
+        data-testid="internal-note-textarea"
+      />
       {attachments.length > 0 && (
         <div className="mb-4 flex w-full flex-wrap gap-2">
           {attachments.map((fileInfo, idx) => (
