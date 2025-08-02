@@ -1,5 +1,5 @@
 {
-  "id": "9a19ecda-e9ab-44e4-bcf6-83e992039602",
+  "id": "ababe5a7-c65e-4965-b6f3-65bb4c922d7c",
   "prevId": "7cf06204-5f68-408d-bb5d-eab179b133e0",
   "version": "7",
   "dialect": "postgresql",
@@ -658,8 +658,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "body_plaintext": {
-          "name": "body_plaintext",
+        "body": {
+          "name": "body",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -670,8 +670,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "cleaned_up_text_plaintext": {
-          "name": "cleaned_up_text_plaintext",
+        "cleaned_up_text": {
+          "name": "cleaned_up_text",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -1065,8 +1065,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "subject_plaintext": {
-          "name": "subject_plaintext",
+        "subject": {
+          "name": "subject",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -1805,8 +1805,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "access_token_plaintext": {
-          "name": "access_token_plaintext",
+        "access_token": {
+          "name": "access_token",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -1817,8 +1817,8 @@
           "primaryKey": false,
           "notNull": false
         },
-        "refresh_token_plaintext": {
-          "name": "refresh_token_plaintext",
+        "refresh_token": {
+          "name": "refresh_token",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -3475,14 +3475,14 @@
           "primaryKey": false,
           "notNull": false
         },
-        "authentication_token": {
-          "name": "authentication_token",
+        "encrypted_authentication_token": {
+          "name": "encrypted_authentication_token",
           "type": "bytea",
           "primaryKey": false,
           "notNull": false
         },
-        "authentication_token_plaintext": {
-          "name": "authentication_token_plaintext",
+        "authentication_token": {
+          "name": "authentication_token",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -3602,14 +3602,14 @@
           "notNull": true,
           "default": "'none'"
         },
-        "authentication_token": {
-          "name": "authentication_token",
+        "encrypted_authentication_token": {
+          "name": "encrypted_authentication_token",
           "type": "bytea",
           "primaryKey": false,
           "notNull": false
         },
-        "authentication_token_plaintext": {
-          "name": "authentication_token_plaintext",
+        "authentication_token": {
+          "name": "authentication_token",
           "type": "text",
           "primaryKey": false,
           "notNull": false

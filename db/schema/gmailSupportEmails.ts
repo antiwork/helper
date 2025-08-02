@@ -13,9 +13,9 @@ export const gmailSupportEmails = pgTable(
     expiresAt: timestamp({ withTimezone: true, mode: "date" }),
     historyId: integer(),
     accessToken: encryptedField("encrypted_access_token"),
-    accessTokenPlaintext: text("access_token_plaintext"),
+    accessTokenPlaintext: text("access_token"),
     refreshToken: encryptedField("encrypted_refresh_token"),
-    refreshTokenPlaintext: text("refresh_token_plaintext"),
+    refreshTokenPlaintext: text("refresh_token"),
   },
   (table) => [
     index("mailboxes_gmailsupportemail_created_at_321a00f1").on(table.createdAt),

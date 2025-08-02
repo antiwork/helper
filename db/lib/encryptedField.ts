@@ -1,4 +1,4 @@
-import { customType, text } from "drizzle-orm/pg-core";
+import { customType } from "drizzle-orm/pg-core";
 import { symmetricDecrypt, symmetricEncrypt } from "@/db/lib/crypto";
 import { env } from "@/lib/env";
 
@@ -36,8 +36,4 @@ export const decryptFieldValue = (value: unknown): string => {
   }
 
   throw new Error(`Unexpected value type: ${typeof value}`);
-};
-
-export const plaintextField = (dbName: string) => {
-  return text(dbName);
 };
