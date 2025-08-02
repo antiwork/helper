@@ -70,13 +70,7 @@ const NotesPageContent = ({ onOpenChange }: NotesPageProps) => {
   return (
     <div className="flex-1 flex flex-col p-4">
       <h3 className="font-medium mb-4">Add Internal Note</h3>
-      <Textarea
-        ref={textareaRef}
-        className="min-h-24 mb-4 flex-1"
-        placeholder="Type your note here..."
-        autoFocus
-        data-testid="internal-note-textarea"
-      />
+      <Textarea ref={textareaRef} className="min-h-24 mb-4 flex-1" placeholder="Type your note here..." autoFocus />
       {attachments.length > 0 && (
         <div className="mb-4 flex w-full flex-wrap gap-2">
           {attachments.map((fileInfo, idx) => (
@@ -95,7 +89,7 @@ const NotesPageContent = ({ onOpenChange }: NotesPageProps) => {
           <Paperclip className="h-4 w-4 mr-1" />
           Attach files
         </Button>
-        <Button onClick={handleSubmit} disabled={isSubmitting} data-testid="add-note-button">
+        <Button onClick={handleSubmit} disabled={isSubmitting}>
           Add internal note
         </Button>
       </div>

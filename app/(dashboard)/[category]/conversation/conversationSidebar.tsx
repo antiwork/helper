@@ -106,7 +106,7 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
         <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
           <span className="text-muted-foreground">Status</span>
           <div>
-            <Badge data-testid="conversation-status-badge">{conversation.status || "open"}</Badge>
+            <Badge>{conversation.status || "open"}</Badge>
           </div>
           <span className="text-muted-foreground">Assignee</span>
           <div className="min-w-0">

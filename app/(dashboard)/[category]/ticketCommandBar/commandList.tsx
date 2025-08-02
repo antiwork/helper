@@ -49,7 +49,6 @@ export const CommandList = ({ isLoading, page, groups, selectedItemId, onSelect,
               onSelect={() => onSelect(item.id)}
               onMouseEnter={() => onMouseEnter(item.id)}
               className={cn("flex items-center gap-2 cursor-pointer")}
-              data-testid={`command-${item.id}`}
             >
               {item.icon && <item.icon className="h-4 w-4" />}
               <span>{item.label}</span>
