@@ -406,7 +406,7 @@ export const generateAIResponse = async ({
             data: result.success ? result.data : undefined,
             error: result.success ? undefined : result.error,
             parameters: params,
-            userMessage: "Tool executed successfully.",
+            userMessage: result.success ? "Tool executed successfully." : "Tool execution failed.",
           });
           return result;
         };
