@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { ToolRequestBody } from "@helperai/client";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
@@ -11,7 +12,13 @@ import { createMessageNotification } from "@/lib/data/messageNotifications";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata } from "@/lib/data/retrieval";
 
-export const handleAutoResponse = async ({ messageId }: { messageId: number }) => {
+export const handleAutoResponse = async ({
+  messageId,
+  tools,
+}: {
+  messageId: number;
+  tools?: Record<string, ToolRequestBody>;
+}) => {
   const message = await db.query.conversationMessages
     .findFirst({
       where: eq(conversationMessages.id, messageId),
@@ -50,7 +57,7 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
   if (!conversation.assignedToAI) return { message: "Skipped - not assigned to AI" };
 
   if (mailbox?.preferences?.autoRespondEmailToChat === "draft") {
-    const aiDraft = await generateDraftResponse(conversation.id, mailbox);
+    const aiDraft = await generateDraftResponse(conversation.id, mailbox, tools);
     return { message: "Draft response generated", draftId: aiDraft.id };
   }
 
@@ -65,6 +72,7 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
   const response = await respondWithAI({
     conversation,
     mailbox,
+    tools,
     userEmail: message.emailFrom,
     message: {
       id: message.id.toString(),
@@ -75,6 +83,7 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
     readPageTool: null,
     sendEmail: true,
     guideEnabled: false,
+    reasoningEnabled: false,
     onResponse: async ({ platformCustomer, humanSupportRequested }) => {
       await db.transaction(async (tx) => {
         if (platformCustomer && !humanSupportRequested) {

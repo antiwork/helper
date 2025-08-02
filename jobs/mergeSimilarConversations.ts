@@ -142,17 +142,20 @@ Should the current conversation be merged into any of the others? If so, which o
 
     await db.update(conversations).set({ mergedIntoId: mergeIntoId }).where(eq(conversations.id, conversation.id));
     if (conversation.lastUserEmailCreatedAt) {
+      const lastUserEmailCreatedAt = new Date(
+        Math.max(
+          conversation.lastUserEmailCreatedAt.getTime(),
+          ...(targetConversation.lastUserEmailCreatedAt ? [targetConversation.lastUserEmailCreatedAt.getTime()] : []),
+        ),
+      );
       await db
         .update(conversations)
         .set({
-          lastUserEmailCreatedAt: new Date(
-            Math.max(
-              conversation.lastUserEmailCreatedAt.getTime(),
-              ...(targetConversation.lastUserEmailCreatedAt
-                ? [targetConversation.lastUserEmailCreatedAt.getTime()]
-                : []),
-            ),
-          ),
+          lastUserEmailCreatedAt,
+          lastReadAt:
+            lastUserEmailCreatedAt && targetConversation.lastReadAt
+              ? new Date(Math.max(lastUserEmailCreatedAt.getTime(), targetConversation.lastReadAt.getTime()))
+              : (lastUserEmailCreatedAt ?? targetConversation.lastReadAt),
         })
         .where(eq(conversations.id, mergeIntoId));
     }
