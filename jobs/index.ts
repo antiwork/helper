@@ -23,7 +23,7 @@ import { indexConversationMessage } from "./indexConversation";
 import { mergeSimilarConversations } from "./mergeSimilarConversations";
 import { notifyVipMessage } from "./notifyVipMessage";
 import { postEmailToGmail } from "./postEmailToGmail";
-import { publishNewConversationEvent } from "./publishNewConversationEvent";
+import { publishNewMessageEvent } from "./publishNewMessageEvent";
 import { publishRequestHumanSupport } from "./publishRequestHumanSupport";
 import { renewMailboxWatches } from "./renewMailboxWatches";
 import { scheduledWebsiteCrawl } from "./scheduledWebsiteCrawl";
@@ -37,7 +37,7 @@ export const eventJobs = {
   indexConversationMessage,
   generateConversationSummaryEmbeddings,
   mergeSimilarConversations,
-  publishNewConversationEvent,
+  publishNewMessageEvent,
   notifyVipMessage,
   postEmailToGmail,
   handleAutoResponse,

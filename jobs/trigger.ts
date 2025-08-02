@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import superjson from "superjson";
 import { z } from "zod";
+import { toolBodySchema } from "@helperai/client";
 import { db } from "@/db/client";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 
@@ -21,7 +22,7 @@ const events = {
       "indexConversationMessage",
       "generateConversationSummaryEmbeddings",
       "mergeSimilarConversations",
-      "publishNewConversationEvent",
+      "publishNewMessageEvent",
       "notifyVipMessage",
       "categorizeConversationToIssueGroup",
     ],
@@ -35,6 +36,7 @@ const events = {
   "conversations/auto-response.create": {
     data: z.object({
       messageId: z.number(),
+      tools: z.record(z.string(), toolBodySchema).optional(),
     }),
     jobs: ["handleAutoResponse"],
   },
