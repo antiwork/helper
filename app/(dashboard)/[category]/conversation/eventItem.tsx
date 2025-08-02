@@ -82,10 +82,11 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
           : User;
 
   return (
-    <div className="flex flex-col mx-auto">
+    <div className="flex flex-col mx-auto" data-testid="event-item">
       <button
         className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         onClick={() => setDetailsExpanded(!detailsExpanded)}
+        data-testid="event-summary-button"
       >
         {hasDetails && (detailsExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />)}
         <Icon className="h-4 w-4" />
@@ -97,7 +98,7 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
       </button>
 
       {hasDetails && detailsExpanded && (
-        <div className="mt-2 text-sm text-muted-foreground border rounded p-4">
+        <div className="mt-2 text-sm text-muted-foreground border rounded p-4" data-testid="event-details">
           <div className="flex flex-col gap-1">
             {byUserName && (
               <div>

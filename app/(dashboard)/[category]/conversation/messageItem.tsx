@@ -192,10 +192,16 @@ const MessageItem = ({
   });
 
   return (
-    <div data-message-item data-type={message.type} data-id={message.id} className="responsive-break-words grid">
+    <div
+      data-message-item
+      data-type={message.type}
+      data-id={message.id}
+      className="responsive-break-words grid"
+      data-testid="message-item"
+    >
       <div className={`flex ${rightAlignedMessage ? "justify-end" : ""}`}>
         <div className={`flex flex-col gap-2 ${rightAlignedMessage ? "items-end" : ""}`}>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground" data-testid="message-header">
             {addSeparator(messageLabels, "·")}
           </div>
           <div className="flex items-start gap-2">
@@ -208,6 +214,7 @@ const MessageItem = ({
                     ? "border md:bg-muted md:border-none"
                     : "bg-muted",
               )}
+              data-testid="message-content"
             >
               {mainContent}
               {quotedContext ? (
@@ -220,6 +227,7 @@ const MessageItem = ({
                         ? "bg-muted-foreground text-muted-foreground"
                         : "bg-border text-muted-foreground hover:text-muted-foreground",
                     )}
+                    data-testid="expand-quoted-context-button"
                   >
                     <MoreHorizontal className="h-8 w-8" />
                   </button>
@@ -228,7 +236,7 @@ const MessageItem = ({
               ) : null}
             </div>
           </div>
-          <div className="flex w-full items-center gap-3 text-sm text-muted-foreground">
+          <div className="flex w-full items-center gap-3 text-sm text-muted-foreground" data-testid="message-footer">
             {message.type === "message" && message.isMerged && (
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
@@ -255,7 +263,10 @@ const MessageItem = ({
             {hasReasoning && !userMessage && (
               <Popover>
                 <PopoverTrigger asChild>
-                  <button className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                  <button
+                    className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                    data-testid="view-ai-reasoning-button"
+                  >
                     <Sparkles className="h-4 w-4" />
                     <span className="text-xs">View AI reasoning</span>
                   </button>
@@ -330,6 +341,7 @@ const MessageItem = ({
           {message.files.length ? (
             <div
               className={`flex flex-wrap gap-2 overflow-x-auto pb-2 ${rightAlignedMessage ? "flex-row-reverse" : ""}`}
+              data-testid="message-attachments"
             >
               {message.files.map((file, idx) => (
                 <a

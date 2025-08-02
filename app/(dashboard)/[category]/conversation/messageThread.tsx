@@ -14,10 +14,13 @@ export const MessageThread = ({
   onPreviewAttachment: (message: Message, index: number) => void;
 }) => {
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex flex-1 flex-col gap-8 pb-4 mb-4">
+    <div className="flex h-full flex-col" data-testid="message-thread">
+      <div className="flex flex-1 flex-col gap-8 pb-4 mb-4" data-testid="messages-container">
         {conversation.isPrompt && (
-          <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
+          <div
+            className="flex items-center justify-center gap-1 text-sm text-muted-foreground"
+            data-testid="prompt-indicator"
+          >
             <HelpCircle className="h-4 w-4 text-muted-foreground" />
             <span>Started this conversation from a prompt</span>
           </div>
@@ -45,7 +48,7 @@ export const MessageThread = ({
           ),
         )}
         {conversation.summary && conversation.summary.length > 0 && (
-          <div className="mx-auto flex max-w-2xl flex-col gap-2">
+          <div className="mx-auto flex max-w-2xl flex-col gap-2" data-testid="conversation-summary">
             <div className="flex items-center gap-1 text-base text-muted-foreground">
               <MessagesSquare className="h-4 w-4 shrink-0" />
               Conversation summary
