@@ -3,7 +3,7 @@ import { appendClientMessage, createDataStreamResponse, generateText, Message, s
 import { z } from "zod";
 import { withWidgetAuth } from "@/app/api/widget/utils";
 import { getGuideSessionActions, getGuideSessionByUuid } from "@/lib/data/guide";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { assertDefined } from "../../../../components/utils/assert";
 
 const PROMPT = `You are an AI agent designed to automate browser tasks for {{MAILBOX_NAME}}. Your goal is to accomplish the ultimate task following the rules.
@@ -217,7 +217,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
         tools,
         toolChoice: "required",
         onError: (error) => {
-          captureExceptionAndLogIfDevelopment(error);
+          captureExceptionAndLog(error);
         },
         experimental_repairToolCall: async ({ toolCall, tools, error, messages, system }) => {
           // eslint-disable-next-line no-console

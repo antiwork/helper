@@ -120,10 +120,21 @@ export const handleAutoResponse = async ({
 
   // Consume the response to make sure we wait for the AI to generate it
   const reader = assertDefined(response.body).getReader();
+  const decoder = new TextDecoder();
+  let responseContent = "";
+
   while (true) {
-    const { done } = await reader.read();
+    const { done, value } = await reader.read();
     if (done) break;
+
+    if (value) {
+      const chunk = decoder.decode(value, { stream: true });
+      responseContent += chunk;
+    }
   }
+
+  // eslint-disable-next-line no-console
+  console.log("Auto response content:", responseContent);
 
   return { message: "Auto response sent", messageId };
 };

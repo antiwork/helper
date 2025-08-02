@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { mailboxes } from "@/db/schema";
 import { getMailbox, Mailbox } from "@/lib/data/mailbox";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { verifyWidgetSession, type WidgetSessionPayload } from "@/lib/widgetSession";
 
 const corsHeaders = {
@@ -56,7 +56,7 @@ export async function authenticateWidget(request: Request): Promise<Authenticate
   try {
     session = verifyWidgetSession(token, mailbox);
   } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
+    captureExceptionAndLog(error);
     return { success: false, error: "Invalid session token" };
   }
 

@@ -7,7 +7,7 @@ import { generateEmbedding } from "@/lib/ai";
 import { knowledgeBankPrompt, PAST_CONVERSATIONS_PROMPT, websitePagesPrompt } from "@/lib/ai/prompts";
 import { cleanUpTextForAI } from "../ai/core";
 import { getMetadata, timestamp } from "../metadataApiClient";
-import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
+import { captureExceptionAndLog } from "../shared/sentry";
 import { getMetadataApi } from "./mailboxMetadataApi";
 
 const SIMILARITY_THRESHOLD = 0.4;
@@ -151,7 +151,7 @@ export const fetchMetadata = async (email: string) => {
     });
     return metadata;
   } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
+    captureExceptionAndLog(error);
     return null;
   }
 };
