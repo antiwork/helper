@@ -36,6 +36,7 @@ import { Conversation, updateOriginalConversation } from "@/lib/data/conversatio
 import {
   createAiDraft,
   createConversationMessage,
+  createToolEvent,
   getLastAiGeneratedDraft,
   getMessagesOnly,
 } from "@/lib/data/conversationMessage";
@@ -393,8 +394,22 @@ export const generateAIResponse = async ({
       };
 
       if (tool.serverRequestUrl) {
-        toolDefinition.execute = async (params: Record<string, any>) =>
-          await callToolEndpoint(tool, email, params, mailbox);
+        toolDefinition.execute = async (params: Record<string, any>) => {
+          const result = await callToolEndpoint(tool, email, params, mailbox);
+          await createToolEvent({
+            conversationId,
+            tool: {
+              name: toolName,
+              description: tool.description,
+              url: tool.serverRequestUrl,
+            },
+            data: result.success ? result.data : undefined,
+            error: result.success ? undefined : result.error,
+            parameters: params,
+            userMessage: "Tool executed successfully.",
+          });
+          return result;
+        };
       }
 
       tools[toolName] = toolDefinition;
