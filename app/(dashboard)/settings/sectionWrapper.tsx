@@ -12,7 +12,6 @@ type SectionWrapperProps = {
   className?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
-  "data-testid"?: string;
 };
 
 const SectionWrapper = ({ title, description, fullWidth, className, action, children }: SectionWrapperProps) => {

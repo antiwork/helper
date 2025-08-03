@@ -247,12 +247,8 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
               <SelectValue placeholder="Permissions" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="member" data-testid="permission-option-member">
-                {PERMISSIONS_DISPLAY_NAMES.member}
-              </SelectItem>
-              <SelectItem value="admin" data-testid="permission-option-admin">
-                {PERMISSIONS_DISPLAY_NAMES.admin}
-              </SelectItem>
+              <SelectItem value="member">{PERMISSIONS_DISPLAY_NAMES.member}</SelectItem>
+              <SelectItem value="admin">{PERMISSIONS_DISPLAY_NAMES.admin}</SelectItem>
             </SelectContent>
           </Select>
         ) : (
@@ -266,15 +262,9 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
               <SelectValue placeholder="Role" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="core" data-testid="role-option-core">
-                {ROLE_DISPLAY_NAMES.core}
-              </SelectItem>
-              <SelectItem value="nonCore" data-testid="role-option-noncore">
-                {ROLE_DISPLAY_NAMES.nonCore}
-              </SelectItem>
-              <SelectItem value="afk" data-testid="role-option-afk">
-                {ROLE_DISPLAY_NAMES.afk}
-              </SelectItem>
+              <SelectItem value="core">{ROLE_DISPLAY_NAMES.core}</SelectItem>
+              <SelectItem value="nonCore">{ROLE_DISPLAY_NAMES.nonCore}</SelectItem>
+              <SelectItem value="afk">{ROLE_DISPLAY_NAMES.afk}</SelectItem>
             </SelectContent>
           </Select>
         ) : (
