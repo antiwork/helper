@@ -47,7 +47,7 @@ export const KnowledgeEditForm = ({
         </div>
       )}
       <div>
-        <Label>{originalContent ? "Suggested Change" : "Content"}</Label>
+        <Label htmlFor="knowledge-content-textarea">{originalContent ? "Suggested Change" : "Content"}</Label>
         <Textarea
           id="knowledge-content-textarea"
           value={content}
