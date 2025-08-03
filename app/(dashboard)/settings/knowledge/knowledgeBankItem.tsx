@@ -41,7 +41,7 @@ export const KnowledgeEditForm = ({
       {originalContent && (
         <div>
           <Label>Original Content</Label>
-          <div className="mt-2 p-3 bg-muted rounded-md" data-testid="original-content">
+          <div className="mt-2 p-3 bg-muted rounded-md">
             <ReactMarkdown className="prose prose-sm">{originalContent}</ReactMarkdown>
           </div>
         </div>
@@ -182,7 +182,6 @@ const KnowledgeBankItem = ({ faq, suggestedReplacement, onDelete }: KnowledgeBan
             }}
             disabled={updateMutation.isPending}
             className="mt-0.5"
-            data-testid="knowledge-toggle-switch"
           />
           <button
             className="flex-1 w-full text-left text-sm hover:underline"
