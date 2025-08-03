@@ -154,7 +154,7 @@ const KnowledgeBankItem = ({ faq, suggestedReplacement, onDelete }: KnowledgeBan
   };
 
   return (
-    <div className="py-4" data-testid="knowledge-bank-item">
+    <div className="py-4" id="knowledge-bank-item">
       {editingContent ? (
         <KnowledgeEditForm
           content={editingContent}
