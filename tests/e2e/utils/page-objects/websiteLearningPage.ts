@@ -1,5 +1,6 @@
 import { expect, Page } from "@playwright/test";
 import { BasePage } from "./basePage";
+import { waitForToast } from "../toastHelpers";
 
 interface TestWebsite {
   name: string;
@@ -14,8 +15,7 @@ export class WebsiteLearningPage extends BasePage {
   private readonly urlLabel = 'label[for="url"]';
   private readonly cancelButton = 'button:has-text("Cancel")';
   private readonly submitButton = 'form button[type="submit"]';
-  private readonly errorText = '.text-sm.text-destructive';
-  private readonly websiteItems = 'div.rounded-lg.border';
+  private readonly websiteItems = '[data-testid="website-item"]';
   private readonly externalLinks = 'a[target="_blank"]';
 
   constructor(page: Page) {
@@ -66,9 +66,7 @@ export class WebsiteLearningPage extends BasePage {
   }
 
   async expectUrlValidationError(expectedError: string) {
-    const errorElement = this.page.locator(this.errorText);
-    await expect(errorElement).toBeVisible();
-    await expect(errorElement).toContainText(expectedError);
+    await expect(this.page.getByText(expectedError)).toBeVisible();
   }
 
   generateTestWebsite(): TestWebsite {
@@ -79,28 +77,7 @@ export class WebsiteLearningPage extends BasePage {
   }
 
   async expectToastMessage(message: string) {
-    const toastSelectors = [
-      '[data-sonner-toast]',
-      '[data-sonner-toaster] li',
-      '.toaster li',
-      '[role="status"]',
-      '[aria-live="polite"]'
-    ];
-    
-    let found = false;
-    for (const selector of toastSelectors) {
-      const toast = this.page.locator(selector).filter({ hasText: message });
-      if (await toast.count() > 0) {
-        await expect(toast.first()).toBeVisible({ timeout: 8000 });
-        found = true;
-        break;
-      }
-    }
-    
-    if (!found) {
-      const fallbackToast = this.page.locator(`text=${message}`).first();
-      await expect(fallbackToast).toBeVisible({ timeout: 8000 });
-    }
+    await waitForToast(this.page, message);
   }
 
   async expectWebsiteInList(websiteName: string) {
