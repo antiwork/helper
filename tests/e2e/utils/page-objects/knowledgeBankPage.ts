@@ -13,7 +13,7 @@ export class KnowledgeBankPage {
   } as const;
 
   private readonly SELECTORS = {
-    KNOWLEDGE_ITEM: "#knowledge-bank-item",
+    KNOWLEDGE_ITEM: '[data-testid="knowledge-bank-item"]',
     KNOWLEDGE_TEXTAREA: "#knowledge-content-textarea",
   } as const;
 
