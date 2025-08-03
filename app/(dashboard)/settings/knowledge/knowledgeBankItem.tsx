@@ -37,7 +37,6 @@ export const KnowledgeEditForm = ({
         onSubmit();
       }}
       className="border rounded-lg p-4 space-y-4"
-      data-testid="knowledge-edit-form"
     >
       {originalContent && (
         <div>
@@ -50,16 +49,16 @@ export const KnowledgeEditForm = ({
       <div>
         <Label>{originalContent ? "Suggested Change" : "Content"}</Label>
         <Textarea
+          id="knowledge-content-textarea"
           value={content}
           onChange={(e) => onChange?.(e.target.value)}
           className={cn("min-h-[10rem]", originalContent && "border-bright")}
           onModEnter={onSubmit}
-          data-testid="knowledge-content-textarea"
         />
       </div>
       <div className={originalContent ? "grid grid-cols-2 gap-2" : "flex justify-end gap-2"}>
         {onCancel && (
-          <Button type="button" variant="subtle" onClick={onCancel} data-testid="cancel-knowledge-button">
+          <Button type="button" variant="subtle" onClick={onCancel}>
             {originalContent ? (
               <>
                 <X className="h-4 w-4 mr-2" />
@@ -70,7 +69,7 @@ export const KnowledgeEditForm = ({
             )}
           </Button>
         )}
-        <Button type="submit" disabled={isLoading} data-testid="save-knowledge-button">
+        <Button type="submit" disabled={isLoading}>
           {isLoading ? (
             "Saving..."
           ) : originalContent ? (
@@ -191,7 +190,6 @@ const KnowledgeBankItem = ({ faq, suggestedReplacement, onDelete }: KnowledgeBan
               e.preventDefault();
               handleStartEditing();
             }}
-            data-testid="knowledge-content-button"
           >
             <ReactMarkdown className={cn("prose prose-sm", !faq.enabled && "text-muted-foreground")}>
               {truncate(faq?.content, { length: 125 })}
@@ -207,7 +205,7 @@ const KnowledgeBankItem = ({ faq, suggestedReplacement, onDelete }: KnowledgeBan
             onConfirm={onDelete}
             confirmLabel="Yes, delete"
           >
-            <Button variant="ghost" size="sm" iconOnly data-testid="delete-knowledge-button">
+            <Button variant="ghost" size="sm" iconOnly>
               <Trash className="h-4 w-4" />
               <span className="sr-only">Delete</span>
             </Button>

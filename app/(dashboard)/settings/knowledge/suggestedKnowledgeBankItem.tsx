@@ -27,22 +27,12 @@ const SuggestedKnowledgeBankItem = ({ faq }: SuggestedKnowledgeBankItemProps) =>
   });
 
   return (
-    <div className="flex flex-col gap-2 border border-bright rounded-lg p-4" data-testid="suggested-knowledge-item">
+    <div className="flex flex-col gap-2 border border-bright rounded-lg p-4">
       <div className="flex-1 w-full text-left text-sm">
-        <Textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={5}
-          data-testid="suggested-knowledge-textarea"
-        />
+        <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={5} />
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Button
-          variant="subtle"
-          onClick={() => rejectFaq.mutate({ id: faq.id })}
-          disabled={rejectFaq.isPending}
-          data-testid="reject-suggested-knowledge-button"
-        >
+        <Button variant="subtle" onClick={() => rejectFaq.mutate({ id: faq.id })} disabled={rejectFaq.isPending}>
           <X className="h-4 w-4 mr-1" />
           Reject
         </Button>
@@ -50,7 +40,6 @@ const SuggestedKnowledgeBankItem = ({ faq }: SuggestedKnowledgeBankItemProps) =>
           variant="bright"
           onClick={() => acceptFaq.mutate({ id: faq.id, content })}
           disabled={acceptFaq.isPending}
-          data-testid="accept-suggested-knowledge-button"
         >
           <Check className="h-4 w-4 mr-1" />
           Accept

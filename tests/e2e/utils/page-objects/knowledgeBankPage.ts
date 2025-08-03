@@ -1,5 +1,17 @@
 import { expect, Page } from "@playwright/test";
 
+const TIMEOUTS = {
+  SEARCH_DEBOUNCE: 500,
+  ELEMENT_VISIBLE: 10000,
+  NETWORK_IDLE: "networkidle" as const,
+} as const;
+
+const SELECTORS = {
+  KNOWLEDGE_ITEM: "knowledge-bank-item",
+  KNOWLEDGE_TEXTAREA: "#knowledge-content-textarea",
+  SEARCH_INPUT: "Search knowledge bank...",
+} as const;
+
 export class KnowledgeBankPage {
   readonly page: Page;
 
@@ -13,133 +25,145 @@ export class KnowledgeBankPage {
   }
 
   async waitForPageLoad() {
-    await expect(this.page.getByTestId("knowledge-bank-page")).toBeVisible();
+    await expect(this.page.getByRole("heading", { name: "Knowledge Bank" })).toBeVisible();
   }
 
   async searchKnowledge(query: string) {
-    await this.page.getByTestId("knowledge-search-input").fill(query);
-    await this.page.waitForTimeout(500); // Allow search to filter
+    await this.page.getByPlaceholder(SELECTORS.SEARCH_INPUT).fill(query);
+    await this.page.waitForTimeout(TIMEOUTS.SEARCH_DEBOUNCE);
   }
 
   async clearSearch() {
-    await this.page.getByTestId("knowledge-search-input").clear();
-    await this.page.waitForTimeout(500);
+    await this.page.getByPlaceholder(SELECTORS.SEARCH_INPUT).clear();
+    await this.page.waitForTimeout(TIMEOUTS.SEARCH_DEBOUNCE);
   }
 
   async clickAddKnowledge() {
-    await this.page.getByTestId("add-knowledge-button").click();
-    await expect(this.page.getByTestId("new-knowledge-form-container")).toBeVisible();
+    await this.page.getByRole("button", { name: "Add Knowledge" }).click();
+    await expect(this.page.locator(SELECTORS.KNOWLEDGE_TEXTAREA)).toBeVisible();
   }
 
   async addKnowledge(content: string) {
     await this.clickAddKnowledge();
-    await this.page.getByTestId("knowledge-content-textarea").fill(content);
-    await this.page.getByTestId("save-knowledge-button").click();
-    await this.page.waitForLoadState("networkidle");
+    await this.page.locator(SELECTORS.KNOWLEDGE_TEXTAREA).fill(content);
+    await this.page.getByRole("button", { name: "Save" }).click();
+    await this.page.waitForLoadState(TIMEOUTS.NETWORK_IDLE);
   }
 
   async editKnowledge(originalContent: string, newContent: string) {
-    const knowledgeButton = this.page.getByTestId("knowledge-content-button").filter({ hasText: originalContent });
-    await knowledgeButton.click();
-    await expect(this.page.getByTestId("knowledge-edit-form")).toBeVisible();
+    await this.startEditingKnowledge(originalContent);
+    await this.fillKnowledgeContent(newContent);
+    await this.page.getByRole("button", { name: "Save" }).click();
+    await expect(this.page.locator(SELECTORS.KNOWLEDGE_TEXTAREA)).not.toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
+    await this.page.waitForLoadState(TIMEOUTS.NETWORK_IDLE);
+  }
 
-    const textarea = this.page.getByTestId("knowledge-content-textarea");
+  async startEditingKnowledge(content: string) {
+    const editButton = this.getEditButtonForKnowledge(content);
+    await expect(editButton).toBeVisible();
+    await expect(editButton).toBeEnabled();
+    await editButton.click();
+    await expect(this.page.locator(SELECTORS.KNOWLEDGE_TEXTAREA)).toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
+  }
+
+  async fillKnowledgeContent(content: string) {
+    const textarea = this.page.locator(SELECTORS.KNOWLEDGE_TEXTAREA);
     await textarea.click();
-    await textarea.fill(newContent);
-    await this.page.getByTestId("save-knowledge-button").click();
-    
-    // Wait for the edit form to disappear, indicating save completed
-    await expect(this.page.getByTestId("knowledge-edit-form")).not.toBeVisible({ timeout: 10000 });
-    await this.page.waitForLoadState("networkidle");
+    await textarea.fill(content);
+  }
+
+  async cancelEdit() {
+    await this.getCancelButtonInForm().click();
   }
 
   async toggleKnowledgeEnabled(content: string) {
-    const knowledgeItem = this.page.getByTestId("knowledge-bank-item").filter({ hasText: content });
-    const toggleSwitch = knowledgeItem.getByTestId("knowledge-toggle-switch");
+    const knowledgeItem = this.getKnowledgeItemByContent(content);
+    const toggleSwitch = knowledgeItem.getByRole("switch", { name: "Enable Knowledge" });
     await toggleSwitch.click();
-    await this.page.waitForLoadState("networkidle");
+    await this.page.waitForLoadState(TIMEOUTS.NETWORK_IDLE);
   }
 
   async deleteKnowledge(content: string) {
-    const knowledgeItem = this.page.getByTestId("knowledge-bank-item").filter({ hasText: content });
-    const deleteButton = knowledgeItem.getByTestId("delete-knowledge-button");
+    const knowledgeItem = this.getKnowledgeItemByContent(content);
+    const deleteButton = knowledgeItem.getByRole("button", { name: "Delete" });
     await deleteButton.click();
-
-    // Wait for confirmation dialog and confirm deletion
     await this.page.getByRole("button", { name: "Yes, delete" }).click();
-    await this.page.waitForLoadState("networkidle");
+    await this.page.waitForLoadState(TIMEOUTS.NETWORK_IDLE);
   }
 
   async expectKnowledgeExists(content: string) {
-    const knowledgeItem = this.page.getByTestId("knowledge-bank-item").filter({ hasText: content });
-    await expect(knowledgeItem).toBeVisible({ timeout: 10000 });
+    const knowledgeItem = this.getKnowledgeItemByContent(content);
+    await expect(knowledgeItem).toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
   }
 
   async expectKnowledgeNotExists(content: string) {
-    const knowledgeItem = this.page.getByTestId("knowledge-bank-item").filter({ hasText: content });
-    await expect(knowledgeItem).not.toBeVisible({ timeout: 10000 });
+    const knowledgeItem = this.getKnowledgeItemByContent(content);
+    await expect(knowledgeItem).not.toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
   }
 
   async expectKnowledgeEnabled(content: string, enabled: boolean) {
-    const knowledgeItem = this.page.getByTestId("knowledge-bank-item").filter({ hasText: content });
-    const toggleSwitch = knowledgeItem.getByTestId("knowledge-toggle-switch");
-
-    if (enabled) {
-      await expect(toggleSwitch).toBeChecked();
-    } else {
-      await expect(toggleSwitch).not.toBeChecked();
-    }
+    const knowledgeItem = this.getKnowledgeItemByContent(content);
+    const toggleSwitch = knowledgeItem.getByRole("switch", { name: "Enable Knowledge" });
+    
+    const expectation = expect(toggleSwitch);
+    enabled ? await expectation.toBeChecked() : await expectation.not.toBeChecked();
   }
 
   async expandSuggestedKnowledge() {
-    const trigger = this.page.getByTestId("suggested-knowledge-trigger");
+    const trigger = this.page.locator("button").filter({ hasText: /suggested.*entries?/i });
     if (await trigger.isVisible()) {
       await trigger.click();
-      await expect(this.page.getByTestId("suggested-knowledge-content")).toBeVisible();
+      await expect(this.page.locator('[role="region"]')).toBeVisible();
     }
   }
 
   async acceptSuggestedKnowledge(originalContent: string, newContent?: string) {
     await this.expandSuggestedKnowledge();
-
-    const suggestedItem = this.page.getByTestId("suggested-knowledge-item").filter({ hasText: originalContent });
+    const suggestedItem = this.page.locator("div").filter({ hasText: originalContent }).first();
 
     if (newContent) {
-      await suggestedItem.getByTestId("suggested-knowledge-textarea").clear();
-      await suggestedItem.getByTestId("suggested-knowledge-textarea").fill(newContent);
+      const textarea = suggestedItem.locator("textarea");
+      await textarea.clear();
+      await textarea.fill(newContent);
     }
 
-    await suggestedItem.getByTestId("accept-suggested-knowledge-button").click();
-    await this.page.waitForLoadState("networkidle");
+    await suggestedItem.getByRole("button", { name: "Accept" }).click();
+    await this.page.waitForLoadState(TIMEOUTS.NETWORK_IDLE);
   }
 
   async rejectSuggestedKnowledge(content: string) {
     await this.expandSuggestedKnowledge();
-
-    const suggestedItem = this.page.getByTestId("suggested-knowledge-item").filter({ hasText: content });
-
-    await suggestedItem.getByTestId("reject-suggested-knowledge-button").click();
-    await this.page.waitForLoadState("networkidle");
+    const suggestedItem = this.page.locator("div").filter({ hasText: content }).first();
+    await suggestedItem.getByRole("button", { name: "Reject" }).click();
+    await this.page.waitForLoadState(TIMEOUTS.NETWORK_IDLE);
   }
 
   async expectSuggestedKnowledgeCount(count: number) {
+    const badge = this.page.locator("button").filter({ hasText: /suggested.*entries?/i });
+    
     if (count > 0) {
-      const badge = this.page.getByTestId("suggested-knowledge-badge");
       await expect(badge).toBeVisible();
       await expect(badge).toContainText(count.toString());
     } else {
-      const accordion = this.page.getByTestId("suggested-knowledge-accordion");
-      await expect(accordion).not.toBeVisible();
+      await expect(badge).not.toBeVisible();
     }
   }
 
-  async getKnowledgeList() {
-    return this.page.getByTestId("knowledge-list");
+  async expectEmptyState() {
+    const knowledgeItems = this.page.getByTestId(SELECTORS.KNOWLEDGE_ITEM);
+    await expect(knowledgeItems).toHaveCount(0);
   }
 
-  async expectEmptyState() {
-    const knowledgeList = await this.getKnowledgeList();
-    const knowledgeItems = knowledgeList.getByTestId("knowledge-bank-item");
-    await expect(knowledgeItems).toHaveCount(0);
+  private getKnowledgeItemByContent(content: string) {
+    return this.page.getByTestId(SELECTORS.KNOWLEDGE_ITEM).filter({ hasText: content }).first();
+  }
+
+  private getEditButtonForKnowledge(content: string) {
+    const knowledgeItem = this.getKnowledgeItemByContent(content);
+    return knowledgeItem.locator("button").filter({ hasText: content.substring(0, 125) });
+  }
+
+  private getCancelButtonInForm() {
+    return this.page.locator("form").getByRole("button", { name: "Cancel" });
   }
 }
