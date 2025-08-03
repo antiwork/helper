@@ -48,7 +48,7 @@ test.describe("Working Authentication", () => {
 
     const finalUrl = page.url();
 
-    if (finalUrl.includes("mailboxes")) {
+    if (finalUrl.includes("mailboxes") || finalUrl.includes("mine")) {
       await page.waitForLoadState("networkidle");
 
       const searchInput = page.locator('input[placeholder="Search conversations"]');
@@ -87,7 +87,6 @@ test.describe("Working Authentication", () => {
     await debugWait(page, 2000);
 
     const currentUrl = page.url();
-
     expect(currentUrl).toContain(process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3020");
   });
 
@@ -117,7 +116,7 @@ test.describe("Working Authentication", () => {
 
     const mobileUrl = page.url();
 
-    if (mobileUrl.includes("mailboxes")) {
+    if (mobileUrl.includes("mailboxes") || mobileUrl.includes("mine")) {
       await page.waitForLoadState("networkidle");
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible({ timeout: 15000 });
