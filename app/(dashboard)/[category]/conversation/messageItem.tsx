@@ -227,7 +227,7 @@ const MessageItem = ({
                         ? "bg-muted-foreground text-muted-foreground"
                         : "bg-border text-muted-foreground hover:text-muted-foreground",
                     )}
-                    data-testid="expand-quoted-context-button"
+                    aria-label="Toggle quoted context"
                   >
                     <MoreHorizontal className="h-8 w-8" />
                   </button>

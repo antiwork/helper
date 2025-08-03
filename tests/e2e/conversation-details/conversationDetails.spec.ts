@@ -28,11 +28,14 @@ test.describe("Conversation Details", () => {
   const setupConversation = async (): Promise<void> => {
     await conversationDetailsPage.navigateToConversation();
     await conversationDetailsPage.waitForConversationLoad();
-    
-    await conversationDetailsPage.page.waitForFunction(() => {
-      const header = document.querySelector('[data-testid="conversation-header"]');
-      return header && !header.classList.contains('hidden');
-    }, { timeout: TEST_CONSTANTS.MAX_WAIT_TIME });
+
+    await conversationDetailsPage.page.waitForFunction(
+      () => {
+        const header = document.querySelector('[data-testid="conversation-header"]');
+        return header && !header.classList.contains("hidden");
+      },
+      { timeout: TEST_CONSTANTS.MAX_WAIT_TIME },
+    );
   };
 
   const verifyBasicConversationStructure = async (): Promise<void> => {
@@ -53,7 +56,11 @@ test.describe("Conversation Details", () => {
     }
   };
 
-  const performNavigationTest = async (): Promise<{ changed: boolean; originalSubject: string; originalCounter: string }> => {
+  const performNavigationTest = async (): Promise<{
+    changed: boolean;
+    originalSubject: string;
+    originalCounter: string;
+  }> => {
     const originalSubject = await conversationDetailsPage.getConversationSubject();
     const originalCounter = await conversationDetailsPage.getConversationCounter();
 
@@ -83,7 +90,7 @@ test.describe("Conversation Details", () => {
 
       await conversationDetailsPage.page.waitForTimeout(TEST_CONSTANTS.SCROLL_ANIMATION_DELAY);
 
-      const scrollButton = conversationDetailsPage.page.getByTestId("scroll-to-top-button");
+      const scrollButton = conversationDetailsPage.page.locator("[aria-label='Scroll to top']");
       await expect(scrollButton).toBeAttached();
 
       if (await scrollButton.isVisible()) {
@@ -112,7 +119,7 @@ test.describe("Conversation Details", () => {
   const attemptInternalNoteCreation = async (): Promise<void> => {
     const testNote = `${TEST_CONSTANTS.NOTE_PREFIX} ${generateRandomString(8)}`;
     const noteCreated = await conversationDetailsPage.createInternalNoteIfAvailable(testNote);
-    
+
     if (noteCreated) {
       await conversationDetailsPage.expectMessageExists(testNote);
     }

@@ -86,7 +86,7 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
       <button
         className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         onClick={() => setDetailsExpanded(!detailsExpanded)}
-        data-testid="event-summary-button"
+        aria-label="Toggle event details"
       >
         {hasDetails && (detailsExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />)}
         <Icon className="h-4 w-4" />

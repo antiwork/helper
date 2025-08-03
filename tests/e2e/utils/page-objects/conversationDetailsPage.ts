@@ -25,20 +25,14 @@ export class ConversationDetailsPage {
     MESSAGE_THREAD: "message-thread",
     MESSAGES_CONTAINER: "messages-container",
     CONVERSATION_LIST_ITEM: "conversation-list-item",
-    CLOSE_CONVERSATION_BUTTON: "close-conversation-button",
-    PREVIOUS_CONVERSATION_BUTTON: "previous-conversation-button",
-    NEXT_CONVERSATION_BUTTON: "next-conversation-button",
     TOGGLE_SIDEBAR_BUTTON: "toggle-sidebar-button",
     CONVERSATION_SUBJECT: "conversation-subject",
     CONVERSATION_COUNTER: "conversation-counter",
     MESSAGE_ITEM: "message-item",
     EVENT_ITEM: "event-item",
-    EVENT_SUMMARY_BUTTON: "event-summary-button",
     EVENT_DETAILS: "event-details",
-    EXPAND_QUOTED_CONTEXT_BUTTON: "expand-quoted-context-button",
     VIEW_AI_REASONING_BUTTON: "view-ai-reasoning-button",
     MESSAGE_ATTACHMENTS: "message-attachments",
-    SCROLL_TO_TOP_BUTTON: "scroll-to-top-button",
     MESSAGE_THREAD_PANEL: "message-thread-panel",
     CONVERSATION_SUMMARY: "conversation-summary",
     PROMPT_INDICATOR: "prompt-indicator",
@@ -70,13 +64,16 @@ export class ConversationDetailsPage {
       const conversationLink = firstConversation.locator("a").first();
       await conversationLink.click();
     }
-    
+
     await this.page.waitForLoadState(this.TIMEOUTS.NETWORK_IDLE);
-    
-    await this.page.waitForFunction(() => {
-      const url = new URL(window.location.href);
-      return url.searchParams.has('id') || url.pathname.includes('/conversations');
-    }, { timeout: this.TIMEOUTS.DEFAULT });
+
+    await this.page.waitForFunction(
+      () => {
+        const url = new URL(window.location.href);
+        return url.searchParams.has("id") || url.pathname.includes("/conversations");
+      },
+      { timeout: this.TIMEOUTS.DEFAULT },
+    );
   }
 
   async waitForConversationLoad() {
@@ -145,7 +142,7 @@ export class ConversationDetailsPage {
 
   async expandEventDetails(eventDescription: EventDescription) {
     const eventItem = this.findEventByDescription(eventDescription);
-    const summaryButton = eventItem.getByTestId(this.TEST_IDS.EVENT_SUMMARY_BUTTON);
+    const summaryButton = eventItem.locator("button[aria-label='Toggle event details']");
     await summaryButton.click();
 
     const eventDetails = eventItem.getByTestId(this.TEST_IDS.EVENT_DETAILS);
@@ -160,7 +157,7 @@ export class ConversationDetailsPage {
 
   async expandQuotedContext(messageContent: MessageContent) {
     const messageItem = this.findMessageByContent(messageContent);
-    const expandButton = messageItem.getByTestId(this.TEST_IDS.EXPAND_QUOTED_CONTEXT_BUTTON);
+    const expandButton = messageItem.locator("button[aria-label='Toggle quoted context']");
     await expandButton.click();
   }
 
@@ -301,19 +298,14 @@ export class ConversationDetailsPage {
   }
 
   async createInternalNoteIfAvailable(testNote: string) {
-    const addNoteButton = this.page
-      .locator("button")
-      .filter({ hasText: this.NOTE_BUTTON_PATTERN })
-      .first();
+    const addNoteButton = this.page.locator("button").filter({ hasText: this.NOTE_BUTTON_PATTERN }).first();
     const addNoteExists = await addNoteButton.count();
 
     if (addNoteExists > 0 && (await addNoteButton.isVisible())) {
       await addNoteButton.click();
 
-      const noteInput = this.page
-        .locator('textarea, [data-testid="tiptap-editor-content"] .ProseMirror')
-        .first();
-      
+      const noteInput = this.page.locator('textarea, [data-testid="tiptap-editor-content"] .ProseMirror').first();
+
       if (await noteInput.isVisible()) {
         await noteInput.fill(testNote);
 
@@ -345,15 +337,15 @@ export class ConversationDetailsPage {
   }
 
   private getCloseButton(): Locator {
-    return this.page.getByTestId(this.TEST_IDS.CLOSE_CONVERSATION_BUTTON);
+    return this.page.locator("button[aria-label='Close conversation']");
   }
 
   private getPreviousButton(): Locator {
-    return this.page.getByTestId(this.TEST_IDS.PREVIOUS_CONVERSATION_BUTTON);
+    return this.page.locator("button[aria-label='Previous conversation']");
   }
 
   private getNextButton(): Locator {
-    return this.page.getByTestId(this.TEST_IDS.NEXT_CONVERSATION_BUTTON);
+    return this.page.locator("button[aria-label='Next conversation']");
   }
 
   private getSidebarToggleButton(): Locator {
@@ -377,7 +369,7 @@ export class ConversationDetailsPage {
   }
 
   private getScrollToTopButton(): Locator {
-    return this.page.getByTestId(this.TEST_IDS.SCROLL_TO_TOP_BUTTON);
+    return this.page.locator("[aria-label='Scroll to top']");
   }
 
   private getMessageThreadPanel(): Locator {

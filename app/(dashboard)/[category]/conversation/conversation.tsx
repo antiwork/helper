@@ -140,7 +140,6 @@ const ScrollToTopButton = ({
           onClick={scrollToTop}
           aria-label="Scroll to top"
           tabIndex={show ? 0 : -1}
-          data-testid="scroll-to-top-button"
         >
           <ArrowUp className="h-4 w-4 text-foreground" />
         </button>
@@ -228,7 +227,7 @@ const ConversationHeader = ({
           iconOnly
           onClick={minimize}
           className="text-primary hover:text-foreground"
-          data-testid="close-conversation-button"
+          aria-label="Close conversation"
         >
           <X className="h-4 w-4" />
         </Button>
@@ -238,7 +237,7 @@ const ConversationHeader = ({
             size="sm"
             iconOnly
             onClick={moveToPreviousConversation}
-            data-testid="previous-conversation-button"
+            aria-label="Previous conversation"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -249,13 +248,7 @@ const ConversationHeader = ({
             {currentIndex + 1} of {currentTotal}
             {hasNextPage ? "+" : ""}
           </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            iconOnly
-            onClick={moveToNextConversation}
-            data-testid="next-conversation-button"
-          >
+          <Button variant="ghost" size="sm" iconOnly onClick={moveToNextConversation} aria-label="Next conversation">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
