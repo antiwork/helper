@@ -1,5 +1,4 @@
-import { expect, test } from "@playwright/test";
-import { cleanupTestMembers } from "../utils/db-cleanup";
+import { test } from "@playwright/test";
 import { TeamSettingsPage } from "../utils/page-objects/teamSettingsPage";
 import { generateTestEmail, takeDebugScreenshot } from "../utils/test-helpers";
 
@@ -28,7 +27,6 @@ test.describe("Team Settings", () => {
     await teamSettingsPage.expectMemberInvited(testEmail);
 
     await takeDebugScreenshot(page, "team-member-invited.png");
-    await cleanupTestMembers([testEmail]);
   });
 
   test("should show invited member in team list", async ({ page }) => {
@@ -39,7 +37,6 @@ test.describe("Team Settings", () => {
     await teamSettingsPage.expectMemberInList(testEmail);
 
     await takeDebugScreenshot(page, "team-member-in-list.png");
-    await cleanupTestMembers([testEmail]);
   });
 
   test("should remove a team member", async ({ page }) => {
@@ -53,7 +50,6 @@ test.describe("Team Settings", () => {
     await teamSettingsPage.expectMemberRemoved(testEmail);
 
     await takeDebugScreenshot(page, "team-member-removed.png");
-    await cleanupTestMembers([testEmail]);
   });
 
   test("should change member role from member to admin", async ({ page }) => {
@@ -67,7 +63,6 @@ test.describe("Team Settings", () => {
     await teamSettingsPage.expectMemberRole(testEmail, "admin");
 
     await takeDebugScreenshot(page, "team-member-role-admin.png");
-    await cleanupTestMembers([testEmail]);
   });
 
   test("should change member role from admin to member", async ({ page }) => {
@@ -84,7 +79,6 @@ test.describe("Team Settings", () => {
     await teamSettingsPage.expectMemberRole(testEmail, "member");
 
     await takeDebugScreenshot(page, "team-member-role-member.png");
-    await cleanupTestMembers([testEmail]);
   });
 
   test("should show admin permissions for admin users", async ({ page }) => {
@@ -100,10 +94,10 @@ test.describe("Team Settings", () => {
 
   test("should handle duplicate email invitation", async ({ page }) => {
     const currentUserEmail = await teamSettingsPage.getCurrentUserEmail();
-    
+
     await teamSettingsPage.inviteDuplicateMember(currentUserEmail);
     await teamSettingsPage.expectDuplicateError();
-    
+
     await takeDebugScreenshot(page, "team-duplicate-invite.png");
   });
 
@@ -111,7 +105,7 @@ test.describe("Team Settings", () => {
     await teamSettingsPage.fillInviteForm("test@example.com", "Test User");
     await teamSettingsPage.cancelInvite();
     await teamSettingsPage.expectFormCleared();
-    
+
     await takeDebugScreenshot(page, "team-invite-cancelled.png");
   });
 });
