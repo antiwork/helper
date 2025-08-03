@@ -57,7 +57,14 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
   const canAddMember = isValidEmail && displayNameInput.trim().length > 0 && !isAdding && permissions;
 
   return (
-    <div className="flex gap-4" data-testid="invite-member-form">
+    <form
+      className="flex gap-4"
+      id="invite-member-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        inviteMember();
+      }}
+    >
       <div className="relative flex-1">
         <Label className="sr-only" htmlFor="email-input">
           Email Address
@@ -108,7 +115,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
           Permissions
         </Label>
         <Select value={permissions} onValueChange={(value: string) => setPermissions(value as "member" | "admin")}>
-          <SelectTrigger data-testid="member-role-selector">
+          <SelectTrigger id="member-role-selector">
             <SelectValue placeholder="Permissions" />
           </SelectTrigger>
           <SelectContent>
@@ -117,7 +124,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
           </SelectContent>
         </Select>
       </div>
-      <Button onClick={inviteMember} disabled={!canAddMember}>
+      <Button type="submit" disabled={!canAddMember}>
         {isAdding ? (
           <>Adding...</>
         ) : (
@@ -127,6 +134,6 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
           </>
         )}
       </Button>
-    </div>
+    </form>
   );
 }

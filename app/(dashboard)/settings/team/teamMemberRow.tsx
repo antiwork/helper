@@ -243,7 +243,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
       <TableCell>
         {isAdmin ? (
           <Select value={permissions} onValueChange={handlePermissionsChange}>
-            <SelectTrigger className="w-[100px]" data-testid="member-permissions-selector">
+            <SelectTrigger className="w-[100px]" id="member-permissions-selector">
               <SelectValue placeholder="Permissions" />
             </SelectTrigger>
             <SelectContent>
@@ -258,7 +258,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
       <TableCell>
         {isAdmin ? (
           <Select value={role} onValueChange={(value: UserRole) => handleRoleChange(value)}>
-            <SelectTrigger className="w-[100px]" data-testid="support-role-selector">
+            <SelectTrigger className="w-[100px]" id="support-role-selector">
               <SelectValue placeholder="Role" />
             </SelectTrigger>
             <SelectContent>

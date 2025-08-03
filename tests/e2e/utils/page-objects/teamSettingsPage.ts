@@ -11,9 +11,9 @@ const TIMEOUTS = {
 const SELECTORS = {
   EMAIL_INPUT: "#email-input",
   NAME_INPUT: "#display-name-input",
-  INVITE_FORM: "invite-member-form",
-  ROLE_SELECTOR: "member-role-selector",
-  PERMISSIONS_SELECTOR: "member-permissions-selector",
+  INVITE_FORM: "form#invite-member-form",
+  ROLE_SELECTOR: "#member-role-selector",
+  PERMISSIONS_SELECTOR: "#member-permissions-selector",
 } as const;
 
 const MESSAGES = {
@@ -85,7 +85,7 @@ export class TeamSettingsPage extends BasePage {
     const memberRow = this.getMemberRow(email);
     await expect(memberRow).toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
 
-    const permissionsSelector = memberRow.getByTestId(SELECTORS.PERMISSIONS_SELECTOR);
+    const permissionsSelector = memberRow.locator(SELECTORS.PERMISSIONS_SELECTOR);
     await expect(permissionsSelector).toBeVisible();
     await permissionsSelector.click();
 
@@ -95,7 +95,7 @@ export class TeamSettingsPage extends BasePage {
     await roleOption.click();
 
     await this.page.waitForLoadState(TIMEOUTS.NETWORK_IDLE);
-    const updatedSelector = this.getMemberRow(email).getByTestId(SELECTORS.PERMISSIONS_SELECTOR);
+    const updatedSelector = this.getMemberRow(email).locator(SELECTORS.PERMISSIONS_SELECTOR);
     await expect(updatedSelector).toContainText(roleText, { timeout: TIMEOUTS.ELEMENT_VISIBLE });
   }
 
@@ -105,7 +105,7 @@ export class TeamSettingsPage extends BasePage {
 
     const roleText = role === "admin" ? "Admin" : "Member";
     const permissionsDisplay = memberRow.locator("span").filter({ hasText: roleText });
-    const permissionsSelector = memberRow.getByTestId(SELECTORS.PERMISSIONS_SELECTOR);
+    const permissionsSelector = memberRow.locator(SELECTORS.PERMISSIONS_SELECTOR);
 
     try {
       await expect(permissionsDisplay).toBeVisible();
@@ -115,7 +115,7 @@ export class TeamSettingsPage extends BasePage {
   }
 
   async expectAdminPermissions() {
-    const inviteForm = this.page.getByTestId(SELECTORS.INVITE_FORM);
+    const inviteForm = this.page.locator(SELECTORS.INVITE_FORM);
     await expect(inviteForm).toBeVisible();
     
     const emailInput = this.page.locator(SELECTORS.EMAIL_INPUT);
@@ -124,12 +124,12 @@ export class TeamSettingsPage extends BasePage {
     const nameInput = this.page.locator(SELECTORS.NAME_INPUT);
     await expect(nameInput).toBeEnabled();
     
-    const roleSelector = this.page.getByTestId(SELECTORS.ROLE_SELECTOR);
+    const roleSelector = this.page.locator(SELECTORS.ROLE_SELECTOR);
     await expect(roleSelector).toBeEnabled();
   }
 
   async expectMemberPermissions() {
-    const inviteForm = this.page.getByTestId(SELECTORS.INVITE_FORM);
+    const inviteForm = this.page.locator(SELECTORS.INVITE_FORM);
     await expect(inviteForm).not.toBeVisible();
     
     const removeButtons = this.page.getByRole("button", { name: "Delete" });
@@ -218,7 +218,7 @@ export class TeamSettingsPage extends BasePage {
   }
 
   private async selectRole(role: string) {
-    const permissionsSelector = this.page.getByTestId(SELECTORS.ROLE_SELECTOR);
+    const permissionsSelector = this.page.locator(SELECTORS.ROLE_SELECTOR);
     await expect(permissionsSelector).toBeVisible();
     await permissionsSelector.click();
 
