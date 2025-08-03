@@ -59,7 +59,6 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
   return (
     <form
       className="flex gap-4"
-      id="invite-member-form"
       onSubmit={(e) => {
         e.preventDefault();
         inviteMember();
