@@ -37,7 +37,6 @@ const CommonIssueEditForm = ({
         onSubmit();
       }}
       className="border rounded-lg p-4 space-y-4"
-      data-testid="common-issue-form"
     >
       <div>
         <Label>Title</Label>
@@ -46,7 +45,6 @@ const CommonIssueEditForm = ({
           onChange={(e) => onTitleChange?.(e.target.value)}
           placeholder="e.g., Login Issues"
           className="mt-2"
-          data-testid="issue-title-input"
         />
       </div>
       <div>
@@ -57,16 +55,15 @@ const CommonIssueEditForm = ({
           placeholder="Brief description of this issue group..."
           className="mt-2"
           rows={3}
-          data-testid="issue-description-input"
         />
       </div>
       <div className="flex justify-end gap-2">
         {onCancel && (
-          <Button type="button" variant="subtle" onClick={onCancel} data-testid="cancel-issue-button">
+          <Button type="button" variant="subtle" onClick={onCancel}>
             Cancel
           </Button>
         )}
-        <Button type="submit" disabled={isLoading || !title.trim()} data-testid="save-issue-button">
+        <Button type="submit" disabled={isLoading || !title.trim()}>
           {isLoading ? "Saving..." : "Save"}
         </Button>
       </div>
@@ -155,7 +152,6 @@ const CommonIssuesSetting = () => {
     <SectionWrapper
       title="Common Issues"
       description="Create issue groups to organize and track recurring customer problems. These will help you quickly categorize and resolve similar conversations."
-      data-testid="common-issues-page"
     >
       <Input
         type="text"
@@ -163,10 +159,9 @@ const CommonIssuesSetting = () => {
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className="mb-4"
-        data-testid="common-issues-search-input"
       />
 
-      <div className="mb-4 divide-y divide-border" data-testid="common-issues-list">
+      <div className="mb-4 divide-y divide-border">
         {isLoading ? (
           <>
             {Array.from({ length: 3 }).map((_, i) => (
@@ -180,13 +175,13 @@ const CommonIssuesSetting = () => {
             ))}
           </>
         ) : filteredIssueGroups.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground" data-testid="common-issues-empty-state">
+          <div className="py-8 text-center text-muted-foreground">
             {searchQuery ? "No common issues found matching your search." : "No common issues created yet."}
           </div>
         ) : (
           <>
             {filteredIssueGroups.map((group) => (
-              <div key={group.id} className="py-4" data-testid="common-issue-item">
+              <div key={group.id} className="py-4">
                 {editingIssue?.id === group.id ? (
                   <CommonIssueEditForm
                     title={editingIssue.title}
@@ -200,18 +195,11 @@ const CommonIssuesSetting = () => {
                 ) : (
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm" data-testid="common-issue-title">
-                        {group.title}
-                      </div>
+                      <div className="font-medium text-sm">{group.title}</div>
                       {group.description && (
-                        <div
-                          className="text-xs text-muted-foreground mt-1 line-clamp-2"
-                          data-testid="common-issue-description"
-                        >
-                          {group.description}
-                        </div>
+                        <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{group.description}</div>
                       )}
-                      <div className="text-xs text-muted-foreground mt-2" data-testid="common-issue-conversation-count">
+                      <div className="text-xs text-muted-foreground mt-2">
                         {group.conversationCount} conversation{group.conversationCount !== 1 ? "s" : ""}
                       </div>
                     </div>
@@ -227,7 +215,6 @@ const CommonIssuesSetting = () => {
                             description: group.description || "",
                           })
                         }
-                        data-testid="edit-common-issue-button"
                       >
                         <Edit2 className="h-4 w-4" />
                         <span className="sr-only">Edit</span>
@@ -237,7 +224,7 @@ const CommonIssuesSetting = () => {
                         onConfirm={() => handleDeleteIssue(group.id)}
                         confirmLabel="Yes, delete"
                       >
-                        <Button variant="ghost" size="sm" iconOnly data-testid="delete-common-issue-button">
+                        <Button variant="ghost" size="sm" iconOnly>
                           <Trash className="h-4 w-4" />
                           <span className="sr-only">Delete</span>
                         </Button>

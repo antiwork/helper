@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 export class CommonIssuesPage {
   readonly page: Page;
@@ -9,98 +9,106 @@ export class CommonIssuesPage {
 
   async navigateToCommonIssues() {
     await this.page.goto("/settings/common-issues");
-    await expect(this.page.getByTestId("common-issues-page")).toBeVisible();
+    await expect(this.page.getByText("Common Issues").first()).toBeVisible();
   }
 
   async searchCommonIssues(query: string) {
-    const searchInput = this.page.getByTestId("common-issues-search-input");
-    await searchInput.click();
-    await searchInput.fill(query);
+    await this.page.getByPlaceholder("Search common issues...").fill(query);
   }
 
   async addCommonIssue(title: string, description?: string) {
-    await this.page.getByTestId("add-common-issue-button").click();
+    await this.page.getByRole("button", { name: "Add Common Issue" }).click();
 
-    await this.page.getByTestId("issue-title-input").fill(title);
+    await this.page.getByPlaceholder("e.g., Login Issues").fill(title);
     if (description) {
-      await this.page.getByTestId("issue-description-input").fill(description);
+      await this.page.getByPlaceholder("Brief description of this issue group...").fill(description);
     }
 
-    await this.page.getByTestId("save-issue-button").click();
+    await this.page.getByRole("button", { name: "Save" }).click();
     await this.page.waitForLoadState("networkidle");
   }
 
   async editCommonIssue(currentTitle: string, newTitle: string, newDescription?: string) {
-    const issueItem = this.page.getByTestId("common-issue-item").filter({ hasText: currentTitle });
-    await issueItem.getByTestId("edit-common-issue-button").click();
+    const issueItem = await this.findIssueItem(currentTitle);
+    await issueItem.getByRole("button", { name: "Edit" }).click();
 
-    const titleInput = this.page.getByTestId("issue-title-input");
-    await titleInput.click();
-    await titleInput.fill(newTitle);
+    await this.page.getByPlaceholder("e.g., Login Issues").fill(newTitle);
 
     if (newDescription !== undefined) {
-      const descriptionInput = this.page.getByTestId("issue-description-input");
-      await descriptionInput.click();
-      await descriptionInput.fill(newDescription);
+      await this.page.getByPlaceholder("Brief description of this issue group...").fill(newDescription);
     }
 
-    await this.page.getByTestId("save-issue-button").click();
+    await this.page.getByRole("button", { name: "Save" }).click();
     await this.page.waitForLoadState("networkidle");
   }
 
   async deleteCommonIssue(title: string) {
-    const issueItem = this.page.getByTestId("common-issue-item").filter({ hasText: title });
-    await issueItem.getByTestId("delete-common-issue-button").click();
-
-    // Handle confirmation dialog - look for the "Yes, delete" button
+    const issueItem = await this.findIssueItem(title);
+    await issueItem.getByRole("button", { name: "Delete" }).click();
     await this.page.getByRole("button", { name: "Yes, delete" }).click();
     await this.page.waitForLoadState("networkidle");
   }
 
   async cancelAddCommonIssue() {
-    await this.page.getByTestId("add-common-issue-button").click();
-    await this.page.getByTestId("cancel-issue-button").click();
+    await this.page.getByRole("button", { name: "Add Common Issue" }).click();
+    await this.page.getByRole("button", { name: "Cancel" }).click();
   }
 
   async cancelEditCommonIssue(title: string) {
-    const issueItem = this.page.getByTestId("common-issue-item").filter({ hasText: title });
-    await issueItem.getByTestId("edit-common-issue-button").click();
-    await this.page.getByTestId("cancel-issue-button").click();
+    const issueItem = await this.findIssueItem(title);
+    await issueItem.getByRole("button", { name: "Edit" }).click();
+    await this.page.getByRole("button", { name: "Cancel" }).click();
   }
 
   async expectCommonIssueVisible(title: string) {
-    const issueItem = this.page.getByTestId("common-issue-item").filter({ hasText: title });
-    await expect(issueItem).toBeVisible();
-    await expect(issueItem.getByTestId("common-issue-title")).toContainText(title);
+    await expect(this.page.getByText(title, { exact: true })).toBeVisible();
   }
 
   async expectCommonIssueNotVisible(title: string) {
-    const issueItem = this.page.getByTestId("common-issue-item").filter({ hasText: title });
-    await expect(issueItem).not.toBeVisible();
+    await expect(this.page.getByText(title, { exact: true })).not.toBeVisible();
   }
 
   async expectCommonIssueDescription(title: string, description: string) {
-    const issueItem = this.page.getByTestId("common-issue-item").filter({ hasText: title });
-    await expect(issueItem.getByTestId("common-issue-description")).toContainText(description);
+    const issueItem = await this.findIssueItem(title);
+    await expect(issueItem.getByText(description)).toBeVisible();
   }
 
   async expectCommonIssueConversationCount(title: string, count: number) {
-    const issueItem = this.page.getByTestId("common-issue-item").filter({ hasText: title });
+    const issueItem = await this.findIssueItem(title);
     const expectedText = count === 1 ? "1 conversation" : `${count} conversations`;
-    await expect(issueItem.getByTestId("common-issue-conversation-count")).toContainText(expectedText);
+    await expect(issueItem.getByText(expectedText)).toBeVisible();
   }
 
   async expectEmptyState() {
-    await expect(this.page.getByTestId("common-issues-empty-state")).toBeVisible();
+    await expect(this.page.getByText("No common issues created yet.")).toBeVisible();
   }
 
   async expectSearchEmptyState() {
-    await expect(this.page.getByTestId("common-issues-empty-state")).toContainText(
-      "No common issues found matching your search.",
-    );
+    await expect(this.page.getByText("No common issues found matching your search.")).toBeVisible();
   }
 
   async expectNoEmptyState() {
-    await expect(this.page.getByTestId("common-issues-empty-state")).not.toBeVisible();
+    await expect(this.page.getByText("No common issues created yet.")).not.toBeVisible();
+  }
+
+  async openAddIssueForm() {
+    await this.page.getByRole("button", { name: "Add Common Issue" }).click();
+  }
+
+  async fillIssueTitle(title: string) {
+    await this.page.getByPlaceholder("e.g., Login Issues").fill(title);
+  }
+
+  async expectSaveButtonDisabled() {
+    await expect(this.page.getByRole("button", { name: "Save" })).toBeDisabled();
+  }
+
+  async expectSaveButtonEnabled() {
+    await expect(this.page.getByRole("button", { name: "Save" })).toBeEnabled();
+  }
+
+  private async findIssueItem(title: string): Promise<Locator> {
+    const titleElement = this.page.getByText(title, { exact: true });
+    return titleElement.locator("xpath=ancestor::div[2]");
   }
 }
