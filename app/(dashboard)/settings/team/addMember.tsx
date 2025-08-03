@@ -22,9 +22,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
 
   const { mutate: addMemberMutation, isPending: isAdding } = api.organization.addMember.useMutation({
     onSuccess: () => {
-      toast.success("Team member added", {
-        description: `${emailInput} can now log in`,
-      });
+      toast.success("Team member added", { description: `${emailInput} can now log in` });
 
       setEmailInput("");
       setDisplayNameInput("");
@@ -33,9 +31,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
       utils.mailbox.members.list.invalidate();
     },
     onError: (error) => {
-      toast.error("Failed to send invitation", {
-        description: error.message,
-      });
+      toast.error("Failed to send invitation", { description: error.message });
     },
   });
 
@@ -47,9 +43,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
     const existingMember = teamMembers.find((member) => member.email?.toLowerCase() === emailInput.toLowerCase());
 
     if (existingMember) {
-      toast.error("Member already exists", {
-        description: "This user is already in your organization",
-      });
+      toast.error("Member already exists", { description: "This user is already in your organization" });
     } else {
       addMemberMutation({
         email: emailInput,
