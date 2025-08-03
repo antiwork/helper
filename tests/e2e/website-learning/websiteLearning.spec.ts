@@ -18,12 +18,9 @@ test.describe("Website Learning UI Smoke Tests", () => {
     }
   });
 
-  test("displays main website learning interface", async () => {
+  test("displays the website learning section and add website form", async () => {
     await websiteLearningPage.expectWebsiteLearningSection();
     await websiteLearningPage.expectAddWebsiteButton();
-  });
-
-  test("shows add website form on button click", async () => {
     await websiteLearningPage.clickAddWebsite();
     await websiteLearningPage.expectAddWebsiteForm();
   });
