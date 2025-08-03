@@ -24,7 +24,6 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
     onSuccess: () => {
       toast.success("Team member added", {
         description: `${emailInput} can now log in`,
-        id: "invite-success-message",
       });
 
       setEmailInput("");
@@ -36,7 +35,6 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
     onError: (error) => {
       toast.error("Failed to send invitation", {
         description: error.message,
-        id: "invite-error-message",
       });
     },
   });
@@ -51,7 +49,6 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
     if (existingMember) {
       toast.error("Member already exists", {
         description: "This user is already in your organization",
-        id: "duplicate-member-error",
       });
     } else {
       addMemberMutation({

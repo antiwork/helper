@@ -85,14 +85,11 @@ export default function DeleteMemberDialog({
 
         toast.success("Member removed from the team", {
           description: `Conversations will be reassigned to ${"displayName" in assignedTo ? assignedTo.displayName : "Helper agent"}`,
-          id: "member-removal-success",
         });
       } else {
         await removeTeamMember({ id: member.id });
 
-        toast.success("Member removed from the team", {
-          id: "member-removal-success",
-        });
+        toast.success("Member removed from the team");
       }
     } catch (error) {
       setLoading(false);
@@ -104,16 +101,14 @@ export default function DeleteMemberDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent data-testid="delete-member-dialog">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2" data-testid="delete-member-title">
-            Remove Team Member
-          </DialogTitle>
-          <DialogDescription data-testid="delete-member-description">{description}</DialogDescription>
+          <DialogTitle className="flex items-center gap-2">Remove Team Member</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         {assignedConversationCount > 0 && (
-          <div className="flex flex-col space-y-4" data-testid="reassignment-section">
+          <div className="flex flex-col space-y-4">
             <h4 className="font-medium">Reassign {assignedConversationCount} tickets to</h4>
 
             <AssignSelect
@@ -121,7 +116,6 @@ export default function DeleteMemberDialog({
               onChange={handleAssignSelectChange}
               aiOption
               aiOptionSelected={!!assignedTo && "ai" in assignedTo}
-              data-testid="reassign-select"
             />
 
             <div className="grid gap-1">
@@ -132,18 +126,12 @@ export default function DeleteMemberDialog({
                 value={assignMessage}
                 rows={3}
                 onChange={(e) => setAssignMessage(e.target.value)}
-                data-testid="reassign-message-input"
               />
             </div>
           </div>
         )}
 
-        <Button
-          onClick={handleAssignSubmit}
-          disabled={loading}
-          variant="destructive"
-          data-testid="confirm-remove-member"
-        >
+        <Button onClick={handleAssignSubmit} disabled={loading} variant="destructive">
           {loading ? "Removing member..." : "Confirm Removal"}
         </Button>
       </DialogContent>

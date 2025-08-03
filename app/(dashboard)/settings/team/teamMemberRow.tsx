@@ -221,13 +221,11 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
   };
 
   return (
-    <TableRow data-testid="member-row">
+    <TableRow>
       <TableCell>
         <div className="flex items-center gap-3">
           <Avatar fallback={getAvatarFallback(member)} size="sm" />
-          <span className="truncate" data-testid="member-email">
-            {member.email || "No email"}
-          </span>
+          <span className="truncate">{member.email || "No email"}</span>
         </div>
       </TableCell>
       <TableCell>
@@ -237,10 +235,9 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
             onChange={(e) => handleDisplayNameChange(e.target.value)}
             placeholder="Enter display name"
             className="w-full max-w-lg"
-            data-testid="member-name-input"
           />
         ) : (
-          <span data-testid="member-name">{member.displayName || "No display name"}</span>
+          <span>{member.displayName || "No display name"}</span>
         )}
       </TableCell>
       <TableCell>
@@ -259,7 +256,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
             </SelectContent>
           </Select>
         ) : (
-          <span data-testid="member-permissions-display">{PERMISSIONS_DISPLAY_NAMES[member.permissions]}</span>
+          <span>{PERMISSIONS_DISPLAY_NAMES[member.permissions]}</span>
         )}
       </TableCell>
       <TableCell>
@@ -281,7 +278,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
             </SelectContent>
           </Select>
         ) : (
-          <span data-testid="member-role-display">{ROLE_DISPLAY_NAMES[member.role]}</span>
+          <span>{ROLE_DISPLAY_NAMES[member.role]}</span>
         )}
       </TableCell>
       <TableCell>
@@ -292,14 +289,10 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
               onChange={(e) => handleKeywordsChange(e.target.value)}
               placeholder="Enter keywords separated by commas"
               className={role === "nonCore" ? "" : "invisible"}
-              data-testid="member-keywords-input"
             />
           </div>
         ) : (
-          <span
-            className={`text-muted-foreground ${role === "nonCore" ? "" : "invisible"}`}
-            data-testid="member-keywords-display"
-          >
+          <span className={`text-muted-foreground ${role === "nonCore" ? "" : "invisible"}`}>
             {member.keywords.length > 0 ? member.keywords.join(", ") : ""}
           </span>
         )}
@@ -315,7 +308,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
             }
             assignedConversationCount={count?.total || 0}
           >
-            <Button variant="ghost" size="sm" iconOnly data-testid="remove-member-button">
+            <Button variant="ghost" size="sm" iconOnly>
               <Trash className="h-4 w-4" />
               <span className="sr-only">Delete</span>
             </Button>
@@ -323,7 +316,7 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
         )}
       </TableCell>
       <TableCell className="min-w-[120px]">
-        <div className="flex items-center gap-2" data-testid="member-status-indicators">
+        <div className="flex items-center gap-2">
           <SavingIndicator state={displayNameSaving.state} />
           <SavingIndicator state={permissionsSaving.state} />
           <SavingIndicator state={roleSaving.state} />
