@@ -1,9 +1,12 @@
 import { expect, test } from "@playwright/test";
+import { cleanupTestMembers } from "../utils/db-cleanup";
 import { TeamSettingsPage } from "../utils/page-objects/teamSettingsPage";
 import { generateTestEmail, takeDebugScreenshot } from "../utils/test-helpers";
 
 // Uses authenticated session with support@gumroad.com which has admin permissions
 test.use({ storageState: "tests/e2e/.auth/user.json" });
+
+test.describe.configure({ mode: "serial" });
 
 test.describe("Team Settings", () => {
   let teamSettingsPage: TeamSettingsPage;
@@ -11,13 +14,12 @@ test.describe("Team Settings", () => {
   test.beforeEach(async ({ page }) => {
     teamSettingsPage = new TeamSettingsPage(page);
 
-    try {
-      await teamSettingsPage.navigateToTeamSettings();
-    } catch (error) {
-      console.log("Initial navigation failed, retrying...", error);
-      await teamSettingsPage.navigateToTeamSettings();
-    }
+    // Wait for page to be ready and ensure stable state
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1000); // Additional stability wait
 
+    // Simple navigation without retry loop
+    await teamSettingsPage.navigateToTeamSettings();
     await teamSettingsPage.expectTeamSettingsPage();
   });
 
@@ -25,24 +27,24 @@ test.describe("Team Settings", () => {
     // Test that admin can perform operations that require admin permissions
 
     // 1. Admin should see the invite form (member users would not see this)
-    const inviteForm = page.getByTestId("invite-member-form");
+    const inviteForm = page.locator('[data-testid="invite-member-form"]');
     await expect(inviteForm).toBeVisible();
 
     // 2. Admin should see permission selectors for existing members
-    const permissionSelectors = page.getByTestId("member-permissions-selector");
+    const permissionSelectors = page.locator("select").filter({ hasText: "Permissions" });
     const selectorCount = await permissionSelectors.count();
     if (selectorCount > 0) {
       await expect(permissionSelectors.first()).toBeVisible();
     }
 
     // 3. Admin can fill out the invite form (this would be disabled for members)
-    const emailInput = page.getByTestId("invite-email-input");
+    const emailInput = page.locator("#email-input");
     await expect(emailInput).toBeEnabled();
 
-    const nameInput = page.getByTestId("invite-name-input");
+    const nameInput = page.locator("#display-name-input");
     await expect(nameInput).toBeEnabled();
 
-    const roleSelector = page.getByTestId("member-role-selector");
+    const roleSelector = page.locator('[data-testid="member-role-selector"]');
     await expect(roleSelector).toBeEnabled();
 
     await takeDebugScreenshot(page, "admin-only-operations.png");
@@ -55,6 +57,9 @@ test.describe("Team Settings", () => {
     await teamSettingsPage.expectMemberInvited(testEmail);
 
     await takeDebugScreenshot(page, "team-member-invited.png");
+
+    // Clean up the member we created
+    await cleanupTestMembers([testEmail]);
   });
 
   test("should show invited member in team list", async ({ page }) => {
@@ -66,6 +71,9 @@ test.describe("Team Settings", () => {
     // Member should appear in the list after invitation
     await teamSettingsPage.expectMemberInList(testEmail);
     await takeDebugScreenshot(page, "team-member-in-list.png");
+
+    // Clean up the member we created
+    await cleanupTestMembers([testEmail]);
   });
 
   test("should remove a team member", async ({ page }) => {
@@ -83,10 +91,14 @@ test.describe("Team Settings", () => {
     await teamSettingsPage.expectMemberRemoved(testEmail);
 
     await takeDebugScreenshot(page, "team-member-removed.png");
+
+    // Clean up in case the member wasn't properly removed
+    await cleanupTestMembers([testEmail]);
   });
 
   test("should change member role from member to admin", async ({ page }) => {
     const testEmail = generateTestEmail();
+    await page.waitForLoadState("networkidle");
 
     // Invite a member
     await teamSettingsPage.inviteMember(testEmail);
@@ -101,6 +113,9 @@ test.describe("Team Settings", () => {
     await teamSettingsPage.expectMemberRole(testEmail, "admin");
 
     await takeDebugScreenshot(page, "team-member-role-admin.png");
+
+    // Clean up the member we created
+    await cleanupTestMembers([testEmail]);
   });
 
   test("should change member role from admin to member", async ({ page }) => {
@@ -124,6 +139,9 @@ test.describe("Team Settings", () => {
     await teamSettingsPage.expectMemberRole(testEmail, "member");
 
     await takeDebugScreenshot(page, "team-member-role-member.png");
+
+    // Clean up the member we created
+    await cleanupTestMembers([testEmail]);
   });
 
   test("should show admin permissions for admin users", async ({ page }) => {
@@ -134,11 +152,11 @@ test.describe("Team Settings", () => {
 
   test("should handle invite form validation", async ({ page }) => {
     // Try to invite with invalid email
-    const emailInput = page.getByTestId("invite-email-input");
+    const emailInput = page.locator("#email-input");
     await emailInput.fill("invalid-email");
 
     // Should show validation error
-    const errorMessage = page.getByTestId("email-validation-error");
+    const errorMessage = page.getByText("Please enter a valid email address");
     await expect(errorMessage).toBeVisible();
 
     await takeDebugScreenshot(page, "team-invite-validation.png");
@@ -147,20 +165,29 @@ test.describe("Team Settings", () => {
   test("should handle duplicate email invitation", async ({ page }) => {
     const currentUserEmail = await teamSettingsPage.getCurrentUserEmail();
 
-    // Fill the form with existing user email
-    const emailInput = page.getByTestId("invite-email-input");
+    // Wait for the team list to load
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(2000);
+
+    // Try to invite the current user (who already exists)
+    const emailInput = page.locator("#email-input");
     await emailInput.fill(currentUserEmail);
 
-    const nameInput = page.getByTestId("invite-name-input");
+    const nameInput = page.locator("#display-name-input");
     await nameInput.fill("Duplicate User");
 
-    const permissionsSelector = page.getByTestId("member-role-selector");
+    // Wait for the form to be ready and select permissions
+    const permissionsSelector = page.locator('[data-testid="member-role-selector"]');
+    await expect(permissionsSelector).toBeVisible();
     await permissionsSelector.click();
 
-    const memberOption = page.getByTestId("role-option-member");
+    const memberOption = page.getByRole("option", { name: "Member" });
+    await expect(memberOption).toBeVisible();
     await memberOption.click();
 
-    const submitButton = page.getByTestId("invite-member-button");
+    // Wait for the button to be enabled
+    const submitButton = page.getByRole("button", { name: "Add Member" });
+    await expect(submitButton).toBeEnabled();
     await submitButton.click();
 
     // Should show error toast about existing member
@@ -172,10 +199,10 @@ test.describe("Team Settings", () => {
 
   test("should cancel invite process", async ({ page }) => {
     // Fill some data in the form first
-    const emailInput = page.getByTestId("invite-email-input");
+    const emailInput = page.locator("#email-input");
     await emailInput.fill("test@example.com");
 
-    const nameInput = page.getByTestId("invite-name-input");
+    const nameInput = page.locator("#display-name-input");
     await nameInput.fill("Test User");
 
     // Cancel the invite (clear fields)
