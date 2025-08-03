@@ -2,196 +2,152 @@ import { expect, Page } from "@playwright/test";
 import { generateTestEmail } from "../test-helpers";
 import { BasePage } from "./basePage";
 
-/**
- * Page object for Team Settings functionality.
- *
- * Note: Many operations (invite, remove, role changes) require admin permissions.
- * The test suite uses support@gumroad.com which is created with admin role during seeding.
- */
+const TIMEOUTS = {
+  ELEMENT_VISIBLE: 10000,
+  NETWORK_IDLE: "networkidle" as const,
+  FORM_STABILITY: 2000,
+} as const;
+
+const SELECTORS = {
+  EMAIL_INPUT: "#email-input",
+  NAME_INPUT: "#display-name-input",
+  INVITE_FORM: "invite-member-form",
+  ROLE_SELECTOR: "member-role-selector",
+  PERMISSIONS_SELECTOR: "member-permissions-selector",
+} as const;
+
+const MESSAGES = {
+  MEMBER_ADDED: "Team member added",
+  MEMBER_REMOVED: "Member removed from the team",
+  MEMBER_EXISTS: "Member already exists",
+  VALIDATION_EMAIL: "Please enter a valid email address",
+} as const;
+
 export class TeamSettingsPage extends BasePage {
   constructor(page: Page) {
     super(page);
   }
 
   async navigateToTeamSettings() {
-    // Check if we're already on the team settings page
-    const currentUrl = this.page.url();
-    if (currentUrl.includes("/settings/team")) {
-      // Already on the correct page, just wait for it to be ready
+    if (this.page.url().includes("/settings/team")) {
       await this.waitForPageLoad();
       return;
     }
 
-    // Navigate to team settings page
     await this.goto("/settings/team");
-
     await this.page.waitForLoadState("domcontentloaded");
-    await this.page.waitForSelector('h2:has-text("Manage Team Members")', { timeout: 10000 });
+    await this.waitForTeamSettingsHeader();
   }
 
   async expectTeamSettingsPage() {
     await expect(this.page).toHaveURL(/.*settings\/team.*/);
-    // Wait for the main heading to be visible
-    await this.page.waitForSelector('h2:has-text("Manage Team Members")', { timeout: 10000 });
+    await this.waitForTeamSettingsHeader();
   }
 
   async inviteMember(email?: string): Promise<string> {
     const testEmail = email || generateTestEmail();
-
-    // Fill email input
-    const emailInput = this.page.locator("#email-input");
-    await expect(emailInput).toBeVisible();
-    await emailInput.fill(testEmail);
-
-    // Fill name input (required)
-    const nameInput = this.page.locator("#display-name-input");
-    await expect(nameInput).toBeVisible();
-    await nameInput.fill(`Test User ${Date.now()}`);
-
-    // Select permissions
-    const permissionsSelector = this.page.locator('[data-testid="member-role-selector"]');
-    await expect(permissionsSelector).toBeVisible();
-    await permissionsSelector.click();
-
-    const memberOption = this.page.getByRole("option", { name: "Member" });
-    await expect(memberOption).toBeVisible();
-    await memberOption.click();
-
-    // Submit invitation
-    const submitButton = this.page.getByRole("button", { name: "Add Member" });
-    await expect(submitButton).toBeVisible();
-    await submitButton.click();
-
+    
+    await this.fillInviteForm(testEmail, `Test User ${Date.now()}`);
+    await this.selectRole("Member");
+    await this.submitInvite();
+    
     return testEmail;
   }
 
   async expectMemberInvited(email: string) {
-    // Wait for success toast message
-    const successToast = this.page.locator('[data-sonner-toast]:has-text("Team member added")');
-    await expect(successToast).toBeVisible({ timeout: 10000 });
-
-    // Wait for the member to appear in the list
+    await this.expectToast(MESSAGES.MEMBER_ADDED);
     await this.expectMemberInList(email);
   }
 
   async expectMemberInList(email: string) {
-    // Wait for the member row to be visible with the email
-    const memberRow = this.page.locator("tr").filter({ hasText: email });
-
-    // Check if the element exists in the DOM first
-    await expect(memberRow).toBeVisible({ timeout: 10000 });
+    const memberRow = this.getMemberRow(email);
+    await expect(memberRow).toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
   }
 
   async removeMember(email: string) {
-    const memberRow = this.page.locator("tr").filter({ hasText: email });
+    const memberRow = this.getMemberRow(email);
+    await expect(memberRow).toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
 
-    // Check if the element exists in the DOM first
-    await expect(memberRow).toBeVisible({ timeout: 10000 });
-
-    // Find remove button in the row
     const removeButton = memberRow.getByRole("button", { name: "Delete" });
     await expect(removeButton).toBeVisible();
     await removeButton.click();
 
-    // Wait for deletion dialog to appear
-    const deleteDialog = this.page.getByRole("dialog");
-    await expect(deleteDialog).toBeVisible();
-
-    // Confirm removal
-    const confirmButton = deleteDialog.getByRole("button", { name: "Confirm Removal" });
-    await expect(confirmButton).toBeVisible();
-    await confirmButton.click();
-
-    // Wait for success toast
-    const successToast = this.page.locator('[data-sonner-toast]:has-text("Member removed from the team")');
-    await expect(successToast).toBeVisible({ timeout: 10000 });
+    await this.confirmDeletion();
+    await this.expectToast(MESSAGES.MEMBER_REMOVED);
   }
 
   async expectMemberRemoved(email: string) {
-    const memberRow = this.page.locator("tr").filter({ hasText: email });
+    const memberRow = this.getMemberRow(email);
     await expect(memberRow).not.toBeVisible();
   }
 
   async changeRole(email: string, role: "admin" | "member") {
-    const memberRow = this.page.locator("tr").filter({ hasText: email });
+    const memberRow = this.getMemberRow(email);
+    await expect(memberRow).toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
 
-    // Check if the element exists in the DOM first
-    await expect(memberRow).toBeVisible({ timeout: 10000 });
-
-    // Find permissions dropdown (this controls admin/member permissions)
-    const permissionsSelector = memberRow.getByTestId("member-permissions-selector");
+    const permissionsSelector = memberRow.getByTestId(SELECTORS.PERMISSIONS_SELECTOR);
     await expect(permissionsSelector).toBeVisible();
     await permissionsSelector.click();
 
-    // Select the new role
-    const roleOption = this.page.getByRole("option", { name: role === "admin" ? "Admin" : "Member" });
+    const roleText = role === "admin" ? "Admin" : "Member";
+    const roleOption = this.page.getByRole("option", { name: roleText });
     await expect(roleOption).toBeVisible();
     await roleOption.click();
 
-    // Wait for the role change to be applied using Playwright's native waiting
-    const memberRow2 = this.page.locator("tr").filter({ hasText: email });
-    const permissionsSelector2 = memberRow2.getByTestId("member-permissions-selector");
-
-    const expectedText = role === "admin" ? "Admin" : "Member";
-    await expect(permissionsSelector2).toContainText(expectedText, { timeout: 10000 });
+    await this.page.waitForLoadState(TIMEOUTS.NETWORK_IDLE);
+    const updatedSelector = this.getMemberRow(email).getByTestId(SELECTORS.PERMISSIONS_SELECTOR);
+    await expect(updatedSelector).toContainText(roleText, { timeout: TIMEOUTS.ELEMENT_VISIBLE });
   }
 
   async expectMemberRole(email: string, role: "admin" | "member") {
-    const memberRow = this.page.locator("tr").filter({ hasText: email });
+    const memberRow = this.getMemberRow(email);
+    await expect(memberRow).toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
 
-    // Check if the element exists in the DOM first
-    await expect(memberRow).toBeVisible({ timeout: 10000 });
+    const roleText = role === "admin" ? "Admin" : "Member";
+    const permissionsDisplay = memberRow.locator("span").filter({ hasText: roleText });
+    const permissionsSelector = memberRow.getByTestId(SELECTORS.PERMISSIONS_SELECTOR);
 
-    // Check permissions display or selector
-    const permissionsDisplay = memberRow.locator("span").filter({ hasText: role === "admin" ? "Admin" : "Member" });
-    const permissionsSelector = memberRow.getByTestId("member-permissions-selector");
-
-    // Try to find either display or selector and check it contains the role
     try {
       await expect(permissionsDisplay).toBeVisible();
     } catch {
-      await expect(permissionsSelector).toContainText(role === "admin" ? "Admin" : "Member");
+      await expect(permissionsSelector).toContainText(roleText);
     }
   }
 
   async expectAdminPermissions() {
-    // Admin should see invite form
-    const inviteForm = this.page.getByTestId("invite-member-form");
+    const inviteForm = this.page.getByTestId(SELECTORS.INVITE_FORM);
     await expect(inviteForm).toBeVisible();
-
-    // Admin should see at least one remove button (if there are members)
-    const removeButtons = this.page.getByRole("button", { name: "Delete" });
-    const count = await removeButtons.count();
-    expect(count).toBeGreaterThanOrEqual(0); // May be 0 if no other members exist
+    
+    const emailInput = this.page.locator(SELECTORS.EMAIL_INPUT);
+    await expect(emailInput).toBeEnabled();
+    
+    const nameInput = this.page.locator(SELECTORS.NAME_INPUT);
+    await expect(nameInput).toBeEnabled();
+    
+    const roleSelector = this.page.getByTestId(SELECTORS.ROLE_SELECTOR);
+    await expect(roleSelector).toBeEnabled();
   }
 
   async expectMemberPermissions() {
-    // Member should not see invite form
-    const inviteForm = this.page.getByTestId("invite-member-form");
+    const inviteForm = this.page.getByTestId(SELECTORS.INVITE_FORM);
     await expect(inviteForm).not.toBeVisible();
-
-    // Member should not see remove buttons
+    
     const removeButtons = this.page.getByRole("button", { name: "Delete" });
     const count = await removeButtons.count();
     expect(count).toBe(0);
   }
 
   async expectTeamMembersList() {
-    // Should show team members list
     const membersList = this.page.locator("table");
     await expect(membersList).toBeVisible();
-
-    // Scroll to the table to ensure it's fully visible
     await membersList.scrollIntoViewIfNeeded();
   }
 
   async getCurrentUserEmail(): Promise<string> {
-    // Look for current user's email in member rows or return default
     const memberRows = this.page.locator("tr");
     const count = await memberRows.count();
 
     if (count > 0) {
-      // Look for email pattern in the first member row
       const firstRow = memberRows.first();
       const emailPattern = /[^\s]+@[^\s]+\.[^\s]+/;
       const rowText = await firstRow.textContent();
@@ -203,14 +159,92 @@ export class TeamSettingsPage extends BasePage {
   }
 
   async cancelInvite() {
-    // For the current form design, we can clear the inputs to "cancel"
-    const emailInput = this.page.locator("#email-input");
-    const nameInput = this.page.locator("#display-name-input");
+    const emailInput = this.page.locator(SELECTORS.EMAIL_INPUT);
+    const nameInput = this.page.locator(SELECTORS.NAME_INPUT);
 
     await emailInput.clear();
     await nameInput.clear();
-
-    // Or press Escape to potentially dismiss any dropdowns
     await this.page.keyboard.press("Escape");
+  }
+
+  async fillInviteForm(email: string, name: string) {
+    const emailInput = this.page.locator(SELECTORS.EMAIL_INPUT);
+    const nameInput = this.page.locator(SELECTORS.NAME_INPUT);
+    
+    await expect(emailInput).toBeVisible();
+    await emailInput.fill(email);
+    
+    await expect(nameInput).toBeVisible();
+    await nameInput.fill(name);
+  }
+
+  async fillInvalidEmail(email: string) {
+    const emailInput = this.page.locator(SELECTORS.EMAIL_INPUT);
+    await emailInput.fill(email);
+  }
+
+  async inviteDuplicateMember(email: string) {
+    await this.page.waitForLoadState(TIMEOUTS.NETWORK_IDLE);
+    await this.page.waitForTimeout(TIMEOUTS.FORM_STABILITY);
+    
+    await this.fillInviteForm(email, "Duplicate User");
+    await this.selectRole("Member");
+    await this.submitInvite();
+  }
+
+  async expectValidationError(message: string) {
+    const errorMessage = this.page.getByText(message);
+    await expect(errorMessage).toBeVisible();
+  }
+
+  async expectDuplicateError() {
+    await this.expectToast(MESSAGES.MEMBER_EXISTS);
+  }
+
+  async expectFormCleared() {
+    const emailInput = this.page.locator(SELECTORS.EMAIL_INPUT);
+    const nameInput = this.page.locator(SELECTORS.NAME_INPUT);
+    
+    await expect(emailInput).toHaveValue("");
+    await expect(nameInput).toHaveValue("");
+  }
+
+  private async waitForTeamSettingsHeader() {
+    await this.page.waitForSelector('h2:has-text("Manage Team Members")', { timeout: TIMEOUTS.ELEMENT_VISIBLE });
+  }
+
+  private getMemberRow(email: string) {
+    return this.page.locator("tr").filter({ hasText: email });
+  }
+
+  private async selectRole(role: string) {
+    const permissionsSelector = this.page.getByTestId(SELECTORS.ROLE_SELECTOR);
+    await expect(permissionsSelector).toBeVisible();
+    await permissionsSelector.click();
+
+    const memberOption = this.page.getByRole("option", { name: role });
+    await expect(memberOption).toBeVisible();
+    await memberOption.click();
+  }
+
+  private async submitInvite() {
+    const submitButton = this.page.getByRole("button", { name: "Add Member" });
+    await expect(submitButton).toBeVisible();
+    await expect(submitButton).toBeEnabled();
+    await submitButton.click();
+  }
+
+  private async confirmDeletion() {
+    const deleteDialog = this.page.getByRole("dialog");
+    await expect(deleteDialog).toBeVisible();
+
+    const confirmButton = deleteDialog.getByRole("button", { name: "Confirm Removal" });
+    await expect(confirmButton).toBeVisible();
+    await confirmButton.click();
+  }
+
+  private async expectToast(message: string) {
+    const toast = this.page.locator(`[data-sonner-toast]:has-text("${message}")`);    
+    await expect(toast).toBeVisible({ timeout: TIMEOUTS.ELEMENT_VISIBLE });
   }
 }
