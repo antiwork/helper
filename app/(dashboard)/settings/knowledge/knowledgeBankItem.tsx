@@ -189,6 +189,7 @@ const KnowledgeBankItem = ({ faq, suggestedReplacement, onDelete }: KnowledgeBan
               e.preventDefault();
               handleStartEditing();
             }}
+            aria-label="Edit knowledge"
           >
             <ReactMarkdown className={cn("prose prose-sm", !faq.enabled && "text-muted-foreground")}>
               {truncate(faq?.content, { length: 125 })}

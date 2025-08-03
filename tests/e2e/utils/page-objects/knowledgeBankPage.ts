@@ -160,7 +160,7 @@ export class KnowledgeBankPage {
 
   private getEditButtonForKnowledge(content: string) {
     const knowledgeItem = this.getKnowledgeItemByContent(content);
-    return knowledgeItem.locator("button").filter({ hasText: content.substring(0, 125) });
+    return knowledgeItem.getByRole("button", { name: "Edit knowledge" });
   }
 
   private getCancelButtonInForm() {
