@@ -70,15 +70,11 @@ export class TeamSettingsPage extends BasePage {
     const successToast = this.page.locator('[data-sonner-toast]:has-text("Team member added")');
     await expect(successToast).toBeVisible({ timeout: 10000 });
 
-    // Wait for the list to update and stabilize
-    await this.page.waitForTimeout(2000);
-    // Also wait for the member to appear in the list
+    // Wait for the member to appear in the list
     await this.expectMemberInList(email);
   }
 
   async expectMemberInList(email: string) {
-    console.log(`Looking for member with email: ${email}`);
-
     // Wait for the member row to be visible with the email
     const memberRow = this.page.locator("tr").filter({ hasText: email });
 
