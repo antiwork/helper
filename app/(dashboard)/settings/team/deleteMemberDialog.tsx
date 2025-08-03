@@ -68,9 +68,7 @@ export default function DeleteMemberDialog({
     try {
       if (assignedConversationCount > 0) {
         if (!assignedTo) {
-          toast.error("Please select a valid assignee", {
-            id: "reassign-validation-error",
-          });
+          toast.error("Please select a valid assignee");
           setLoading(false);
           return;
         }
