@@ -27,7 +27,7 @@ test.describe("Team Settings", () => {
     // Test that admin can perform operations that require admin permissions
 
     // 1. Admin should see the invite form (member users would not see this)
-    const inviteForm = page.locator('[data-testid="invite-member-form"]');
+    const inviteForm = page.getByTestId("invite-member-form");
     await expect(inviteForm).toBeVisible();
 
     // 2. Admin should see permission selectors for existing members
@@ -44,7 +44,7 @@ test.describe("Team Settings", () => {
     const nameInput = page.locator("#display-name-input");
     await expect(nameInput).toBeEnabled();
 
-    const roleSelector = page.locator('[data-testid="member-role-selector"]');
+    const roleSelector = page.getByTestId("member-role-selector");
     await expect(roleSelector).toBeEnabled();
 
     await takeDebugScreenshot(page, "admin-only-operations.png");
@@ -177,7 +177,7 @@ test.describe("Team Settings", () => {
     await nameInput.fill("Duplicate User");
 
     // Wait for the form to be ready and select permissions
-    const permissionsSelector = page.locator('[data-testid="member-role-selector"]');
+    const permissionsSelector = page.getByTestId("member-role-selector");
     await expect(permissionsSelector).toBeVisible();
     await permissionsSelector.click();
 

@@ -202,14 +202,6 @@ export class TeamSettingsPage extends BasePage {
     return "support@gumroad.com";
   }
 
-  async waitForInviteForm() {
-    const inviteForm = this.page.locator('[data-testid="invite-member-form"]');
-    await expect(inviteForm).toBeVisible({ timeout: 10000 });
-
-    const emailInput = this.page.locator("#email-input");
-    await expect(emailInput).toBeVisible();
-  }
-
   async cancelInvite() {
     // For the current form design, we can clear the inputs to "cancel"
     const emailInput = this.page.locator("#email-input");
