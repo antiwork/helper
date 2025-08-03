@@ -114,7 +114,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
           Permissions
         </Label>
         <Select value={permissions} onValueChange={(value: string) => setPermissions(value as "member" | "admin")}>
-          <SelectTrigger id="member-role-selector">
+          <SelectTrigger>
             <SelectValue placeholder="Permissions" />
           </SelectTrigger>
           <SelectContent>
