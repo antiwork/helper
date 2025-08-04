@@ -35,7 +35,6 @@ test.describe('Conversation Actions', () => {
     await conversationActionsPage.clickReplyButton();
     
     await conversationActionsPage.waitForMessageToSend();
-    await conversationActionsPage.waitForMessageToSend();
     
     const lastMessageText = await conversationActionsPage.getLastMessageText();
     expect(lastMessageText).toContain(testMessage);
