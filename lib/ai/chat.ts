@@ -20,10 +20,10 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { remark } from "remark";
 import remarkHtml from "remark-html";
 import { z } from "zod";
+import { ToolRequestBody } from "@helperai/client";
 import { ReadPageToolConfig } from "@helperai/sdk";
 import { db } from "@/db/client";
-import { conversationMessages, files, MessageMetadata } from "@/db/schema";
-import type { Tool as HelperTool } from "@/db/schema/tools";
+import { conversationMessages, files, MessageMetadata, ToolMetadata } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { COMPLETION_MODEL, GPT_4_1_MINI_MODEL, GPT_4_1_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
@@ -35,6 +35,7 @@ import { Conversation, updateOriginalConversation } from "@/lib/data/conversatio
 import {
   createAiDraft,
   createConversationMessage,
+  createToolEvent,
   getLastAiGeneratedDraft,
   getMessagesOnly,
 } from "@/lib/data/conversationMessage";
@@ -45,7 +46,7 @@ import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { env } from "@/lib/env";
 import { createHmacDigest } from "@/lib/metadataApiClient";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
-import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
+import { captureExceptionAndLog, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
 
 const SUMMARY_MAX_TOKENS = 7000;
 const SUMMARY_PROMPT =
@@ -117,7 +118,7 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
     .filter((message) => message.body && message.id !== latestMessageId)
     .map((message) => {
       if (message.role === "tool") {
-        const tool = message.metadata?.tool as HelperTool;
+        const metadata = message.metadata as ToolMetadata;
         return {
           id: message.id.toString(),
           role: "assistant",
@@ -125,12 +126,12 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
           toolInvocations: [
             {
               id: message.id.toString(),
-              toolName: tool.slug,
-              result: message.metadata?.result,
+              toolName: metadata?.tool?.slug ?? metadata?.tool?.name,
+              result: metadata?.result,
               step: 0,
               state: "result",
               toolCallId: `tool_${message.id}`,
-              args: message.metadata?.parameters,
+              args: metadata?.parameters,
             },
           ],
         };
@@ -309,7 +310,7 @@ const generateReasoning = async ({
     if (evaluation) {
       captureExceptionAndThrowIfDevelopment(error);
     } else {
-      captureExceptionAndLogIfDevelopment(error);
+      captureExceptionAndLog(error);
     }
     return { reasoning: null, usage: null };
   }
@@ -351,7 +352,7 @@ export const generateAIResponse = async ({
   seed?: number | undefined;
   evaluation?: boolean;
   dataStream?: DataStreamWriter;
-  tools?: ClientProvidedTool[];
+  tools?: Record<string, ToolRequestBody>;
 }) => {
   const lastMessage = messages.findLast((m: Message) => m.role === "user");
   const query = lastMessage?.content || "";
@@ -372,7 +373,7 @@ export const generateAIResponse = async ({
   }
 
   if (clientProvidedTools) {
-    clientProvidedTools.forEach((tool) => {
+    Object.entries(clientProvidedTools).forEach(([toolName, tool]) => {
       const toolDefinition: Tool = {
         description: tool.description,
         parameters: z.object(
@@ -392,11 +393,25 @@ export const generateAIResponse = async ({
       };
 
       if (tool.serverRequestUrl) {
-        toolDefinition.execute = async (params: Record<string, any>) =>
-          await callToolEndpoint(tool, email, params, mailbox);
+        toolDefinition.execute = async (params: Record<string, any>) => {
+          const result = await callToolEndpoint(tool, email, params, mailbox);
+          await createToolEvent({
+            conversationId,
+            tool: {
+              name: toolName,
+              description: tool.description,
+              url: tool.serverRequestUrl,
+            },
+            data: result.success ? result.data : undefined,
+            error: result.success ? undefined : result.error,
+            parameters: params,
+            userMessage: result.success ? "Tool executed successfully." : "Tool execution failed.",
+          });
+          return result;
+        };
       }
 
-      tools[tool.name] = toolDefinition;
+      tools[toolName] = toolDefinition;
     });
   }
 
@@ -562,15 +577,8 @@ const createAssistantMessage = (
   });
 };
 
-export interface ClientProvidedTool {
-  name: string;
-  description: string;
-  parameters: Record<string, { type: "string" | "number"; description?: string; optional?: boolean }>;
-  serverRequestUrl?: string;
-}
-
 const callToolEndpoint = async (
-  tool: ClientProvidedTool,
+  tool: ToolRequestBody,
   email: string | null,
   parameters: Record<string, any>,
   mailbox: Mailbox,
@@ -579,7 +587,7 @@ const callToolEndpoint = async (
     throw new Error("Tool does not have a server request URL");
   }
 
-  const requestBody = { email, parameters };
+  const requestBody = { email, parameters, requestTimestamp: Math.floor(Date.now() / 1000) };
   const hmacDigest = createHmacDigest(mailbox.widgetHMACSecret, { json: requestBody });
   const hmacSignature = hmacDigest.toString("base64");
 
@@ -649,7 +657,7 @@ export const respondWithAI = async ({
   }) => void | Promise<void>;
   isHelperUser?: boolean;
   reasoningEnabled?: boolean;
-  tools?: ClientProvidedTool[];
+  tools?: Record<string, ToolRequestBody>;
 }) => {
   const previousMessages = await loadPreviousMessages(conversation.id, messageId);
   const messages = appendClientMessage({
@@ -810,7 +818,7 @@ export const respondWithAI = async ({
       result.mergeIntoDataStream(dataStream);
     },
     onError(error) {
-      captureExceptionAndLogIfDevelopment(error);
+      captureExceptionAndLog(error);
       return "Error generating AI response";
     },
   });
@@ -847,7 +855,11 @@ const convertMarkdownToHtml = async (markdown: string): Promise<string> => {
   return result.toString();
 };
 
-export const generateDraftResponse = async (conversationId: number, mailbox: Mailbox) => {
+export const generateDraftResponse = async (
+  conversationId: number,
+  mailbox: Mailbox,
+  tools?: Record<string, ToolRequestBody>,
+) => {
   const lastUserMessage = await db.query.conversationMessages.findFirst({
     where: and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.role, "user")),
     orderBy: desc(conversationMessages.createdAt),
@@ -871,6 +883,7 @@ export const generateDraftResponse = async (conversationId: number, mailbox: Mai
     readPageTool: null,
     guideEnabled: false,
     addReasoning: false,
+    tools,
   });
   for await (const _ of result.textStream) {
     // awaiting result.text doesn't appear to work without this

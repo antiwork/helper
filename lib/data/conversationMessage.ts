@@ -2,6 +2,7 @@ import { and, asc, desc, eq, inArray, isNull, ne, notInArray, or, SQL } from "dr
 import { htmlToText } from "html-to-text";
 import DOMPurify from "isomorphic-dompurify";
 import { marked } from "marked";
+import { Message } from "@helperai/client";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, Transaction } from "@/db/client";
@@ -12,17 +13,19 @@ import {
   DRAFT_STATUSES,
   files,
   mailboxes,
+  MessageMetadata,
   notes,
   Tool,
 } from "@/db/schema";
 import { conversations } from "@/db/schema/conversations";
 import { triggerEvent } from "@/jobs/trigger";
 import { PromptInfo } from "@/lib/ai/promptInfo";
+import { getStaffName } from "@/lib/data/user";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
 import { getSlackPermalink } from "@/lib/slack/client";
 import { formatBytes } from "../files";
 import { getConversationById, getNonSupportParticipants, updateConversation } from "./conversation";
-import { finishFileUpload, getFileUrl } from "./files";
+import { finishFileUpload, formatAttachments, getFileUrl } from "./files";
 
 const isAiDraftStale = (draft: typeof conversationMessages.$inferSelect, mailbox: typeof mailboxes.$inferSelect) => {
   return draft.status !== "draft" || draft.createdAt < mailbox.promptUpdatedAt;
@@ -249,6 +252,27 @@ export const serializeMessage = async (
   };
 };
 
+export const serializeMessageForWidget = async (
+  message: typeof conversationMessages.$inferSelect,
+  attachments: (typeof files.$inferSelect)[],
+): Promise<Message> => {
+  const messageAttachments = await formatAttachments(attachments.filter((a) => a.messageId === message.id));
+  const hasPublicAttachments =
+    (message.metadata as MessageMetadata)?.hasAttachments || (message.metadata as MessageMetadata)?.includesScreenshot;
+  return {
+    id: message.id.toString(),
+    role: message.role === "ai_assistant" || message.role === "tool" ? ("assistant" as const) : message.role,
+    content: message.cleanedUpText || htmlToText(message.body ?? "", { wordwrap: false }),
+    createdAt: message.createdAt.toISOString(),
+    reactionType: message.reactionType,
+    reactionFeedback: message.reactionFeedback,
+    reactionCreatedAt: message.reactionCreatedAt?.toISOString() ?? null,
+    staffName: await getStaffName(message.userId),
+    publicAttachments: hasPublicAttachments ? messageAttachments : [],
+    privateAttachments: hasPublicAttachments ? [] : messageAttachments,
+  };
+};
+
 const serializeFiles = (inputFiles: (typeof files.$inferSelect)[]) =>
   Promise.all(
     inputFiles.map(async (file) => {
@@ -372,7 +396,7 @@ export const createConversationMessage = async (
   if (message.role === "user") {
     await updateConversation(
       message.conversationId,
-      { set: { lastUserEmailCreatedAt: new Date() }, skipRealtimeEvents: true },
+      { set: { lastUserEmailCreatedAt: new Date(), lastReadAt: new Date() }, skipRealtimeEvents: true },
       tx,
     );
   }
@@ -489,7 +513,7 @@ export const createToolEvent = async ({
   tx = db,
 }: {
   conversationId: number;
-  tool: Tool;
+  tool: Tool | { name: string; description?: string; url?: string };
   data?: any;
   error?: any;
   parameters: Record<string, any>;
@@ -503,14 +527,21 @@ export const createToolEvent = async ({
     body: userMessage,
     cleanedUpText: userMessage,
     metadata: {
-      tool: {
-        id: tool.id,
-        slug: tool.slug,
-        name: tool.name,
-        description: tool.description,
-        url: tool.url,
-        requestMethod: tool.requestMethod,
-      },
+      tool:
+        "id" in tool
+          ? {
+              id: tool.id,
+              slug: tool.slug,
+              name: tool.name,
+              description: tool.description,
+              url: tool.url,
+              requestMethod: tool.requestMethod,
+            }
+          : {
+              name: tool.name,
+              description: tool.description,
+              url: tool.url,
+            },
       result: data || error,
       success: !error,
       parameters,

@@ -2,11 +2,11 @@
 
 import NextError from "next/error";
 import { useEffect } from "react";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
   useEffect(() => {
-    captureExceptionAndLogIfDevelopment(error);
+    captureExceptionAndLog(error);
   }, [error]);
 
   return (

@@ -3,11 +3,10 @@ import { and, eq, exists, gte, inArray, isNotNull, isNull, lte, not, sql } from 
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files } from "@/db/schema";
+import { conversationMessages, conversations } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { createConversationEmbedding } from "@/lib/ai/conversationEmbedding";
 import { createReply, sanitizeBody } from "@/lib/data/conversationMessage";
-import { formatAttachments } from "@/lib/data/files";
 import { findSimilarConversations } from "@/lib/data/retrieval";
 import { mailboxProcedure } from "../../mailbox/procedure";
 import { conversationProcedure } from "./procedure";
@@ -86,10 +85,7 @@ export const messagesRouter = {
       await triggerEvent("conversations/auto-response.create", {
         messageId: id,
       });
-      return {
-        id,
-        attachments: await formatAttachments(await db.query.files.findMany({ where: inArray(files.messageId, [id]) })),
-      };
+      return { id };
     }),
   flagAsBad: conversationProcedure
     .input(

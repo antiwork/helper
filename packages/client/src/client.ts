@@ -4,15 +4,19 @@ import {
   ConversationDetails,
   ConversationsResult,
   CreateConversationParams,
+  CreateConversationRequestBody,
   CreateConversationResult,
   CreateMessageParams,
+  CreateMessageRequestBody,
   CreateMessageResult,
   CreateSessionResult,
   HelperTool,
   Message,
   SessionParams,
+  ToolRequestBody,
   UnreadConversationsCountResult,
   UpdateConversationParams,
+  UpdateConversationRequestBody,
   UpdateConversationResult,
 } from "./types";
 
@@ -102,26 +106,33 @@ export class HelperClient {
     get: (slug: string, { markRead = true }: { markRead?: boolean } = {}): Promise<ConversationDetails> =>
       this.request<ConversationDetails>(`/api/chat/conversation/${slug}?markRead=${markRead}`),
 
-    create: (params: CreateConversationParams = {}): Promise<CreateConversationResult> =>
-      this.request<CreateConversationResult>("/api/chat/conversation", {
+    create: async ({ message, ...params }: CreateConversationParams = {}): Promise<CreateConversationResult> => {
+      const conversation = await this.request<CreateConversationResult>("/api/chat/conversation", {
         method: "POST",
-        body: JSON.stringify(params),
-      }),
+        body: JSON.stringify(params satisfies CreateConversationRequestBody),
+      });
+
+      if (message) {
+        await this.messages.create(conversation.conversationSlug, message);
+      }
+
+      return conversation;
+    },
 
     update: (slug: string, params: UpdateConversationParams): Promise<UpdateConversationResult> =>
       this.request<UpdateConversationResult>(`/api/chat/conversation/${slug}`, {
         method: "PATCH",
-        body: JSON.stringify(params),
+        body: JSON.stringify(params satisfies UpdateConversationRequestBody),
       }),
 
     listen: (
       conversationSlug: string,
       {
-        onHumanReply,
+        onReply,
         onTyping,
         onSubjectChanged,
       }: {
-        onHumanReply?: (message: { id: string; content: string; role: "assistant" }) => void;
+        onReply?: ({ message, aiMessage }: { message: Message; aiMessage: AIMessageCompat }) => void;
         onTyping?: (isTyping: boolean) => void;
         onSubjectChanged?: (subject: string) => void;
       },
@@ -146,10 +157,9 @@ export class HelperClient {
           "agent-reply",
           (event) => {
             onTyping?.(false);
-            onHumanReply?.({
-              id: `staff_${Date.now()}`,
-              content: event.data.message,
-              role: "assistant",
+            onReply?.({
+              message: event.data,
+              aiMessage: formatAIMessage(event.data),
             });
             this.conversations.update(conversationSlug, { markRead: true });
           },
@@ -178,18 +188,45 @@ export class HelperClient {
   };
 
   readonly messages = {
-    create: (conversationSlug: string, params: CreateMessageParams): Promise<CreateMessageResult> =>
-      this.request<CreateMessageResult>(`/api/chat/conversation/${conversationSlug}/message`, {
+    create: async (conversationSlug: string, params: CreateMessageParams): Promise<CreateMessageResult> => {
+      const prepareAttachment = (
+        attachment: File | { name: string; base64Url: string; contentType: string },
+      ): Promise<{ name: string; contentType: string; url: string }> => {
+        if (attachment instanceof File) {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const result = reader.result;
+              if (typeof result === "string") {
+                resolve({
+                  name: attachment.name,
+                  contentType: attachment.type,
+                  url: result,
+                });
+              } else {
+                reject(new Error("Failed to read file as data URL"));
+              }
+            };
+            reader.onerror = () => reject(new Error("Failed to read file"));
+            reader.readAsDataURL(attachment);
+          });
+        }
+        return Promise.resolve({
+          name: attachment.name,
+          url: attachment.base64Url,
+          contentType: attachment.contentType ?? "application/octet-stream",
+        });
+      };
+
+      return this.request<CreateMessageResult>(`/api/chat/conversation/${conversationSlug}/message`, {
         method: "POST",
         body: JSON.stringify({
           ...params,
-          attachments: params.attachments?.map((attachment) => ({
-            name: attachment.name,
-            url: attachment.base64Url,
-            contentType: attachment.contentType,
-          })),
-        }),
-      }),
+          tools: serializeTools(params.tools ?? {}),
+          attachments: await Promise.all((params.attachments ?? []).map(prepareAttachment)),
+        } satisfies CreateMessageRequestBody),
+      });
+    },
   };
 
   readonly chat = {
@@ -200,7 +237,7 @@ export class HelperClient {
       conversation: ConversationDetails;
       tools?: Record<string, HelperTool>;
     }) => {
-      const formattedMessages = conversation.messages.map(formatMessage);
+      const formattedMessages = conversation.messages.map(formatAIMessage);
 
       const guideMessages = conversation.experimental_guideSessions.map((session) => ({
         id: `guide_session_${session.uuid}`,
@@ -254,12 +291,7 @@ export class HelperClient {
           id,
           message: messages[messages.length - 1],
           conversationSlug: conversation.slug,
-          tools: Object.entries(tools).map(([name, tool]) => ({
-            name,
-            description: tool.description,
-            parameters: tool.parameters,
-            serverRequestUrl: "url" in tool ? tool.url : undefined,
-          })),
+          tools: serializeTools(tools),
           requestBody,
         }),
         onToolCall: ({ toolCall }: { toolCall: { toolName: string; args: unknown } }) => {
@@ -306,7 +338,24 @@ export class HelperClient {
   };
 }
 
-const formatMessage = (message: Message): AIMessageCompat => ({
+const serializeTools = (tools: Record<string, HelperTool>) =>
+  Object.fromEntries(
+    Object.entries(tools).map(([name, tool]) => [
+      name,
+      {
+        description: tool.description,
+        parameters: tool.parameters,
+        serverRequestUrl:
+          "url" in tool
+            ? typeof window !== "undefined"
+              ? new URL(tool.url, window.location.origin).toString()
+              : tool.url
+            : undefined,
+      } satisfies ToolRequestBody,
+    ]),
+  );
+
+const formatAIMessage = (message: Message): AIMessageCompat => ({
   id: message.id,
   content: message.content,
   role: message.role === "staff" || message.role === "assistant" ? ("assistant" as const) : message.role,

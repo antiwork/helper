@@ -10,12 +10,12 @@ import { messageNotifications } from "./messageNotifications";
 
 export type ToolMetadata = {
   tool: {
-    id: number;
-    slug: string;
+    id?: number;
+    slug?: string;
     name: string;
     description: string;
     url: string;
-    requestMethod: string;
+    requestMethod?: string;
   };
   result: any;
   success: boolean;
