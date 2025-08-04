@@ -12,9 +12,7 @@ IMPORTANT:
 - These instructions are for React and Next.js, so adapt them as required for the current framework.
 - If you run into an instruction you cannot follow in this app, ask for clarification.
 - Reuse existing UI components from this app as much as possible, falling back to simple HTML if necessary.
-- Before starting work, read the documentation at the following URLs to use as a reference:
-  - Helper client API usage: https://helper.ai/docs/api/05-client-sdk
-  - Vercel AI SDK chatbot usage: https://ai-sdk.dev/docs/ai-sdk-ui/chatbot
+- Before starting work, read the documentation at the following URL to use as a reference: https://helper.ai/docs/api/05-client-sdk
 
 ## 1. Installation
 
@@ -48,15 +46,13 @@ After creating the HelperClient instance, render a conversations component with 
 - When the selected slug is not null, it should instead render a conversation detail component which:
   - Fetches the conversation details using the \`client.conversations.get()\` method
   - Displays the conversation subject as the page heading
-  - Renders a child \`HelperChat\` component when the details have been loaded which:
-    - Takes the loaded conversation details as a prop
-    - Calls \`const { messages, setMessages, input, handleInputChange, handleSubmit } = useChat({ ...client.chat.handler({ conversation }) })\` from the Vercel AI SDK
-    - Displays the content of the chat messages using \`client.chat.messages(messages).map(({ content, role, staffName, createdAt }) => ...)\`
-    - Displays an input field to add a new message to the conversation as described in the Vercel AI SDK docs (i.e. controlled using \`input\`, \`handleInputChange\`, and \`handleSubmit\`)
+  - Displays the conversation messages using \`conversation.messages.map(({ content, role, staffName, createdAt }) => ...)\`
+  - Uses the \`MessageContent\` component to display the \`content\` of each message
+  - Displays an input field to add a new message to the conversation using the \`client.messages.create(slug, { content })\` method
 
 ## 5. Real-time updates
 
-In the conversation details view after the \`useChat\` hook, add a \`useEffect\` hook that calls \`client.conversations.listen\` similar to this:
+In the conversation details view, add a \`useEffect\` hook that calls \`client.conversations.listen\` similar to this:
 
 \`\`\`tsx
 useEffect(() => {
@@ -64,8 +60,8 @@ useEffect(() => {
     onSubjectChanged: (subject) => {
       setConversation((conversation) => (conversation ? { ...conversation, subject } : null));
     },
-    onReply: ({ aiMessage }) => {
-      setMessages((prev) => [...prev, aiMessage]);
+    onReply: ({ message }) => {
+      setConversation((conversation) => (conversation ? { ...conversation, messages: [...conversation.messages, message] } : null));
     },
   });
   return () => unlisten();
@@ -75,8 +71,9 @@ useEffect(() => {
 ## 6. New ticket button
 
 - Above the conversation list, add a new ticket button which:
-  - Uses the \`client.conversations.create()\` method to create a new conversation
-  - Sets the \`selectedConversationSlug\` state variable to the new conversation's slug
+  - Opens a modal containing a form with subject and message input fields
+  - Uses the \`client.conversations.create({ subject })\` method to create a new conversation, then calls \`client.messages.create(slug, { content })\` to create the first message in the conversation
+  - Reloads the conversation list
 
 ## 7. Final steps
 
