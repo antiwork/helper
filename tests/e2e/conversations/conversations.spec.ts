@@ -24,7 +24,7 @@ test.describe("Working Conversation Management", () => {
     await expect(page.getByRole("textbox", { name: "Search conversations" })).toBeVisible();
     await expect(page.getByRole("button", { name: "open" })).toBeVisible();
 
-    await expect(page.getByText("G", { exact: true })).toBeVisible();
+    await expect(page.getByText("Gumroad", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Account menu" }).getByText("support@gumroad.com")).toBeVisible();
 
     await searchConversations(page, "test search");
@@ -51,7 +51,7 @@ test.describe("Working Conversation Management", () => {
   test("should display dashboard with conversations", async ({ page }) => {
     await expect(page).toHaveTitle("Helper");
 
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
     await expect(searchInput).toBeVisible();
 
     const openFilter = page.locator('button:has-text("open")');
@@ -61,7 +61,7 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should have functional search", async ({ page }) => {
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
     await expect(searchInput).toBeVisible();
 
     await searchInput.fill("test search");
@@ -85,7 +85,7 @@ test.describe("Working Conversation Management", () => {
     const openFilter = page.locator('button:has-text("open")');
     await expect(openFilter).toBeVisible();
 
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
     await expect(searchInput).toBeVisible();
 
     const sortButton = page
@@ -136,13 +136,13 @@ test.describe("Working Conversation Management", () => {
         await expect(selectNoneButton).toBeVisible();
       }
 
-      const searchInput = page.locator('input[placeholder="Search conversations"]');
+      const searchInput = page.getByRole("textbox", { name: "Search conversations" });
       await expect(searchInput).toBeVisible();
     } else {
       const selectAllButton = page.locator('button:has-text("Select all")');
       await expect(selectAllButton).not.toBeVisible();
 
-      const searchInput = page.locator('input[placeholder="Search conversations"]');
+      const searchInput = page.getByRole("textbox", { name: "Search conversations" });
       await expect(searchInput).toBeVisible();
     }
   });
@@ -150,7 +150,7 @@ test.describe("Working Conversation Management", () => {
   test("should be responsive on mobile", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
 
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
     await expect(searchInput).toBeVisible();
 
     const selectAllButton = page.locator('button:has-text("Select all")');
@@ -164,7 +164,7 @@ test.describe("Working Conversation Management", () => {
 
     await expect(page).toHaveURL(/.*mine.*/);
 
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
     await expect(searchInput).toBeVisible();
 
     const openFilter = page.locator('button:has-text("open")');
@@ -172,7 +172,7 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should support keyboard navigation", async ({ page }) => {
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
 
     await searchInput.focus();
     await expect(searchInput).toBeFocused();
@@ -192,7 +192,7 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should focus search input with Ctrl+K hotkey", async ({ page }) => {
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
 
     await searchInput.blur();
 
@@ -475,7 +475,7 @@ test.describe("Working Conversation Management", () => {
   test("should handle search with no results gracefully", async ({ page }) => {
     await searchConversations(page, "xyzunlikelyterm123");
 
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
     await expect(searchInput).toBeVisible();
     await expect(searchInput).toHaveValue("xyzunlikelyterm123");
 
