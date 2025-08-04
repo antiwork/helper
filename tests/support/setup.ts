@@ -5,6 +5,7 @@ beforeAll(() => {
   vi.stubEnv("POSTGRES_URL", inject("TEST_DATABASE_URL"));
 
   vi.mock("@/lib/env", () => ({
+    isAIMockingEnabled: false,
     env: {
       POSTGRES_URL: inject("TEST_DATABASE_URL"),
       CRYPTO_SECRET: "secret",
