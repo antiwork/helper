@@ -29,7 +29,7 @@ import { extractAddresses, parseEmailAddress } from "@/lib/emails";
 import { env } from "@/lib/env";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
 import { extractEmailPartsFromDocument } from "@/lib/shared/html";
-import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
+import { captureExceptionAndLog, captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { generateFilePreview } from "./generateFilePreview";
 import { triggerEvent } from "./trigger";
 import { assertDefinedOrRaiseNonRetriableError, NonRetriableError } from "./utils";
@@ -64,7 +64,7 @@ const isThankYouOrAutoResponse = async (
 
     return content.toLowerCase().trim() === "yes";
   } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
+    captureExceptionAndLog(error);
     return false;
   }
 };
@@ -210,7 +210,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
     assertSuccessResponseOrThrow(response);
     histories = response.data.history ?? [];
   } else {
-    captureExceptionAndLogIfDevelopment(new Error("Cached historyId expired"));
+    captureExceptionAndLog(new Error("Cached historyId expired"));
     histories =
       (await getMessagesFromHistoryId(client, data.historyId.toString()).then(assertSuccessResponseOrThrow)).data
         .history ?? [];
@@ -421,7 +421,7 @@ const authorizeGmailRequest = async (
     if (!claim?.email || claim.email !== env.GOOGLE_PUBSUB_CLAIM_EMAIL)
       throw new Error(`Invalid claim email: ${claim?.email}`);
   } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
+    captureExceptionAndLog(error);
     throw new NonRetriableError("Invalid token");
   }
   const rawData = JSON.parse(Buffer.from(body.message.data, "base64").toString("utf-8"));
@@ -508,7 +508,7 @@ export const extractAndUploadInlineImages = async (html: string) => {
         processedHtml = processedHtml.replace(match, match.replace(/src="[^"]+"/i, `src="${file.key}"`));
         fileSlugs.push(file.slug);
       } catch (error) {
-        captureExceptionAndLogIfDevelopment(error);
+        captureExceptionAndLog(error);
       }
     }),
   );

@@ -5,7 +5,7 @@ import { db } from "@/db/client";
 import { gmailSupportEmails } from "@/db/schema";
 import { createConversationEmbedding, PromptTooLongError } from "@/lib/ai/conversationEmbedding";
 import { getGmailService, listGmailThreads } from "@/lib/gmail/client";
-import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
+import { captureExceptionAndLog, captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { assertSuccessResponseOrThrow } from "./handleGmailWebhookEvent";
 import { excludeExistingGmailThreads, processGmailThreadWithClient } from "./importRecentGmailThreads";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
@@ -53,7 +53,7 @@ export const processGmailThreads = async (gmailSupportEmailId: number, weekStart
   });
   assertSuccessResponseOrThrow(result);
   if (result.data.nextPageToken) {
-    captureExceptionAndLogIfDevelopment(new Error("Pagination not supported by this function"));
+    captureExceptionAndLog(new Error("Pagination not supported by this function"));
   }
   const threads = await excludeExistingGmailThreads(result.data.threads ?? []);
 

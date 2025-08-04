@@ -2,7 +2,6 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { db } from "@/db/client";
 import { Mailbox } from "@/lib/data/mailbox";
-import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export type WidgetSessionPayload = {
   email?: string;
@@ -31,7 +30,8 @@ export function createWidgetSession(
       const decoded = verifyWidgetSession(currentToken, mailbox);
       anonymousSessionId = decoded.anonymousSessionId;
     } catch (e) {
-      captureExceptionAndLog(e);
+      // eslint-disable-next-line no-console
+      console.warn("Invalid previous session token", e);
     }
   }
   const isAnonymous = !email;

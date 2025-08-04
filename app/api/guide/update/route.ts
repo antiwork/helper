@@ -2,7 +2,7 @@ import { z } from "zod";
 import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
 import { getGuideSessionByUuid, updateGuideSession, type GuideSession } from "@/lib/data/guide";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 const updateGuideSchema = z.object({
   sessionId: z.string().uuid(),
@@ -54,11 +54,11 @@ export const POST = withWidgetAuth(async ({ request }, { session }) => {
         conversationId,
       });
     } catch (error) {
-      captureExceptionAndLogIfDevelopment(error);
+      captureExceptionAndLog(error);
       return corsResponse({ error: "Failed to update guide session" }, { status: 500 });
     }
   } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
+    captureExceptionAndLog(error);
     return corsResponse({ error: "Failed to update guide session" }, { status: 500 });
   }
 });

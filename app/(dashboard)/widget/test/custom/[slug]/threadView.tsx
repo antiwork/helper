@@ -4,7 +4,6 @@ import { Paperclip, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ConversationDetails } from "@helperai/client";
 import { useCreateMessage, useRealtimeEvents } from "@helperai/react";
-import { getBaseUrl } from "@/components/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -79,7 +78,7 @@ export const ThreadView = ({ conversation }: { conversation: ConversationDetails
         getCurrentTime: {
           description: "Get the current time",
           parameters: {},
-          url: `${getBaseUrl()}/widget/test/custom/tool`,
+          url: "/widget/test/custom/tool",
         },
       },
     });

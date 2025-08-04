@@ -222,6 +222,7 @@ export class HelperClient {
         method: "POST",
         body: JSON.stringify({
           ...params,
+          tools: serializeTools(params.tools ?? {}),
           attachments: await Promise.all((params.attachments ?? []).map(prepareAttachment)),
         } satisfies CreateMessageRequestBody),
       });
@@ -290,16 +291,7 @@ export class HelperClient {
           id,
           message: messages[messages.length - 1],
           conversationSlug: conversation.slug,
-          tools: Object.fromEntries(
-            Object.entries(tools).map(([name, tool]) => [
-              name,
-              {
-                description: tool.description,
-                parameters: tool.parameters,
-                serverRequestUrl: "url" in tool ? tool.url : undefined,
-              } satisfies ToolRequestBody,
-            ]),
-          ),
+          tools: serializeTools(tools),
           requestBody,
         }),
         onToolCall: ({ toolCall }: { toolCall: { toolName: string; args: unknown } }) => {
@@ -345,6 +337,23 @@ export class HelperClient {
     messages: (aiMessages: AIMessageCompat[]) => aiMessages.map(this.chat.message),
   };
 }
+
+const serializeTools = (tools: Record<string, HelperTool>) =>
+  Object.fromEntries(
+    Object.entries(tools).map(([name, tool]) => [
+      name,
+      {
+        description: tool.description,
+        parameters: tool.parameters,
+        serverRequestUrl:
+          "url" in tool
+            ? typeof window !== "undefined"
+              ? new URL(tool.url, window.location.origin).toString()
+              : tool.url
+            : undefined,
+      } satisfies ToolRequestBody,
+    ]),
+  );
 
 const formatAIMessage = (message: Message): AIMessageCompat => ({
   id: message.id,

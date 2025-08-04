@@ -513,7 +513,7 @@ export const createToolEvent = async ({
   tx = db,
 }: {
   conversationId: number;
-  tool: Tool;
+  tool: Tool | { name: string; description?: string; url?: string };
   data?: any;
   error?: any;
   parameters: Record<string, any>;
@@ -527,14 +527,21 @@ export const createToolEvent = async ({
     body: userMessage,
     cleanedUpText: userMessage,
     metadata: {
-      tool: {
-        id: tool.id,
-        slug: tool.slug,
-        name: tool.name,
-        description: tool.description,
-        url: tool.url,
-        requestMethod: tool.requestMethod,
-      },
+      tool:
+        "id" in tool
+          ? {
+              id: tool.id,
+              slug: tool.slug,
+              name: tool.name,
+              description: tool.description,
+              url: tool.url,
+              requestMethod: tool.requestMethod,
+            }
+          : {
+              name: tool.name,
+              description: tool.description,
+              url: tool.url,
+            },
       result: data || error,
       success: !error,
       parameters,
