@@ -35,9 +35,9 @@ export class SettingsPreferencesPage extends BasePage {
 
   async waitForSavingComplete() {
     await this.page.waitForFunction(() => {
-      const input = document.querySelector('input[placeholder="Enter mailbox name"]') as HTMLInputElement;
-      return input && input.value.trim() !== '';
-    });
+      const savingIndicator = document.querySelector('[data-testid="saving-indicator"]');
+      return !savingIndicator || !savingIndicator.textContent?.includes('Saving');
+    }, { timeout: 10000 });
   }
 
   async clickTestConfettiButton() {

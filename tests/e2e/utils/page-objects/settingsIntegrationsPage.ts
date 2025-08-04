@@ -3,9 +3,6 @@ import { BasePage } from "./basePage";
 
 export class SettingsIntegrationsPage extends BasePage {
   private readonly connectApiButton = 'button:has-text("Connect API")';
-  private readonly toolsSection = 'section:has(h2:text("Tools"))';
-  private readonly slackSection = 'section:has(h2:text("Slack Integration"))';
-  private readonly apiFormContainer = '[data-testid="api-form"]';
 
   private readonly apiNameInput = 'input#apiName[placeholder="Your App"]';
   private readonly apiUrlInput = 'input#apiUrl[placeholder="https://yourapp.com/api"]';
@@ -30,10 +27,6 @@ export class SettingsIntegrationsPage extends BasePage {
     await expect(this.page.locator("body")).toBeVisible();
   }
 
-  async expectToolsSection() {
-    await expect(this.page.locator(this.toolsSection)).toBeVisible();
-  }
-
   async expectConnectApiButton() {
     await expect(this.page.locator(this.connectApiButton)).toBeVisible();
   }
@@ -42,12 +35,10 @@ export class SettingsIntegrationsPage extends BasePage {
     await this.page.locator(this.connectApiButton).click();
   }
 
-  async expectApiForm() {
-    await expect(this.page.locator(this.apiFormContainer)).toBeVisible();
-  }
-
-  async expectSlackSection() {
-    await expect(this.page.locator(this.slackSection)).toBeVisible();
+  async expectApiFormVisible() {
+    await expect(this.page.locator(this.apiNameInput)).toBeVisible();
+    await expect(this.page.locator(this.apiUrlInput)).toBeVisible();
+    await expect(this.page.locator(this.apiKeyInput)).toBeVisible();
   }
 
   async fillApiName(name: string) {
@@ -83,6 +74,6 @@ export class SettingsIntegrationsPage extends BasePage {
   }
 
   async expectApiFormNotVisible() {
-    await expect(this.page.locator(this.apiFormContainer)).not.toBeVisible();
+    await expect(this.page.locator(this.apiNameInput)).not.toBeVisible();
   }
 }

@@ -19,16 +19,16 @@ test.describe("Settings - Integrations", () => {
   test("should show Connect API button and open API form", async ({ page }) => {
     const integrationsPage = new SettingsIntegrationsPage(page);
 
-    await integrationsPage.expectToolsSection();
+    await integrationsPage.expectConnectApiButton();
     await integrationsPage.clickConnectApiButton();
-    await integrationsPage.expectApiForm();
+    await integrationsPage.expectApiFormVisible();
   });
 
   test("should handle API form interactions and validation", async ({ page }) => {
     const integrationsPage = new SettingsIntegrationsPage(page);
 
     await integrationsPage.clickConnectApiButton();
-    await integrationsPage.expectApiForm();
+    await integrationsPage.expectApiFormVisible();
 
     await integrationsPage.clickImportApi();
 
@@ -44,7 +44,7 @@ test.describe("Settings - Integrations", () => {
     const integrationsPage = new SettingsIntegrationsPage(page);
 
     await integrationsPage.clickConnectApiButton();
-    await integrationsPage.expectApiForm();
+    await integrationsPage.expectApiFormVisible();
 
     await integrationsPage.toggleToSchemaInput();
     await expect(page.locator('textarea')).toBeVisible();
