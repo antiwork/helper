@@ -1,6 +1,6 @@
 {
-  "id": "30433e8a-1c4d-481f-9c7a-f8270116524c",
-  "prevId": "7cf06204-5f68-408d-bb5d-eab179b133e0",
+  "id": "aca32d0b-e70f-456b-a140-659368455819",
+  "prevId": "94647fbb-cd42-4d91-aabc-0ba9899a1716",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3475,9 +3475,15 @@
           "primaryKey": false,
           "notNull": false
         },
+        "encrypted_authentication_token": {
+          "name": "encrypted_authentication_token",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": false
+        },
         "authentication_token": {
           "name": "authentication_token",
-          "type": "bytea",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         }
@@ -3596,9 +3602,15 @@
           "notNull": true,
           "default": "'none'"
         },
+        "encrypted_authentication_token": {
+          "name": "encrypted_authentication_token",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": false
+        },
         "authentication_token": {
           "name": "authentication_token",
-          "type": "bytea",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
