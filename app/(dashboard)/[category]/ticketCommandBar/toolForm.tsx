@@ -52,7 +52,7 @@ export const ToolForm = ({ tool, onOpenChange }: ToolFormProps) => {
       .filter(
         (param) =>
           (param.required && parameters[param.name] === undefined) ||
-          (param.type === "number" && isNaN(Number(parameters[param.name]))),
+          (parameters[param.name] && param.type === "number" && isNaN(Number(parameters[param.name]))),
       )
       .map((param) => param.name);
     if (invalidFields.length > 0) {
@@ -61,6 +61,7 @@ export const ToolForm = ({ tool, onOpenChange }: ToolFormProps) => {
     }
 
     const parameterValues = tool.parameterTypes.reduce<Record<string, string | number>>((acc, param) => {
+      if (!parameters[param.name]) return acc;
       if (param.type === "number") {
         acc[param.name] = Number(parameters[param.name]);
       } else {

@@ -23,8 +23,7 @@ import { z } from "zod";
 import { ToolRequestBody } from "@helperai/client";
 import { ReadPageToolConfig } from "@helperai/sdk";
 import { db } from "@/db/client";
-import { conversationMessages, files, MessageMetadata } from "@/db/schema";
-import type { Tool as HelperTool } from "@/db/schema/tools";
+import { conversationMessages, files, MessageMetadata, ToolMetadata } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { COMPLETION_MODEL, GPT_4_1_MINI_MODEL, GPT_4_1_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
@@ -36,6 +35,7 @@ import { Conversation, updateOriginalConversation } from "@/lib/data/conversatio
 import {
   createAiDraft,
   createConversationMessage,
+  createToolEvent,
   getLastAiGeneratedDraft,
   getMessagesOnly,
 } from "@/lib/data/conversationMessage";
@@ -46,7 +46,7 @@ import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import { env } from "@/lib/env";
 import { createHmacDigest } from "@/lib/metadataApiClient";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
-import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
+import { captureExceptionAndLog, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
 
 const SUMMARY_MAX_TOKENS = 7000;
 const SUMMARY_PROMPT =
@@ -118,7 +118,7 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
     .filter((message) => message.body && message.id !== latestMessageId)
     .map((message) => {
       if (message.role === "tool") {
-        const tool = message.metadata?.tool as HelperTool;
+        const metadata = message.metadata as ToolMetadata;
         return {
           id: message.id.toString(),
           role: "assistant",
@@ -126,12 +126,12 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
           toolInvocations: [
             {
               id: message.id.toString(),
-              toolName: tool.slug,
-              result: message.metadata?.result,
+              toolName: metadata?.tool?.slug ?? metadata?.tool?.name,
+              result: metadata?.result,
               step: 0,
               state: "result",
               toolCallId: `tool_${message.id}`,
-              args: message.metadata?.parameters,
+              args: metadata?.parameters,
             },
           ],
         };
@@ -310,7 +310,7 @@ const generateReasoning = async ({
     if (evaluation) {
       captureExceptionAndThrowIfDevelopment(error);
     } else {
-      captureExceptionAndLogIfDevelopment(error);
+      captureExceptionAndLog(error);
     }
     return { reasoning: null, usage: null };
   }
@@ -393,8 +393,22 @@ export const generateAIResponse = async ({
       };
 
       if (tool.serverRequestUrl) {
-        toolDefinition.execute = async (params: Record<string, any>) =>
-          await callToolEndpoint(tool, email, params, mailbox);
+        toolDefinition.execute = async (params: Record<string, any>) => {
+          const result = await callToolEndpoint(tool, email, params, mailbox);
+          await createToolEvent({
+            conversationId,
+            tool: {
+              name: toolName,
+              description: tool.description,
+              url: tool.serverRequestUrl,
+            },
+            data: result.success ? result.data : undefined,
+            error: result.success ? undefined : result.error,
+            parameters: params,
+            userMessage: result.success ? "Tool executed successfully." : "Tool execution failed.",
+          });
+          return result;
+        };
       }
 
       tools[toolName] = toolDefinition;
@@ -804,7 +818,7 @@ export const respondWithAI = async ({
       result.mergeIntoDataStream(dataStream);
     },
     onError(error) {
-      captureExceptionAndLogIfDevelopment(error);
+      captureExceptionAndLog(error);
       return "Error generating AI response";
     },
   });

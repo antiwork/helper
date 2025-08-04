@@ -2,7 +2,7 @@ import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/util
 import { assertDefined } from "@/components/utils/assert";
 import { getConversationById } from "@/lib/data/conversation";
 import { getGuideSessionByUuid } from "@/lib/data/guide";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export function OPTIONS() {
   return corsOptions();
@@ -37,7 +37,7 @@ export const POST = withWidgetAuth(async ({ request }, { session: { email } }) =
       conversationSlug: conversation.slug,
     });
   } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
+    captureExceptionAndLog(error);
     return corsResponse({ error: "Failed to fetch guide session" }, { status: 500 });
   }
 });

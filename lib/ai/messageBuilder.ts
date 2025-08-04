@@ -16,7 +16,7 @@ export function buildToolMessages(
       {
         type: "tool-call",
         toolCallId: `tool_${message.id}`,
-        toolName: metadata?.tool?.slug,
+        toolName: metadata?.tool?.slug ?? metadata?.tool?.name,
         args: metadata?.parameters,
       },
     ],
@@ -28,7 +28,7 @@ export function buildToolMessages(
       {
         type: "tool-result",
         toolCallId: `tool_${message.id}`,
-        toolName: metadata?.tool?.slug,
+        toolName: metadata?.tool?.slug ?? metadata?.tool?.name,
         result: {
           formatted: content,
           raw: metadata?.result,
