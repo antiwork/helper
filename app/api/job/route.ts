@@ -64,6 +64,8 @@ const handleJob = async (jobRun: typeof jobRuns.$inferSelect, handler: Promise<a
   }
 };
 
+export const maxDuration = 60;
+
 export const POST = async (request: NextRequest) => {
   try {
     const authHeader = request.headers.get("authorization");

@@ -384,14 +384,14 @@ export const createConversationMessage = async (
   conversationMessage: NewConversationMessage,
   tx: Transaction | typeof db = db,
 ): Promise<typeof conversationMessages.$inferSelect> => {
-  const message = await tx
-    .insert(conversationMessages)
-    .values({
-      isPinned: false,
-      ...conversationMessage,
-    })
-    .returning()
-    .then(takeUniqueOrThrow);
+  const messageValues = {
+    isPinned: false,
+    ...conversationMessage,
+    bodyPlaintext: conversationMessage.body,
+    cleanedUpTextPlaintext: conversationMessage.cleanedUpText,
+  };
+
+  const message = await tx.insert(conversationMessages).values(messageValues).returning().then(takeUniqueOrThrow);
 
   if (message.role === "user") {
     await updateConversation(
@@ -449,11 +449,13 @@ export const createAiDraft = async (
     {
       conversationId,
       body: sanitizedBody,
+      bodyPlaintext: sanitizedBody,
       role: "ai_assistant",
       status: "draft",
       responseToId,
       promptInfo: promptInfo ? { details: promptInfo } : null,
       cleanedUpText: body,
+      cleanedUpTextPlaintext: body,
       isPerfect: false,
       isFlaggedAsBad: false,
     },
@@ -467,7 +469,10 @@ export const ensureCleanedUpText = async (
 ) => {
   if (message.cleanedUpText !== null) return message.cleanedUpText;
   const cleanedUpText = generateCleanedUpText(message.body ?? "");
-  await tx.update(conversationMessages).set({ cleanedUpText }).where(eq(conversationMessages.id, message.id));
+  await tx
+    .update(conversationMessages)
+    .set({ cleanedUpText, cleanedUpTextPlaintext: cleanedUpText })
+    .where(eq(conversationMessages.id, message.id));
   return cleanedUpText;
 };
 
@@ -513,7 +518,7 @@ export const createToolEvent = async ({
   tx = db,
 }: {
   conversationId: number;
-  tool: Tool;
+  tool: Tool | { name: string; description?: string; url?: string };
   data?: any;
   error?: any;
   parameters: Record<string, any>;
@@ -525,16 +530,25 @@ export const createToolEvent = async ({
     conversationId,
     role: "tool",
     body: userMessage,
+    bodyPlaintext: userMessage,
     cleanedUpText: userMessage,
+    cleanedUpTextPlaintext: userMessage,
     metadata: {
-      tool: {
-        id: tool.id,
-        slug: tool.slug,
-        name: tool.name,
-        description: tool.description,
-        url: tool.url,
-        requestMethod: tool.requestMethod,
-      },
+      tool:
+        "id" in tool
+          ? {
+              id: tool.id,
+              slug: tool.slug,
+              name: tool.name,
+              description: tool.description,
+              url: tool.url,
+              requestMethod: tool.requestMethod,
+            }
+          : {
+              name: tool.name,
+              description: tool.description,
+              url: tool.url,
+            },
       result: data || error,
       success: !error,
       parameters,

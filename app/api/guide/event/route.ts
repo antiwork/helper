@@ -5,7 +5,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { guideSessionEventTypeEnum, guideSessionReplays, guideSessions } from "@/db/schema";
 import { createGuideSessionEvent, updateGuideSession } from "@/lib/data/guide";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 const eventSchema = z.object({
   type: z.enum(guideSessionEventTypeEnum.enumValues),
@@ -67,7 +67,7 @@ export const POST = withWidgetAuth(async ({ request }) => {
 
     return corsResponse({ success: true, eventsReceived: events.length });
   } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
+    captureExceptionAndLog(error);
     return corsResponse({ error: "Failed to process events" }, { status: 500 });
   }
 });
