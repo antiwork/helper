@@ -2,26 +2,25 @@ import { expect, type Page } from "@playwright/test";
 import { BasePage } from "./basePage";
 
 export class ConversationActionsPage extends BasePage {
-  private readonly messageComposer = '[data-testid="message-composer"]';
-  private readonly commandBar = '[data-testid="command-bar"]';
-  private readonly commandBarInput = '[data-testid="command-bar-input"]';
-  private readonly internalNoteTextarea = '[data-testid="internal-note-textarea"]';
+  readonly messageComposer = '[data-testid="message-composer"]';
+  readonly commandBar = '[data-testid="command-bar"]';
+  readonly commandBarInput = '[data-testid="command-bar-input"]';
+  readonly internalNoteTextarea = '[data-testid="internal-note-textarea"]';
 
-  private readonly replyButton = 'button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))';
-  private readonly replyAndCloseButton = 'button:has-text("Reply and close")';
-  private readonly closeConversationButton = 'button:has-text("Close"):not(:has-text("Reply"))';
-  private readonly reopenConversationButton = 'button:has-text("Reopen")';
-  private readonly addNoteButton = 'button:has-text("Add internal note")';
+  readonly replyButton = 'button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))';
+  readonly replyAndCloseButton = 'button:has-text("Reply and close")';
+  readonly closeConversationButton = 'button:has-text("Close"):not(:has-text("Reply"))';
+  readonly reopenConversationButton = 'button:has-text("Reopen")';
+  readonly addNoteButton = 'button:has-text("Add internal note")';
 
-  private readonly ccInput = 'input[name="CC"]';
-  private readonly bccInput = 'input[name="BCC"]';
+  readonly ccInput = 'input[name="CC"]';
+  readonly bccInput = 'input[name="BCC"]';
 
-  private readonly conversationStatusBadge = 'span:has-text("open"), span:has-text("closed")';
+  readonly conversationStatusBadge = 'span:has-text("open"), span:has-text("closed")';
 
-  private readonly issueAssignmentSelect = 'button:has-text("Assign to issue")';
+  readonly issueAssignmentSelect = 'button:has-text("Assign to issue")';
 
-  private readonly messageElement =
-    ".flex.flex-col.gap-4 > div, [data-message-id], .message-item, .conversation-message";
+  readonly messageElement = '[data-message-item], [data-testid="message"]';
 
   constructor(page: Page) {
     super(page);
@@ -77,8 +76,23 @@ export class ConversationActionsPage extends BasePage {
   async clearReply() {
     const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
     await composer.click({ force: true });
-    await this.page.keyboard.press("Control+a");
-    await this.page.keyboard.press("Delete");
+    
+    try {
+      await composer.evaluate((el) => {
+        el.innerHTML = "";
+        el.textContent = "";
+      });
+    } catch {
+      await this.page.keyboard.press("Control+a");
+      await this.page.keyboard.press("Delete");
+    }
+    
+    if (await this.getComposerText()) {
+      await this.page.keyboard.press("Control+a");
+      await this.page.keyboard.press("Backspace");
+    }
+    
+    await this.page.waitForTimeout(200);
   }
 
   async focusComposer() {
@@ -314,6 +328,12 @@ export class ConversationActionsPage extends BasePage {
     return "unknown";
   }
   async openCommandBar() {
+    const commandInput = this.page.locator('[data-testid="command-bar-input"]');
+    if (await commandInput.isVisible({ timeout: 1000 })) {
+      await commandInput.click();
+      await this.page.waitForTimeout(500);
+      return;
+    }
     const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await this.page.keyboard.press("/");
@@ -417,49 +437,34 @@ export class ConversationActionsPage extends BasePage {
       return uiPatterns.reduce((text, pattern) => text.replace(pattern, "").trim(), content);
     });
   }
-  private isValidMessageText(text: string): boolean {
-    const validMessages = ["This is a test reply message", "keyboard shortcut test", "Test message"];
-    return text.length > 5 && validMessages.some((msg) => text.includes(msg));
-  }
+
   async getLastMessageText(): Promise<string> {
     try {
       await this.page.waitForLoadState("networkidle");
       await this.page.waitForTimeout(1000);
 
-      const messageSelectors = [
-        'div:has-text("This is a test reply message")',
-        'div:has-text("keyboard shortcut test")',
-        'div:has-text("Test message")',
-      ];
-      for (const selector of messageSelectors) {
-        const elements = this.page.locator(selector);
-        const count = await elements.count();
 
-        if (count > 0) {
-          const lastElement = elements.last();
+      const messageElements = this.page.locator(this.messageElement);
+      const count = await messageElements.count();
+      
+      if (count === 0) {
+        throw new Error("No message elements found");
+      }
 
-          if (await lastElement.isVisible({ timeout: 2000 }).catch(() => false)) {
-            const text = await this.cleanMessageText(lastElement);
-            if (this.isValidMessageText(text)) {
-              return text;
-            }
-          }
+      const lastMessage = messageElements.last();
+      
+      if (await lastMessage.isVisible({ timeout: 2000 })) {
+        const text = await this.cleanMessageText(lastMessage);
+        if (text.length > 0) {
+          return text;
         }
       }
+
       throw new Error("No valid message text found");
     } catch (error) {
       console.error("Error getting last message text:", error);
       throw error;
     }
-  }
-
-  getLastMessage() {
-    return this.page
-      .locator("div")
-      .filter({ hasText: "keyboard shortcut test" })
-      .last()
-      .or(this.page.locator("div").filter({ hasText: "Test message" }).last())
-      .first();
   }
 
   getConversationStatusLocator() {
@@ -513,10 +518,6 @@ export class ConversationActionsPage extends BasePage {
     await this.reopenConversation();
   }
 
-  async waitForTimeout(ms: number) {
-    await this.page.waitForTimeout(ms);
-  }
-
   async pressKey(key: string) {
     await this.page.keyboard.press(key);
   }
@@ -531,5 +532,9 @@ export class ConversationActionsPage extends BasePage {
 
   async pressControlEnter() {
     await this.page.keyboard.press("Control+Enter");
+  }
+
+  async waitForTimeout(ms: number) {
+    await this.page.waitForTimeout(ms);
   }
 }

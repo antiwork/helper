@@ -166,8 +166,8 @@ test.describe("Conversation Actions", () => {
 
     await conversationActionsPage.clickReplyButton();
     await conversationActionsPage.waitForMessageToSend();
-    const lastMessage = conversationActionsPage.getLastMessage();
-    await expect(lastMessage).toContainText("Test message");
+    const lastMessageText = await conversationActionsPage.getLastMessageText();
+    expect(lastMessageText).toContain("Test message");
   });
 
   test("should close and reopen conversation", async () => {
@@ -307,9 +307,9 @@ test.describe("Conversation Actions", () => {
     }
   });
 
-  test("should generate draft response via command bar", async () => {
+  test("should generate draft response via command bar", async ({ page }) => {
     await conversationActionsPage.clearReply();
-    await conversationActionsPage.waitForTimeout(500);
+    await page.waitForTimeout(500);
 
     const initialText = await conversationActionsPage.getComposerText();
 
@@ -321,7 +321,7 @@ test.describe("Conversation Actions", () => {
     try {
       await conversationActionsPage.selectCommand("generate-draft");
 
-      await conversationActionsPage.waitForTimeout(5000);
+      await page.waitForTimeout(5000);
 
       const composerText = await conversationActionsPage.getComposerText();
       const commandClosed = !(await conversationActionsPage.isCommandBarVisible());
