@@ -6,21 +6,22 @@ export class ConversationActionsPage extends BasePage {
   private readonly commandBar = '[data-testid="command-bar"]';
   private readonly commandBarInput = '[data-testid="command-bar-input"]';
   private readonly internalNoteTextarea = '[data-testid="internal-note-textarea"]';
-  
+
   private readonly replyButton = 'button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))';
   private readonly replyAndCloseButton = 'button:has-text("Reply and close")';
   private readonly closeConversationButton = 'button:has-text("Close"):not(:has-text("Reply"))';
   private readonly reopenConversationButton = 'button:has-text("Reopen")';
   private readonly addNoteButton = 'button:has-text("Add internal note")';
-  
+
   private readonly ccInput = 'input[name="CC"]';
   private readonly bccInput = 'input[name="BCC"]';
-  
+
   private readonly conversationStatusBadge = 'span:has-text("open"), span:has-text("closed")';
-  
+
   private readonly issueAssignmentSelect = 'button:has-text("Assign to issue")';
-  
-  private readonly messageElement = '.flex.flex-col.gap-4 > div, [data-message-id], .message-item, .conversation-message';
+
+  private readonly messageElement =
+    ".flex.flex-col.gap-4 > div, [data-message-id], .message-item, .conversation-message";
 
   constructor(page: Page) {
     super(page);
@@ -31,10 +32,10 @@ export class ConversationActionsPage extends BasePage {
     } else {
       await this.goto("/mine");
       await this.waitForPageLoad();
-      
+
       await this.page.waitForLoadState("networkidle");
       await expect(this.page.locator('input[placeholder="Search conversations"]')).toBeVisible({ timeout: 10000 });
-      
+
       const firstConversationLink = this.page.locator('a[href*="/conversations?id="]').first();
       await expect(firstConversationLink).toBeVisible({ timeout: 10000 });
       await firstConversationLink.click();
@@ -47,8 +48,10 @@ export class ConversationActionsPage extends BasePage {
   }
 
   async waitForConversationLoad() {
-    await expect(this.page.locator('.flex.items-center.border-b.border-border').first()).toBeVisible({ timeout: 10000 });
-    await expect(this.page.locator('.flex.h-full.flex-col').first()).toBeVisible({ timeout: 10000 });
+    await expect(this.page.locator(".flex.items-center.border-b.border-border").first()).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(this.page.locator(".flex.h-full.flex-col").first()).toBeVisible({ timeout: 10000 });
   }
 
   async typeInComposer(message: string, clearFirst: boolean = true) {
@@ -58,9 +61,9 @@ export class ConversationActionsPage extends BasePage {
     await composer.focus();
     await this.page.waitForTimeout(500);
     if (clearFirst) {
-      await composer.evaluate(el => {
-        el.innerHTML = '';
-        el.textContent = '';
+      await composer.evaluate((el) => {
+        el.innerHTML = "";
+        el.textContent = "";
       });
       await this.page.waitForTimeout(200);
     }
@@ -74,8 +77,8 @@ export class ConversationActionsPage extends BasePage {
   async clearReply() {
     const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
     await composer.click({ force: true });
-    await this.page.keyboard.press('Control+a');
-    await this.page.keyboard.press('Delete');
+    await this.page.keyboard.press("Control+a");
+    await this.page.keyboard.press("Delete");
   }
 
   async focusComposer() {
@@ -86,12 +89,12 @@ export class ConversationActionsPage extends BasePage {
 
   async getComposerText(): Promise<string> {
     const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
-    return await composer.textContent() || '';
+    return (await composer.textContent()) || "";
   }
 
   async isComposerFocused(): Promise<boolean> {
     const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
-    return await composer.evaluate(el => document.activeElement === el);
+    return await composer.evaluate((el) => document.activeElement === el);
   }
 
   async clickReplyButton() {
@@ -118,7 +121,7 @@ export class ConversationActionsPage extends BasePage {
     const closeButton = this.page.locator(this.closeConversationButton);
     await expect(closeButton).toBeVisible({ timeout: 5000 });
     await expect(closeButton).toBeEnabled({ timeout: 5000 });
-    
+
     await closeButton.click();
     await this.page.waitForTimeout(2000);
     await this.page.waitForLoadState("networkidle");
@@ -130,13 +133,13 @@ export class ConversationActionsPage extends BasePage {
 
   async assignToIssue(issueTitle: string) {
     await this.page.locator(this.issueAssignmentSelect).click();
-    
+
     await this.page.waitForTimeout(500);
-    
+
     const issueOption = this.page.locator(`[role="option"]`).filter({ hasText: issueTitle });
     await expect(issueOption).toBeVisible({ timeout: 5000 });
     await issueOption.click();
-    
+
     await this.page.waitForTimeout(1000);
   }
 
@@ -150,8 +153,8 @@ export class ConversationActionsPage extends BasePage {
 
   async showCcBccFields() {
     await this.openCommandBar();
-    await this.selectCommand('toggle-cc-bcc');
-    
+    await this.selectCommand("toggle-cc-bcc");
+
     await this.page.waitForTimeout(2000);
   }
 
@@ -248,23 +251,26 @@ export class ConversationActionsPage extends BasePage {
 
   async expectEmptyMessageComposer() {
     const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
-    
-    await this.page.waitForFunction(() => {
-      const element = document.querySelector('[data-testid="message-composer"] .tiptap.ProseMirror');
-      return element && (element.textContent?.trim() === '' || element.textContent?.trim() === undefined);
-    }, { timeout: 10000 });
-    
+
+    await this.page.waitForFunction(
+      () => {
+        const element = document.querySelector('[data-testid="message-composer"] .tiptap.ProseMirror');
+        return element && (element.textContent?.trim() === "" || element.textContent?.trim() === undefined);
+      },
+      { timeout: 10000 },
+    );
+
     const content = await composer.textContent();
     expect(content?.trim()).toBe("");
   }
 
   async expectConversationClosed() {
-    await expect(this.page.locator('text=closed')).toBeVisible({ timeout: 10000 });
+    await expect(this.page.locator("text=closed")).toBeVisible({ timeout: 10000 });
     await expect(this.page.locator(this.closeConversationButton)).toBeDisabled();
   }
 
   async expectConversationReopened() {
-    await expect(this.page.locator('text=open')).toBeVisible({ timeout: 10000 });
+    await expect(this.page.locator("text=open")).toBeVisible({ timeout: 10000 });
     await expect(this.page.locator(this.closeConversationButton)).toBeEnabled();
     await expect(this.page.locator(this.reopenConversationButton)).not.toBeVisible();
   }
@@ -285,44 +291,44 @@ export class ConversationActionsPage extends BasePage {
 
   async getConversationStatus(): Promise<string> {
     try {
-      const statusElement = this.page.locator('text=OPEN').or(this.page.locator('text=CLOSED')).first();
+      const statusElement = this.page.locator("text=OPEN").or(this.page.locator("text=CLOSED")).first();
       const statusText = await statusElement.textContent({ timeout: 5000 });
-      
-      if (statusText?.includes('OPEN')) {
+
+      if (statusText?.includes("OPEN")) {
         return "open";
-      } else if (statusText?.includes('CLOSED')) {
+      } else if (statusText?.includes("CLOSED")) {
         return "closed";
       }
     } catch (e) {
+      console.debug("Failed to get conversation status from text, trying button visibility", e);
       const closeButton = this.page.locator(this.closeConversationButton);
       const reopenButton = this.page.locator(this.reopenConversationButton);
-      
+
       if (await closeButton.isVisible({ timeout: 2000 })) {
         return "open";
       } else if (await reopenButton.isVisible({ timeout: 2000 })) {
         return "closed";
       }
     }
-    
+
     return "unknown";
   }
-
   async openCommandBar() {
     const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
     await composer.click({ force: true });
-    await this.page.keyboard.press('/');
+    await this.page.keyboard.press("/");
     await this.page.waitForTimeout(500);
-    
+
     if (await this.isCommandBarVisible()) {
       return;
     }
-    
-    await this.page.keyboard.press('Control+k');
+
+    await this.page.keyboard.press("Control+k");
     await this.page.waitForTimeout(500);
   }
 
   async typeSlashToOpenCommandBar() {
-    await this.page.keyboard.press('/');
+    await this.page.keyboard.press("/");
     await this.page.waitForTimeout(300);
   }
 
@@ -332,14 +338,14 @@ export class ConversationActionsPage extends BasePage {
 
   async selectCommand(commandId: string) {
     const commandMap: Record<string, string> = {
-      'generate-draft': 'Generate draft',
-      'toggle-cc-bcc': 'Add CC or BCC',
-      'add-note': 'Add internal note',
-      'assign-issue': 'Assign ticket'
+      "generate-draft": "Generate draft",
+      "toggle-cc-bcc": "Add CC or BCC",
+      "add-note": "Add internal note",
+      "assign-issue": "Assign ticket",
     };
-    
+
     const commandText = commandMap[commandId] || commandId;
-    
+
     const commandOption = this.page.locator('[role="option"]').filter({ hasText: commandText });
     await expect(commandOption).toBeVisible({ timeout: 5000 });
     await commandOption.click();
@@ -362,7 +368,7 @@ export class ConversationActionsPage extends BasePage {
   async addInternalNote(noteText: string) {
     const textarea = this.page.locator(this.internalNoteTextarea);
     await textarea.fill(noteText);
-    
+
     const addButton = this.page.locator(this.addNoteButton);
     await addButton.click();
   }
@@ -384,7 +390,10 @@ export class ConversationActionsPage extends BasePage {
   }
 
   async navigateToNextConversation() {
-    const nextConversationLink = this.page.locator('a').filter({ hasText: /conversation/i }).nth(1);
+    const nextConversationLink = this.page
+      .locator("a")
+      .filter({ hasText: /conversation/i })
+      .nth(1);
     if (await nextConversationLink.isVisible()) {
       await nextConversationLink.click();
     }
@@ -392,53 +401,43 @@ export class ConversationActionsPage extends BasePage {
 
   async loadStoredAuthState() {
     try {
-      await this.page.goto('/conversations');
-      await this.page.waitForLoadState('networkidle');
-    } catch (error) {
-    }
+      await this.page.goto("/conversations");
+      await this.page.waitForLoadState("networkidle");
+    } catch (error) {}
   }
 
   private async cleanMessageText(element: any): Promise<string> {
     return await element.evaluate((el) => {
       const clone = el.cloneNode(true) as Element;
-      clone.querySelectorAll('button').forEach(btn => btn.remove());
-      
-      const content = clone.textContent?.trim() || '';
-      const uiPatterns = [
-        /^(Reply|Close|Send|CC|BCC)$/gi,
-        /^(Replying\.\.\.|Replying|now)$/gi,
-        /^(\d+d|\d+h|now)$/gi
-      ];
-      
-      return uiPatterns.reduce((text, pattern) => 
-        text.replace(pattern, '').trim(), content);
+      clone.querySelectorAll("button").forEach((btn) => btn.remove());
+
+      const content = clone.textContent?.trim() || "";
+      const uiPatterns = [/^(Reply|Close|Send|CC|BCC)$/gi, /^(Replying\.\.\.|Replying|now)$/gi, /^(\d+d|\d+h|now)$/gi];
+
+      return uiPatterns.reduce((text, pattern) => text.replace(pattern, "").trim(), content);
     });
   }
   private isValidMessageText(text: string): boolean {
-    const validMessages = [
-      'This is a test reply message',
-      'keyboard shortcut test',
-      'Test message'
-    ];
-    return text.length > 5 && validMessages.some(msg => text.includes(msg));
+    const validMessages = ["This is a test reply message", "keyboard shortcut test", "Test message"];
+    return text.length > 5 && validMessages.some((msg) => text.includes(msg));
   }
   async getLastMessageText(): Promise<string> {
     try {
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState("networkidle");
       await this.page.waitForTimeout(1000);
-      
+
       const messageSelectors = [
         'div:has-text("This is a test reply message")',
-        'div:has-text("keyboard shortcut test")', 
-        'div:has-text("Test message")'
+        'div:has-text("keyboard shortcut test")',
+        'div:has-text("Test message")',
       ];
       for (const selector of messageSelectors) {
         const elements = this.page.locator(selector);
         const count = await elements.count();
-        
+
         if (count > 0) {
           const lastElement = elements.last();
-          
+
           if (await lastElement.isVisible({ timeout: 2000 }).catch(() => false)) {
             const text = await this.cleanMessageText(lastElement);
             if (this.isValidMessageText(text)) {
@@ -447,17 +446,20 @@ export class ConversationActionsPage extends BasePage {
           }
         }
       }
-      throw new Error('No valid message text found');
+      throw new Error("No valid message text found");
     } catch (error) {
-      console.error('Error getting last message text:', error);
+      console.error("Error getting last message text:", error);
       throw error;
     }
   }
 
   getLastMessage() {
-    return this.page.locator('div').filter({ hasText: 'keyboard shortcut test' }).last().or(
-      this.page.locator('div').filter({ hasText: 'Test message' }).last()
-    ).first();
+    return this.page
+      .locator("div")
+      .filter({ hasText: "keyboard shortcut test" })
+      .last()
+      .or(this.page.locator("div").filter({ hasText: "Test message" }).last())
+      .first();
   }
 
   getConversationStatusLocator() {
@@ -478,12 +480,12 @@ export class ConversationActionsPage extends BasePage {
 
   getCommand(commandId: string) {
     const commandMap: Record<string, string> = {
-      'generate-draft': 'Generate draft',
-      'toggle-cc-bcc': 'Add CC or BCC',
-      'add-note': 'Add internal note',
-      'assign-issue': 'Assign ticket'
+      "generate-draft": "Generate draft",
+      "toggle-cc-bcc": "Add CC or BCC",
+      "add-note": "Add internal note",
+      "assign-issue": "Assign ticket",
     };
-    
+
     const commandText = commandMap[commandId] || commandId;
     return this.page.locator('[role="option"]').filter({ hasText: commandText });
   }
@@ -497,9 +499,10 @@ export class ConversationActionsPage extends BasePage {
   }
 
   getConversationHeader() {
-    return this.page.locator('[data-testid="conversation-header"]').or(
-      this.page.locator('.flex.items-center.border-b.border-border')
-    ).first();
+    return this.page
+      .locator('[data-testid="conversation-header"]')
+      .or(this.page.locator(".flex.items-center.border-b.border-border"))
+      .first();
   }
 
   async clickCloseButton() {
@@ -519,14 +522,14 @@ export class ConversationActionsPage extends BasePage {
   }
 
   async pressSlashKey() {
-    await this.page.keyboard.press('/');
+    await this.page.keyboard.press("/");
   }
 
   async pressEscapeKey() {
-    await this.page.keyboard.press('Escape');
+    await this.page.keyboard.press("Escape");
   }
 
   async pressControlEnter() {
-    await this.page.keyboard.press('Control+Enter');
+    await this.page.keyboard.press("Control+Enter");
   }
 }
