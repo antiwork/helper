@@ -17,20 +17,6 @@ export class SettingsPreferencesPage extends BasePage {
     await this.waitForPageLoad();
   }
 
-  async waitForPreferencesLoad() {
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector(this.preferencesSection, { timeout: 10000 });
-  }
-
-  async expectPreferencesPageVisible() {
-    await expect(this.page).toHaveURL(/\/settings\/preferences/);
-    await expect(this.page.locator("body")).toBeVisible();
-  }
-
-  async expectPreferencesSection() {
-    await expect(this.page.locator(this.preferencesSection)).toBeVisible();
-  }
-
   async expectMailboxNameSetting() {
     await expect(this.page.locator(this.mailboxNameSetting)).toBeVisible();
   }
@@ -45,6 +31,13 @@ export class SettingsPreferencesPage extends BasePage {
 
   async getMailboxNameValue() {
     return await this.page.locator(this.mailboxNameInput).inputValue();
+  }
+
+  async waitForSavingComplete() {
+    await this.page.waitForFunction(() => {
+      const input = document.querySelector('input[placeholder="Enter mailbox name"]') as HTMLInputElement;
+      return input && input.value.trim() !== '';
+    });
   }
 
   async clickTestConfettiButton() {

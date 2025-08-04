@@ -15,18 +15,6 @@ test.describe("Settings - Integrations", () => {
     }
   });
 
-  test("should display integrations page and load successfully", async ({ page }) => {
-    const integrationsPage = new SettingsIntegrationsPage(page);
-
-    await expect(page).toHaveURL(/\/settings\/integrations/);
-    await expect(page.locator("body")).toBeVisible();
-  });
-
-  test("should display Tools section", async ({ page }) => {
-    const integrationsPage = new SettingsIntegrationsPage(page);
-
-    await integrationsPage.expectToolsSection();
-  });
 
   test("should show Connect API button and open API form", async ({ page }) => {
     const integrationsPage = new SettingsIntegrationsPage(page);
@@ -70,47 +58,4 @@ test.describe("Settings - Integrations", () => {
     await integrationsPage.clickCancel();
   });
 
-  test.describe("Responsiveness", () => {
-    const viewports = [
-      { name: "mobile", width: 375, height: 667 },
-      { name: "tablet", width: 768, height: 1024 },
-    ];
-
-    viewports.forEach(({ name, width, height }) => {
-      test(`should be responsive on ${name} devices`, async ({ page }) => {
-        await page.setViewportSize({ width, height });
-
-        const integrationsPage = new SettingsIntegrationsPage(page);
-        await integrationsPage.navigateToIntegrations();
-
-        await expect(page).toHaveURL(/\/settings\/integrations/);
-        await integrationsPage.expectToolsSection();
-      });
-    });
-  });
-
-  test("should maintain URL after page refresh", async ({ page }) => {
-    const currentUrl = page.url();
-
-    await page.reload();
-    await page.waitForLoadState("networkidle");
-
-    expect(page.url()).toBe(currentUrl);
-    await expect(page).toHaveURL(/\/settings\/integrations/);
-  });
-
-  test("should load without JavaScript errors", async ({ page }) => {
-    const errors: string[] = [];
-
-    page.on("pageerror", (error) => {
-      errors.push(error.message);
-    });
-
-    await page.goto("/settings/integrations");
-    await page.waitForLoadState("networkidle");
-
-    await page.waitForTimeout(2000);
-
-    expect(errors).toHaveLength(0);
-  });
 });

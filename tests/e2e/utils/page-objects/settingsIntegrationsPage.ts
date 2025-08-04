@@ -7,14 +7,14 @@ export class SettingsIntegrationsPage extends BasePage {
   private readonly slackSection = 'section:has(h2:text("Slack Integration"))';
   private readonly apiFormContainer = '[data-testid="api-form"]';
 
-  private readonly apiNameInput = 'input[placeholder="Your App"]';
-  private readonly apiUrlInput = 'input[placeholder="https://yourapp.com/api"]';
-  private readonly apiKeyInput = 'input[type="password"]';
+  private readonly apiNameInput = 'input#apiName[placeholder="Your App"]';
+  private readonly apiUrlInput = 'input#apiUrl[placeholder="https://yourapp.com/api"]';
+  private readonly apiKeyInput = 'input#apiKey[type="password"]';
   private readonly importApiButton = 'button:has-text("Import API")';
   private readonly cancelButton = 'button:has-text("Cancel")';
   private readonly toggleSchemaButton = 'button:has-text("Enter OpenAPI schema instead")';
   private readonly toggleUrlButton = 'button:has-text("Enter OpenAPI URL instead")';
-  private readonly apiSchemaTextarea = 'textarea';
+  private readonly apiSchemaTextarea = '[data-testid="api-schema-textarea"]';
 
   constructor(page: Page) {
     super(page);
@@ -23,11 +23,6 @@ export class SettingsIntegrationsPage extends BasePage {
   async navigateToIntegrations() {
     await this.goto("/settings/integrations");
     await this.waitForPageLoad();
-  }
-
-  async waitForIntegrationsLoad() {
-    await this.page.waitForLoadState("networkidle");
-    await this.page.waitForSelector(this.toolsSection, { timeout: 10000 });
   }
 
   async expectIntegrationsPageVisible() {
