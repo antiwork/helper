@@ -51,37 +51,24 @@ export class ConversationActionsPage extends BasePage {
     await expect(this.page.locator('.flex.h-full.flex-col').first()).toBeVisible({ timeout: 10000 });
   }
 
-  async typeReply(message: string) {
+  async typeInComposer(message: string, clearFirst: boolean = true) {
     const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
-    await composer.click({ force: true });
-    
-    await this.page.waitForTimeout(300);
-    
-    await this.page.keyboard.press('Control+a');
-    await this.page.keyboard.press('Delete');
-    await this.page.waitForTimeout(100);
-    
-    await this.page.keyboard.type(message);
-    await this.page.waitForTimeout(300);
-  }
-
-  async typeInComposer(message: string) {
-    const composer = this.page.locator('[data-testid="message-composer"] .tiptap.ProseMirror');
-    
     await expect(composer).toBeVisible({ timeout: 5000 });
-    
     await composer.click({ force: true });
     await composer.focus();
     await this.page.waitForTimeout(500);
-    
-    await composer.evaluate(el => {
-      el.innerHTML = '';
-      el.textContent = '';
-    });
-    await this.page.waitForTimeout(200);
-    
+    if (clearFirst) {
+      await composer.evaluate(el => {
+        el.innerHTML = '';
+        el.textContent = '';
+      });
+      await this.page.waitForTimeout(200);
+    }
     await composer.pressSequentially(message);
     await this.page.waitForTimeout(500);
+  }
+  async typeReply(message: string) {
+    await this.typeInComposer(message, true);
   }
 
   async clearReply() {
@@ -411,6 +398,30 @@ export class ConversationActionsPage extends BasePage {
     }
   }
 
+  private async cleanMessageText(element: any): Promise<string> {
+    return await element.evaluate((el) => {
+      const clone = el.cloneNode(true) as Element;
+      clone.querySelectorAll('button').forEach(btn => btn.remove());
+      
+      const content = clone.textContent?.trim() || '';
+      const uiPatterns = [
+        /^(Reply|Close|Send|CC|BCC)$/gi,
+        /^(Replying\.\.\.|Replying|now)$/gi,
+        /^(\d+d|\d+h|now)$/gi
+      ];
+      
+      return uiPatterns.reduce((text, pattern) => 
+        text.replace(pattern, '').trim(), content);
+    });
+  }
+  private isValidMessageText(text: string): boolean {
+    const validMessages = [
+      'This is a test reply message',
+      'keyboard shortcut test',
+      'Test message'
+    ];
+    return text.length > 5 && validMessages.some(msg => text.includes(msg));
+  }
   async getLastMessageText(): Promise<string> {
     try {
       await this.page.waitForLoadState('networkidle');
@@ -419,13 +430,8 @@ export class ConversationActionsPage extends BasePage {
       const messageSelectors = [
         'div:has-text("This is a test reply message")',
         'div:has-text("keyboard shortcut test")', 
-        'div:has-text("Test message")',
-        'main div:has-text(/This is a test reply message/)',
-        'main p:has-text(/This is a test reply message/)',
-        '[class*="conversation"] div:has-text(/\\w+/)',
-        'main div:has-text(/\\w+/)'
+        'div:has-text("Test message")'
       ];
-
       for (const selector of messageSelectors) {
         const elements = this.page.locator(selector);
         const count = await elements.count();
@@ -434,41 +440,17 @@ export class ConversationActionsPage extends BasePage {
           const lastElement = elements.last();
           
           if (await lastElement.isVisible({ timeout: 2000 }).catch(() => false)) {
-            const text = await lastElement.evaluate((el) => {
-              const clone = el.cloneNode(true) as Element;
-              
-              clone.querySelectorAll('button').forEach(btn => btn.remove());
-              
-              const content = clone.textContent?.trim() || '';
-              
-              const uiPatterns = [
-                /^(Reply|Close|Send|CC|BCC)$/gi,
-                /^(Replying\.\.\.|Replying|now)$/gi,
-                /^(\d+d|\d+h|now)$/gi
-              ];
-              
-              let cleanedContent = content;
-              for (const pattern of uiPatterns) {
-                cleanedContent = cleanedContent.replace(pattern, '').trim();
-              }
-              
-              return cleanedContent;
-            });
-
-            if (text && text.length > 5 && 
-                (text.includes('This is a test reply message') || 
-                 text.includes('keyboard shortcut test') || 
-                 text.includes('Test message'))) {
+            const text = await this.cleanMessageText(lastElement);
+            if (this.isValidMessageText(text)) {
               return text;
             }
           }
         }
       }
-
-      return "keyboard shortcut test";
+      throw new Error('No valid message text found');
     } catch (error) {
       console.error('Error getting last message text:', error);
-      return "keyboard shortcut test";
+      throw error;
     }
   }
 
