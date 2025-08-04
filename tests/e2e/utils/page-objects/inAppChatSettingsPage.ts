@@ -2,6 +2,9 @@ import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "./basePage";
 
 export class InAppChatSettingsPage extends BasePage {
+  private readonly switchSelector = '[role="switch"]';
+  private readonly widgetIconSelector = '.helper-widget-icon';
+  
   readonly pageTitle: Locator;
   readonly documentationLink: Locator;
   
@@ -45,10 +48,10 @@ export class InAppChatSettingsPage extends BasePage {
     this.contextualHelpAccordion = page.getByRole("button", { name: "Add contextual help buttons" });
     this.authenticateUsersAccordion = page.getByRole("button", { name: "Authenticate your users" });
     
-    this.chatIconVisibilitySwitch = page.locator('[role="switch"]').first();
+    this.chatIconVisibilitySwitch = page.locator(this.switchSelector).first();
     this.chatIconVisibilitySelect = page.getByTestId("chat-icon-visibility-select-trigger");
-    this.allCustomersOption = page.getByText("All customers");
-    this.revenueBasedOption = page.getByText("Customers with value greater than");
+    this.allCustomersOption = page.getByRole("option", { name: "All customers" });
+    this.revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
     this.minCustomerValueInput = page.getByTestId("min-customer-value-input");
     
     this.hostUrlInput = page.getByLabel("Host URL");
@@ -59,7 +62,7 @@ export class InAppChatSettingsPage extends BasePage {
     this.emailResponseReplyTab = this.emailResponseTabs.getByRole("tab", { name: "Reply" });
     
     this.widgetPreviewIndicator = page.getByText("Try it out →");
-    this.helperWidgetIcon = page.locator(".helper-widget-icon").last();
+    this.helperWidgetIcon = page.locator(this.widgetIconSelector).last();
   }
 
   get currentPage() {
@@ -136,7 +139,7 @@ export class InAppChatSettingsPage extends BasePage {
     await this.enableChatIconVisibility();
     await expect(this.chatIconVisibilitySelect).toBeVisible();
     await this.chatIconVisibilitySelect.click();
-    await this.page.getByRole("option", { name: "All customers" }).click();
+    await this.allCustomersOption.click();
     await this.page.waitForTimeout(500);
     await expect(this.minCustomerValueInput).not.toBeVisible();
   }
@@ -145,7 +148,7 @@ export class InAppChatSettingsPage extends BasePage {
     await this.enableChatIconVisibility();
     await expect(this.chatIconVisibilitySelect).toBeVisible();
     await this.chatIconVisibilitySelect.click();
-    await this.page.getByRole("option", { name: "Customers with value greater than" }).click();
+    await this.revenueBasedOption.click();
     await this.page.waitForTimeout(500);
     await expect(this.minCustomerValueInput).toBeVisible();
   }
@@ -185,9 +188,9 @@ export class InAppChatSettingsPage extends BasePage {
   }
 
   async expectWidgetToBeHidden() {
-    const widgetCount = await this.page.locator(".helper-widget-icon").count();
+    const widgetCount = await this.page.locator(this.widgetIconSelector).count();
     if (widgetCount > 0) {
-      await expect(this.page.locator(".helper-widget-icon").last()).not.toBeVisible();
+      await expect(this.page.locator(this.widgetIconSelector).last()).not.toBeVisible();
     }
   }
 
