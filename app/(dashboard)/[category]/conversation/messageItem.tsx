@@ -3,32 +3,30 @@ import { useMemo, useState, type JSX } from "react";
 import type { AttachedFile, Conversation, Message as MessageType, Note as NoteType } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
 import { FlagAsBadAction } from "./flagAsBadAction";
+import { NoteEditor } from "./noteEditor";
 import "@/components/linkCta.css";
 import { truncate } from "lodash-es";
 import {
   Bot,
-  Check,
   Download,
-  Edit,
   Frown,
   Mail,
   MessageSquare,
   MoreHorizontal,
   Paperclip,
+  Pencil,
   Sparkles,
+  StickyNote,
   ThumbsDown,
   ThumbsUp,
   Trash2,
   User,
-  X,
   XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
-import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMembers } from "@/components/useMembers";
 import { useSession } from "@/components/useSession";
@@ -46,6 +44,38 @@ function getPreviewUrl(file: AttachedFile): string {
 
 const hasReasoningMetadata = (metadata: any): metadata is { reasoning: string } => {
   return metadata && typeof metadata.reasoning === "string";
+};
+
+const MessageContent = ({
+  mainContent,
+  quotedContext,
+}: {
+  mainContent: React.ReactNode;
+  quotedContext: React.ReactNode | null;
+}) => {
+  const [showQuotedContext, setShowQuotedContext] = useState(false);
+
+  return (
+    <>
+      {mainContent}
+      {quotedContext ? (
+        <>
+          <button
+            onClick={() => setShowQuotedContext(!showQuotedContext)}
+            className={cx(
+              "my-2 flex h-3 w-8 items-center justify-center rounded-full outline-hidden transition-colors duration-200",
+              showQuotedContext
+                ? "bg-muted-foreground text-muted-foreground"
+                : "bg-border text-muted-foreground hover:text-muted-foreground",
+            )}
+          >
+            <MoreHorizontal className="h-8 w-8" />
+          </button>
+          {showQuotedContext ? quotedContext : null}
+        </>
+      ) : null}
+    </>
+  );
 };
 
 const MessageItem = ({
@@ -66,24 +96,10 @@ const MessageItem = ({
   const hasReasoning = isAIMessage && hasReasoningMetadata(message.metadata);
   const router = useRouter();
   const { user: currentUser } = useSession() ?? {};
-  const [isEditing, setIsEditing] = useState(false);
-  const [editContent, setEditContent] = useState(message.body);
+  const [isEditingNote, setIsEditingNote] = useState(false);
   const utils = api.useUtils();
 
   const { data: orgMembers, isLoading: isLoadingMembers, error: membersError } = useMembers();
-
-  const updateNoteMutation = api.mailbox.conversations.notes.update.useMutation({
-    onSuccess: () => {
-      setIsEditing(false);
-      utils.mailbox.conversations.get.invalidate({
-        conversationSlug: conversation.slug,
-      });
-      toast.success("Note updated successfully");
-    },
-    onError: (error) => {
-      toast.error("Failed to update note", { description: error.message });
-    },
-  });
 
   const deleteNoteMutation = api.mailbox.conversations.notes.delete.useMutation({
     onSuccess: () => {
@@ -96,21 +112,6 @@ const MessageItem = ({
       toast.error("Failed to delete note", { description: error.message });
     },
   });
-
-  const handleSaveEdit = () => {
-    if (message.type === "note" && editContent?.trim()) {
-      updateNoteMutation.mutate({
-        conversationSlug: conversation.slug,
-        noteId: message.id,
-        message: editContent.trim(),
-      });
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setEditContent(message.body);
-  };
 
   const handleDeleteNote = () => {
     if (message.type === "note") {
@@ -165,7 +166,7 @@ const MessageItem = ({
           <MessageSquare className="h-3 w-3" />
         )
       ) : message.type === "note" ? (
-        <Edit className="h-3 w-3" />
+        <StickyNote className="h-3 w-3" />
       ) : message.role === "staff" ? (
         <User className="h-3 w-3" />
       ) : (
@@ -228,8 +229,6 @@ const MessageItem = ({
       [],
     );
 
-  const [showQuotedContext, setShowQuotedContext] = useState(false);
-
   const isChatMessage =
     message.type === "message" && message.role === "user" && conversation.source !== "email" && !message.emailTo;
   const { mainContent, quotedContext } = useMemo(
@@ -270,54 +269,17 @@ const MessageItem = ({
                     : "bg-muted",
               )}
             >
-              {message.type === "note" && isEditing ? (
-                <div className="space-y-2">
-                  <Textarea
-                    value={editContent || ""}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    className="min-h-20 resize-none"
-                    autoFocus
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={handleSaveEdit}
-                      disabled={updateNoteMutation.isPending || !editContent?.trim()}
-                    >
-                      <Check className="h-4 w-4 mr-1" />
-                      Save
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={handleCancelEdit}
-                      disabled={updateNoteMutation.isPending}
-                    >
-                      <X className="h-4 w-4 mr-1" />
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
+              {message.type === "note" ? (
+                <NoteEditor
+                  conversation={conversation}
+                  note={message}
+                  isEditing={isEditingNote}
+                  onCancelEdit={() => setIsEditingNote(false)}
+                >
+                  <MessageContent mainContent={mainContent} quotedContext={quotedContext} />
+                </NoteEditor>
               ) : (
-                <>
-                  {mainContent}
-                  {quotedContext ? (
-                    <>
-                      <button
-                        onClick={() => setShowQuotedContext(!showQuotedContext)}
-                        className={cx(
-                          "my-2 flex h-3 w-8 items-center justify-center rounded-full outline-hidden transition-colors duration-200",
-                          showQuotedContext
-                            ? "bg-muted-foreground text-muted-foreground"
-                            : "bg-border text-muted-foreground hover:text-muted-foreground",
-                        )}
-                      >
-                        <MoreHorizontal className="h-8 w-8" />
-                      </button>
-                      {showQuotedContext ? quotedContext : null}
-                    </>
-                  ) : null}
-                </>
+                <MessageContent mainContent={mainContent} quotedContext={quotedContext} />
               )}
             </div>
           </div>
@@ -418,16 +380,16 @@ const MessageItem = ({
               {message.type === "message" && message.role === "ai_assistant" && (
                 <FlagAsBadAction message={message} conversationSlug={conversation.slug} />
               )}
-              {canEditNote && !isEditing && (
-                <div className="flex gap-1">
+              {canEditNote && !isEditingNote && (
+                <>
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
-                          onClick={() => setIsEditing(true)}
+                          onClick={() => setIsEditingNote(true)}
                           className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                           <span className="text-xs">Edit</span>
                         </button>
                       </TooltipTrigger>
@@ -455,7 +417,7 @@ const MessageItem = ({
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                </div>
+                </>
               )}
             </div>
           </div>
