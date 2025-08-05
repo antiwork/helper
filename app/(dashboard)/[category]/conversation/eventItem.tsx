@@ -98,7 +98,7 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
       </button>
 
       {hasDetails && detailsExpanded && (
-        <section className="mt-2 text-sm text-muted-foreground border rounded p-4 event-details">
+        <section className="mt-2 text-sm text-muted-foreground border rounded p-4">
           <div className="flex flex-col gap-1">
             {byUserName && (
               <div>
