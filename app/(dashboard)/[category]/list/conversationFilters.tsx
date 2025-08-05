@@ -133,7 +133,7 @@ export const ConversationFilters = ({
       />
       {input.category === "all" && (
         <AssigneeFilter
-          selectedAssignees={filterValues.assignee.concat(input.isAssigned === false ? ["unassigned"] : [])}
+          selectedAssignees={filterValues.isAssigned === false ? ["unassigned"] : filterValues.assignee}
           onChange={(assignees) => {
             const hasUnassigned = assignees.includes("unassigned");
             const memberAssignees = assignees.filter((id) => id !== "unassigned");
