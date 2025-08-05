@@ -155,21 +155,18 @@ test.describe("Conversation Details", () => {
   }
 
   async function createInternalNoteIfAvailable(page: Page, testNote: string) {
-    const noteButtonPattern = /note|internal/i;
-    const submitButtonPattern = /save|add|submit/i;
-
-    const addNoteButton = page.locator("button").filter({ hasText: noteButtonPattern }).first();
+    const addNoteButton = page.getByRole("button", { name: "Add internal note" });
     const addNoteExists = await addNoteButton.count();
 
     if (addNoteExists > 0 && (await addNoteButton.isVisible())) {
       await addNoteButton.click();
 
-      const noteInput = page.locator('textarea, [data-testid="tiptap-editor-content"] .ProseMirror').first();
+      const noteInput = page.locator("textarea, .ProseMirror").first();
 
       if (await noteInput.isVisible()) {
         await noteInput.fill(testNote);
 
-        const submitButton = page.getByRole("button", { name: submitButtonPattern });
+        const submitButton = page.getByRole("button", { name: "Save" });
         await submitButton.click();
 
         await page.waitForLoadState("networkidle");
