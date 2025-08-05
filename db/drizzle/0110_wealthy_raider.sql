@@ -1,0 +1,2 @@
+ALTER TABLE "tool_apis" RENAME COLUMN "authentication_token" TO "encrypted_authentication_token";--> statement-breakpoint
+ALTER TABLE "tools" RENAME COLUMN "authentication_token" TO "encrypted_authentication_token";

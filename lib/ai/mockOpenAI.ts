@@ -1,7 +1,5 @@
 import { MockEmbeddingModelV1, MockLanguageModelV1 } from "ai/test";
-import { env } from "@/lib/env";
-
-const isTesting = env.NODE_ENV === "test" || env.CI;
+import { isAIMockingEnabled } from "@/lib/env";
 
 const createMockLanguageModel = () =>
   new MockLanguageModelV1({
@@ -47,7 +45,7 @@ const createMockEmbeddingModel = () =>
   });
 
 export const createMockOpenAI = () => {
-  if (!isTesting) {
+  if (!isAIMockingEnabled) {
     throw new Error(`Mock OpenAI should only be used in testing/CI environments`);
   }
 
@@ -58,5 +56,3 @@ export const createMockOpenAI = () => {
 
   return mockProvider;
 };
-
-export const isMockingEnabled = () => isTesting;
