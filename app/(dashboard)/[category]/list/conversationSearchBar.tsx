@@ -57,17 +57,10 @@ export const ConversationSearchBar = ({
     debouncedSetSearch(search);
   }, [search]);
 
-  useHotkeys(
-    "mod+k",
-    (e) => {
-      e.preventDefault();
-      searchInputRef.current?.focus();
-    },
-    {
-      enableOnFormTags: true,
-      enableOnContentEditable: true,
-    },
-  );
+  useHotkeys("mod+k", (e) => {
+    e.preventDefault();
+    searchInputRef.current?.focus();
+  });
 
   const handleStatusFilterChange = useCallback(
     (status: StatusOption) => {
