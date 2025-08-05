@@ -1,4 +1,3 @@
-// tests/utils/page-objects/knowledgeBankPage.ts
 import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "./basePage";
 
