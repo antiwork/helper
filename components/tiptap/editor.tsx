@@ -41,7 +41,6 @@ type TipTapEditorProps = {
   isRecording: boolean;
   startRecording: () => void;
   stopRecording: () => void;
-  "data-testid"?: string;
 };
 
 declare module "@tiptap/core" {
