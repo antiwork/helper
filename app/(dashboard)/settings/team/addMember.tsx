@@ -17,6 +17,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
   const [emailInput, setEmailInput] = useState("");
   const [displayNameInput, setDisplayNameInput] = useState("");
   const [permissions, setPermissions] = useState<"member" | "admin" | undefined>(undefined);
+  const [emailTouched, setEmailTouched] = useState(false);
 
   const utils = api.useUtils();
 
@@ -73,6 +74,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
           placeholder="Email address"
           value={emailInput}
           onChange={(e) => setEmailInput(e.target.value)}
+          onBlur={() => setEmailTouched(true)}
           disabled={isAdding}
         />
         {emailInput && (
@@ -84,7 +86,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
             <X className="h-4 w-4 text-gray-400" aria-hidden="true" />
           </button>
         )}
-        {emailInput && !isValidEmail && (
+        {emailInput && emailTouched && !isValidEmail && (
           <div className="text-xs text-red-500 mt-1">Please enter a valid email address</div>
         )}
       </div>
