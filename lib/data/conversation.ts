@@ -181,6 +181,43 @@ export const updateConversation = async (
       }
     };
     await publishEvents();
+
+    // Send follower notifications for relevant changes
+    if (byUserId && updatesToLog.length > 0) {
+      const notificationEvents = [];
+
+      if (current.status !== updatedConversation.status) {
+        notificationEvents.push(
+          triggerEvent("conversations/send-follower-notification", {
+            conversationId: updatedConversation.id,
+            eventType: "status_change" as const,
+            triggeredByUserId: byUserId,
+            eventDetails: {
+              oldStatus: current.status || "open",
+              newStatus: updatedConversation.status || "open",
+            },
+          }),
+        );
+      }
+
+      if (current.assignedToId !== updatedConversation.assignedToId) {
+        notificationEvents.push(
+          triggerEvent("conversations/send-follower-notification", {
+            conversationId: updatedConversation.id,
+            eventType: "assignment_change" as const,
+            triggeredByUserId: byUserId,
+            eventDetails: {
+              oldAssignee: current.assignedToId || undefined,
+              newAssignee: updatedConversation.assignedToId || undefined,
+            },
+          }),
+        );
+      }
+
+      if (notificationEvents.length > 0) {
+        await Promise.allSettled(notificationEvents);
+      }
+    }
   }
   return updatedConversation ?? null;
 };
