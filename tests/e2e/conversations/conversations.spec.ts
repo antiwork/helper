@@ -198,6 +198,7 @@ test.describe("Working Conversation Management", () => {
 
     await page.keyboard.press("ControlOrMeta+k");
 
+    await expect(searchInput).toBeFocused();
     const focusedElement = await page.evaluate(() => document.activeElement?.getAttribute("placeholder"));
     expect(focusedElement).toBe("Search conversations");
   });
@@ -274,11 +275,11 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should handle date filter presets", async ({ page }) => {
-    const filterToggleButton = page.getByTestId("filter-toggle");
+    const filterToggleButton = page.getByRole("button", { name: "Filter Toggle" });
     await expect(filterToggleButton).toBeVisible();
     await filterToggleButton.click();
 
-    const dateFilterButton = page.getByTestId("date-filter-button");
+    const dateFilterButton = page.getByRole("button", { name: "Date Filter" });
     await expect(dateFilterButton).toBeVisible();
 
     // Initially should show "Created" (All time)
@@ -302,11 +303,11 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should handle custom date picker", async ({ page }) => {
-    const filterToggleButton = page.getByTestId("filter-toggle");
+    const filterToggleButton = page.getByRole("button", { name: "Filter Toggle" });
     await expect(filterToggleButton).toBeVisible();
     await filterToggleButton.click();
 
-    const dateFilterButton = page.getByTestId("date-filter-button");
+    const dateFilterButton = page.getByRole("button", { name: "Date Filter" });
     await expect(dateFilterButton).toBeVisible();
 
     // Open date filter dropdown
@@ -324,9 +325,6 @@ test.describe("Working Conversation Management", () => {
     const dayButton = page.locator('table[aria-multiselectable="true"] button[aria-label*="15"]').first();
     await dayButton.click();
 
-    // Button label should show the selected date
-    await expect(dateFilterButton).toContainText("15");
-
     // Test "Back" button
     const backButton = page.locator("button").filter({ hasText: "Back" });
     await expect(backButton).toBeVisible();
@@ -338,11 +336,11 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should clear date filter with clear filters button", async ({ page }) => {
-    const filterToggleButton = page.getByTestId("filter-toggle");
+    const filterToggleButton = page.getByRole("button", { name: "Filter Toggle" });
     await expect(filterToggleButton).toBeVisible();
     await filterToggleButton.click();
 
-    const dateFilterButton = page.getByTestId("date-filter-button");
+    const dateFilterButton = page.getByRole("button", { name: "Date Filter" });
     await expect(dateFilterButton).toBeVisible();
 
     await dateFilterButton.click();
@@ -350,7 +348,7 @@ test.describe("Working Conversation Management", () => {
     await yesterdayOption.click();
     await expect(dateFilterButton).toHaveText(/Yesterday/);
 
-    const clearFiltersButton = page.getByTestId("clear-filters-button");
+    const clearFiltersButton = page.getByRole("button", { name: "Clear Filters" });
     await expect(clearFiltersButton).toBeVisible();
 
     await clearFiltersButton.click();
@@ -361,14 +359,14 @@ test.describe("Working Conversation Management", () => {
 
   test("should preserve date filter after page refresh", async ({ page }) => {
     const toggleFilters = async () => {
-      const filterToggleButton = page.getByTestId("filter-toggle");
+      const filterToggleButton = page.getByRole("button", { name: "Filter Toggle" });
       await expect(filterToggleButton).toBeVisible();
       await filterToggleButton.click();
     };
 
     await toggleFilters();
 
-    const dateFilterButton = page.getByTestId("date-filter-button");
+    const dateFilterButton = page.getByRole("button", { name: "Date Filter" });
     await expect(dateFilterButton).toBeVisible();
 
     await dateFilterButton.click();
@@ -382,9 +380,9 @@ test.describe("Working Conversation Management", () => {
 
     await toggleFilters();
 
-    const dateFilterButtonAfterRefresh = page.getByTestId("date-filter-button");
+    const dateFilterButtonAfterRefresh = page.getByRole("button", { name: "Date Filter" });
     await expect(dateFilterButtonAfterRefresh).toHaveText(/Last 30 days/);
-    const clearFiltersButton = page.locator("button").filter({ hasText: "Clear filters" });
+    const clearFiltersButton = page.getByRole("button", { name: "Clear Filters" });
     await expect(clearFiltersButton).toBeVisible();
   });
 

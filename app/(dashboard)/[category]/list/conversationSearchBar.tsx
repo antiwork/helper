@@ -57,9 +57,17 @@ export const ConversationSearchBar = ({
     debouncedSetSearch(search);
   }, [search]);
 
-  useHotkeys("mod+k", () => {
-    searchInputRef.current?.focus();
-  });
+  useHotkeys(
+    "mod+k",
+    (e) => {
+      e.preventDefault();
+      searchInputRef.current?.focus();
+    },
+    {
+      enableOnFormTags: true,
+      enableOnContentEditable: true,
+    },
+  );
 
   const handleStatusFilterChange = useCallback(
     (status: StatusOption) => {
@@ -185,7 +193,7 @@ export const ConversationSearchBar = ({
           autoFocus
         />
         <Button
-          data-testid="filter-toggle"
+          aria-label="Filter Toggle"
           type="button"
           variant="ghost"
           size="sm"
