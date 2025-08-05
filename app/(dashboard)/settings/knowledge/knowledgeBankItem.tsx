@@ -153,7 +153,7 @@ const KnowledgeBankItem = ({ faq, suggestedReplacement, onDelete }: KnowledgeBan
   };
 
   return (
-    <div className="py-4">
+    <div className="py-4" data-testid="knowledge-item">
       {editingContent ? (
         <KnowledgeEditForm
           content={editingContent}
@@ -181,6 +181,7 @@ const KnowledgeBankItem = ({ faq, suggestedReplacement, onDelete }: KnowledgeBan
             }}
             disabled={updateMutation.isPending}
             className="mt-0.5"
+            data-testid="knowledge-toggle"
           />
           <button
             className="flex-1 w-full text-left text-sm hover:underline"
