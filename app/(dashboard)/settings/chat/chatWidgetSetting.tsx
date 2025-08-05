@@ -290,7 +290,7 @@ ${NODE_HMAC_SAMPLE_CODE}
           </a>
         }
       >
-        <Tabs defaultValue="vanilla" className="w-full" data-testid="widget-installation-tabs">
+        <Tabs defaultValue="vanilla" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="vanilla">HTML/JavaScript</TabsTrigger>
             <TabsTrigger value="react">React/Next.js</TabsTrigger>
