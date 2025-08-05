@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { and, eq, gt, isNotNull, isNull, or } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, gmailSupportEmails, toolApis, tools } from "@/db/schema";
