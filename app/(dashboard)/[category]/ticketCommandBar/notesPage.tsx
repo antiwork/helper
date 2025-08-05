@@ -75,7 +75,7 @@ const NotesPageContent = ({ onOpenChange }: NotesPageProps) => {
         className="min-h-24 mb-4 flex-1"
         placeholder="Type your note here..."
         autoFocus
-        data-testid="internal-note-textarea"
+        aria-label="Internal Note Textarea"
       />
       {attachments.length > 0 && (
         <div className="mb-4 flex w-full flex-wrap gap-2">

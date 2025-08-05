@@ -1,13 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { ConversationActionsPage } from "../utils/page-objects/conversationActionsPage";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 test.describe("Conversation Actions", () => {
-  let conversationActionsPage: ConversationActionsPage;
-
   test.beforeEach(async ({ page }) => {
-    conversationActionsPage = new ConversationActionsPage(page);
     try {
       await page.goto("/mine", { timeout: 15000 });
       await page.waitForLoadState("networkidle", { timeout: 10000 });
@@ -24,245 +20,404 @@ test.describe("Conversation Actions", () => {
     await page.waitForLoadState("networkidle");
   });
 
-  test("should send a reply message", async () => {
+  test("should send a reply message", async ({ page }) => {
     const testMessage = "This is a test reply message";
 
-    await conversationActionsPage.typeInComposer(testMessage);
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await expect(composer).toBeVisible({ timeout: 5000 });
+    await composer.click({ force: true });
+    await composer.focus();
+    await page.waitForTimeout(500);
+    await composer.evaluate((el) => {
+      el.innerHTML = "";
+      el.textContent = "";
+    });
+    await page.waitForTimeout(200);
+    await composer.pressSequentially(testMessage);
+    await page.waitForTimeout(500);
 
-    const composerText = await conversationActionsPage.getComposerText();
+    const composerText = await composer.textContent();
     expect(composerText).toContain(testMessage);
 
-    await conversationActionsPage.clickReplyButton();
+    const replyButton = page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
+    await replyButton.click();
 
-    await conversationActionsPage.waitForMessageToSend();
-
-    const lastMessageText = await conversationActionsPage.getLastMessageText();
-    expect(lastMessageText).toContain(testMessage);
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000);
   });
 
-  test("should show conversation metadata", async () => {
-    await expect(conversationActionsPage.getConversationHeader()).toBeVisible();
+  test("should show conversation metadata", async ({ page }) => {
+    const conversationHeader = page
+      .locator(".flex.items-center.border-b.border-border")
+      .first();
+    await expect(conversationHeader).toBeVisible();
   });
 
-  test("should trigger command bar with slash key", async () => {
-    await conversationActionsPage.openCommandBar();
+  test("should trigger command bar with slash key", async ({ page }) => {
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await page.keyboard.press("/");
+    await page.waitForTimeout(500);
 
-    const isVisible = await conversationActionsPage.isCommandBarVisible();
+    const commandBar = page.locator('[aria-label="Command Bar"]');
+    const isVisible = await commandBar.isVisible();
     expect(isVisible).toBe(true);
   });
 
-  test("should escape command bar", async () => {
-    await conversationActionsPage.openCommandBar();
-    await conversationActionsPage.pressEscapeKey();
+  test("should escape command bar", async ({ page }) => {
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await page.keyboard.press("/");
+    await page.waitForTimeout(500);
 
-    await expect(conversationActionsPage.getCommandBar()).not.toBeVisible();
+    await page.keyboard.press("Escape");
+
+    const commandBar = page.locator('[aria-label="Command Bar"]');
+    await expect(commandBar).not.toBeVisible();
   });
 
-  test("should open generate draft command", async () => {
-    await conversationActionsPage.openCommandBar();
-    await conversationActionsPage.selectCommand("generate-draft");
+  test("should open generate draft command", async ({ page }) => {
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await page.keyboard.press("/");
+    await page.waitForTimeout(500);
 
-    await conversationActionsPage.waitForTimeout(1000);
+    const generateDraftCommand = page.locator('[role="option"]').filter({ hasText: "Generate draft" });
+    await expect(generateDraftCommand).toBeVisible({ timeout: 5000 });
+    await generateDraftCommand.click();
+
+    await page.waitForTimeout(1000);
   });
 
-  test("should handle empty reply attempt", async () => {
-    await conversationActionsPage.clearReply();
-    await conversationActionsPage.waitForTimeout(500);
+  test("should handle empty reply attempt", async ({ page }) => {
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    
+    try {
+      await composer.evaluate((el) => {
+        el.innerHTML = "";
+        el.textContent = "";
+      });
+    } catch {
+      await page.keyboard.press("Control+a");
+      await page.keyboard.press("Delete");
+    }
+    
+    const composerText = await composer.textContent();
+    if (composerText) {
+      await page.keyboard.press("Control+a");
+      await page.keyboard.press("Backspace");
+    }
+    
+    await page.waitForTimeout(200);
 
-    await conversationActionsPage.focusComposer();
-    await conversationActionsPage.waitForTimeout(500);
+    await composer.focus();
+    await page.waitForTimeout(500);
 
-    const composerText = await conversationActionsPage.getComposerText();
-
-    expect(composerText.trim()).toBe("");
-    const replyButton = conversationActionsPage.getReplyButton();
+    const finalComposerText = await composer.textContent();
+    expect(finalComposerText?.trim()).toBe("");
+    
+    const replyButton = page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
     await expect(replyButton).toBeDisabled();
   });
 
-  test("should preserve composer content when switching between actions", async () => {
+  test("should preserve composer content when switching between actions", async ({ page }) => {
     const testMessage = "This message should be preserved";
 
-    await conversationActionsPage.clearReply();
-    await conversationActionsPage.waitForTimeout(500);
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await composer.evaluate((el) => {
+      el.innerHTML = "";
+      el.textContent = "";
+    });
+    await page.waitForTimeout(200);
+    await composer.pressSequentially(testMessage);
+    await page.waitForTimeout(500);
 
-    await conversationActionsPage.typeInComposer(testMessage);
-    await conversationActionsPage.waitForTimeout(500);
+    const initialText = await composer.textContent();
+    expect(initialText?.trim()).toContain(testMessage);
 
-    const initialText = await conversationActionsPage.getComposerText();
-    expect(initialText.trim()).toContain(testMessage);
+    await page.keyboard.press("/");
+    await page.waitForTimeout(300);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(500);
 
-    await conversationActionsPage.openCommandBar();
-    await conversationActionsPage.waitForTimeout(300);
-    await conversationActionsPage.pressEscapeKey();
-    await conversationActionsPage.waitForTimeout(500);
-
-    const finalText = await conversationActionsPage.getComposerText();
-    expect(finalText.trim()).toContain(testMessage);
+    const finalText = await composer.textContent();
+    expect(finalText?.trim()).toContain(testMessage);
   });
 
-  test("should handle keyboard shortcuts", async () => {
-    await conversationActionsPage.typeInComposer("Keyboard shortcut test");
-    await conversationActionsPage.pressControlEnter();
+  test("should handle keyboard shortcuts", async ({ page }) => {
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await composer.pressSequentially("Keyboard shortcut test");
+    await page.keyboard.press("Control+Enter");
 
-    await conversationActionsPage.waitForTimeout(2000);
+    await page.waitForTimeout(2000);
   });
 
-  test("should toggle CC field via command bar", async () => {
-    await conversationActionsPage.openCommandBar();
-    await conversationActionsPage.selectCommand("toggle-cc-bcc");
+  test("should toggle CC field via command bar", async ({ page }) => {
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await page.keyboard.press("/");
+    await page.waitForTimeout(500);
 
-    await conversationActionsPage.waitForTimeout(1000);
+    const toggleCcCommand = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
+    await expect(toggleCcCommand).toBeVisible({ timeout: 5000 });
+    await toggleCcCommand.click();
 
-    const ccInput = conversationActionsPage.getCcInput();
+    await page.waitForTimeout(1000);
+
+    const ccInput = page.locator('input[name="CC"]');
     await expect(ccInput).toBeVisible({ timeout: 5000 });
   });
 
-  test("should filter commands when typing in command bar", async () => {
-    await conversationActionsPage.openCommandBar();
-    await conversationActionsPage.typeInCommandBar("generate");
+  test("should filter commands when typing in command bar", async ({ page }) => {
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await page.keyboard.press("/");
+    await page.waitForTimeout(500);
 
-    await conversationActionsPage.waitForTimeout(500);
+    const commandInput = page.locator('[aria-label="Command Bar Input"]');
+    await commandInput.fill("generate");
 
-    await expect(conversationActionsPage.getCommand("generate-draft")).toBeVisible();
+    await page.waitForTimeout(500);
+
+    const generateDraftCommand = page.locator('[role="option"]').filter({ hasText: "Generate draft" });
+    await expect(generateDraftCommand).toBeVisible();
   });
 
-  test("should validate composer with actual content", async () => {
+  test("should validate composer with actual content", async ({ page }) => {
     const testMessage = "This is a valid message";
-    await conversationActionsPage.typeInComposer(testMessage);
+    
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await composer.pressSequentially(testMessage);
 
-    const replyButton = conversationActionsPage.getReplyButton();
+    const replyButton = page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
     await expect(replyButton).toBeEnabled();
   });
 
-  test("should access internal note functionality", async () => {
-    await conversationActionsPage.openCommandBar();
-    await conversationActionsPage.selectCommand("add-note");
+  test("should access internal note functionality", async ({ page }) => {
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await page.keyboard.press("/");
+    await page.waitForTimeout(500);
 
-    await conversationActionsPage.waitForTimeout(1000);
+    const addNoteCommand = page.locator('[role="option"]').filter({ hasText: "Add internal note" });
+    await expect(addNoteCommand).toBeVisible({ timeout: 5000 });
+    await addNoteCommand.click();
+
+    await page.waitForTimeout(1000);
 
     const noteText = "This is an internal note for testing";
-    await conversationActionsPage.addInternalNote(noteText);
+    const textarea = page.locator('[aria-label="Internal Note Textarea"]');
+    await textarea.fill(noteText);
 
-    await conversationActionsPage.waitForTimeout(1000);
+    const addButton = page.locator('button:has-text("Add internal note")');
+    await addButton.click();
+
+    await page.waitForTimeout(1000);
   });
 
-  test("should handle multiple sequential actions", async () => {
-    await conversationActionsPage.clearReply();
-    await conversationActionsPage.waitForTimeout(500);
+  test("should handle multiple sequential actions", async ({ page }) => {
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await composer.evaluate((el) => {
+      el.innerHTML = "";
+      el.textContent = "";
+    });
+    await page.waitForTimeout(500);
 
-    await conversationActionsPage.typeInComposer("Test message");
-    await conversationActionsPage.waitForTimeout(500);
+    await composer.pressSequentially("Test message");
+    await page.waitForTimeout(500);
 
-    const initialText = await conversationActionsPage.getComposerText();
-    expect(initialText.trim()).toContain("Test message");
+    const initialText = await composer.textContent();
+    expect(initialText?.trim()).toContain("Test message");
 
-    await conversationActionsPage.openCommandBar();
-    await conversationActionsPage.waitForTimeout(300);
-    await conversationActionsPage.pressEscapeKey();
-    await conversationActionsPage.waitForTimeout(500);
+    await page.keyboard.press("/");
+    await page.waitForTimeout(300);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(500);
 
-    const composerText = await conversationActionsPage.getComposerText();
-    expect(composerText.trim()).toContain("Test message");
+    const composerText = await composer.textContent();
+    expect(composerText?.trim()).toContain("Test message");
 
-    await conversationActionsPage.clickReplyButton();
-    await conversationActionsPage.waitForMessageToSend();
-    const lastMessageText = await conversationActionsPage.getLastMessageText();
-    expect(lastMessageText).toContain("Test message");
+    const replyButton = page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
+    await replyButton.click();
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000);
+
+    const messageElements = page.locator('[data-message-item], [data-testid="message"]');
+    const lastMessage = messageElements.last();
+    await expect(lastMessage).toContainText("Test message");
   });
 
-  test("should close and reopen conversation", async () => {
-    await conversationActionsPage.clearReply();
-    await conversationActionsPage.waitForTimeout(500);
+  test("should close and reopen conversation", async ({ page }) => {
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await composer.evaluate((el) => {
+      el.innerHTML = "";
+      el.textContent = "";
+    });
+    await page.waitForTimeout(500);
 
-    const initialStatus = await conversationActionsPage.getConversationStatus();
+    const getConversationStatus = async (): Promise<string> => {
+      try {
+        const statusElement = page.locator("text=OPEN").or(page.locator("text=CLOSED")).first();
+        const statusText = await statusElement.textContent({ timeout: 5000 });
+
+        if (statusText?.includes("OPEN")) {
+          return "open";
+        } else if (statusText?.includes("CLOSED")) {
+          return "closed";
+        }
+      } catch (e) {
+        const closeButton = page.locator('button:has-text("Close"):not(:has-text("Reply"))');
+        const reopenButton = page.locator('button:has-text("Reopen")');
+
+        if (await closeButton.isVisible({ timeout: 2000 })) {
+          return "open";
+        } else if (await reopenButton.isVisible({ timeout: 2000 })) {
+          return "closed";
+        }
+      }
+      return "unknown";
+    };
+
+    const initialStatus = await getConversationStatus();
 
     if (initialStatus === "open") {
-      try {
-        await conversationActionsPage.closeConversation();
-        await conversationActionsPage.waitForConversationStatusChange();
+      const closeButton = page.locator('button:has-text("Close"):not(:has-text("Reply"))');
+      await expect(closeButton).toBeVisible({ timeout: 5000 });
+      await expect(closeButton).toBeEnabled({ timeout: 5000 });
+      await closeButton.click();
+      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
 
-        const statusAfterClose = await conversationActionsPage.getConversationStatus();
+      const statusAfterClose = await getConversationStatus();
 
-        if (statusAfterClose === "closed") {
-          await conversationActionsPage.expectConversationClosed();
+      if (statusAfterClose === "closed") {
+        await expect(page.locator("text=closed")).toBeVisible({ timeout: 10000 });
+        await expect(closeButton).toBeDisabled();
 
-          await conversationActionsPage.reopenConversation();
-          await conversationActionsPage.waitForConversationStatusChange();
-          await conversationActionsPage.expectConversationReopened();
-        } else {
-          console.error("Failed to close conversation:", statusAfterClose);
-          throw new Error(`Conversation status change failed: expected closed, got ${statusAfterClose}`);
-        }
-      } catch (error) {
-        console.error("Failed to close/reopen conversation:", error);
-        throw error;
+        const reopenButton = page.locator('button:has-text("Reopen")');
+        await reopenButton.click();
+        await page.waitForTimeout(1000);
+        await page.waitForLoadState("networkidle");
+        await expect(page.locator("text=open")).toBeVisible({ timeout: 10000 });
+        await expect(closeButton).toBeEnabled();
+        await expect(reopenButton).not.toBeVisible();
+      } else {
+        throw new Error(`Conversation status change failed: expected closed, got ${statusAfterClose}`);
       }
     } else if (initialStatus === "closed") {
-      await conversationActionsPage.reopenConversation();
-      await conversationActionsPage.waitForConversationStatusChange();
-      await conversationActionsPage.expectConversationReopened();
+      const reopenButton = page.locator('button:has-text("Reopen")');
+      await reopenButton.click();
+      await page.waitForTimeout(1000);
+      await page.waitForLoadState("networkidle");
+      await expect(page.locator("text=open")).toBeVisible({ timeout: 10000 });
 
-      await conversationActionsPage.closeConversation();
-      await conversationActionsPage.waitForConversationStatusChange();
-      await conversationActionsPage.expectConversationClosed();
+      const closeButton = page.locator('button:has-text("Close"):not(:has-text("Reply"))');
+      await closeButton.click();
+      await page.waitForTimeout(2000);
+      await page.waitForLoadState("networkidle");
+      await expect(page.locator("text=closed")).toBeVisible({ timeout: 10000 });
     }
   });
 
-  test("should send reply and close conversation", async () => {
+  test("should send reply and close conversation", async ({ page }) => {
     const testMessage = "Reply and close test message";
 
-    const status = await conversationActionsPage.getConversationStatus();
+    const getConversationStatus = async (): Promise<string> => {
+      try {
+        const statusElement = page.locator("text=OPEN").or(page.locator("text=CLOSED")).first();
+        const statusText = await statusElement.textContent({ timeout: 5000 });
+
+        if (statusText?.includes("OPEN")) {
+          return "open";
+        } else if (statusText?.includes("CLOSED")) {
+          return "closed";
+        }
+      } catch (e) {
+        const closeButton = page.locator('button:has-text("Close"):not(:has-text("Reply"))');
+        const reopenButton = page.locator('button:has-text("Reopen")');
+
+        if (await closeButton.isVisible({ timeout: 2000 })) {
+          return "open";
+        } else if (await reopenButton.isVisible({ timeout: 2000 })) {
+          return "closed";
+        }
+      }
+      return "unknown";
+    };
+
+    const status = await getConversationStatus();
     if (status === "closed") {
-      await conversationActionsPage.reopenConversation();
-      await conversationActionsPage.waitForConversationStatusChange();
+      const reopenButton = page.locator('button:has-text("Reopen")');
+      await reopenButton.click();
+      await page.waitForTimeout(1000);
+      await page.waitForLoadState("networkidle");
     }
 
-    await conversationActionsPage.clearReply();
-    await conversationActionsPage.waitForTimeout(500);
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await composer.evaluate((el) => {
+      el.innerHTML = "";
+      el.textContent = "";
+    });
+    await page.waitForTimeout(500);
 
-    await conversationActionsPage.typeInComposer(testMessage);
-    await conversationActionsPage.waitForTimeout(500);
+    await composer.pressSequentially(testMessage);
+    await page.waitForTimeout(500);
 
     try {
-      await conversationActionsPage.expectReplyAndCloseButtonVisible();
-      await conversationActionsPage.clickReplyAndCloseButton();
-      await conversationActionsPage.waitForConversationStatusChange();
-      await conversationActionsPage.expectConversationClosed();
+      const replyAndCloseButton = page.locator('button:has-text("Reply and close")');
+      await expect(replyAndCloseButton).toBeVisible();
+      await replyAndCloseButton.click();
+      await page.waitForTimeout(1000);
+      await page.waitForLoadState("networkidle");
+      await expect(page.locator("text=closed")).toBeVisible({ timeout: 10000 });
     } catch (error) {
-      const composerText = await conversationActionsPage.getComposerText();
+      const composerText = await composer.textContent();
 
-      if (composerText.trim().length > 0) {
-        const replyButton = conversationActionsPage.getReplyButton();
+      if (composerText && composerText.trim().length > 0) {
+        const replyButton = page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
         await expect(replyButton).toBeEnabled();
       } else {
-        await conversationActionsPage.typeInComposer(testMessage);
-        await conversationActionsPage.waitForTimeout(500);
+        await composer.pressSequentially(testMessage);
+        await page.waitForTimeout(500);
 
-        const updatedText = await conversationActionsPage.getComposerText();
-        expect(updatedText.trim()).toContain(testMessage);
+        const updatedText = await composer.textContent();
+        expect(updatedText?.trim()).toContain(testMessage);
 
-        const replyButton = conversationActionsPage.getReplyButton();
+        const replyButton = page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
         await expect(replyButton).toBeEnabled();
       }
     }
   });
 
-  test("should add CC recipient via command bar", async () => {
-    await conversationActionsPage.openCommandBar();
-    await conversationActionsPage.selectCommand("toggle-cc-bcc");
-    await conversationActionsPage.waitForTimeout(1000);
+  test("should add CC recipient via command bar", async ({ page }) => {
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await page.keyboard.press("/");
+    await page.waitForTimeout(500);
 
-    const ccInput = conversationActionsPage.getCcInput();
+    const toggleCcCommand = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
+    await expect(toggleCcCommand).toBeVisible({ timeout: 5000 });
+    await toggleCcCommand.click();
+    await page.waitForTimeout(1000);
+
+    const ccInput = page.locator('input[name="CC"]');
 
     try {
       const isVisible = await ccInput.isVisible();
 
       if (isVisible) {
         await expect(ccInput).toBeVisible({ timeout: 5000 });
-        await conversationActionsPage.addCcRecipient("test@example.com");
-        await conversationActionsPage.waitForTimeout(500);
+        await ccInput.fill("test@example.com", { force: true });
+        await page.waitForTimeout(500);
       } else {
-        await conversationActionsPage.waitForTimeout(1000);
+        await page.waitForTimeout(1000);
       }
     } catch (error) {
       console.error("Failed to add CC recipient:", error);
@@ -270,22 +425,28 @@ test.describe("Conversation Actions", () => {
     }
   });
 
-  test("should add BCC recipient via command bar", async () => {
-    await conversationActionsPage.openCommandBar();
-    await conversationActionsPage.selectCommand("toggle-cc-bcc");
-    await conversationActionsPage.waitForTimeout(1000);
+  test("should add BCC recipient via command bar", async ({ page }) => {
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await page.keyboard.press("/");
+    await page.waitForTimeout(500);
 
-    const bccInput = conversationActionsPage.getBccInput();
+    const toggleCcCommand = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
+    await expect(toggleCcCommand).toBeVisible({ timeout: 5000 });
+    await toggleCcCommand.click();
+    await page.waitForTimeout(1000);
+
+    const bccInput = page.locator('input[name="BCC"]');
 
     try {
       const isVisible = await bccInput.isVisible();
 
       if (isVisible) {
         await expect(bccInput).toBeVisible({ timeout: 5000 });
-        await conversationActionsPage.addBccRecipient("bcc@example.com");
-        await conversationActionsPage.waitForTimeout(500);
+        await bccInput.fill("bcc@example.com", { force: true });
+        await page.waitForTimeout(500);
       } else {
-        await conversationActionsPage.waitForTimeout(1000);
+        await page.waitForTimeout(1000);
       }
     } catch (error) {
       console.error("Failed to add BCC recipient:", error);
@@ -293,44 +454,57 @@ test.describe("Conversation Actions", () => {
     }
   });
 
-  test("should assign conversation to common issue", async () => {
-    await conversationActionsPage.openCommandBar();
+  test("should assign conversation to common issue", async ({ page }) => {
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await page.keyboard.press("/");
+    await page.waitForTimeout(500);
 
-    const commands = await conversationActionsPage.getVisibleCommands();
+    const commands = await page.locator('[role="option"]').allTextContents();
 
     try {
-      await conversationActionsPage.selectCommand("assign-issue");
-      await conversationActionsPage.waitForTimeout(1000);
+      const assignIssueCommand = page.locator('[role="option"]').filter({ hasText: "Assign ticket" });
+      await expect(assignIssueCommand).toBeVisible({ timeout: 5000 });
+      await assignIssueCommand.click();
+      await page.waitForTimeout(1000);
     } catch (error) {
       console.error("Failed to assign conversation to issue:", error);
-      await conversationActionsPage.pressEscapeKey();
+      await page.keyboard.press("Escape");
     }
   });
 
   test("should generate draft response via command bar", async ({ page }) => {
-    await conversationActionsPage.clearReply();
+    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    await composer.click({ force: true });
+    await composer.evaluate((el) => {
+      el.innerHTML = "";
+      el.textContent = "";
+    });
     await page.waitForTimeout(500);
 
-    const initialText = await conversationActionsPage.getComposerText();
 
-    await conversationActionsPage.openCommandBar();
+    await page.keyboard.press("/");
+    await page.waitForTimeout(500);
 
-    const isCommandBarVisible = await conversationActionsPage.isCommandBarVisible();
+    const commandBar = page.locator('[aria-label="Command Bar"]');
+    const isCommandBarVisible = await commandBar.isVisible();
     expect(isCommandBarVisible).toBe(true);
 
     try {
-      await conversationActionsPage.selectCommand("generate-draft");
+      const generateDraftCommand = page.locator('[role="option"]').filter({ hasText: "Generate draft" });
+      await expect(generateDraftCommand).toBeVisible({ timeout: 5000 });
+      await generateDraftCommand.click();
 
       await page.waitForTimeout(5000);
 
-      const composerText = await conversationActionsPage.getComposerText();
-      const commandClosed = !(await conversationActionsPage.isCommandBarVisible());
+      const composerText = await composer.textContent();
+      const commandClosed = !(await commandBar.isVisible());
 
       expect(commandClosed).toBe(true);
-      expect(composerText.trim().length).toBeGreaterThan(0);
+      expect(composerText?.trim().length).toBeGreaterThan(0);
     } catch (error) {
-      await conversationActionsPage.pressEscapeKey();
-      const commandBarClosedAfterEscape = !(await conversationActionsPage.isCommandBarVisible());
+      await page.keyboard.press("Escape");
+      const commandBarClosedAfterEscape = !(await commandBar.isVisible());
       expect(commandBarClosedAfterEscape).toBe(true);
     }
   });

@@ -440,11 +440,10 @@ export const MessageActions = () => {
       <TipTapEditor
         ref={editorRef}
         className={cn("flex-1 min-h-0 my-2 md:my-4", showCommandBar && "hidden")}
-        ariaLabel="Conversation editor"
+        ariaLabel="Message Composer"
         placeholder="Type your reply here..."
         defaultContent={initialMessageObject}
         editable={true}
-        data-testid="message-composer"
         onUpdate={(message, isEmpty) => {
           updateDraftedEmail({ message: isEmpty ? "" : message });
           if (!isEmpty && conversation?.slug) {
@@ -453,7 +452,10 @@ export const MessageActions = () => {
         }}
         onModEnter={() => !sendDisabled && handleSend({ assign: false })}
         onOptionEnter={() => !sendDisabled && handleSend({ assign: false, close: false })}
-        onSlashKey={() => commandInputRef.current?.focus()}
+        onSlashKey={() => {
+          setShowCommandBar(true);
+          setTimeout(() => commandInputRef.current?.focus(), 100);
+        }}
         enableImageUpload
         enableFileUpload
         actionButtons={actionButtons}
