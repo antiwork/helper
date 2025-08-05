@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { generateRandomString } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
@@ -26,7 +26,7 @@ test.describe("Conversation Details", () => {
     );
   });
 
-  async function setupConversation(page: any) {
+  async function setupConversation(page: Page) {
     await page.waitForLoadState("networkidle");
     await expect(page.getByTestId("conversation-subject")).toBeVisible({ timeout: 10000 });
 
@@ -39,46 +39,46 @@ test.describe("Conversation Details", () => {
     );
   }
 
-  async function verifyBasicConversationStructure(page: any) {
+  async function verifyBasicConversationStructure(page: Page) {
     await expect(page.getByTestId("conversation-subject")).toBeVisible();
     await expect(page.locator("button[aria-label='Previous conversation']")).toBeVisible();
     await expect(page.locator("button[aria-label='Next conversation']")).toBeVisible();
     await expect(page.getByLabel("Conversation counter")).toBeVisible();
   }
 
-  async function getConversationSubject(page: any) {
+  async function getConversationSubject(page: Page) {
     const subject = await page.getByTestId("conversation-subject").textContent();
     return subject?.trim() || "";
   }
 
-  async function getConversationCounter(page: any) {
+  async function getConversationCounter(page: Page) {
     const counter = await page.getByLabel("Conversation counter").textContent();
     return counter?.trim() || "";
   }
 
-  async function getMessageCount(page: any) {
+  async function getMessageCount(page: Page) {
     return await page.locator("[data-message-item]").count();
   }
 
-  async function goToNextConversation(page: any) {
+  async function goToNextConversation(page: Page) {
     await page.locator("button[aria-label='Next conversation']").click();
     await page.waitForLoadState("networkidle");
   }
 
-  async function goToPreviousConversation(page: any) {
+  async function goToPreviousConversation(page: Page) {
     await page.locator("button[aria-label='Previous conversation']").click();
     await page.waitForLoadState("networkidle");
   }
 
-  async function closeConversation(page: any) {
+  async function closeConversation(page: Page) {
     await page.locator("button[aria-label='Close conversation']").click();
   }
 
-  async function toggleSidebar(page: any) {
+  async function toggleSidebar(page: Page) {
     await page.locator("button[aria-label='Toggle sidebar']").click();
   }
 
-  async function testMessageStructure(page: any, maxMessages: number = 3) {
+  async function testMessageStructure(page: Page, maxMessages: number = 3) {
     const messages = page.locator("[data-message-item]");
     const count = await messages.count();
 
@@ -88,7 +88,7 @@ test.describe("Conversation Details", () => {
     }
   }
 
-  async function performNavigationTest(page: any): Promise<{
+  async function performNavigationTest(page: Page): Promise<{
     changed: boolean;
     originalSubject: string;
     originalCounter: string;
@@ -110,7 +110,7 @@ test.describe("Conversation Details", () => {
     return { changed, originalSubject, originalCounter };
   }
 
-  async function performScrollTest(page: any) {
+  async function performScrollTest(page: Page) {
     const messageCount = await getMessageCount(page);
 
     if (messageCount > 0) {
@@ -135,7 +135,7 @@ test.describe("Conversation Details", () => {
     }
   }
 
-  async function validateCounterFormat(page: any) {
+  async function validateCounterFormat(page: Page) {
     const counter = await getConversationCounter(page);
     const counterPattern = /^\d+ of \d+\+?$/;
     expect(counter).toMatch(counterPattern);
@@ -149,12 +149,12 @@ test.describe("Conversation Details", () => {
     }
   }
 
-  async function expectMessageExists(page: any, messageContent: string) {
+  async function expectMessageExists(page: Page, messageContent: string) {
     const messageItem = page.locator("[data-message-item]").filter({ hasText: messageContent });
     await expect(messageItem).toBeVisible();
   }
 
-  async function createInternalNoteIfAvailable(page: any, testNote: string) {
+  async function createInternalNoteIfAvailable(page: Page, testNote: string) {
     const noteButtonPattern = /note|internal/i;
     const submitButtonPattern = /save|add|submit/i;
 
@@ -180,7 +180,7 @@ test.describe("Conversation Details", () => {
     return false;
   }
 
-  async function attemptInternalNoteCreation(page: any) {
+  async function attemptInternalNoteCreation(page: Page) {
     const notePrefix = "Internal note";
     const testNote = `${notePrefix} ${generateRandomString(8)}`;
     const noteCreated = await createInternalNoteIfAvailable(page, testNote);
