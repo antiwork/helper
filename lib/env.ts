@@ -34,7 +34,6 @@ export const env = createEnv({
     // Set this for both local development and when deploying
     OPENAI_API_KEY: isAIMockingEnabled ? z.string().min(1).default("mock-openai-api-key") : z.string().min(1), // API key from https://platform.openai.com for AI models
 
-
     // Set these before or after deploying for email sending and receiving
     RESEND_API_KEY: z.string().min(1).optional(),
     RESEND_FROM_ADDRESS: z.string().min(1).optional(),
