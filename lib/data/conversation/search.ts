@@ -19,7 +19,6 @@ import {
 } from "drizzle-orm";
 import { memoize } from "lodash-es";
 import { db } from "@/db/client";
-import { decryptFieldValue } from "@/db/lib/encryptedField";
 import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
@@ -204,7 +203,7 @@ export const searchConversations = async (
               ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
               matchedMessageText:
                 matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
-              recentMessageText: recent_message_cleanedUpText ? decryptFieldValue(recent_message_cleanedUpText) : null,
+              recentMessageText: recent_message_cleanedUpText || null,
               recentMessageAt: recent_message_createdAt ? new Date(recent_message_createdAt) : null,
             }),
           ),

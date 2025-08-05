@@ -44,9 +44,9 @@ export const setupJobFunctions = async () => {
         select id into secret_id from vault.secrets where name = 'jobs-hmac-secret';
         
         if secret_id is not null then
-          perform vault.update_secret(secret_id, '${env.ENCRYPT_COLUMN_SECRET}', 'jobs-hmac-secret');
+          perform vault.update_secret(secret_id, '${env.HASH_WORDS_SECRET ?? "default-hmac-secret"}', 'jobs-hmac-secret');
         else
-          perform vault.create_secret('${env.ENCRYPT_COLUMN_SECRET}', 'jobs-hmac-secret');
+          perform vault.create_secret('${env.HASH_WORDS_SECRET ?? "default-hmac-secret"}', 'jobs-hmac-secret');
         end if;
       end $$;
     `),
