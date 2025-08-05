@@ -1,4 +1,6 @@
-export async function waitForSettingsSaved(page: any) {
+import { Page } from "@playwright/test";
+
+export async function waitForSettingsSaved(page: Page) {
   const saving = page.getByText("Saving", { exact: true });
   const saved = page.getByText("Saved", { exact: true });
   const error = page.getByText("Error", { exact: true });
