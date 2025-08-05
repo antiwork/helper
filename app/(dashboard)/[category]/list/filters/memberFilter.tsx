@@ -21,6 +21,7 @@ interface MemberFilterProps {
   emptyText: string;
   singleSelectionDisplay?: (memberName: string) => string;
   multiSelectionDisplay?: (count: number) => string;
+  includeUnassigned?: boolean;
 }
 
 export function MemberFilter({
@@ -32,6 +33,7 @@ export function MemberFilter({
   emptyText,
   singleSelectionDisplay = (name) => name,
   multiSelectionDisplay = (count) => `${count} selected`,
+  includeUnassigned = false,
 }: MemberFilterProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,8 +43,20 @@ export function MemberFilter({
     member.displayName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+  const unassignedItem = {
+    id: "unassigned",
+    displayName: "Unassigned",
+  };
+
+  const shouldShowUnassigned =
+    includeUnassigned && (!searchTerm || unassignedItem.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
+
   const singleMemberName =
-    selectedMembers.length === 1 ? members?.find((m) => m.id === selectedMembers[0])?.displayName : undefined;
+    selectedMembers.length === 1
+      ? selectedMembers[0] === "unassigned"
+        ? "Unassigned"
+        : members?.find((m) => m.id === selectedMembers[0])?.displayName
+      : undefined;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -68,6 +82,20 @@ export function MemberFilter({
           <div className="max-h-[300px] overflow-y-auto">
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
+              {shouldShowUnassigned && (
+                <CommandItem
+                  key="unassigned"
+                  onSelect={() => {
+                    const isSelected = selectedMembers.includes("unassigned");
+                    onChange(isSelected ? selectedMembers.filter((m) => m !== "unassigned") : ["unassigned"]);
+                  }}
+                >
+                  <Check
+                    className={`mr-2 h-4 w-4 ${selectedMembers.includes("unassigned") ? "opacity-100" : "opacity-0"}`}
+                  />
+                  <span className="truncate">Unassigned</span>
+                </CommandItem>
+              )}
               {filteredMembers
                 ?.toSorted((a, b) => a.displayName.localeCompare(b.displayName))
                 .map((member) => (
@@ -76,7 +104,9 @@ export function MemberFilter({
                     onSelect={() => {
                       const isSelected = selectedMembers.includes(member.id);
                       onChange(
-                        isSelected ? selectedMembers.filter((m) => m !== member.id) : [...selectedMembers, member.id],
+                        isSelected
+                          ? selectedMembers.filter((m) => m !== member.id)
+                          : [...selectedMembers.filter((m) => m !== "unassigned"), member.id],
                       );
                     }}
                   >

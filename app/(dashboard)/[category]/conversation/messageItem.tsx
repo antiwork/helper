@@ -3,20 +3,23 @@ import { useMemo, useState, type JSX } from "react";
 import type { AttachedFile, Conversation, Message as MessageType, Note as NoteType } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
 import { FlagAsBadAction } from "./flagAsBadAction";
+import { NoteEditor } from "./noteEditor";
 import "@/components/linkCta.css";
 import { truncate } from "lodash-es";
 import {
   Bot,
   Download,
-  Edit,
   Frown,
   Mail,
   MessageSquare,
   MoreHorizontal,
   Paperclip,
+  Pencil,
   Sparkles,
+  StickyNote,
   ThumbsDown,
   ThumbsUp,
+  Trash2,
   User,
   XCircle,
 } from "lucide-react";
@@ -26,6 +29,7 @@ import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMembers } from "@/components/useMembers";
+import { useSession } from "@/components/useSession";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
 import { renderMessageBody } from "./renderMessageBody";
@@ -40,6 +44,38 @@ function getPreviewUrl(file: AttachedFile): string {
 
 const hasReasoningMetadata = (metadata: any): metadata is { reasoning: string } => {
   return metadata && typeof metadata.reasoning === "string";
+};
+
+const MessageContent = ({
+  mainContent,
+  quotedContext,
+}: {
+  mainContent: React.ReactNode;
+  quotedContext: React.ReactNode | null;
+}) => {
+  const [showQuotedContext, setShowQuotedContext] = useState(false);
+
+  return (
+    <>
+      {mainContent}
+      {quotedContext ? (
+        <>
+          <button
+            onClick={() => setShowQuotedContext(!showQuotedContext)}
+            className={cx(
+              "my-2 flex h-3 w-8 items-center justify-center rounded-full outline-hidden transition-colors duration-200",
+              showQuotedContext
+                ? "bg-muted-foreground text-muted-foreground"
+                : "bg-border text-muted-foreground hover:text-muted-foreground",
+            )}
+          >
+            <MoreHorizontal className="h-8 w-8" />
+          </button>
+          {showQuotedContext ? quotedContext : null}
+        </>
+      ) : null}
+    </>
+  );
 };
 
 const MessageItem = ({
@@ -59,8 +95,34 @@ const MessageItem = ({
   const isAIMessage = message.type === "message" && message.role === "ai_assistant";
   const hasReasoning = isAIMessage && hasReasoningMetadata(message.metadata);
   const router = useRouter();
+  const { user: currentUser } = useSession() ?? {};
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const utils = api.useUtils();
 
   const { data: orgMembers, isLoading: isLoadingMembers, error: membersError } = useMembers();
+
+  const deleteNoteMutation = api.mailbox.conversations.notes.delete.useMutation({
+    onSuccess: () => {
+      utils.mailbox.conversations.get.invalidate({
+        conversationSlug: conversation.slug,
+      });
+      toast.success("Note deleted successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to delete note", { description: error.message });
+    },
+  });
+
+  const handleDeleteNote = () => {
+    if (message.type === "note") {
+      deleteNoteMutation.mutate({
+        conversationSlug: conversation.slug,
+        noteId: message.id,
+      });
+    }
+  };
+
+  const canEditNote = message.type === "note" && currentUser && message.userId === currentUser.id;
 
   const getDisplayName = (msg: MessageType | NoteType): string => {
     if (msg.type === "message") {
@@ -104,7 +166,7 @@ const MessageItem = ({
           <MessageSquare className="h-3 w-3" />
         )
       ) : message.type === "note" ? (
-        <Edit className="h-3 w-3" />
+        <StickyNote className="h-3 w-3" />
       ) : message.role === "staff" ? (
         <User className="h-3 w-3" />
       ) : (
@@ -167,8 +229,6 @@ const MessageItem = ({
       [],
     );
 
-  const [showQuotedContext, setShowQuotedContext] = useState(false);
-
   const isChatMessage =
     message.type === "message" && message.role === "user" && conversation.source !== "email" && !message.emailTo;
   const { mainContent, quotedContext } = useMemo(
@@ -209,23 +269,18 @@ const MessageItem = ({
                     : "bg-muted",
               )}
             >
-              {mainContent}
-              {quotedContext ? (
-                <>
-                  <button
-                    onClick={() => setShowQuotedContext(!showQuotedContext)}
-                    className={cx(
-                      "my-2 flex h-3 w-8 items-center justify-center rounded-full outline-hidden transition-colors duration-200",
-                      showQuotedContext
-                        ? "bg-muted-foreground text-muted-foreground"
-                        : "bg-border text-muted-foreground hover:text-muted-foreground",
-                    )}
-                  >
-                    <MoreHorizontal className="h-8 w-8" />
-                  </button>
-                  {showQuotedContext ? quotedContext : null}
-                </>
-              ) : null}
+              {message.type === "note" ? (
+                <NoteEditor
+                  conversation={conversation}
+                  note={message}
+                  isEditing={isEditingNote}
+                  onCancelEdit={() => setIsEditingNote(false)}
+                >
+                  <MessageContent mainContent={mainContent} quotedContext={quotedContext} />
+                </NoteEditor>
+              ) : (
+                <MessageContent mainContent={mainContent} quotedContext={quotedContext} />
+              )}
             </div>
           </div>
           <div className="flex w-full items-center gap-3 text-sm text-muted-foreground">
@@ -324,6 +379,45 @@ const MessageItem = ({
               )}
               {message.type === "message" && message.role === "ai_assistant" && (
                 <FlagAsBadAction message={message} conversationSlug={conversation.slug} />
+              )}
+              {canEditNote && !isEditingNote && (
+                <>
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => setIsEditingNote(true)}
+                          className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          <span className="text-xs">Edit</span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Edit this note</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <ConfirmationDialog
+                          message="Are you sure you want to delete this note? This action cannot be undone."
+                          onConfirm={handleDeleteNote}
+                          confirmLabel="Delete"
+                        >
+                          <button className="inline-flex items-center gap-1 text-muted-foreground hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                            <span className="text-xs">Delete</span>
+                          </button>
+                        </ConfirmationDialog>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Delete this note</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </>
               )}
             </div>
           </div>

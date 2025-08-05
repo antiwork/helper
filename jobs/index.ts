@@ -4,7 +4,6 @@ import { bulkEmbeddingClosedConversations } from "./bulkEmbeddingClosedConversat
 import { bulkUpdateConversations } from "./bulkUpdateConversations";
 import { categorizeConversationToIssueGroup } from "./categorizeConversationToIssueGroup";
 import { checkAssignedTicketResponseTimes } from "./checkAssignedTicketResponseTimes";
-import { checkConversationResolution } from "./checkConversationResolution";
 import { checkVipResponseTimes } from "./checkVipResponseTimes";
 import { cleanupDanglingFiles } from "./cleanupDanglingFiles";
 import { crawlWebsite } from "./crawlWebsite";
@@ -50,7 +49,6 @@ export const eventJobs = {
   generateMailboxWeeklyReport,
   generateMailboxDailyReport,
   crawlWebsite,
-  checkConversationResolution,
   suggestKnowledgeBankChanges,
   closeInactiveConversations,
   closeInactiveConversationsForMailbox,

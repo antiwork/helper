@@ -26,6 +26,7 @@ vi.mock("googleapis", () => ({
   },
 }));
 vi.mock("@/lib/env", () => ({
+  isAIMockingEnabled: false,
   env: {
     POSTGRES_URL: inject("TEST_DATABASE_URL"),
     GOOGLE_CLIENT_ID: "test-client-id",

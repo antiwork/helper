@@ -160,7 +160,7 @@ export const List = () => {
       if (!firstPage) return data;
 
       switch (input.category) {
-        case "conversations":
+        case "all":
           break;
         case "assigned":
           if (!newConversation.assignedToId) return data;
