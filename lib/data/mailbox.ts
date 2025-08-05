@@ -8,7 +8,7 @@ import { env } from "@/lib/env";
 import { getGitHubInstallUrl } from "@/lib/github/client";
 import { uninstallSlackApp } from "@/lib/slack/client";
 import { REQUIRED_SCOPES, SLACK_REDIRECT_URI } from "@/lib/slack/constants";
-import { captureExceptionAndLogIfDevelopment } from "../shared/sentry";
+import { captureExceptionAndLog } from "../shared/sentry";
 
 export const getMailbox = cache(async (): Promise<typeof mailboxes.$inferSelect | null> => {
   const result = await db.query.mailboxes.findFirst({
@@ -89,7 +89,7 @@ export const disconnectSlack = async (mailboxId: number): Promise<void> => {
     await uninstallSlackApp(mailbox.slackBotToken);
   } catch (error) {
     // Likely indicates that the app was already uninstalled from the Slack UI
-    captureExceptionAndLogIfDevelopment(error, { level: "info" });
+    captureExceptionAndLog(error, { level: "info" });
   }
 
   await db

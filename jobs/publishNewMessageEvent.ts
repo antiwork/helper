@@ -1,13 +1,18 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
-import { serializeMessage } from "@/lib/data/conversationMessage";
+import { serializeMessage, serializeMessageForWidget } from "@/lib/data/conversationMessage";
 import { createMessageEventPayload } from "@/lib/data/dashboardEvent";
 import { getMailbox } from "@/lib/data/mailbox";
-import { conversationChannelId, conversationsListChannelId, dashboardChannelId } from "@/lib/realtime/channels";
+import {
+  conversationChannelId,
+  conversationsListChannelId,
+  dashboardChannelId,
+  publicConversationChannelId,
+} from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
 
-export const publishNewConversationEvent = async ({ messageId }: { messageId: number }) => {
+export const publishNewMessageEvent = async ({ messageId }: { messageId: number }) => {
   const message = await db.query.conversationMessages.findFirst({
     where: eq(conversationMessages.id, messageId),
     with: {
@@ -16,12 +21,20 @@ export const publishNewConversationEvent = async ({ messageId }: { messageId: nu
           platformCustomer: true,
         },
       },
+      files: true,
     },
   });
   const published = [];
   const mailbox = await getMailbox();
   if (!mailbox) return `No mailbox found, cannot publish events.`;
 
+  if (message && message.role !== "user") {
+    await publishToRealtime({
+      channel: publicConversationChannelId(message.conversation.slug),
+      event: "agent-reply",
+      data: await serializeMessageForWidget(message, message.files),
+    });
+  }
   if (message && message?.role !== "ai_assistant") {
     await publishToRealtime({
       channel: conversationChannelId(message.conversation.slug),

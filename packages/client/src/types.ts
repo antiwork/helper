@@ -1,16 +1,57 @@
 import { z } from "zod";
 
-export type HelperTool<Args = any, Result = any> = {
+type HelperToolBase = {
   description?: string;
   parameters: Record<string, { type: "string" | "number"; description?: string; optional?: boolean }>;
-} & (
-  | {
-      execute: (params: Args) => Promise<Result> | Result;
-    }
-  | {
-      url: string;
-    }
-);
+};
+
+export type HelperClientTool<Args = any, Result = any> = HelperToolBase & {
+  execute: (params: Args) => Promise<Result> | Result;
+};
+
+export type HelperServerTool = HelperToolBase & {
+  url: string;
+};
+
+export type HelperTool<Args = any, Result = any> = HelperClientTool<Args, Result> | HelperServerTool;
+
+export const toolBodySchema = z.object({
+  description: z.string().optional(),
+  parameters: z.record(
+    z.string(),
+    z.object({
+      type: z.enum(["string", "number"]),
+      description: z.string().optional(),
+      optional: z.boolean().optional(),
+    }),
+  ),
+  serverRequestUrl: z.string().optional(),
+});
+export type ToolRequestBody = z.infer<typeof toolBodySchema>;
+
+export const createMessageBodySchema = z.object({
+  content: z.string(),
+  attachments: z
+    .array(
+      z.object({
+        name: z.string(),
+        url: z.string(),
+        contentType: z.string(),
+      }),
+    )
+    .optional(),
+  tools: z.record(z.string(), toolBodySchema).optional(),
+});
+export type CreateMessageRequestBody = z.infer<typeof createMessageBodySchema>;
+export type CreateMessageParams = Omit<CreateMessageRequestBody, "attachments" | "tools"> & {
+  attachments?: (File | { name: string; base64Url: string; contentType: string })[];
+  tools?: Record<string, HelperServerTool>;
+};
+
+export type CreateMessageResult = {
+  messageId: string;
+  conversationSlug: string;
+};
 
 export const conversationSchema = z.object({
   slug: z.string(),
@@ -80,41 +121,40 @@ export const sessionParamsSchema = z.object({
 });
 export type SessionParams = z.infer<typeof sessionParamsSchema>;
 
-export const createSessionResultSchema = z.object({
-  token: z.string(),
-  supabaseUrl: z.string(),
-  supabaseAnonKey: z.string(),
-});
-export type CreateSessionResult = z.infer<typeof createSessionResultSchema>;
+export type CreateSessionResult = {
+  token: string;
+  supabaseUrl: string;
+  supabaseAnonKey: string;
+};
 
-export const createConversationParamsSchema = z.object({
+export const createConversationBodySchema = z.object({
   isPrompt: z.boolean().nullish(),
   subject: z.string().nullish(),
 });
-export type CreateConversationParams = z.infer<typeof createConversationParamsSchema>;
+export type CreateConversationRequestBody = z.infer<typeof createConversationBodySchema>;
+export type CreateConversationParams = CreateConversationRequestBody & {
+  message?: CreateMessageParams;
+};
 
-export const createConversationResultSchema = z.object({
-  conversationSlug: z.string(),
-});
-export type CreateConversationResult = z.infer<typeof createConversationResultSchema>;
+export type CreateConversationResult = {
+  conversationSlug: string;
+};
 
-export const updateConversationParamsSchema = z.object({
+export const updateConversationBodySchema = z.object({
   markRead: z.literal(true),
 });
-export type UpdateConversationParams = z.infer<typeof updateConversationParamsSchema>;
+export type UpdateConversationRequestBody = z.infer<typeof updateConversationBodySchema>;
+export type UpdateConversationParams = UpdateConversationRequestBody;
 
-export const updateConversationResultSchema = z.object({
-  success: z.literal(true),
-});
-export type UpdateConversationResult = z.infer<typeof updateConversationResultSchema>;
+export type UpdateConversationResult = {
+  success: true;
+};
 
-export const conversationListSchema = z.object({
-  conversations: z.array(conversationSchema),
-  nextCursor: z.nullable(z.string()),
-});
-export type ConversationsResult = z.infer<typeof conversationListSchema>;
+export type ConversationsResult = {
+  conversations: Conversation[];
+  nextCursor: string | null;
+};
 
-export const unreadConversationsCountSchema = z.object({
-  count: z.number(),
-});
-export type UnreadConversationsCountResult = z.infer<typeof unreadConversationsCountSchema>;
+export type UnreadConversationsCountResult = {
+  count: number;
+};

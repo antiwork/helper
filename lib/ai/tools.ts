@@ -9,7 +9,7 @@ import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata, getPastConversationsPrompt } from "@/lib/data/retrieval";
 import { getMailboxToolsForChat } from "@/lib/data/tools";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
 
 const fetchUserInformation = async (email: string) => {
@@ -17,7 +17,7 @@ const fetchUserInformation = async (email: string) => {
     const metadata = await fetchMetadata(email);
     return metadata?.prompt;
   } catch (error) {
-    captureExceptionAndLogIfDevelopment(error, {
+    captureExceptionAndLog(error, {
       extra: { email },
     });
     return "Error fetching metadata";
@@ -39,7 +39,7 @@ const updateCustomerMetadata = async (email: string) => {
       });
     }
   } catch (error) {
-    captureExceptionAndLogIfDevelopment(error, {
+    captureExceptionAndLog(error, {
       extra: { email },
     });
   }

@@ -51,6 +51,7 @@ describe("handleAutoResponse", () => {
     expect(aiChat.generateDraftResponse).toHaveBeenCalledWith(
       conversation.id,
       expect.objectContaining({ id: mailbox.id }),
+      undefined,
     );
     expect(result).toEqual({ message: "Draft response generated", draftId: 1 });
   });
@@ -139,6 +140,30 @@ describe("handleAutoResponse", () => {
 
     const result = await handleAutoResponse({ messageId: message.id });
     expect(result).toEqual({ message: "Skipped - email text is empty" });
+    expect(aiChat.respondWithAI).not.toHaveBeenCalled();
+  });
+
+  it("skips if newer message exists in the same conversation", async () => {
+    await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create({ assignedToAI: true });
+    const oldTimestamp = new Date("2024-01-01T10:00:00Z");
+    const newTimestamp = new Date("2024-01-01T10:01:00Z");
+
+    const { message: oldMessage } = await conversationMessagesFactory.create(conversation.id, {
+      role: "user",
+      body: "First message",
+      createdAt: oldTimestamp,
+    });
+
+    await conversationMessagesFactory.create(conversation.id, {
+      role: "user",
+      body: "Newer message",
+      createdAt: newTimestamp,
+    });
+
+    const result = await handleAutoResponse({ messageId: oldMessage.id });
+    expect(result).toEqual({ message: "Skipped - newer message exists" });
+    expect(aiChat.generateDraftResponse).not.toHaveBeenCalled();
     expect(aiChat.respondWithAI).not.toHaveBeenCalled();
   });
 });
