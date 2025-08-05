@@ -1,4 +1,3 @@
-// tests/e2e/knowledge-bank/knowledgeBank.spec.ts
 import { expect, test } from "@playwright/test";
 import { KnowledgeBankPage } from "../utils/page-objects/knowledgeBankPage";
 import { generateRandomString, takeDebugScreenshot, waitForNetworkIdle } from "../utils/test-helpers";
@@ -37,7 +36,6 @@ test.describe("Knowledge Bank", () => {
     await waitForNetworkIdle(page).catch(() => {});
     await takeDebugScreenshot(page, "debug/knowledge-bank-search-filled.png");
 
-    // clear using string
     await kb.searchInput.fill("");
     await expect(kb.searchInput).toHaveValue("");
   });
@@ -52,7 +50,6 @@ test.describe("Knowledge Bank", () => {
 
     await kb.save();
 
-    // Wait for new entry to appear (string required)
     const newEntry = kb.findEntryByText(sample);
     await expect(newEntry).toBeVisible({ timeout: 8000 });
 
@@ -63,7 +60,6 @@ test.describe("Knowledge Bank", () => {
       const text = await kb.getEntryText(i);
       if (text.includes(sample)) {
         await kb.deleteEntryByIndex(i);
-        // wait until it's gone
         await expect(kb.findEntryByText(sample)).toBeHidden().catch(() => {});
         break;
       }
@@ -79,7 +75,6 @@ test.describe("Knowledge Bank", () => {
       return;
     }
 
-    // Find the first enabled toggle
     let toggleIndex = 0;
     let foundEnabledToggle = false;
     
@@ -100,7 +95,6 @@ test.describe("Knowledge Bank", () => {
     const before = await kb.getToggleState(toggleIndex);
     await kb.toggleEntry(toggleIndex); 
     
-    // Wait a moment for the change to propagate
     await page.waitForTimeout(1000);
     
     const after = await kb.getToggleState(toggleIndex);

@@ -144,12 +144,8 @@ export class KnowledgeBankPage extends BasePage {
     ];
 
     for (const selector of toastSelectors) {
-      try {
         await this.page.locator(selector).waitFor({ state: "visible", timeout: 2000 });
         return;
-      } catch {
-        // next
-      }
     }
 
     await this.page.waitForSelector(`text="${message}"`, { timeout: 1000 }).catch(() => { });
