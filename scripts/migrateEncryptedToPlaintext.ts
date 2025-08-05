@@ -1,6 +1,5 @@
-import { and, eq, gt, isNotNull, isNull, ne, or } from "drizzle-orm";
+import { and, eq, gt, isNotNull, isNull, or } from "drizzle-orm";
 import { db } from "@/db/client";
-import { decryptFieldValue } from "@/db/lib/encryptedField";
 import { conversationMessages, conversations, gmailSupportEmails, toolApis, tools } from "@/db/schema";
 
 const BATCH_SIZE = 100;
@@ -32,8 +31,8 @@ const migrateConversationMessages = async () => {
     const batch = await db
       .select({
         id: conversationMessages.id,
-        encryptedBody: conversationMessages.body,
-        encryptedCleanedUpText: conversationMessages.cleanedUpText,
+        body: conversationMessages.body,
+        cleanedUpText: conversationMessages.cleanedUpText,
       })
       .from(conversationMessages)
       .where(
@@ -51,16 +50,11 @@ const migrateConversationMessages = async () => {
     // Process batch
     for (const message of batch) {
       try {
-        const decryptedBody = message.encryptedBody ? decryptFieldValue(message.encryptedBody) : null;
-        const decryptedCleanedUpText = message.encryptedCleanedUpText
-          ? decryptFieldValue(message.encryptedCleanedUpText)
-          : null;
-
         await db
           .update(conversationMessages)
           .set({
-            bodyPlaintext: decryptedBody,
-            cleanedUpTextPlaintext: decryptedCleanedUpText,
+            bodyPlaintext: message.body,
+            cleanedUpTextPlaintext: message.cleanedUpText,
           })
           .where(eq(conversationMessages.id, message.id));
       } catch (error) {
@@ -87,15 +81,11 @@ const migrateConversations = async () => {
     const batch = await db
       .select({
         id: conversations.id,
-        encryptedSubject: conversations.subject,
+        subject: conversations.subject,
       })
       .from(conversations)
       .where(
-        and(
-          gt(conversations.id, lastId),
-          isNotNull(conversations.subject), // Has encrypted data
-          isNull(conversations.subjectPlaintext), // Plaintext not populated yet
-        ),
+        and(gt(conversations.id, lastId), isNotNull(conversations.subject), isNull(conversations.subjectPlaintext)),
       )
       .orderBy(conversations.id)
       .limit(BATCH_SIZE);
@@ -105,14 +95,10 @@ const migrateConversations = async () => {
     // Process batch
     for (const conversation of batch) {
       try {
-        const decryptedSubject = conversation.encryptedSubject
-          ? decryptFieldValue(conversation.encryptedSubject)
-          : null;
-
         await db
           .update(conversations)
           .set({
-            subjectPlaintext: decryptedSubject,
+            subjectPlaintext: conversation.subject,
           })
           .where(eq(conversations.id, conversation.id));
       } catch (error) {
@@ -139,15 +125,11 @@ const migrateTools = async () => {
     const batch = await db
       .select({
         id: tools.id,
-        encryptedAuthenticationToken: tools.authenticationToken,
+        authenticationToken: tools.authenticationToken,
       })
       .from(tools)
       .where(
-        and(
-          gt(tools.id, lastId),
-          isNotNull(tools.authenticationToken), // Has encrypted data
-          isNull(tools.authenticationTokenPlaintext), // Plaintext not populated yet
-        ),
+        and(gt(tools.id, lastId), isNotNull(tools.authenticationToken), isNull(tools.authenticationTokenPlaintext)),
       )
       .orderBy(tools.id)
       .limit(BATCH_SIZE);
@@ -157,14 +139,10 @@ const migrateTools = async () => {
     // Process batch
     for (const tool of batch) {
       try {
-        const decryptedToken = tool.encryptedAuthenticationToken
-          ? decryptFieldValue(tool.encryptedAuthenticationToken)
-          : null;
-
         await db
           .update(tools)
           .set({
-            authenticationTokenPlaintext: decryptedToken,
+            authenticationTokenPlaintext: tool.authenticationToken,
           })
           .where(eq(tools.id, tool.id));
       } catch (error) {
@@ -191,7 +169,7 @@ const migrateToolApis = async () => {
     const batch = await db
       .select({
         id: toolApis.id,
-        encryptedAuthenticationToken: toolApis.authenticationToken,
+        authenticationToken: toolApis.authenticationToken,
       })
       .from(toolApis)
       .where(
@@ -209,14 +187,10 @@ const migrateToolApis = async () => {
     // Process batch
     for (const toolApi of batch) {
       try {
-        const decryptedToken = toolApi.encryptedAuthenticationToken
-          ? decryptFieldValue(toolApi.encryptedAuthenticationToken)
-          : null;
-
         await db
           .update(toolApis)
           .set({
-            authenticationTokenPlaintext: decryptedToken,
+            authenticationTokenPlaintext: toolApi.authenticationToken,
           })
           .where(eq(toolApis.id, toolApi.id));
       } catch (error) {
@@ -243,21 +217,15 @@ const migrateGmailSupportEmails = async () => {
     const batch = await db
       .select({
         id: gmailSupportEmails.id,
-        encryptedAccessToken: gmailSupportEmails.accessToken,
-        encryptedRefreshToken: gmailSupportEmails.refreshToken,
+        accessToken: gmailSupportEmails.accessToken,
+        refreshToken: gmailSupportEmails.refreshToken,
       })
       .from(gmailSupportEmails)
       .where(
         and(
           gt(gmailSupportEmails.id, lastId),
-          or(
-            isNotNull(gmailSupportEmails.accessToken), // Has encrypted access token
-            isNotNull(gmailSupportEmails.refreshToken), // Has encrypted refresh token
-          ),
-          or(
-            isNull(gmailSupportEmails.accessTokenPlaintext), // Access token plaintext not populated yet
-            isNull(gmailSupportEmails.refreshTokenPlaintext), // Refresh token plaintext not populated yet
-          ),
+          or(isNotNull(gmailSupportEmails.accessToken), isNotNull(gmailSupportEmails.refreshToken)),
+          or(isNull(gmailSupportEmails.accessTokenPlaintext), isNull(gmailSupportEmails.refreshTokenPlaintext)),
         ),
       )
       .orderBy(gmailSupportEmails.id)
@@ -268,16 +236,11 @@ const migrateGmailSupportEmails = async () => {
     // Process batch
     for (const email of batch) {
       try {
-        const decryptedAccessToken = email.encryptedAccessToken ? decryptFieldValue(email.encryptedAccessToken) : null;
-        const decryptedRefreshToken = email.encryptedRefreshToken
-          ? decryptFieldValue(email.encryptedRefreshToken)
-          : null;
-
         await db
           .update(gmailSupportEmails)
           .set({
-            accessTokenPlaintext: decryptedAccessToken,
-            refreshTokenPlaintext: decryptedRefreshToken,
+            accessTokenPlaintext: email.accessToken,
+            refreshTokenPlaintext: email.refreshToken,
           })
           .where(eq(gmailSupportEmails.id, email.id));
       } catch (error) {
