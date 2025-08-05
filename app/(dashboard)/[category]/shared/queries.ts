@@ -17,7 +17,7 @@ export const useConversationsListInput = () => {
     isVip: parseAsBoolean,
     isPrompt: parseAsBoolean,
     reactionType: parseAsStringEnum(["thumbs-up", "thumbs-down"] as const),
-    events: parseAsArrayOf(parseAsStringEnum(["request_human_support", "resolved_by_ai"] as const)),
+    events: parseAsArrayOf(parseAsStringEnum(["request_human_support"] as const)),
     issueGroupId: parseAsInteger,
   });
 
