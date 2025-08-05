@@ -5,10 +5,9 @@ import { cn } from "@/lib/utils";
 interface SavingIndicatorProps {
   state: SavingState;
   className?: string;
-  "data-testid"?: string;
 }
 
-export function SavingIndicator({ state, className, "data-testid": dataTestId }: SavingIndicatorProps) {
+export function SavingIndicator({ state, className }: SavingIndicatorProps) {
   if (state === "idle") return null;
 
   return (
@@ -21,7 +20,6 @@ export function SavingIndicator({ state, className, "data-testid": dataTestId }:
         },
         className,
       )}
-      data-testid={dataTestId}
     >
       {state === "saving" && (
         <>

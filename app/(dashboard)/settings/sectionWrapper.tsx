@@ -14,14 +14,7 @@ type SectionWrapperProps = {
   children: React.ReactNode;
 };
 
-const SectionWrapper = ({
-  title,
-  description,
-  fullWidth,
-  className,
-  action,
-  children,
-}: SectionWrapperProps) => {
+const SectionWrapper = ({ title, description, fullWidth, className, action, children }: SectionWrapperProps) => {
   return (
     <section className="flex flex-col gap-4 border-b py-8 first:pt-4 lg:flex-row">
       <div className="flex w-full flex-col gap-3 lg:max-w-xs">
@@ -75,13 +68,7 @@ const SwitchSectionWrapper = ({
       description={description}
       fullWidth={fullWidth}
       className={className}
-      action={
-        <Switch
-          aria-label={`${title} Switch`}
-          checked={isSwitchChecked}
-          onCheckedChange={handleSwitchChange}
-        />
-      }
+      action={<Switch aria-label={`${title} Switch`} checked={isSwitchChecked} onCheckedChange={handleSwitchChange} />}
     >
       {children}
     </SectionWrapper>
