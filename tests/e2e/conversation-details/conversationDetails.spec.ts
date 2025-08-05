@@ -2,10 +2,6 @@ import { expect, test } from "@playwright/test";
 import { ConversationDetailsPage } from "../utils/page-objects/conversationDetailsPage";
 import { generateRandomString } from "../utils/test-helpers";
 
-type TestContext = {
-  conversationDetailsPage: ConversationDetailsPage;
-};
-
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 test.describe("Conversation Details", () => {
@@ -154,7 +150,7 @@ test.describe("Conversation Details", () => {
 
     await conversationDetailsPage.toggleSidebar();
 
-    await expect(conversationDetailsPage.page.getByTestId("toggle-sidebar-button")).toBeVisible();
+    await expect(conversationDetailsPage.page.locator("button[aria-label='Toggle sidebar']")).toBeVisible();
   });
 
   test("should close conversation", async () => {
@@ -162,7 +158,7 @@ test.describe("Conversation Details", () => {
 
     await conversationDetailsPage.closeConversation();
 
-    await expect(conversationDetailsPage.page.url()).toContain("/conversations");
+    expect(conversationDetailsPage.page.url()).toContain("/conversations");
   });
 
   test("should display conversation with multiple messages", async () => {

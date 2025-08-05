@@ -269,7 +269,7 @@ const ConversationHeader = ({
           size="sm"
           iconOnly
           onClick={() => setSidebarVisible(!sidebarVisible)}
-          data-testid="toggle-sidebar-button"
+          aria-label="Toggle sidebar"
         >
           {isAboveSm ? (
             sidebarVisible ? (

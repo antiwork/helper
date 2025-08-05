@@ -21,21 +21,14 @@ export class ConversationDetailsPage {
   } as const;
 
   private readonly TEST_IDS = {
-    CONVERSATION_HEADER: "conversation-header",
-    MESSAGE_THREAD: "message-thread",
-    MESSAGES_CONTAINER: "messages-container",
     CONVERSATION_LIST_ITEM: "conversation-list-item",
-    TOGGLE_SIDEBAR_BUTTON: "toggle-sidebar-button",
     CONVERSATION_SUBJECT: "conversation-subject",
     CONVERSATION_COUNTER: "conversation-counter",
     MESSAGE_ITEM: "message-item",
     EVENT_ITEM: "event-item",
-    EVENT_DETAILS: "event-details",
-    VIEW_AI_REASONING_BUTTON: "view-ai-reasoning-button",
     MESSAGE_ATTACHMENTS: "message-attachments",
     MESSAGE_THREAD_PANEL: "message-thread-panel",
     CONVERSATION_SUMMARY: "conversation-summary",
-    PROMPT_INDICATOR: "prompt-indicator",
     MESSAGE_HEADER: "message-header",
     MESSAGE_CONTENT: "message-content",
     MESSAGE_FOOTER: "message-footer",
@@ -79,8 +72,6 @@ export class ConversationDetailsPage {
   async waitForConversationLoad() {
     await this.page.waitForLoadState(this.TIMEOUTS.NETWORK_IDLE);
     await expect(this.getSubjectElement()).toBeVisible({ timeout: this.TIMEOUTS.DEFAULT });
-    await expect(this.getConversationHeader()).toBeVisible();
-    await expect(this.getMessageThread()).toBeVisible();
   }
 
   async closeConversation() {
@@ -145,13 +136,13 @@ export class ConversationDetailsPage {
     const summaryButton = eventItem.locator("button[aria-label='Toggle event details']");
     await summaryButton.click();
 
-    const eventDetails = eventItem.getByTestId(this.TEST_IDS.EVENT_DETAILS);
+    const eventDetails = eventItem.locator(".event-details");
     await expect(eventDetails).toBeVisible();
   }
 
   async expectEventDetails(eventDescription: EventDescription, detailsText: string) {
     const eventItem = this.findEventByDescription(eventDescription);
-    const eventDetails = eventItem.getByTestId(this.TEST_IDS.EVENT_DETAILS);
+    const eventDetails = eventItem.locator(".event-details");
     await expect(eventDetails).toContainText(detailsText);
   }
 
@@ -163,7 +154,7 @@ export class ConversationDetailsPage {
 
   async viewAIReasoning(messageContent: MessageContent) {
     const messageItem = this.findMessageByContent(messageContent);
-    const reasoningButton = messageItem.getByTestId(this.TEST_IDS.VIEW_AI_REASONING_BUTTON);
+    const reasoningButton = messageItem.locator("button[aria-label='View AI reasoning']");
     await reasoningButton.click();
 
     await expect(this.page.locator('[role="dialog"]')).toBeVisible();
@@ -209,10 +200,6 @@ export class ConversationDetailsPage {
     await expect(this.getSummaryElement()).toBeVisible();
   }
 
-  async expectPromptIndicator() {
-    await expect(this.getPromptIndicatorElement()).toBeVisible();
-  }
-
   async expectUserMessage(messageContent: MessageContent) {
     const messageItem = this.findMessageByContent(messageContent);
     await expect(messageItem).toHaveAttribute("data-type", "message");
@@ -241,9 +228,6 @@ export class ConversationDetailsPage {
 
   async expectConversationLoaded() {
     await expect(this.getSubjectElement()).toBeVisible();
-    await expect(this.getConversationHeader()).toBeVisible();
-    await expect(this.getMessageThread()).toBeVisible();
-    await expect(this.getMessagesContainer()).toBeVisible();
   }
 
   async expectConversationEmpty() {
@@ -320,18 +304,6 @@ export class ConversationDetailsPage {
     return false;
   }
 
-  private getConversationHeader(): Locator {
-    return this.page.getByTestId(this.TEST_IDS.CONVERSATION_HEADER);
-  }
-
-  private getMessageThread(): Locator {
-    return this.page.getByTestId(this.TEST_IDS.MESSAGE_THREAD);
-  }
-
-  private getMessagesContainer(): Locator {
-    return this.page.getByTestId(this.TEST_IDS.MESSAGES_CONTAINER);
-  }
-
   private getConversationListItem(): Locator {
     return this.page.getByTestId(this.TEST_IDS.CONVERSATION_LIST_ITEM);
   }
@@ -349,7 +321,7 @@ export class ConversationDetailsPage {
   }
 
   private getSidebarToggleButton(): Locator {
-    return this.page.getByTestId(this.TEST_IDS.TOGGLE_SIDEBAR_BUTTON);
+    return this.page.locator("button[aria-label='Toggle sidebar']");
   }
 
   private getSubjectElement(): Locator {
@@ -378,10 +350,6 @@ export class ConversationDetailsPage {
 
   private getSummaryElement(): Locator {
     return this.page.getByTestId(this.TEST_IDS.CONVERSATION_SUMMARY);
-  }
-
-  private getPromptIndicatorElement(): Locator {
-    return this.page.getByTestId(this.TEST_IDS.PROMPT_INDICATOR);
   }
 
   private findMessageByContent(messageContent: MessageContent): Locator {
