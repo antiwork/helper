@@ -1,3 +1,4 @@
+// tests/utils/page-objects/knowledgeBankPage.ts
 import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "./basePage";
 
@@ -143,8 +144,12 @@ export class KnowledgeBankPage extends BasePage {
     ];
 
     for (const selector of toastSelectors) {
+      try {
         await this.page.locator(selector).waitFor({ state: "visible", timeout: 2000 });
         return;
+      } catch {
+        // silent fallback
+      }
     }
 
     await this.page.waitForSelector(`text="${message}"`, { timeout: 1000 }).catch(() => { });
