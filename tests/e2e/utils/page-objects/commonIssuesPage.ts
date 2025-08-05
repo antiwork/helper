@@ -147,7 +147,6 @@ export class CommonIssuesPage {
   }
 
   private async findIssueItem(title: string): Promise<Locator> {
-    const titleElement = this.page.getByText(title, { exact: true });
-    return titleElement.locator("xpath=ancestor::div[2]");
+    return this.page.getByTestId("common-issue-item").filter({ hasText: title });
   }
 }
