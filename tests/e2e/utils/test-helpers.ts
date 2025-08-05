@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import { Page } from "@playwright/test";
+import { JSErrorTracker } from "./jsErrorTracker";
 
 export async function waitForNetworkIdle(page: Page, timeout = 5000) {
   await page.waitForLoadState("networkidle", { timeout });
@@ -96,4 +97,18 @@ export async function debugWait(page: Page, ms = 1000) {
   if (process.env.HEADED === "true" || process.env.DEBUG === "true") {
     await page.waitForTimeout(ms);
   }
+}
+
+export async function checkForJavaScriptErrors(page: Page): Promise<void> {
+  const tracker = new JSErrorTracker(page);
+  const errors = await tracker.getAllErrors();
+  
+  if (errors.length > 0) {
+    const errorDetails = await tracker.getErrorsAsString();
+    throw new Error(`JavaScript errors detected:\n${errorDetails}`);
+  }
+}
+
+export async function createJSErrorTracker(page: Page): Promise<JSErrorTracker> {
+  return new JSErrorTracker(page);
 }
