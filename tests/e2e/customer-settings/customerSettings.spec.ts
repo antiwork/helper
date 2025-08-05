@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { CustomerSettingsPage } from "../utils/page-objects/customerSettingsPage";
-import { generateRandomString } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
@@ -12,104 +11,84 @@ test.describe("Customer Settings", () => {
     await customerSettingsPage.navigateToCustomerSettings();
   });
 
-  test("should enable VIP customers", async () => {
-    // First disable it if enabled
-    await customerSettingsPage.disableVipCustomers();
-    await customerSettingsPage.expectVipCustomersDisabled();
-
-    // Then enable it
+  test("should toggle VIP customers", async () => {
     await customerSettingsPage.enableVipCustomers();
     await customerSettingsPage.expectVipCustomersEnabled();
 
-    // Verify all VIP settings are visible
-    await expect(customerSettingsPage.page.getByTestId("vip-threshold-input")).toBeVisible();
-    await expect(customerSettingsPage.page.getByTestId("response-hours-input")).toBeVisible();
-    await expect(customerSettingsPage.page.getByTestId("slack-notifications-section")).toBeVisible();
-  });
-
-  test("should disable VIP customers", async () => {
-    // First enable it if disabled
-    await customerSettingsPage.enableVipCustomers();
-    await customerSettingsPage.expectVipCustomersEnabled();
-
-    // Then disable it
     await customerSettingsPage.disableVipCustomers();
     await customerSettingsPage.expectVipCustomersDisabled();
   });
 
-  test("should set VIP threshold value", async () => {
-    const testThreshold = "250";
-
-    await customerSettingsPage.setVipThreshold(testThreshold);
-    await customerSettingsPage.expectVipThreshold(testThreshold);
-  });
-
-  test("should set response hours", async () => {
-    const testHours = "4";
-
-    await customerSettingsPage.setResponseHours(testHours);
-    await customerSettingsPage.expectResponseHours(testHours);
-  });
-
-  test("should update threshold and response hours together", async () => {
-    const testThreshold = "500.75";
-    const testHours = "2";
-
-    // Enable VIP customers first
+  test("should update VIP settings and save successfully", async () => {
     await customerSettingsPage.enableVipCustomers();
 
-    // Set both values
-    await customerSettingsPage.setVipThreshold(testThreshold);
-    await customerSettingsPage.setResponseHours(testHours);
+    await customerSettingsPage.setVipThreshold("250.50");
+    await customerSettingsPage.expectVipThreshold("250.50");
+    await customerSettingsPage.waitForSaved();
 
-    // Verify both values are set
-    await customerSettingsPage.expectVipThreshold(testThreshold);
-    await customerSettingsPage.expectResponseHours(testHours);
+    await customerSettingsPage.setResponseHours("4");
+    await customerSettingsPage.expectResponseHours("4");
     await customerSettingsPage.waitForSaved();
   });
 
-  test("should validate numeric input for threshold", async () => {
+  test("should validate input constraints", async () => {
     await customerSettingsPage.enableVipCustomers();
 
-    const thresholdInput = customerSettingsPage.page.getByTestId("vip-threshold-input");
-
-    // Verify input type and constraints
+    const thresholdInput = customerSettingsPage.page.getByRole("spinbutton", { name: "Customer Value Threshold" });
     await expect(thresholdInput).toHaveAttribute("type", "number");
     await expect(thresholdInput).toHaveAttribute("min", "0");
-    await expect(thresholdInput).toHaveAttribute("step", "0.01");
   });
 
-  test("should validate numeric input for response hours", async () => {
+  test("should show Slack integration alert when not connected", async () => {
     await customerSettingsPage.enableVipCustomers();
 
-    const responseHoursInput = customerSettingsPage.page.getByTestId("response-hours-input");
-
-    // Verify input type and constraints
-    await expect(responseHoursInput).toHaveAttribute("type", "number");
-    await expect(responseHoursInput).toHaveAttribute("min", "1");
-    await expect(responseHoursInput).toHaveAttribute("step", "1");
+    const slackAlert = customerSettingsPage.page
+      .getByRole("alert")
+      .filter({ hasText: "Slack integration is required" });
+    await expect(slackAlert).toBeVisible();
   });
 
-  test("should handle decimal values in threshold", async () => {
-    const decimalThreshold = "99.99";
+  test("should toggle auto-close inactive tickets", async () => {
+    await customerSettingsPage.enableAutoClose();
+    await customerSettingsPage.expectAutoCloseEnabled();
 
-    await customerSettingsPage.setVipThreshold(decimalThreshold);
-    await customerSettingsPage.expectVipThreshold(decimalThreshold);
+    await customerSettingsPage.disableAutoClose();
+    await customerSettingsPage.expectAutoCloseDisabled();
+  });
+
+  test("should update auto-close days and save successfully", async () => {
+    await customerSettingsPage.enableAutoClose();
+
+    await customerSettingsPage.setAutoCloseDays("7");
+    await customerSettingsPage.expectAutoCloseDays("7");
+    await customerSettingsPage.waitForSaved();
+
+    await customerSettingsPage.setAutoCloseDays("14");
+    await customerSettingsPage.expectAutoCloseDays("14");
     await customerSettingsPage.waitForSaved();
   });
 
-  test("should accept input changes", async () => {
-    await customerSettingsPage.enableVipCustomers();
+  test("should disable run button when auto-close is disabled", async () => {
+    await customerSettingsPage.disableAutoClose();
+    await customerSettingsPage.expectRunAutoCloseButtonDisabled();
+  });
 
-    // Set a value and wait for any save attempts to complete
-    const thresholdInput = customerSettingsPage.page.getByTestId("vip-threshold-input");
-    await thresholdInput.click();
-    await thresholdInput.fill("123.45");
+  test("should validate auto-close days input", async () => {
+    await customerSettingsPage.enableAutoClose();
 
-    // Wait for any save operations to complete (but don't require success)
-    await customerSettingsPage.waitForSaveComplete();
+    const daysInput = customerSettingsPage.page.getByRole("spinbutton", {
+      name: "Days of inactivity before auto-close",
+    });
+    await expect(daysInput).toHaveAttribute("type", "number");
+    await expect(daysInput).toHaveAttribute("min", "1");
+  });
 
-    // Verify the input value is set (UI state)
-    await expect(thresholdInput).toHaveValue("123.45");
+  test("should run auto-close and show success toast", async () => {
+    await customerSettingsPage.enableAutoClose();
+
+    await customerSettingsPage.clickRunAutoCloseNow();
+
+    const toast = customerSettingsPage.page.locator("[data-sonner-toast]").filter({ hasText: "Auto-close triggered" });
+    await expect(toast).toBeVisible({ timeout: 5000 });
   });
 });

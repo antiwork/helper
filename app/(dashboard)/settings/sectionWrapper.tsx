@@ -12,7 +12,6 @@ type SectionWrapperProps = {
   className?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
-  "data-testid"?: string;
 };
 
 const SectionWrapper = ({
@@ -22,10 +21,9 @@ const SectionWrapper = ({
   className,
   action,
   children,
-  "data-testid": dataTestId,
 }: SectionWrapperProps) => {
   return (
-    <section className="flex flex-col gap-4 border-b py-8 first:pt-4 lg:flex-row" data-testid={dataTestId}>
+    <section className="flex flex-col gap-4 border-b py-8 first:pt-4 lg:flex-row">
       <div className="flex w-full flex-col gap-3 lg:max-w-xs">
         <div className="flex w-full flex-col gap-1">
           <h2 className="text-base flex items-center gap-2">{title}</h2>
@@ -46,7 +44,6 @@ type SwitchSectionWrapperProps = {
   onSwitchChange: (checked: boolean) => void;
   className?: string;
   children: React.ReactNode;
-  "data-testid"?: string;
 };
 
 const SwitchSectionWrapper = ({
@@ -57,7 +54,6 @@ const SwitchSectionWrapper = ({
   onSwitchChange,
   className,
   children,
-  "data-testid": dataTestId,
 }: SwitchSectionWrapperProps) => {
   const [isSwitchChecked, setIsSwitchChecked] = useState(initialSwitchChecked);
 
@@ -84,10 +80,8 @@ const SwitchSectionWrapper = ({
           aria-label={`${title} Switch`}
           checked={isSwitchChecked}
           onCheckedChange={handleSwitchChange}
-          data-testid={dataTestId ? `${dataTestId}-switch` : undefined}
         />
       }
-      data-testid={dataTestId}
     >
       {children}
     </SectionWrapper>
