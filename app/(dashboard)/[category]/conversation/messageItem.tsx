@@ -98,7 +98,7 @@ const MessageItem = ({
   });
 
   const handleSaveEdit = () => {
-    if (message.type === "note" && editContent && editContent.trim()) {
+    if (message.type === "note" && editContent?.trim()) {
       updateNoteMutation.mutate({
         conversationSlug: conversation.slug,
         noteId: message.id,
@@ -282,7 +282,7 @@ const MessageItem = ({
                     <Button
                       size="sm"
                       onClick={handleSaveEdit}
-                      disabled={updateNoteMutation.isPending || !editContent || !editContent.trim()}
+                      disabled={updateNoteMutation.isPending || !editContent?.trim()}
                     >
                       <Check className="h-4 w-4 mr-1" />
                       Save
