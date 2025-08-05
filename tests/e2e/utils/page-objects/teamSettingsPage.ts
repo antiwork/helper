@@ -5,33 +5,17 @@ import { BasePage } from "./basePage";
 type UserRole = "admin" | "member";
 
 export class TeamSettingsPage extends BasePage {
-  private readonly TIMEOUTS = {
-    ELEMENT_VISIBLE: 10000,
-    NETWORK_IDLE: "networkidle" as const,
-    FORM_STABILITY: 2000,
-  } as const;
+  private readonly addMemberButton = "Add Member";
+  private readonly deleteButton = "Delete";
+  private readonly confirmRemovalButton = "Confirm Removal";
+  private readonly adminRole = "Admin";
+  private readonly memberRole = "Member";
+  private readonly manageTeamHeader = "Manage Team Members";
 
-  private readonly UI_ELEMENTS = {
-    BUTTONS: {
-      ADD_MEMBER: "Add Member",
-      DELETE: "Delete",
-      CONFIRM_REMOVAL: "Confirm Removal",
-    },
-    ROLES: {
-      ADMIN: "Admin",
-      MEMBER: "Member",
-    },
-    HEADERS: {
-      MANAGE_TEAM: "Manage Team Members",
-    },
-  } as const;
-
-  private readonly MESSAGES = {
-    MEMBER_ADDED: "Team member added",
-    MEMBER_REMOVED: "Member removed from the team",
-    MEMBER_EXISTS: "Member already exists",
-    VALIDATION_EMAIL: "Please enter a valid email address",
-  } as const;
+  private readonly memberAddedMessage = "Team member added";
+  private readonly memberRemovedMessage = "Member removed from the team";
+  private readonly memberExistsMessage = "Member already exists";
+  private readonly validationEmailMessage = "Please enter a valid email address";
 
   constructor(page: Page) {
     super(page);
@@ -57,32 +41,32 @@ export class TeamSettingsPage extends BasePage {
     const testEmail = email || generateTestEmail();
 
     await this.fillInviteForm(testEmail, `Test User ${Date.now()}`);
-    await this.selectRole(this.UI_ELEMENTS.ROLES.MEMBER);
+    await this.selectRole(this.memberRole);
     await this.submitInvite();
 
     return testEmail;
   }
 
   async expectMemberInvited(email: string) {
-    await this.expectToast(this.MESSAGES.MEMBER_ADDED);
+    await this.expectToast(this.memberAddedMessage);
     await this.expectMemberInList(email);
   }
 
   async expectMemberInList(email: string) {
     const memberRow = this.getMemberRow(email);
-    await expect(memberRow).toBeVisible({ timeout: this.TIMEOUTS.ELEMENT_VISIBLE });
+    await expect(memberRow).toBeVisible({ timeout: 10000 });
   }
 
   async removeMember(email: string) {
     const memberRow = this.getMemberRow(email);
-    await expect(memberRow).toBeVisible({ timeout: this.TIMEOUTS.ELEMENT_VISIBLE });
+    await expect(memberRow).toBeVisible({ timeout: 10000 });
 
-    const removeButton = memberRow.getByRole("button", { name: this.UI_ELEMENTS.BUTTONS.DELETE });
+    const removeButton = memberRow.getByRole("button", { name: this.deleteButton });
     await expect(removeButton).toBeVisible();
     await removeButton.click();
 
     await this.confirmDeletion();
-    await this.expectToast(this.MESSAGES.MEMBER_REMOVED);
+    await this.expectToast(this.memberRemovedMessage);
   }
 
   async expectMemberRemoved(email: string) {
@@ -92,7 +76,7 @@ export class TeamSettingsPage extends BasePage {
 
   async changeRole(email: string, role: UserRole) {
     const memberRow = this.getMemberRow(email);
-    await expect(memberRow).toBeVisible({ timeout: this.TIMEOUTS.ELEMENT_VISIBLE });
+    await expect(memberRow).toBeVisible({ timeout: 10000 });
 
     const permissionsSelector = memberRow
       .getByRole("combobox")
@@ -100,23 +84,23 @@ export class TeamSettingsPage extends BasePage {
     await expect(permissionsSelector).toBeVisible();
     await permissionsSelector.click();
 
-    const roleText = role === "admin" ? this.UI_ELEMENTS.ROLES.ADMIN : this.UI_ELEMENTS.ROLES.MEMBER;
+    const roleText = role === "admin" ? this.adminRole : this.memberRole;
     const roleOption = this.page.getByRole("option", { name: roleText });
     await expect(roleOption).toBeVisible();
     await roleOption.click();
 
-    await this.page.waitForLoadState(this.TIMEOUTS.NETWORK_IDLE);
+    await this.page.waitForLoadState("networkidle");
     const updatedSelector = memberRow
       .getByRole("combobox")
       .filter({ has: this.page.locator("span").filter({ hasText: roleText }) });
-    await expect(updatedSelector).toBeVisible({ timeout: this.TIMEOUTS.ELEMENT_VISIBLE });
+    await expect(updatedSelector).toBeVisible({ timeout: 10000 });
   }
 
   async expectMemberRole(email: string, role: UserRole) {
     const memberRow = this.getMemberRow(email);
-    await expect(memberRow).toBeVisible({ timeout: this.TIMEOUTS.ELEMENT_VISIBLE });
+    await expect(memberRow).toBeVisible({ timeout: 10000 });
 
-    const roleText = role === "admin" ? this.UI_ELEMENTS.ROLES.ADMIN : this.UI_ELEMENTS.ROLES.MEMBER;
+    const roleText = role === "admin" ? this.adminRole : this.memberRole;
     const permissionsSelector = memberRow
       .getByRole("combobox")
       .filter({ has: this.page.locator("span").filter({ hasText: roleText }) });
@@ -141,7 +125,7 @@ export class TeamSettingsPage extends BasePage {
     const inviteForm = this.getInviteForm();
     await expect(inviteForm).not.toBeVisible();
 
-    const removeButtons = this.page.getByRole("button", { name: this.UI_ELEMENTS.BUTTONS.DELETE });
+    const removeButtons = this.page.getByRole("button", { name: this.deleteButton });
     const count = await removeButtons.count();
     expect(count).toBe(0);
   }
@@ -210,11 +194,11 @@ export class TeamSettingsPage extends BasePage {
   }
 
   async inviteDuplicateMember(email: string) {
-    await this.page.waitForLoadState(this.TIMEOUTS.NETWORK_IDLE);
-    await this.page.waitForTimeout(this.TIMEOUTS.FORM_STABILITY);
+    await this.page.waitForLoadState("networkidle");
+    await this.page.waitForTimeout(2000);
 
     await this.fillInviteForm(email, "Duplicate User");
-    await this.selectRole(this.UI_ELEMENTS.ROLES.MEMBER);
+    await this.selectRole(this.memberRole);
     await this.submitInvite();
   }
 
@@ -224,7 +208,7 @@ export class TeamSettingsPage extends BasePage {
   }
 
   async expectDuplicateError() {
-    await this.expectToast(this.MESSAGES.MEMBER_EXISTS);
+    await this.expectToast(this.memberExistsMessage);
   }
 
   async expectFormCleared() {
@@ -239,12 +223,12 @@ export class TeamSettingsPage extends BasePage {
   private getInviteForm() {
     return this.page
       .locator("form")
-      .filter({ has: this.page.getByRole("button", { name: new RegExp(this.UI_ELEMENTS.BUTTONS.ADD_MEMBER, "i") }) });
+      .filter({ has: this.page.getByRole("button", { name: new RegExp(this.addMemberButton, "i") }) });
   }
 
   private async waitForTeamSettingsHeader() {
-    await this.page.waitForSelector(`h2:has-text("${this.UI_ELEMENTS.HEADERS.MANAGE_TEAM}")`, {
-      timeout: this.TIMEOUTS.ELEMENT_VISIBLE,
+    await this.page.waitForSelector(`h2:has-text("${this.manageTeamHeader}")`, {
+      timeout: 10000,
     });
   }
 
@@ -264,7 +248,7 @@ export class TeamSettingsPage extends BasePage {
   }
 
   private async submitInvite() {
-    const submitButton = this.page.getByRole("button", { name: this.UI_ELEMENTS.BUTTONS.ADD_MEMBER });
+    const submitButton = this.page.getByRole("button", { name: this.addMemberButton });
     await expect(submitButton).toBeVisible();
     await expect(submitButton).toBeEnabled();
     await submitButton.click();
@@ -274,13 +258,13 @@ export class TeamSettingsPage extends BasePage {
     const deleteDialog = this.page.getByRole("dialog");
     await expect(deleteDialog).toBeVisible();
 
-    const confirmButton = deleteDialog.getByRole("button", { name: this.UI_ELEMENTS.BUTTONS.CONFIRM_REMOVAL });
+    const confirmButton = deleteDialog.getByRole("button", { name: this.confirmRemovalButton });
     await expect(confirmButton).toBeVisible();
     await confirmButton.click();
   }
 
   private async expectToast(message: string) {
     const toast = this.page.locator(`[data-sonner-toast]:has-text("${message}")`);
-    await expect(toast).toBeVisible({ timeout: this.TIMEOUTS.ELEMENT_VISIBLE });
+    await expect(toast).toBeVisible({ timeout: 10000 });
   }
 }
