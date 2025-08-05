@@ -361,10 +361,16 @@ test.describe("Conversation Actions", () => {
 
     const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
-    await composer.evaluate((el) => {
-      el.innerHTML = "";
-      el.textContent = "";
-    });
+    
+    try {
+      await composer.evaluate((el) => {
+        el.innerHTML = "";
+        el.textContent = "";
+      });
+    } catch {
+      await page.keyboard.press("Control+a");
+      await page.keyboard.press("Delete");
+    }
     await page.waitForTimeout(500);
 
     await composer.pressSequentially(testMessage);
@@ -378,21 +384,25 @@ test.describe("Conversation Actions", () => {
       await page.waitForLoadState("networkidle");
       await expect(page.locator("text=closed")).toBeVisible({ timeout: 10000 });
     } catch (error) {
-      const composerText = await composer.textContent();
-
-      if (composerText && composerText.trim().length > 0) {
-        const replyButton = page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
-        await expect(replyButton).toBeEnabled();
-      } else {
-        await composer.pressSequentially(testMessage);
-        await page.waitForTimeout(500);
-
-        const updatedText = await composer.textContent();
-        expect(updatedText?.trim()).toContain(testMessage);
-
-        const replyButton = page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
-        await expect(replyButton).toBeEnabled();
+      try {
+        await composer.evaluate((el) => {
+          el.innerHTML = "";
+          el.textContent = "";
+        });
+      } catch {
+        await page.keyboard.press("Control+a");
+        await page.keyboard.press("Delete");
       }
+      await page.waitForTimeout(500);
+      
+      await composer.pressSequentially(testMessage);
+      await page.waitForTimeout(500);
+
+      const updatedText = await composer.textContent();
+      expect(updatedText?.trim()).toContain(testMessage);
+
+      const replyButton = page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
+      await expect(replyButton).toBeEnabled();
     }
   });
 
