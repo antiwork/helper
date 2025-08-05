@@ -71,7 +71,7 @@ export const useConversationFilters = () => {
 
   useEffect(() => {
     setFilterValues({
-      assignee: searchParams.isAssigned === false ? ["unassigned"] : (searchParams.assignee ?? []),
+      assignee: searchParams.assignee ?? [],
       createdAfter: searchParams.createdAfter ?? null,
       createdBefore: searchParams.createdBefore ?? null,
       repliedBy: searchParams.repliedBy ?? [],
@@ -121,6 +121,7 @@ export const ConversationFilters = ({
   activeFilterCount,
   onClearFilters,
 }: ConversationFiltersProps) => {
+  const { input } = useConversationsListInput();
   return (
     <div className="flex flex-wrap items-center justify-center gap-1 md:gap-2">
       <DateFilter
@@ -130,17 +131,19 @@ export const ConversationFilters = ({
           onUpdateFilter({ createdAfter: startDate, createdBefore: endDate });
         }}
       />
-      <AssigneeFilter
-        selectedAssignees={filterValues.assignee}
-        onChange={(assignees) => {
-          const hasUnassigned = assignees.includes("unassigned");
-          const memberAssignees = assignees.filter((id) => id !== "unassigned");
-          onUpdateFilter({
-            assignee: memberAssignees,
-            isAssigned: hasUnassigned ? false : memberAssignees.length > 0 ? true : undefined,
-          });
-        }}
-      />
+      {input.category === "all" && (
+        <AssigneeFilter
+          selectedAssignees={filterValues.assignee.concat(input.isAssigned === false ? ["unassigned"] : [])}
+          onChange={(assignees) => {
+            const hasUnassigned = assignees.includes("unassigned");
+            const memberAssignees = assignees.filter((id) => id !== "unassigned");
+            onUpdateFilter({
+              assignee: memberAssignees,
+              isAssigned: hasUnassigned ? false : memberAssignees.length > 0 ? true : undefined,
+            });
+          }}
+        />
+      )}
       <ResponderFilter
         selectedResponders={filterValues.repliedBy}
         onChange={(responders) => onUpdateFilter({ repliedBy: responders })}

@@ -3,7 +3,7 @@ import { parseAsArrayOf, parseAsBoolean, parseAsInteger, parseAsString, parseAsS
 
 export const useConversationsListInput = () => {
   const params = useParams<{
-    category: "conversations" | "assigned" | "unassigned" | "mine";
+    category: "all" | "assigned" | "unassigned" | "mine";
   }>();
   const [searchParams, setSearchParams] = useQueryStates({
     status: parseAsStringEnum(["open", "closed", "spam"] as const),

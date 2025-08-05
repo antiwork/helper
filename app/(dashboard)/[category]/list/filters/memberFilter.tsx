@@ -1,4 +1,4 @@
-import { Check, LucideIcon, UserMinus } from "lucide-react";
+import { Check, LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -87,17 +87,12 @@ export function MemberFilter({
                   key="unassigned"
                   onSelect={() => {
                     const isSelected = selectedMembers.includes("unassigned");
-                    onChange(
-                      isSelected
-                        ? selectedMembers.filter((m) => m !== "unassigned")
-                        : [...selectedMembers, "unassigned"],
-                    );
+                    onChange(isSelected ? selectedMembers.filter((m) => m !== "unassigned") : ["unassigned"]);
                   }}
                 >
                   <Check
                     className={`mr-2 h-4 w-4 ${selectedMembers.includes("unassigned") ? "opacity-100" : "opacity-0"}`}
                   />
-                  <UserMinus className="mr-2 h-4 w-4" />
                   <span className="truncate">Unassigned</span>
                 </CommandItem>
               )}
@@ -109,7 +104,9 @@ export function MemberFilter({
                     onSelect={() => {
                       const isSelected = selectedMembers.includes(member.id);
                       onChange(
-                        isSelected ? selectedMembers.filter((m) => m !== member.id) : [...selectedMembers, member.id],
+                        isSelected
+                          ? selectedMembers.filter((m) => m !== member.id)
+                          : [...selectedMembers.filter((m) => m !== "unassigned"), member.id],
                       );
                     }}
                   >
