@@ -23,6 +23,7 @@ interface FilterValues {
   reactionType: "thumbs-up" | "thumbs-down" | null;
   events: ("request_human_support" | "resolved_by_ai")[];
   issueGroupId: number | null;
+  isAssigned: boolean | undefined;
 }
 
 interface ConversationFiltersProps {
@@ -36,7 +37,7 @@ export const useConversationFilters = () => {
   const { searchParams, setSearchParams } = useConversationsListInput();
 
   const [filterValues, setFilterValues] = useState<FilterValues>({
-    assignee: searchParams.assignee ?? [],
+    assignee: searchParams.isAssigned === false ? ["unassigned"] : searchParams.assignee ?? [],
     createdAfter: searchParams.createdAfter ?? null,
     createdBefore: searchParams.createdBefore ?? null,
     repliedBy: searchParams.repliedBy ?? [],
@@ -46,6 +47,7 @@ export const useConversationFilters = () => {
     reactionType: searchParams.reactionType ?? null,
     events: searchParams.events ?? [],
     issueGroupId: searchParams.issueGroupId ?? null,
+    isAssigned: searchParams.isAssigned ?? undefined,
   });
 
   const activeFilterCount = useMemo(() => {
@@ -59,6 +61,7 @@ export const useConversationFilters = () => {
     if (filterValues.reactionType !== null) count++;
     if (filterValues.events.length > 0) count++;
     if (filterValues.issueGroupId !== null) count++;
+    if (filterValues.isAssigned !== undefined) count++;
     return count;
   }, [filterValues]);
 
@@ -68,7 +71,7 @@ export const useConversationFilters = () => {
 
   useEffect(() => {
     setFilterValues({
-      assignee: searchParams.assignee ?? [],
+      assignee: searchParams.isAssigned === false ? ["unassigned"] : searchParams.assignee ?? [],
       createdAfter: searchParams.createdAfter ?? null,
       createdBefore: searchParams.createdBefore ?? null,
       repliedBy: searchParams.repliedBy ?? [],
@@ -78,6 +81,7 @@ export const useConversationFilters = () => {
       reactionType: searchParams.reactionType ?? null,
       events: searchParams.events ?? [],
       issueGroupId: searchParams.issueGroupId ?? null,
+      isAssigned: searchParams.isAssigned ?? undefined,
     });
   }, [searchParams]);
 
@@ -98,6 +102,7 @@ export const useConversationFilters = () => {
       reactionType: null,
       events: null,
       issueGroupId: null,
+      isAssigned: null,
     };
     setSearchParams((prev) => ({ ...prev, ...clearedFilters }));
   };
@@ -127,7 +132,14 @@ export const ConversationFilters = ({
       />
       <AssigneeFilter
         selectedAssignees={filterValues.assignee}
-        onChange={(assignees) => onUpdateFilter({ assignee: assignees })}
+        onChange={(assignees) => {
+          const hasUnassigned = assignees.includes("unassigned");
+          const memberAssignees = assignees.filter(id => id !== "unassigned");
+          onUpdateFilter({ 
+            assignee: memberAssignees,
+            isAssigned: hasUnassigned ? false : memberAssignees.length > 0 ? true : undefined
+          });
+        }}
       />
       <ResponderFilter
         selectedResponders={filterValues.repliedBy}
