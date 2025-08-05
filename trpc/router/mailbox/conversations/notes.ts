@@ -1,6 +1,6 @@
-import { TRPCRouterRecord } from "@trpc/server";
+import { TRPCError, TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod";
-import { addNote } from "@/lib/data/note";
+import { addNote, deleteNote, updateNote } from "@/lib/data/note";
 import { conversationProcedure } from "./procedure";
 
 export const notesRouter = {
@@ -19,5 +19,45 @@ export const notesRouter = {
         user: ctx.user,
       });
       return { id: note.id };
+    }),
+
+  update: conversationProcedure
+    .input(
+      z.object({
+        noteId: z.number(),
+        message: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (!ctx.user) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+
+      const updatedNote = await updateNote({
+        noteId: input.noteId,
+        message: input.message,
+        userId: ctx.user.id,
+      });
+
+      return { id: updatedNote.id };
+    }),
+
+  delete: conversationProcedure
+    .input(
+      z.object({
+        noteId: z.number(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (!ctx.user) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+
+      await deleteNote({
+        noteId: input.noteId,
+        userId: ctx.user.id,
+      });
+
+      return { success: true };
     }),
 } satisfies TRPCRouterRecord;

@@ -99,13 +99,6 @@ const events = {
     }),
     jobs: ["crawlWebsite"],
   },
-  "conversations/check-resolution": {
-    data: z.object({
-      conversationId: z.number(),
-      messageId: z.number(),
-    }),
-    jobs: ["checkConversationResolution"],
-  },
   "messages/flagged.bad": {
     data: z.object({
       messageId: z.number(),
