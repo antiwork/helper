@@ -48,14 +48,14 @@ export function MemberFilter({
     displayName: "Unassigned",
   };
 
-  const shouldShowUnassigned = includeUnassigned && 
-    (!searchTerm || unassignedItem.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
+  const shouldShowUnassigned =
+    includeUnassigned && (!searchTerm || unassignedItem.displayName.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const singleMemberName =
-    selectedMembers.length === 1 
-      ? selectedMembers[0] === "unassigned" 
+    selectedMembers.length === 1
+      ? selectedMembers[0] === "unassigned"
         ? "Unassigned"
-        : members?.find((m) => m.id === selectedMembers[0])?.displayName 
+        : members?.find((m) => m.id === selectedMembers[0])?.displayName
       : undefined;
 
   return (
@@ -88,7 +88,9 @@ export function MemberFilter({
                   onSelect={() => {
                     const isSelected = selectedMembers.includes("unassigned");
                     onChange(
-                      isSelected ? selectedMembers.filter((m) => m !== "unassigned") : [...selectedMembers, "unassigned"],
+                      isSelected
+                        ? selectedMembers.filter((m) => m !== "unassigned")
+                        : [...selectedMembers, "unassigned"],
                     );
                   }}
                 >

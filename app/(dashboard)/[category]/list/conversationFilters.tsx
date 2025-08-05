@@ -37,7 +37,7 @@ export const useConversationFilters = () => {
   const { searchParams, setSearchParams } = useConversationsListInput();
 
   const [filterValues, setFilterValues] = useState<FilterValues>({
-    assignee: searchParams.isAssigned === false ? ["unassigned"] : searchParams.assignee ?? [],
+    assignee: searchParams.isAssigned === false ? ["unassigned"] : (searchParams.assignee ?? []),
     createdAfter: searchParams.createdAfter ?? null,
     createdBefore: searchParams.createdBefore ?? null,
     repliedBy: searchParams.repliedBy ?? [],
@@ -71,7 +71,7 @@ export const useConversationFilters = () => {
 
   useEffect(() => {
     setFilterValues({
-      assignee: searchParams.isAssigned === false ? ["unassigned"] : searchParams.assignee ?? [],
+      assignee: searchParams.isAssigned === false ? ["unassigned"] : (searchParams.assignee ?? []),
       createdAfter: searchParams.createdAfter ?? null,
       createdBefore: searchParams.createdBefore ?? null,
       repliedBy: searchParams.repliedBy ?? [],
@@ -134,10 +134,10 @@ export const ConversationFilters = ({
         selectedAssignees={filterValues.assignee}
         onChange={(assignees) => {
           const hasUnassigned = assignees.includes("unassigned");
-          const memberAssignees = assignees.filter(id => id !== "unassigned");
-          onUpdateFilter({ 
+          const memberAssignees = assignees.filter((id) => id !== "unassigned");
+          onUpdateFilter({
             assignee: memberAssignees,
-            isAssigned: hasUnassigned ? false : memberAssignees.length > 0 ? true : undefined
+            isAssigned: hasUnassigned ? false : memberAssignees.length > 0 ? true : undefined,
           });
         }}
       />
