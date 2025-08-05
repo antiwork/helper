@@ -1,21 +1,11 @@
 import { upperFirst } from "lodash-es";
-import {
-  AlertCircle,
-  ArrowLeftFromLine,
-  ArrowRightFromLine,
-  Bot,
-  CheckCircle,
-  ChevronDown,
-  ChevronRight,
-  User,
-} from "lucide-react";
+import { AlertCircle, ArrowLeftFromLine, ArrowRightFromLine, Bot, ChevronDown, ChevronRight, User } from "lucide-react";
 import { useState } from "react";
 import { ConversationEvent } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
 import { useMembers } from "@/components/useMembers";
 
 const eventDescriptions = {
-  resolved_by_ai: "AI resolution",
   request_human_support: "Human support requested",
 };
 const hasEventDescription = (eventType: ConversationEvent["eventType"]): eventType is keyof typeof eventDescriptions =>
@@ -72,14 +62,7 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
   const hasDetails = event.byUserId || event.reason;
   const byUserName = getUserDisplayName(event.byUserId);
 
-  const Icon =
-    event.eventType === "resolved_by_ai"
-      ? CheckCircle
-      : event.changes.assignedToAI
-        ? Bot
-        : event.changes.status
-          ? statusIcons[event.changes.status]
-          : User;
+  const Icon = event.changes.assignedToAI ? Bot : event.changes.status ? statusIcons[event.changes.status] : User;
 
   return (
     <div className="flex flex-col mx-auto">
