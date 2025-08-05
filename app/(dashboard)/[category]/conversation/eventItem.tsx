@@ -4,7 +4,6 @@ import {
   ArrowLeftFromLine,
   ArrowRightFromLine,
   Bot,
-  CheckCircle,
   ChevronDown,
   ChevronRight,
   User,
