@@ -37,7 +37,7 @@ test.describe("In-App Chat Settings", () => {
     });
 
     test("should copy AI agent prompt", async ({ page }) => {
-      const copyButton = page.getByTestId("copy-ai-prompt-vanilla");
+      const copyButton = page.getByLabel("Copy AI Prompt Vanilla");
       await copyButton.click();
       await expect(copyButton).toContainText("Copied!", { timeout: 3000 });
     });
@@ -84,9 +84,9 @@ test.describe("In-App Chat Settings", () => {
 
     test("should configure visibility for all customers", async ({ page }) => {
       const chatIconSwitch = page.locator('[role="switch"]').first();
-      const chatIconSelect = page.getByTestId("chat-icon-visibility-select-trigger");
+      const chatIconSelect = page.getByLabel("chat-icon-visibility-select-trigger");
       const allCustomersOption = page.getByRole("option", { name: "All customers" });
-      const minCustomerValueInput = page.getByTestId("min-customer-value-input");
+      const minCustomerValueInput = page.getByLabel("min-customer-value-input");
 
       const isChecked = await chatIconSwitch.isChecked();
       if (!isChecked) {
@@ -104,9 +104,9 @@ test.describe("In-App Chat Settings", () => {
 
     test("should configure revenue-based visibility", async ({ page }) => {
       const chatIconSwitch = page.locator('[role="switch"]').first();
-      const chatIconSelect = page.getByTestId("chat-icon-visibility-select-trigger");
+      const chatIconSelect = page.getByLabel("chat-icon-visibility-select-trigger");
       const revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
-      const minCustomerValueInput = page.getByTestId("min-customer-value-input");
+      const minCustomerValueInput = page.getByLabel("min-customer-value-input");
 
       const isChecked = await chatIconSwitch.isChecked();
       if (!isChecked) {
@@ -129,9 +129,9 @@ test.describe("In-App Chat Settings", () => {
 
     test("should persist visibility settings across page reloads", async ({ page }) => {
       const chatIconSwitch = page.locator('[role="switch"]').first();
-      const chatIconSelect = page.getByTestId("chat-icon-visibility-select-trigger");
+      const chatIconSelect = page.getByLabel("chat-icon-visibility-select-trigger");
       const revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
-      const minCustomerValueInput = page.getByTestId("min-customer-value-input");
+      const minCustomerValueInput = page.getByLabel("min-customer-value-input");
 
       const isChecked = await chatIconSwitch.isChecked();
       if (!isChecked) {
@@ -198,7 +198,7 @@ test.describe("In-App Chat Settings", () => {
 
   test.describe("Email Response Settings", () => {
     test("should switch between email response modes", async ({ page }) => {
-      const emailResponseTabs = page.getByTestId("email-response-tabs");
+      const emailResponseTabs = page.getByLabel("email-response-tabs");
       const offTab = emailResponseTabs.getByRole("tab", { name: "Off" });
       const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
       const replyTab = emailResponseTabs.getByRole("tab", { name: "Reply" });
@@ -214,7 +214,7 @@ test.describe("In-App Chat Settings", () => {
     });
 
     test("should persist email response settings", async ({ page }) => {
-      const emailResponseTabs = page.getByTestId("email-response-tabs");
+      const emailResponseTabs = page.getByLabel("email-response-tabs");
       const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
 
       await draftTab.click();
@@ -251,9 +251,9 @@ test.describe("In-App Chat Settings", () => {
   test.describe("Form Validation and Error Handling", () => {
     test("should handle numeric validation for minimum customer value", async ({ page }) => {
       const chatIconSwitch = page.locator('[role="switch"]').first();
-      const chatIconSelect = page.getByTestId("chat-icon-visibility-select-trigger");
+      const chatIconSelect = page.getByLabel("chat-icon-visibility-select-trigger");
       const revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
-      const minCustomerValueInput = page.getByTestId("min-customer-value-input");
+      const minCustomerValueInput = page.getByLabel("min-customer-value-input");
 
       const isChecked = await chatIconSwitch.isChecked();
       if (!isChecked) {
@@ -279,7 +279,7 @@ test.describe("In-App Chat Settings", () => {
     test("should show saving indicators", async ({ page }) => {
       const chatIconSwitch = page.locator('[role="switch"]').first();
       const hostUrlInput = page.getByLabel("Host URL");
-      const emailResponseTabs = page.getByTestId("email-response-tabs");
+      const emailResponseTabs = page.getByLabel("email-response-tabs");
       const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
 
       const isChecked = await chatIconSwitch.isChecked();
@@ -301,11 +301,11 @@ test.describe("In-App Chat Settings", () => {
   test.describe("Complete Workflow", () => {
     test("should configure all settings in a typical workflow", async ({ page }) => {
       const chatIconSwitch = page.locator('[role="switch"]').first();
-      const chatIconSelect = page.getByTestId("chat-icon-visibility-select-trigger");
+      const chatIconSelect = page.getByLabel("chat-icon-visibility-select-trigger");
       const revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
-      const minCustomerValueInput = page.getByTestId("min-customer-value-input");
+      const minCustomerValueInput = page.getByLabel("min-customer-value-input");
       const hostUrlInput = page.getByLabel("Host URL");
-      const emailResponseTabs = page.getByTestId("email-response-tabs");
+      const emailResponseTabs = page.getByLabel("email-response-tabs");
       const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
       const widgetPreviewIndicator = page.getByText("Try it out →");
 

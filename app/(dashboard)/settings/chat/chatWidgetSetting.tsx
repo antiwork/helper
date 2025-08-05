@@ -304,7 +304,7 @@ ${NODE_HMAC_SAMPLE_CODE}
                   <TooltipTrigger>
                     <Button
                       variant="subtle"
-                      data-testid="copy-ai-prompt-vanilla"
+                      aria-label="Copy AI Prompt Vanilla"
                       onClick={() => {
                         navigator.clipboard.writeText(plainJSPrompt);
                         setIsCopied(true);
@@ -447,7 +447,7 @@ ${WIDGET_SAMPLE_CODE}
                   <TooltipTrigger>
                     <Button
                       variant="subtle"
-                      data-testid="copy-ai-prompt-react"
+                      aria-label="Copy AI Prompt React"
                       onClick={() => {
                         navigator.clipboard.writeText(reactPrompt);
                         setIsCopied(true);
@@ -625,9 +625,9 @@ export default async function RootLayout({
                 <Select
                   value={mode}
                   onValueChange={(mode) => setMode(mode as WidgetMode)}
-                  data-testid="chat-icon-visibility-select"
+                  aria-label="chat-icon-visibility-select"
                 >
-                  <SelectTrigger className="w-[350px]" data-testid="chat-icon-visibility-select-trigger">
+                  <SelectTrigger className="w-[350px]" aria-label="chat-icon-visibility-select-trigger">
                     <SelectValue placeholder="Select when to show chat icon" />
                   </SelectTrigger>
                   <SelectContent>
@@ -647,7 +647,7 @@ export default async function RootLayout({
                     className="max-w-[200px]"
                     min="0"
                     step="1"
-                    data-testid="min-customer-value-input"
+                    aria-label="min-customer-value-input"
                   />
                 </div>
               )}
@@ -690,7 +690,7 @@ export default async function RootLayout({
             <Tabs
               value={autoRespond}
               onValueChange={(value) => setAutoRespond(value as "off" | "draft" | "reply")}
-              data-testid="email-response-tabs"
+              aria-label="email-response-tabs"
             >
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="off">Off</TabsTrigger>
