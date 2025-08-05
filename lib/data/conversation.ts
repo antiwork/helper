@@ -42,6 +42,7 @@ export const createConversation = async (
     const conversationValues = {
       ...conversation,
       conversationProvider: "chat" as const,
+      subjectPlaintext: conversation.subject,
     };
 
     const [newConversation] = await tx.insert(conversations).values(conversationValues).returning();
@@ -99,6 +100,11 @@ export const updateConversation = async (
   }
   if (current.status !== "closed" && dbUpdates.status === "closed") {
     dbUpdates.closedAt = new Date();
+  }
+
+  // Write to both encrypted and plaintext columns for subject
+  if (dbUpdates.subject !== undefined) {
+    dbUpdates.subjectPlaintext = dbUpdates.subject;
   }
 
   const updatedConversation = await tx
@@ -389,6 +395,9 @@ export const generateConversationSubject = async (
           })
         ).text;
 
-  await db.update(conversations).set({ subject }).where(eq(conversations.id, conversationId));
+  await db
+    .update(conversations)
+    .set({ subject, subjectPlaintext: subject })
+    .where(eq(conversations.id, conversationId));
   return subject;
 };

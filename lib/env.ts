@@ -10,6 +10,9 @@ const defaultRootUrl =
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : `https://${process.env.VERCEL_URL ?? "helperai.dev"}`;
 
+// `next dev` forces NODE_ENV to "development" so we need to use a different environment variable
+export const isAIMockingEnabled = process.env.IS_TEST_ENV === "1";
+
 export const env = createEnv({
   extends: [vercel()],
   shared: {
@@ -29,7 +32,7 @@ export const env = createEnv({
    */
   server: {
     // Set this for both local development and when deploying
-    OPENAI_API_KEY: z.string().min(1), // API key from https://platform.openai.com for AI models
+    OPENAI_API_KEY: isAIMockingEnabled ? z.string().min(1).default("mock-openai-api-key") : z.string().min(1), // API key from https://platform.openai.com for AI models
 
     // Set this before deploying
     ENCRYPT_COLUMN_SECRET: defaultUnlessDeployed(
