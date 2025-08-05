@@ -1,5 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
 import { getMailbox } from "../../../lib/data/mailbox";
+import { waitForSettingsSaved } from "../utils/settingsHelpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
@@ -11,7 +12,7 @@ test.describe("Customer Settings", () => {
     await expect(page).toHaveURL("/settings/customers");
   });
 
-  async function enableVipCustomers(page: any) {
+  async function enableVipCustomers(page: Page) {
     const vipSwitch = page.getByRole("switch", { name: "VIP Customers Switch", exact: true });
     const isChecked = await vipSwitch.isChecked();
 
@@ -21,7 +22,7 @@ test.describe("Customer Settings", () => {
     }
   }
 
-  async function disableVipCustomers(page: any) {
+  async function disableVipCustomers(page: Page) {
     const vipSwitch = page.getByRole("switch", { name: "VIP Customers Switch", exact: true });
     const isChecked = await vipSwitch.isChecked();
 
@@ -31,23 +32,7 @@ test.describe("Customer Settings", () => {
     }
   }
 
-  async function waitForSaved(page: any) {
-    const saving = page.getByText("Saving", { exact: true });
-    const saved = page.getByText("Saved", { exact: true });
-    const error = page.getByText("Error", { exact: true });
-
-    try {
-      await saving.waitFor({ state: "visible" });
-      await saved.waitFor({ state: "visible" });
-    } catch (e) {
-      if (await error.isVisible().catch(() => false)) {
-        throw new Error("Save failed: Error indicator visible");
-      }
-      console.warn("No saving indicator found. This should mean there were no changes, but may be worth checking.");
-    }
-  }
-
-  async function enableAutoClose(page: any) {
+  async function enableAutoClose(page: Page) {
     const autoCloseSwitch = page.getByRole("switch", { name: "Enable auto-close", exact: true });
     const isChecked = await autoCloseSwitch.isChecked();
 
@@ -57,7 +42,7 @@ test.describe("Customer Settings", () => {
     }
   }
 
-  async function disableAutoClose(page: any) {
+  async function disableAutoClose(page: Page) {
     const autoCloseSwitch = page.getByRole("switch", { name: "Enable auto-close", exact: true });
     const isChecked = await autoCloseSwitch.isChecked();
 
@@ -100,7 +85,7 @@ test.describe("Customer Settings", () => {
 
     await expect(thresholdInput).toHaveValue(testThreshold);
     await expect(responseHoursInput).toHaveValue(testHours);
-    await waitForSaved(page);
+    await waitForSettingsSaved(page);
 
     await page.reload();
     await expect(page).toHaveURL("/settings/customers");
@@ -120,7 +105,7 @@ test.describe("Customer Settings", () => {
     await thresholdInput.fill(threshold);
 
     await expect(thresholdInput).toHaveValue(threshold);
-    await waitForSaved(page);
+    await waitForSettingsSaved(page);
 
     await page.reload();
     await expect(page).toHaveURL("/settings/customers");
@@ -156,7 +141,7 @@ test.describe("Customer Settings", () => {
     await daysInput.fill(testDays);
 
     await expect(daysInput).toHaveValue(testDays);
-    await waitForSaved(page);
+    await waitForSettingsSaved(page);
 
     await page.reload();
     await expect(page).toHaveURL("/settings/customers");
@@ -180,7 +165,7 @@ test.describe("Customer Settings", () => {
 
     const dayLabel = page.getByText("day", { exact: true });
     await expect(dayLabel).toBeVisible();
-    await waitForSaved(page);
+    await waitForSettingsSaved(page);
 
     await page.reload();
     await expect(page).toHaveURL("/settings/customers");
@@ -223,7 +208,7 @@ test.describe("Customer Settings", () => {
     await daysInput.fill(days);
 
     await expect(daysInput).toHaveValue(days);
-    await waitForSaved(page);
+    await waitForSettingsSaved(page);
 
     await page.reload();
     await expect(page).toHaveURL("/settings/customers");
@@ -243,7 +228,7 @@ test.describe("Customer Settings", () => {
     await daysInput.click();
     await daysInput.fill("25");
 
-    await waitForSaved(page);
+    await waitForSettingsSaved(page);
 
     await page.reload();
     await expect(page).toHaveURL("/settings/customers");
@@ -263,7 +248,7 @@ test.describe("Customer Settings", () => {
     await daysInput.click();
     await daysInput.fill("10");
 
-    await waitForSaved(page);
+    await waitForSettingsSaved(page);
 
     await page.reload();
     await expect(page).toHaveURL("/settings/customers");
