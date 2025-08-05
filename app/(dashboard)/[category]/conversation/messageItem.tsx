@@ -340,7 +340,6 @@ const MessageItem = ({
           {message.files.length ? (
             <div
               className={`flex flex-wrap gap-2 overflow-x-auto pb-2 ${rightAlignedMessage ? "flex-row-reverse" : ""}`}
-              data-testid="message-attachments"
             >
               {message.files.map((file, idx) => (
                 <a

@@ -17,10 +17,7 @@ export const MessageThread = ({
     <div className="flex h-full flex-col" data-testid="message-thread">
       <div className="flex flex-1 flex-col gap-8 pb-4 mb-4">
         {conversation.isPrompt && (
-          <div
-            className="flex items-center justify-center gap-1 text-sm text-muted-foreground"
-            data-testid="prompt-indicator"
-          >
+          <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
             <HelpCircle className="h-4 w-4 text-muted-foreground" />
             <span>Started this conversation from a prompt</span>
           </div>
