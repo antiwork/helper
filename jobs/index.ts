@@ -21,6 +21,7 @@ import { importGmailThreads } from "./importGmailThreads";
 import { importRecentGmailThreads } from "./importRecentGmailThreads";
 import { indexConversationMessage } from "./indexConversation";
 import { mergeSimilarConversations } from "./mergeSimilarConversations";
+import { migrateEncryptedToPlaintext } from "./migrateEncryptedToPlaintext";
 import { notifyVipMessage } from "./notifyVipMessage";
 import { postEmailToGmail } from "./postEmailToGmail";
 import { publishNewMessageEvent } from "./publishNewMessageEvent";
@@ -58,6 +59,7 @@ export const eventJobs = {
   categorizeConversationToIssueGroup,
   publishRequestHumanSupport,
   handleSlackAgentMessage,
+  migrateEncryptedToPlaintext,
 };
 
 export const cronJobs = {
