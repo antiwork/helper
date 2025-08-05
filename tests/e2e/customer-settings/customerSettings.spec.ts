@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { db } from "../../../db/client";
-import { mailboxes } from "../../../db/schema";
+import { getMailbox } from "../../../lib/data/mailbox";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
@@ -11,11 +10,6 @@ test.describe("Customer Settings", () => {
     await page.goto("/settings/customers");
     await expect(page).toHaveURL("/settings/customers");
   });
-
-  async function getMailboxFromDb() {
-    const mailbox = await db.select().from(mailboxes).limit(1);
-    return mailbox[0];
-  }
 
   async function enableVipCustomers(page: any) {
     const vipSwitch = page.getByRole("switch", { name: "VIP Customers Switch", exact: true });
@@ -43,16 +37,13 @@ test.describe("Customer Settings", () => {
     const error = page.getByText("Error", { exact: true });
 
     try {
-      // Wait for saving indicator
       await saving.waitFor({ state: "visible" });
-      // Wait for saved indicator
       await saved.waitFor({ state: "visible" });
     } catch (e) {
-      // Check for error
       if (await error.isVisible().catch(() => false)) {
         throw new Error("Save failed: Error indicator visible");
       }
-      // No saving indicator means no changes - this is fine
+      console.warn("No saving indicator found. This should mean there were no changes, but may be worth checking.");
     }
   }
 
@@ -77,18 +68,15 @@ test.describe("Customer Settings", () => {
   }
 
   test("should enable VIP customers", async ({ page }) => {
-    // First disable it if enabled
     await disableVipCustomers(page);
     const vipSwitch = page.getByRole("switch", { name: "VIP Customers Switch", exact: true });
     await expect(vipSwitch).not.toBeChecked();
     await expect(page.getByText("Customer Value Threshold", { exact: true })).not.toBeVisible();
 
-    // Then enable it
     await enableVipCustomers(page);
     await expect(vipSwitch).toBeChecked();
     await expect(page.getByText("Customer Value Threshold", { exact: true })).toBeVisible();
 
-    // Verify all VIP settings are visible
     await expect(page.getByRole("spinbutton", { name: "Customer Value Threshold", exact: true })).toBeVisible();
     await expect(page.getByRole("spinbutton", { name: "Response Time Target", exact: true })).toBeVisible();
     await expect(page.getByText("Slack Notifications", { exact: true })).toBeVisible();
@@ -98,10 +86,8 @@ test.describe("Customer Settings", () => {
     const testThreshold = "500";
     const testHours = "2";
 
-    // Enable VIP customers first
     await enableVipCustomers(page);
 
-    // Set both values
     const thresholdInput = page.getByRole("spinbutton", { name: "Customer Value Threshold", exact: true });
     await thresholdInput.click();
     await thresholdInput.fill(testThreshold);
@@ -110,19 +96,16 @@ test.describe("Customer Settings", () => {
     await responseHoursInput.click();
     await responseHoursInput.fill(testHours);
 
-    // Verify both values are set
     await enableVipCustomers(page);
 
     await expect(thresholdInput).toHaveValue(testThreshold);
     await expect(responseHoursInput).toHaveValue(testHours);
     await waitForSaved(page);
 
-    // Verify values persist in database after refresh
     await page.reload();
     await expect(page).toHaveURL("/settings/customers");
 
-    // Verify database values
-    const mailbox = await getMailboxFromDb();
+    const mailbox = await getMailbox();
     expect(mailbox?.vipThreshold).toBe(parseInt(testThreshold));
     expect(mailbox?.vipExpectedResponseHours).toBe(parseInt(testHours));
   });
@@ -139,29 +122,24 @@ test.describe("Customer Settings", () => {
     await expect(thresholdInput).toHaveValue(threshold);
     await waitForSaved(page);
 
-    // Verify value persists in database after refresh
     await page.reload();
     await expect(page).toHaveURL("/settings/customers");
     await expect(thresholdInput).toHaveValue(threshold);
 
-    // Verify database value
-    const mailbox = await getMailboxFromDb();
+    const mailbox = await getMailbox();
     expect(mailbox?.vipThreshold).toBe(parseInt(threshold));
   });
 
   test("should enable auto-close functionality", async ({ page }) => {
-    // First disable it if enabled
     await disableAutoClose(page);
     const autoCloseSwitch = page.getByRole("switch", { name: "Enable auto-close", exact: true });
     await expect(autoCloseSwitch).not.toBeChecked();
     await expect(page.getByText("Days of inactivity before auto-close", { exact: true })).not.toBeVisible();
 
-    // Then enable it
     await enableAutoClose(page);
     await expect(autoCloseSwitch).toBeChecked();
     await expect(page.getByText("Days of inactivity before auto-close", { exact: true })).toBeVisible();
 
-    // Verify auto-close settings are visible
     await expect(
       page.getByRole("spinbutton", { name: "Days of inactivity before auto-close", exact: true }),
     ).toBeVisible();
@@ -180,13 +158,11 @@ test.describe("Customer Settings", () => {
     await expect(daysInput).toHaveValue(testDays);
     await waitForSaved(page);
 
-    // Verify value persists in database after refresh
     await page.reload();
     await expect(page).toHaveURL("/settings/customers");
     await expect(daysInput).toHaveValue(testDays);
 
-    // Verify database value
-    const mailbox = await getMailboxFromDb();
+    const mailbox = await getMailbox();
     expect(mailbox?.autoCloseDaysOfInactivity).toBe(parseInt(testDays));
   });
 
@@ -206,13 +182,11 @@ test.describe("Customer Settings", () => {
     await expect(dayLabel).toBeVisible();
     await waitForSaved(page);
 
-    // Verify value persists in database after refresh
     await page.reload();
     await expect(page).toHaveURL("/settings/customers");
     await expect(daysInput).toHaveValue(singleDay);
 
-    // Verify database value
-    const mailbox = await getMailboxFromDb();
+    const mailbox = await getMailbox();
     expect(mailbox?.autoCloseDaysOfInactivity).toBe(parseInt(singleDay));
   });
 
@@ -236,7 +210,6 @@ test.describe("Customer Settings", () => {
     const runButton = page.getByRole("button", { name: "Run auto-close now", exact: true });
     await runButton.click();
 
-    // The button should show "Running..." when the auto-close is triggered
     await expect(page.getByRole("button", { name: "Running...", exact: true })).toBeVisible();
   });
 
@@ -252,13 +225,11 @@ test.describe("Customer Settings", () => {
     await expect(daysInput).toHaveValue(days);
     await waitForSaved(page);
 
-    // Verify value persists in database after refresh
     await page.reload();
     await expect(page).toHaveURL("/settings/customers");
     await expect(daysInput).toHaveValue(days);
 
-    // Verify database value
-    const mailbox = await getMailboxFromDb();
+    const mailbox = await getMailbox();
     expect(mailbox?.autoCloseDaysOfInactivity).toBe(parseInt(days));
   });
 
@@ -272,16 +243,13 @@ test.describe("Customer Settings", () => {
     await daysInput.click();
     await daysInput.fill("25");
 
-    // Should wait for saved state
     await waitForSaved(page);
 
-    // Verify value persists in database after refresh
     await page.reload();
     await expect(page).toHaveURL("/settings/customers");
     await expect(daysInput).toHaveValue("25");
 
-    // Verify database value
-    const mailbox = await getMailboxFromDb();
+    const mailbox = await getMailbox();
     expect(mailbox?.autoCloseDaysOfInactivity).toBe(25);
   });
 
@@ -295,16 +263,13 @@ test.describe("Customer Settings", () => {
     await daysInput.click();
     await daysInput.fill("10");
 
-    // Should wait for saved state
     await waitForSaved(page);
 
-    // Verify value persists in database after refresh
     await page.reload();
     await expect(page).toHaveURL("/settings/customers");
     await expect(daysInput).toHaveValue("10");
 
-    // Verify database value
-    const mailbox = await getMailboxFromDb();
+    const mailbox = await getMailbox();
     expect(mailbox?.autoCloseDaysOfInactivity).toBe(10);
   });
 
