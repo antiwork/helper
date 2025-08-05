@@ -1,4 +1,5 @@
-import { eq } from "drizzle-orm";
+import { and, eq, gt, inArray } from "drizzle-orm";
+import { ToolRequestBody } from "@helperai/client";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
@@ -11,7 +12,13 @@ import { createMessageNotification } from "@/lib/data/messageNotifications";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata } from "@/lib/data/retrieval";
 
-export const handleAutoResponse = async ({ messageId }: { messageId: number }) => {
+export const handleAutoResponse = async ({
+  messageId,
+  tools,
+}: {
+  messageId: number;
+  tools?: Record<string, ToolRequestBody>;
+}) => {
   const message = await db.query.conversationMessages
     .findFirst({
       where: eq(conversationMessages.id, messageId),
@@ -26,6 +33,17 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
 
   if (conversation.status === "spam") return { message: "Skipped - conversation is spam" };
   if (message.role === "staff") return { message: "Skipped - message is from staff" };
+
+  const newerMessage = await db.query.conversationMessages.findFirst({
+    columns: { id: true },
+    where: and(
+      eq(conversationMessages.conversationId, message.conversationId),
+      inArray(conversationMessages.role, ["user", "staff", "ai_assistant"]),
+      gt(conversationMessages.createdAt, message.createdAt),
+    ),
+  });
+
+  if (newerMessage) return { message: "Skipped - newer message exists" };
 
   await ensureCleanedUpText(message);
 
@@ -50,7 +68,7 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
   if (!conversation.assignedToAI) return { message: "Skipped - not assigned to AI" };
 
   if (mailbox?.preferences?.autoRespondEmailToChat === "draft") {
-    const aiDraft = await generateDraftResponse(conversation.id, mailbox);
+    const aiDraft = await generateDraftResponse(conversation.id, mailbox, tools);
     return { message: "Draft response generated", draftId: aiDraft.id };
   }
 
@@ -65,6 +83,7 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
   const response = await respondWithAI({
     conversation,
     mailbox,
+    tools,
     userEmail: message.emailFrom,
     message: {
       id: message.id.toString(),
@@ -75,6 +94,7 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
     readPageTool: null,
     sendEmail: true,
     guideEnabled: false,
+    reasoningEnabled: false,
     onResponse: async ({ platformCustomer, humanSupportRequested }) => {
       await db.transaction(async (tx) => {
         if (platformCustomer && !humanSupportRequested) {
@@ -100,10 +120,21 @@ export const handleAutoResponse = async ({ messageId }: { messageId: number }) =
 
   // Consume the response to make sure we wait for the AI to generate it
   const reader = assertDefined(response.body).getReader();
+  const decoder = new TextDecoder();
+  let responseContent = "";
+
   while (true) {
-    const { done } = await reader.read();
+    const { done, value } = await reader.read();
     if (done) break;
+
+    if (value) {
+      const chunk = decoder.decode(value, { stream: true });
+      responseContent += chunk;
+    }
   }
+
+  // eslint-disable-next-line no-console
+  console.log("Auto response content:", responseContent);
 
   return { message: "Auto response sent", messageId };
 };

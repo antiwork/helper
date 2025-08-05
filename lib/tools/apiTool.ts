@@ -168,7 +168,7 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
   const aiTools = buildAITools(mailboxTools, conversation.emailFrom);
 
   const { toolCalls } = await generateText({
-    model: openai(O4_MINI_MODEL),
+    model: openai(O4_MINI_MODEL, { structuredOutputs: false }),
     tools: {
       close: {
         description: "Close the conversation",
@@ -182,7 +182,7 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
       },
       assign: {
         description:
-          "Assign the conversation to a user. The ID must start with 'user_'. Do not use this tool if no user IDs of assigned similar conversations exist.",
+          'Assign the conversation to a user. The ID must be one of those indicated by "Assigned to user ID" in the similar conversations section. Do not use this tool if no user IDs of assigned similar conversations exist.',
         parameters: z.object({
           userId: z.string(),
         }),

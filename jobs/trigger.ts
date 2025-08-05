@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import superjson from "superjson";
 import { z } from "zod";
+import { toolBodySchema } from "@helperai/client";
 import { db } from "@/db/client";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 
@@ -21,7 +22,7 @@ const events = {
       "indexConversationMessage",
       "generateConversationSummaryEmbeddings",
       "mergeSimilarConversations",
-      "publishNewConversationEvent",
+      "publishNewMessageEvent",
       "notifyVipMessage",
       "categorizeConversationToIssueGroup",
     ],
@@ -35,6 +36,7 @@ const events = {
   "conversations/auto-response.create": {
     data: z.object({
       messageId: z.number(),
+      tools: z.record(z.string(), toolBodySchema).optional(),
     }),
     jobs: ["handleAutoResponse"],
   },
@@ -97,13 +99,6 @@ const events = {
     }),
     jobs: ["crawlWebsite"],
   },
-  "conversations/check-resolution": {
-    data: z.object({
-      conversationId: z.number(),
-      messageId: z.number(),
-    }),
-    jobs: ["checkConversationResolution"],
-  },
   "messages/flagged.bad": {
     data: z.object({
       messageId: z.number(),
@@ -140,13 +135,11 @@ const events = {
 export type EventName = keyof typeof events;
 export type EventData<T extends EventName> = z.infer<(typeof events)[T]["data"]>;
 
-export const triggerEvent = <T extends EventName>(
+export const triggerEvent = async <T extends EventName>(
   event: T,
   data: EventData<T>,
   { sleepSeconds = 0 }: { sleepSeconds?: number } = {},
 ) => {
   const payloads = events[event].jobs.map((job) => ({ event, job, data: superjson.serialize(data) }));
-  return db.execute(
-    sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`,
-  );
+  await db.execute(sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`);
 };

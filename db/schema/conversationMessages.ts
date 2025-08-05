@@ -10,12 +10,12 @@ import { messageNotifications } from "./messageNotifications";
 
 export type ToolMetadata = {
   tool: {
-    id: number;
-    slug: string;
+    id?: number;
+    slug?: string;
     name: string;
     description: string;
     url: string;
-    requestMethod: string;
+    requestMethod?: string;
   };
   result: any;
   success: boolean;
@@ -41,7 +41,9 @@ export const conversationMessages = pgTable(
     emailCc: jsonb().$type<string[]>(),
     emailBcc: jsonb().$type<string[]>(),
     body: encryptedField("encrypted_body"),
+    bodyPlaintext: text("body"),
     cleanedUpText: encryptedField("encrypted_cleaned_up_text"),
+    cleanedUpTextPlaintext: text("cleaned_up_text"),
     role: text().notNull().$type<MessageRole>(),
     userId: text("clerk_user_id"),
     metadata: jsonb().$type<Metadata<MessageRole>>(),

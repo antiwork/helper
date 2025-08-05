@@ -4,7 +4,6 @@ import { bulkEmbeddingClosedConversations } from "./bulkEmbeddingClosedConversat
 import { bulkUpdateConversations } from "./bulkUpdateConversations";
 import { categorizeConversationToIssueGroup } from "./categorizeConversationToIssueGroup";
 import { checkAssignedTicketResponseTimes } from "./checkAssignedTicketResponseTimes";
-import { checkConversationResolution } from "./checkConversationResolution";
 import { checkVipResponseTimes } from "./checkVipResponseTimes";
 import { cleanupDanglingFiles } from "./cleanupDanglingFiles";
 import { crawlWebsite } from "./crawlWebsite";
@@ -23,7 +22,7 @@ import { indexConversationMessage } from "./indexConversation";
 import { mergeSimilarConversations } from "./mergeSimilarConversations";
 import { notifyVipMessage } from "./notifyVipMessage";
 import { postEmailToGmail } from "./postEmailToGmail";
-import { publishNewConversationEvent } from "./publishNewConversationEvent";
+import { publishNewMessageEvent } from "./publishNewMessageEvent";
 import { publishRequestHumanSupport } from "./publishRequestHumanSupport";
 import { renewMailboxWatches } from "./renewMailboxWatches";
 import { scheduledWebsiteCrawl } from "./scheduledWebsiteCrawl";
@@ -37,7 +36,7 @@ export const eventJobs = {
   indexConversationMessage,
   generateConversationSummaryEmbeddings,
   mergeSimilarConversations,
-  publishNewConversationEvent,
+  publishNewMessageEvent,
   notifyVipMessage,
   postEmailToGmail,
   handleAutoResponse,
@@ -50,7 +49,6 @@ export const eventJobs = {
   generateMailboxWeeklyReport,
   generateMailboxDailyReport,
   crawlWebsite,
-  checkConversationResolution,
   suggestKnowledgeBankChanges,
   closeInactiveConversations,
   closeInactiveConversationsForMailbox,
