@@ -39,7 +39,7 @@ export const mailboxRouter = {
     ]);
 
     return {
-      conversations: all,
+      all,
       mine,
       assigned,
       unassigned: all - assigned,
