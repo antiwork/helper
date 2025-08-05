@@ -14,7 +14,6 @@ export const conversationFactory = {
         emailFrom: faker.internet.email(),
         emailFromName: faker.person.fullName(),
         subject,
-        subjectPlaintext: subject,
         status: "open",
         slug: generateSlug(),
         conversationProvider: "gmail",
@@ -48,7 +47,6 @@ export const conversationFactory = {
         conversationId,
         userId,
         body,
-        bodyPlaintext: body,
         role: "staff",
         status: "sent",
         isPinned: false,
@@ -72,7 +70,6 @@ export const conversationFactory = {
       .values({
         conversationId,
         body,
-        bodyPlaintext: body,
         emailFrom: faker.internet.email(),
         role: "user",
         status: "sent",

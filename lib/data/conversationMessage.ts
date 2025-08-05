@@ -387,8 +387,8 @@ export const createConversationMessage = async (
   const messageValues = {
     isPinned: false,
     ...conversationMessage,
-    bodyPlaintext: conversationMessage.body,
-    cleanedUpTextPlaintext: conversationMessage.cleanedUpText,
+    body: conversationMessage.body,
+    cleanedUpText: conversationMessage.cleanedUpText,
   };
 
   const message = await tx.insert(conversationMessages).values(messageValues).returning().then(takeUniqueOrThrow);
@@ -449,13 +449,11 @@ export const createAiDraft = async (
     {
       conversationId,
       body: sanitizedBody,
-      bodyPlaintext: sanitizedBody,
       role: "ai_assistant",
       status: "draft",
       responseToId,
       promptInfo: promptInfo ? { details: promptInfo } : null,
       cleanedUpText: body,
-      cleanedUpTextPlaintext: body,
       isPerfect: false,
       isFlaggedAsBad: false,
     },
@@ -471,7 +469,7 @@ export const ensureCleanedUpText = async (
   const cleanedUpText = generateCleanedUpText(message.body ?? "");
   await tx
     .update(conversationMessages)
-    .set({ cleanedUpText, cleanedUpTextPlaintext: cleanedUpText })
+    .set({ cleanedUpText })
     .where(eq(conversationMessages.id, message.id));
   return cleanedUpText;
 };
@@ -530,9 +528,7 @@ export const createToolEvent = async ({
     conversationId,
     role: "tool",
     body: userMessage,
-    bodyPlaintext: userMessage,
     cleanedUpText: userMessage,
-    cleanedUpTextPlaintext: userMessage,
     metadata: {
       tool:
         "id" in tool

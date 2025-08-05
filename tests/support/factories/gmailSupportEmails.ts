@@ -13,9 +13,7 @@ export const gmailSupportEmailFactory = {
       .values({
         email: faker.internet.email(),
         accessToken,
-        accessTokenPlaintext: accessToken,
         refreshToken,
-        refreshTokenPlaintext: refreshToken,
         expiresAt: faker.date.future(),
         historyId: faker.number.int({ min: 1, max: 1000 }),
         ...overrides,

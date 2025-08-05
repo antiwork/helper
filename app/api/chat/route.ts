@@ -135,7 +135,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
         waitUntil(
           db
             .update(conversations)
-            .set({ subject: message.content, subjectPlaintext: message.content })
+            .set({ subject: message.content })
             .where(eq(conversations.id, conversation.id)),
         );
       }

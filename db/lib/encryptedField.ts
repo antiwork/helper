@@ -2,7 +2,7 @@ import { customType } from "drizzle-orm/pg-core";
 import { symmetricDecrypt, symmetricEncrypt } from "@/db/lib/crypto";
 import { env } from "@/lib/env";
 
-const encryptColumnSecret = env.ENCRYPT_COLUMN_SECRET;
+const encryptColumnSecret = env.HASH_WORDS_SECRET ?? "default-encryption-secret-for-unused-columns";
 
 export const bytea = customType<{ data: Buffer; notNull: false; default: false }>({
   dataType() {
