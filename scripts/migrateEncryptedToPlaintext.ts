@@ -3,7 +3,7 @@ import { and, eq, gt, isNotNull, isNull, or } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, gmailSupportEmails, toolApis, tools } from "@/db/schema";
 
-const BATCH_SIZE = 100;
+const BATCH_SIZE = 1000;
 
 export const migrateEncryptedToPlaintext = async () => {
   console.log("Starting migration of encrypted data to plaintext columns...");
