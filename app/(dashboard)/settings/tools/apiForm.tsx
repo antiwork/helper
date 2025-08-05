@@ -10,10 +10,9 @@ import { api } from "@/trpc/react";
 
 type ApiFormProps = {
   onCancel: () => void;
-  "data-testid"?: string;
 };
 
-const ApiForm = ({ onCancel}: ApiFormProps) => {
+const ApiForm = ({ onCancel }: ApiFormProps) => {
   const [isUrlInput, setIsUrlInput] = useState(true);
   const [apiUrl, setApiUrl] = useState("");
   const [apiSchema, setApiSchema] = useState("");
@@ -103,13 +102,8 @@ const ApiForm = ({ onCancel}: ApiFormProps) => {
 }`}
               rows={10}
               disabled={importMutation.isPending}
-              data-testid="api-schema-textarea"
             />
-            <button
-              className="underline text-sm"
-              onClick={toggleInputType}
-              disabled={importMutation.isPending}
-            >
+            <button className="underline text-sm" onClick={toggleInputType} disabled={importMutation.isPending}>
               Enter OpenAPI URL instead
             </button>
           </>
@@ -130,11 +124,7 @@ const ApiForm = ({ onCancel}: ApiFormProps) => {
         <Button variant="ghost" onClick={onCancel} disabled={importMutation.isPending}>
           Cancel
         </Button>
-        <Button
-          variant="bright"
-          onClick={handleImport}
-          disabled={importMutation.isPending}
-        >
+        <Button variant="bright" onClick={handleImport} disabled={importMutation.isPending}>
           {importMutation.isPending ? "Importing API..." : "Import API"}
         </Button>
       </div>
