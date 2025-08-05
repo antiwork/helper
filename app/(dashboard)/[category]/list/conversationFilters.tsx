@@ -21,7 +21,7 @@ interface FilterValues {
   isVip: boolean | undefined;
   isPrompt: boolean | undefined;
   reactionType: "thumbs-up" | "thumbs-down" | null;
-  events: ("request_human_support" | "resolved_by_ai")[];
+  events: ("request_human_support")[];
   issueGroupId: number | null;
 }
 

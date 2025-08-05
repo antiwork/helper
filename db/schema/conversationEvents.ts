@@ -13,7 +13,7 @@ export const conversationEvents = pgTable(
       .notNull()
       .default("update")
       .$type<
-        "update" | "request_human_support" | "reasoning_toggled" | "resolved_by_ai" | "auto_closed_due_to_inactivity"
+        "update" | "request_human_support" | "reasoning_toggled" | "auto_closed_due_to_inactivity"
       >(),
     changes: jsonb()
       .$type<{

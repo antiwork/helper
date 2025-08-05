@@ -763,14 +763,6 @@ export const respondWithAI = async ({
             traceId,
             reasoning,
           );
-          await triggerEvent(
-            "conversations/check-resolution",
-            {
-              conversationId: conversation.id,
-              messageId: assistantMessage.id,
-            },
-            { sleepSeconds: env.NODE_ENV === "development" ? 5 * 60 : 24 * 60 * 60 },
-          );
 
           // Extract sources from markdown links like [(1)](url)
           const markdownSources = Array.from(text.matchAll(/\[\((\d+)\)\]\((https?:\/\/[^\s)]+)\)/g)).map((match) => {
