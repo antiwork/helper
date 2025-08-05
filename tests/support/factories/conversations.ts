@@ -14,6 +14,7 @@ export const conversationFactory = {
         emailFrom: faker.internet.email(),
         emailFromName: faker.person.fullName(),
         subject,
+        subjectPlaintext: subject,
         status: "open",
         slug: generateSlug(),
         conversationProvider: "gmail",
@@ -39,12 +40,15 @@ export const conversationFactory = {
     userId: string,
     overrides: Partial<typeof conversationMessages.$inferInsert> = {},
   ) => {
+    const body = faker.lorem.paragraph();
+
     const [message] = await db
       .insert(conversationMessages)
       .values({
         conversationId,
         userId,
-        body: faker.lorem.paragraph(),
+        body,
+        bodyPlaintext: body,
         role: "staff",
         status: "sent",
         isPinned: false,
@@ -61,11 +65,14 @@ export const conversationFactory = {
     conversationId: number,
     overrides: Partial<typeof conversationMessages.$inferInsert> = {},
   ) => {
+    const body = faker.lorem.paragraph();
+
     const [message] = await db
       .insert(conversationMessages)
       .values({
         conversationId,
-        body: faker.lorem.paragraph(),
+        body,
+        bodyPlaintext: body,
         emailFrom: faker.internet.email(),
         role: "user",
         status: "sent",
