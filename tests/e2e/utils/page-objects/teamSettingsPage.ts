@@ -191,6 +191,7 @@ export class TeamSettingsPage extends BasePage {
     const inviteForm = this.getInviteForm();
     const emailInput = inviteForm.getByRole("textbox", { name: /email/i });
     await emailInput.fill(email);
+    await emailInput.blur();
   }
 
   async inviteDuplicateMember(email: string) {
