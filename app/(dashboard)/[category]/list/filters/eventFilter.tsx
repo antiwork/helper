@@ -13,10 +13,6 @@ const EVENT_OPTIONS = [
     value: "request_human_support",
     label: "Escalated to a human",
   },
-  {
-    value: "resolved_by_ai",
-    label: "Resolved by AI",
-  },
 ] as const;
 
 type EventType = (typeof EVENT_OPTIONS)[number]["value"];

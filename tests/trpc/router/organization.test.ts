@@ -4,6 +4,7 @@ import { describe, expect, inject, it, vi } from "vitest";
 import { createCaller } from "@/trpc";
 
 vi.mock("@/lib/env", () => ({
+  isAIMockingEnabled: false,
   env: {
     POSTGRES_URL: inject("TEST_DATABASE_URL"),
   },

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { waitUntil } from "@vercel/functions";
 import { type Message } from "ai";
 import { eq } from "drizzle-orm";
@@ -5,7 +6,7 @@ import { ReadPageToolConfig } from "@helperai/sdk";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
-import { ClientProvidedTool, createUserMessage, respondWithAI } from "@/lib/ai/chat";
+import { createUserMessage, respondWithAI } from "@/lib/ai/chat";
 import {
   CHAT_CONVERSATION_SUBJECT,
   generateConversationSubject,
@@ -16,6 +17,7 @@ import { publishToRealtime } from "@/lib/realtime/publish";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
 import { createClient } from "@/lib/supabase/server";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
+import { ToolRequestBody } from "@/packages/client/dist";
 
 export const maxDuration = 60;
 
@@ -26,7 +28,7 @@ interface ChatRequestBody {
   readPageTool: ReadPageToolConfig | null;
   guideEnabled: boolean;
   isToolResult?: boolean;
-  tools?: ClientProvidedTool[];
+  tools?: Record<string, ToolRequestBody>;
 }
 
 const getConversation = async (conversationSlug: string, session: WidgetSessionPayload) => {
@@ -52,6 +54,8 @@ export const OPTIONS = () => corsOptions("POST");
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
   const { message, conversationSlug, readPageTool, guideEnabled, tools }: ChatRequestBody = await request.json();
+
+  Sentry.setTag("conversation_slug", conversationSlug);
 
   const conversation = await getConversation(conversationSlug, session);
 
@@ -129,7 +133,10 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
         );
       } else if (isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) {
         waitUntil(
-          db.update(conversations).set({ subject: message.content }).where(eq(conversations.id, conversation.id)),
+          db
+            .update(conversations)
+            .set({ subject: message.content, subjectPlaintext: message.content })
+            .where(eq(conversations.id, conversation.id)),
         );
       }
     },

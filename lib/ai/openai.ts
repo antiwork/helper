@@ -1,8 +1,8 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import { createMockOpenAI, isMockingEnabled } from "@/lib/ai/mockOpenAI";
-import { env } from "@/lib/env";
+import { createMockOpenAI } from "@/lib/ai/mockOpenAI";
+import { env, isAIMockingEnabled } from "@/lib/env";
 
-const openai = isMockingEnabled()
+const openai = isAIMockingEnabled
   ? createMockOpenAI()
   : createOpenAI({
       apiKey: env.OPENAI_API_KEY,

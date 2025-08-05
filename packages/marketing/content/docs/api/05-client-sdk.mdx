@@ -253,7 +253,7 @@ Sets up real-time listeners for conversation events.
 
 ```typescript
 interface ChatListenCallbacks {
-  onHumanReply?: (message: { id: string; content: string; role: "assistant" }) => void;
+  onReply?: ({ message, aiMessage }: { message: Message; aiMessage: AIMessageCompat }) => void;
   onTyping?: (isTyping: boolean) => void;
   onSubjectChanged?: (subject: string) => void;
 }
@@ -265,8 +265,8 @@ interface ChatListenCallbacks {
 
 ```typescript
 const unlisten = client.conversations.listen("conv-abc123", {
-  onHumanReply: (message) => {
-    console.log("New message:", message.content);
+  onReply: ({ message, aiMessage }) => {
+    console.log("New message:", message);
   },
   onTyping: (isTyping) => {
     console.log("Agent typing:", isTyping);
@@ -409,22 +409,30 @@ const tools = {
 };
 ```
 
-For server-side tools, Helper sends the parameters and customer email as a JSON body
+For server-side tools, Helper sends the parameters, customer email and request timestamp (for HMAC verification) as a JSON body
 
 ```typescript
 interface ToolRequest {
   email: string;
   parameters: Record<string, any>;
+  requestTimestamp: number;
 }
 ```
 
-Your endpoint should return:
+Your endpoint must verify the HMAC signature in the `Authorization` header to avoid unauthorized requests. To do this you should:
+
+- Check the `requestTimestamp` is within the last 5 minutes. Note the timestamp is in seconds.
+- Compute a SHA256 HMAC of the JSON body using your `hmacSecret` from Helper settings.
+- Ensure the HMAC in the `Authorization` header matches the computed one.
+
+If you are using the `@helperai/client` package, you can import `verifyHmac` from `@helperai/client/auth` to verify the signature.
+
+Your endpoint should then return a JSON object with a `success` property and any additional information you want to return to the AI agent.
 
 ```typescript
 interface ToolResponse {
   success: boolean;
-  data?: any;
-  error?: string;
+  [key: string]: any;
 }
 ```
 

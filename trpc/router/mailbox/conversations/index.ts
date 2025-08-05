@@ -125,6 +125,7 @@ export const conversationsRouter = {
         .values({
           slug: conversation.conversation_slug,
           subject: conversation.subject,
+          subjectPlaintext: conversation.subject,
           emailFrom: conversation.to_email_address,
           conversationProvider: "gmail",
         })

@@ -18,6 +18,7 @@ export const AssigneeFilter = memo(function AssigneeFilter({
       searchPlaceholder="Search assignees..."
       emptyText="No assignees found"
       multiSelectionDisplay={(count) => `${count} assignees`}
+      includeUnassigned={true}
     />
   );
 });

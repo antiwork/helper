@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { tools } from "@/db/schema/tools";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { callToolApi, ToolApiError } from "@/lib/tools/apiTool";
 import { conversationProcedure } from "./procedure";
 
@@ -82,7 +82,7 @@ export const toolsRouter = {
           });
         }
 
-        captureExceptionAndLogIfDevelopment(error);
+        captureExceptionAndLog(error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Error executing tool",
