@@ -23,7 +23,7 @@ test.describe("Conversation Actions", () => {
   test("should send a reply message", async ({ page }) => {
     const testMessage = "This is a test reply message";
 
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await expect(composer).toBeVisible({ timeout: 5000 });
     await composer.click({ force: true });
     await composer.focus();
@@ -54,7 +54,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test("should trigger command bar with slash key", async ({ page }) => {
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await page.keyboard.press("/");
     await page.waitForTimeout(500);
@@ -65,7 +65,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test("should escape command bar", async ({ page }) => {
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await page.keyboard.press("/");
     await page.waitForTimeout(500);
@@ -77,7 +77,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test("should open generate draft command", async ({ page }) => {
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await page.keyboard.press("/");
     await page.waitForTimeout(500);
@@ -90,7 +90,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test("should handle empty reply attempt", async ({ page }) => {
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     
     try {
@@ -124,7 +124,7 @@ test.describe("Conversation Actions", () => {
   test("should preserve composer content when switching between actions", async ({ page }) => {
     const testMessage = "This message should be preserved";
 
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await composer.evaluate((el) => {
       el.innerHTML = "";
@@ -147,7 +147,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test("should handle keyboard shortcuts", async ({ page }) => {
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await composer.pressSequentially("Keyboard shortcut test");
     await page.keyboard.press("Control+Enter");
@@ -156,7 +156,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test("should toggle CC field via command bar", async ({ page }) => {
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await page.keyboard.press("/");
     await page.waitForTimeout(500);
@@ -172,7 +172,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test("should filter commands when typing in command bar", async ({ page }) => {
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await page.keyboard.press("/");
     await page.waitForTimeout(500);
@@ -189,7 +189,7 @@ test.describe("Conversation Actions", () => {
   test("should validate composer with actual content", async ({ page }) => {
     const testMessage = "This is a valid message";
     
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await composer.pressSequentially(testMessage);
 
@@ -198,7 +198,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test("should access internal note functionality", async ({ page }) => {
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await page.keyboard.press("/");
     await page.waitForTimeout(500);
@@ -220,7 +220,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test("should handle multiple sequential actions", async ({ page }) => {
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await composer.evaluate((el) => {
       el.innerHTML = "";
@@ -253,7 +253,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test("should close and reopen conversation", async ({ page }) => {
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await composer.evaluate((el) => {
       el.innerHTML = "";
@@ -359,7 +359,7 @@ test.describe("Conversation Actions", () => {
       await page.waitForLoadState("networkidle");
     }
 
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await composer.evaluate((el) => {
       el.innerHTML = "";
@@ -397,7 +397,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test("should add CC recipient via command bar", async ({ page }) => {
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await page.keyboard.press("/");
     await page.waitForTimeout(500);
@@ -426,7 +426,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test("should add BCC recipient via command bar", async ({ page }) => {
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await page.keyboard.press("/");
     await page.waitForTimeout(500);
@@ -455,7 +455,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test("should assign conversation to common issue", async ({ page }) => {
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await page.keyboard.press("/");
     await page.waitForTimeout(500);
@@ -474,7 +474,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test("should generate draft response via command bar", async ({ page }) => {
-    const composer = page.locator('[aria-label="Message Composer"] .tiptap.ProseMirror');
+    const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
     await composer.click({ force: true });
     await composer.evaluate((el) => {
       el.innerHTML = "";

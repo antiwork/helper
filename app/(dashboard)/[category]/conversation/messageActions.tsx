@@ -440,7 +440,7 @@ export const MessageActions = () => {
       <TipTapEditor
         ref={editorRef}
         className={cn("flex-1 min-h-0 my-2 md:my-4", showCommandBar && "hidden")}
-        ariaLabel="Message Composer"
+        ariaLabel="Conversation editor"
         placeholder="Type your reply here..."
         defaultContent={initialMessageObject}
         editable={true}
