@@ -264,7 +264,7 @@ test.describe("Conversation Details", () => {
     await page.waitForLoadState("networkidle");
     expect(page.url()).toContain("/conversations");
 
-    await expect(page.getByTestId("conversation-list-item").first()).toBeVisible();
+    await expect(page.locator("a[href*='/conversations?id=']").first()).toBeVisible();
   });
 
   test("should handle conversation counter display correctly", async ({ page }) => {
