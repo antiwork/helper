@@ -1,9 +1,9 @@
+import { and, eq } from "drizzle-orm";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { BasicUserProfile } from "@/db/schema";
 import { notes } from "@/db/schema/notes";
 import { finishFileUpload } from "./files";
-import { and, eq } from "drizzle-orm";
 
 export const addNote = async ({
   conversationId,
@@ -40,15 +40,7 @@ export const addNote = async ({
   });
 };
 
-export const updateNote = async ({
-  noteId,
-  message,
-  userId,
-}: {
-  noteId: number;
-  message: string;
-  userId: string;
-}) => {
+export const updateNote = async ({ noteId, message, userId }: { noteId: number; message: string; userId: string }) => {
   const [updatedNote] = await db
     .update(notes)
     .set({
@@ -57,29 +49,23 @@ export const updateNote = async ({
     })
     .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
     .returning();
-  
+
   if (!updatedNote) {
     throw new Error("Note not found or unauthorized");
   }
-  
+
   return updatedNote;
 };
 
-export const deleteNote = async ({
-  noteId,
-  userId,
-}: {
-  noteId: number;
-  userId: string;
-}) => {
+export const deleteNote = async ({ noteId, userId }: { noteId: number; userId: string }) => {
   const [deletedNote] = await db
     .delete(notes)
     .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
     .returning();
-  
+
   if (!deletedNote) {
     throw new Error("Note not found or unauthorized");
   }
-  
+
   return deletedNote;
 };

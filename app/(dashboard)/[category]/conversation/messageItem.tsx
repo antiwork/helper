@@ -7,6 +7,7 @@ import "@/components/linkCta.css";
 import { truncate } from "lodash-es";
 import {
   Bot,
+  Check,
   Download,
   Edit,
   Frown,
@@ -17,24 +18,23 @@ import {
   Sparkles,
   ThumbsDown,
   ThumbsUp,
-  User,
-  XCircle,
   Trash2,
-  Check,
+  User,
   X,
+  XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
+import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMembers } from "@/components/useMembers";
+import { useSession } from "@/components/useSession";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
 import { renderMessageBody } from "./renderMessageBody";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { useSession } from "@/components/useSession";
 
 function getPreviewUrl(file: AttachedFile): string {
   return file.previewUrl

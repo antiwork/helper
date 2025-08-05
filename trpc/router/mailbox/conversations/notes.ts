@@ -32,13 +32,13 @@ export const notesRouter = {
       if (!ctx.user) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
-      
+
       const updatedNote = await updateNote({
         noteId: input.noteId,
         message: input.message,
         userId: ctx.user.id,
       });
-      
+
       return { id: updatedNote.id };
     }),
 
@@ -52,12 +52,12 @@ export const notesRouter = {
       if (!ctx.user) {
         throw new TRPCError({ code: "UNAUTHORIZED" });
       }
-      
+
       await deleteNote({
         noteId: input.noteId,
         userId: ctx.user.id,
       });
-      
+
       return { success: true };
     }),
 } satisfies TRPCRouterRecord;
