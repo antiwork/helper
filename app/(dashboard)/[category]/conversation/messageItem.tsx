@@ -98,7 +98,7 @@ const MessageItem = ({
   });
 
   const handleSaveEdit = () => {
-    if (message.type === "note" && editContent.trim()) {
+    if (message.type === "note" && editContent && editContent.trim()) {
       updateNoteMutation.mutate({
         conversationSlug: conversation.slug,
         noteId: message.id,
@@ -273,7 +273,7 @@ const MessageItem = ({
               {message.type === "note" && isEditing ? (
                 <div className="space-y-2">
                   <Textarea
-                    value={editContent}
+                    value={editContent || ""}
                     onChange={(e) => setEditContent(e.target.value)}
                     className="min-h-20 resize-none"
                     autoFocus
@@ -282,7 +282,7 @@ const MessageItem = ({
                     <Button
                       size="sm"
                       onClick={handleSaveEdit}
-                      disabled={updateNoteMutation.isPending || !editContent.trim()}
+                      disabled={updateNoteMutation.isPending || !editContent || !editContent.trim()}
                     >
                       <Check className="h-4 w-4 mr-1" />
                       Save
