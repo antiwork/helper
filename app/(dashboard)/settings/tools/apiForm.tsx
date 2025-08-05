@@ -13,7 +13,7 @@ type ApiFormProps = {
   "data-testid"?: string;
 };
 
-const ApiForm = ({ onCancel, "data-testid": testId }: ApiFormProps) => {
+const ApiForm = ({ onCancel}: ApiFormProps) => {
   const [isUrlInput, setIsUrlInput] = useState(true);
   const [apiUrl, setApiUrl] = useState("");
   const [apiSchema, setApiSchema] = useState("");
@@ -57,7 +57,7 @@ const ApiForm = ({ onCancel, "data-testid": testId }: ApiFormProps) => {
   };
 
   return (
-    <div className="rounded-lg border border-border p-4 space-y-4" data-testid={testId}>
+    <div className="rounded-lg border border-border p-4 space-y-4">
       <div>
         <Label htmlFor="apiName">Name</Label>
         <Input

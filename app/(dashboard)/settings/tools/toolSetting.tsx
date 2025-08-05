@@ -43,7 +43,7 @@ const ToolSetting = () => {
         )}
 
         <div className="space-y-6">
-          {showApiForm && <ApiForm onCancel={() => setShowApiForm(false)} data-testid="api-form" />}
+          {showApiForm && <ApiForm onCancel={() => setShowApiForm(false)} />}
 
           {apisLoading || (apisFetching && apis.length === 0) ? (
             <ToolsListSkeleton count={1} />
