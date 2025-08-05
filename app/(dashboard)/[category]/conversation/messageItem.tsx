@@ -19,6 +19,9 @@ import {
   ThumbsUp,
   User,
   XCircle,
+  Trash2,
+  Check,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -29,6 +32,9 @@ import { useMembers } from "@/components/useMembers";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
 import { renderMessageBody } from "./renderMessageBody";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { useSession } from "@/components/useSession";
 
 function getPreviewUrl(file: AttachedFile): string {
   return file.previewUrl
@@ -59,8 +65,63 @@ const MessageItem = ({
   const isAIMessage = message.type === "message" && message.role === "ai_assistant";
   const hasReasoning = isAIMessage && hasReasoningMetadata(message.metadata);
   const router = useRouter();
+  const { user: currentUser } = useSession() ?? {};
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(message.body);
+  const utils = api.useUtils();
 
   const { data: orgMembers, isLoading: isLoadingMembers, error: membersError } = useMembers();
+
+  const updateNoteMutation = api.mailbox.conversations.notes.update.useMutation({
+    onSuccess: () => {
+      setIsEditing(false);
+      utils.mailbox.conversations.get.invalidate({
+        conversationSlug: conversation.slug,
+      });
+      toast.success("Note updated successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to update note", { description: error.message });
+    },
+  });
+
+  const deleteNoteMutation = api.mailbox.conversations.notes.delete.useMutation({
+    onSuccess: () => {
+      utils.mailbox.conversations.get.invalidate({
+        conversationSlug: conversation.slug,
+      });
+      toast.success("Note deleted successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to delete note", { description: error.message });
+    },
+  });
+
+  const handleSaveEdit = () => {
+    if (message.type === "note" && editContent.trim()) {
+      updateNoteMutation.mutate({
+        conversationSlug: conversation.slug,
+        noteId: message.id,
+        message: editContent.trim(),
+      });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditContent(message.body);
+  };
+
+  const handleDeleteNote = () => {
+    if (message.type === "note") {
+      deleteNoteMutation.mutate({
+        conversationSlug: conversation.slug,
+        noteId: message.id,
+      });
+    }
+  };
+
+  const canEditNote = message.type === "note" && currentUser && message.userId === currentUser.id;
 
   const getDisplayName = (msg: MessageType | NoteType): string => {
     if (msg.type === "message") {
@@ -209,23 +270,55 @@ const MessageItem = ({
                     : "bg-muted",
               )}
             >
-              {mainContent}
-              {quotedContext ? (
+              {message.type === "note" && isEditing ? (
+                <div className="space-y-2">
+                  <Textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="min-h-20 resize-none"
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={handleSaveEdit}
+                      disabled={updateNoteMutation.isPending || !editContent.trim()}
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleCancelEdit}
+                      disabled={updateNoteMutation.isPending}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
                 <>
-                  <button
-                    onClick={() => setShowQuotedContext(!showQuotedContext)}
-                    className={cx(
-                      "my-2 flex h-3 w-8 items-center justify-center rounded-full outline-hidden transition-colors duration-200",
-                      showQuotedContext
-                        ? "bg-muted-foreground text-muted-foreground"
-                        : "bg-border text-muted-foreground hover:text-muted-foreground",
-                    )}
-                  >
-                    <MoreHorizontal className="h-8 w-8" />
-                  </button>
-                  {showQuotedContext ? quotedContext : null}
+                  {mainContent}
+                  {quotedContext ? (
+                    <>
+                      <button
+                        onClick={() => setShowQuotedContext(!showQuotedContext)}
+                        className={cx(
+                          "my-2 flex h-3 w-8 items-center justify-center rounded-full outline-hidden transition-colors duration-200",
+                          showQuotedContext
+                            ? "bg-muted-foreground text-muted-foreground"
+                            : "bg-border text-muted-foreground hover:text-muted-foreground",
+                        )}
+                      >
+                        <MoreHorizontal className="h-8 w-8" />
+                      </button>
+                      {showQuotedContext ? quotedContext : null}
+                    </>
+                  ) : null}
                 </>
-              ) : null}
+              )}
             </div>
           </div>
           <div className="flex w-full items-center gap-3 text-sm text-muted-foreground">
@@ -324,6 +417,45 @@ const MessageItem = ({
               )}
               {message.type === "message" && message.role === "ai_assistant" && (
                 <FlagAsBadAction message={message} conversationSlug={conversation.slug} />
+              )}
+              {canEditNote && !isEditing && (
+                <div className="flex gap-1">
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => setIsEditing(true)}
+                          className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                        >
+                          <Edit className="h-4 w-4" />
+                          <span className="text-xs">Edit</span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Edit this note</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <ConfirmationDialog
+                          message="Are you sure you want to delete this note? This action cannot be undone."
+                          onConfirm={handleDeleteNote}
+                          confirmLabel="Delete"
+                        >
+                          <button className="inline-flex items-center gap-1 text-muted-foreground hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                            <span className="text-xs">Delete</span>
+                          </button>
+                        </ConfirmationDialog>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Delete this note</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               )}
             </div>
           </div>
