@@ -82,7 +82,7 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
           : User;
 
   return (
-    <article className="flex flex-col mx-auto" data-testid="event-item">
+    <article className="flex flex-col mx-auto">
       <button
         className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground"
         onClick={() => setDetailsExpanded(!detailsExpanded)}

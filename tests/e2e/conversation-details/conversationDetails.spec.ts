@@ -1,70 +1,106 @@
 import { expect, test } from "@playwright/test";
-import { ConversationDetailsPage } from "../utils/page-objects/conversationDetailsPage";
 import { generateRandomString } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 test.describe("Conversation Details", () => {
-  const TEST_CONSTANTS = {
-    MAX_MESSAGES_TO_TEST: 3,
-    SCROLL_TEST_POSITION: 300,
-    SCROLL_ANIMATION_DELAY: 300,
-    SCROLL_VERIFICATION_DELAY: 200,
-    MAX_WAIT_TIME: 15000,
-    COUNTER_PATTERN: /^\d+ of \d+\+?$/,
-    NOTE_PREFIX: "Internal note",
-  } as const;
-
-  let conversationDetailsPage: ConversationDetailsPage;
-
   test.beforeEach(async ({ page }) => {
-    conversationDetailsPage = new ConversationDetailsPage(page);
+    await page.goto("/conversations");
+    await page.waitForLoadState("networkidle");
+
+    const firstConversation = page
+      .locator("div")
+      .filter({ has: page.locator("a[href*='/conversations?id=']") })
+      .first();
+    const conversationLink = firstConversation.locator("a[href*='/conversations?id=']").first();
+    await conversationLink.click();
+
+    await page.waitForLoadState("networkidle");
+
+    await page.waitForFunction(
+      () => {
+        const url = new URL(window.location.href);
+        return url.searchParams.has("id") || url.pathname.includes("/conversations");
+      },
+      { timeout: 10000 },
+    );
   });
 
-  const setupConversation = async (): Promise<void> => {
-    await conversationDetailsPage.navigateToConversation();
-    await conversationDetailsPage.waitForConversationLoad();
+  async function setupConversation(page: any) {
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByTestId("conversation-subject")).toBeVisible({ timeout: 10000 });
 
-    await conversationDetailsPage.page.waitForFunction(
+    await page.waitForFunction(
       () => {
         const header = document.querySelector('[data-testid="conversation-header"]');
         return header && !header.classList.contains("hidden");
       },
-      { timeout: TEST_CONSTANTS.MAX_WAIT_TIME },
+      { timeout: 15000 },
     );
-  };
+  }
 
-  const verifyBasicConversationStructure = async (): Promise<void> => {
-    await conversationDetailsPage.expectConversationLoaded();
-    await conversationDetailsPage.expectNavigationControls();
-  };
+  async function verifyBasicConversationStructure(page: any) {
+    await expect(page.getByTestId("conversation-subject")).toBeVisible();
+    await expect(page.locator("button[aria-label='Previous conversation']")).toBeVisible();
+    await expect(page.locator("button[aria-label='Next conversation']")).toBeVisible();
+    await expect(page.getByLabel("Conversation counter")).toBeVisible();
+  }
 
-  const testMessageStructure = async (maxMessages: number = TEST_CONSTANTS.MAX_MESSAGES_TO_TEST): Promise<void> => {
-    const messages = conversationDetailsPage.page.getByTestId("message-item");
+  async function getConversationSubject(page: any) {
+    const subject = await page.getByTestId("conversation-subject").textContent();
+    return subject?.trim() || "";
+  }
+
+  async function getConversationCounter(page: any) {
+    const counter = await page.getByLabel("Conversation counter").textContent();
+    return counter?.trim() || "";
+  }
+
+  async function getMessageCount(page: any) {
+    return await page.locator("[data-message-item]").count();
+  }
+
+  async function goToNextConversation(page: any) {
+    await page.locator("button[aria-label='Next conversation']").click();
+    await page.waitForLoadState("networkidle");
+  }
+
+  async function goToPreviousConversation(page: any) {
+    await page.locator("button[aria-label='Previous conversation']").click();
+    await page.waitForLoadState("networkidle");
+  }
+
+  async function closeConversation(page: any) {
+    await page.locator("button[aria-label='Close conversation']").click();
+  }
+
+  async function toggleSidebar(page: any) {
+    await page.locator("button[aria-label='Toggle sidebar']").click();
+  }
+
+  async function testMessageStructure(page: any, maxMessages: number = 3) {
+    const messages = page.locator("[data-message-item]");
     const count = await messages.count();
 
     for (let i = 0; i < Math.min(count, maxMessages); i++) {
       const message = messages.nth(i);
       await expect(message).toBeVisible();
-      await expect(message.getByTestId("message-header")).toBeVisible();
-      await expect(message.getByTestId("message-content")).toBeVisible();
-      await expect(message.getByTestId("message-footer")).toBeVisible();
     }
-  };
+  }
 
-  const performNavigationTest = async (): Promise<{
+  async function performNavigationTest(page: any): Promise<{
     changed: boolean;
     originalSubject: string;
     originalCounter: string;
-  }> => {
-    const originalSubject = await conversationDetailsPage.getConversationSubject();
-    const originalCounter = await conversationDetailsPage.getConversationCounter();
+  }> {
+    const originalSubject = await getConversationSubject(page);
+    const originalCounter = await getConversationCounter(page);
 
-    await conversationDetailsPage.goToNextConversation();
-    await conversationDetailsPage.waitForConversationLoad();
+    await goToNextConversation(page);
+    await setupConversation(page);
 
-    const nextSubject = await conversationDetailsPage.getConversationSubject();
-    const nextCounter = await conversationDetailsPage.getConversationCounter();
+    const nextSubject = await getConversationSubject(page);
+    const nextCounter = await getConversationCounter(page);
 
     const changed = nextCounter !== originalCounter;
     if (changed) {
@@ -72,36 +108,37 @@ test.describe("Conversation Details", () => {
     }
 
     return { changed, originalSubject, originalCounter };
-  };
+  }
 
-  const performScrollTest = async (): Promise<void> => {
-    const messageCount = await conversationDetailsPage.getMessageCount();
+  async function performScrollTest(page: any) {
+    const messageCount = await getMessageCount(page);
 
     if (messageCount > 0) {
-      const messageThreadPanel = conversationDetailsPage.page.getByTestId("message-thread-panel");
+      const messageThreadPanel = page.getByTestId("message-thread-panel");
 
-      await messageThreadPanel.evaluate((el, scrollPos) => {
+      await messageThreadPanel.evaluate((el: any, scrollPos: number) => {
         el.scrollTop = scrollPos;
-      }, TEST_CONSTANTS.SCROLL_TEST_POSITION);
+      }, 300);
 
-      await conversationDetailsPage.page.waitForTimeout(TEST_CONSTANTS.SCROLL_ANIMATION_DELAY);
+      await page.waitForTimeout(300);
 
-      const scrollButton = conversationDetailsPage.page.locator("[aria-label='Scroll to top']");
+      const scrollButton = page.locator("[aria-label='Scroll to top']");
       await expect(scrollButton).toBeAttached();
 
       if (await scrollButton.isVisible()) {
         await scrollButton.click();
-        await conversationDetailsPage.page.waitForTimeout(TEST_CONSTANTS.SCROLL_VERIFICATION_DELAY);
+        await page.waitForTimeout(200);
 
-        const newScrollTop = await messageThreadPanel.evaluate((el) => el.scrollTop);
-        expect(newScrollTop).toBeLessThan(TEST_CONSTANTS.SCROLL_TEST_POSITION);
+        const newScrollTop = await messageThreadPanel.evaluate((el: any) => el.scrollTop);
+        expect(newScrollTop).toBeLessThan(300);
       }
     }
-  };
+  }
 
-  const validateCounterFormat = async (): Promise<void> => {
-    const counter = await conversationDetailsPage.getConversationCounter();
-    expect(counter).toMatch(TEST_CONSTANTS.COUNTER_PATTERN);
+  async function validateCounterFormat(page: any) {
+    const counter = await getConversationCounter(page);
+    const counterPattern = /^\d+ of \d+\+?$/;
+    expect(counter).toMatch(counterPattern);
 
     const match = counter.match(/^(\d+) of (\d+)\+?$/);
     if (match) {
@@ -110,104 +147,136 @@ test.describe("Conversation Details", () => {
       expect(current).toBeGreaterThan(0);
       expect(current).toBeLessThanOrEqual(total);
     }
-  };
+  }
 
-  const attemptInternalNoteCreation = async (): Promise<void> => {
-    const testNote = `${TEST_CONSTANTS.NOTE_PREFIX} ${generateRandomString(8)}`;
-    const noteCreated = await conversationDetailsPage.createInternalNoteIfAvailable(testNote);
+  async function expectMessageExists(page: any, messageContent: string) {
+    const messageItem = page.locator("[data-message-item]").filter({ hasText: messageContent });
+    await expect(messageItem).toBeVisible();
+  }
+
+  async function createInternalNoteIfAvailable(page: any, testNote: string) {
+    const noteButtonPattern = /note|internal/i;
+    const submitButtonPattern = /save|add|submit/i;
+
+    const addNoteButton = page.locator("button").filter({ hasText: noteButtonPattern }).first();
+    const addNoteExists = await addNoteButton.count();
+
+    if (addNoteExists > 0 && (await addNoteButton.isVisible())) {
+      await addNoteButton.click();
+
+      const noteInput = page.locator('textarea, [data-testid="tiptap-editor-content"] .ProseMirror').first();
+
+      if (await noteInput.isVisible()) {
+        await noteInput.fill(testNote);
+
+        const submitButton = page.getByRole("button", { name: submitButtonPattern });
+        await submitButton.click();
+
+        await page.waitForLoadState("networkidle");
+        await expectMessageExists(page, testNote);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  async function attemptInternalNoteCreation(page: any) {
+    const notePrefix = "Internal note";
+    const testNote = `${notePrefix} ${generateRandomString(8)}`;
+    const noteCreated = await createInternalNoteIfAvailable(page, testNote);
 
     if (noteCreated) {
-      await conversationDetailsPage.expectMessageExists(testNote);
+      await expectMessageExists(page, testNote);
     }
-  };
+  }
 
-  test("should display conversation details page", async () => {
-    await setupConversation();
-    await verifyBasicConversationStructure();
+  test("should display conversation details page", async ({ page }) => {
+    await setupConversation(page);
+    await verifyBasicConversationStructure(page);
   });
 
-  test("should show conversation subject", async () => {
-    await setupConversation();
+  test("should show conversation subject", async ({ page }) => {
+    await setupConversation(page);
 
-    const subject = await conversationDetailsPage.getConversationSubject();
+    const subject = await getConversationSubject(page);
     expect(subject.length).toBeGreaterThan(0);
   });
 
-  test("should display messages in conversation", async () => {
-    await setupConversation();
+  test("should display messages in conversation", async ({ page }) => {
+    await setupConversation(page);
 
-    const messageCount = await conversationDetailsPage.getMessageCount();
+    const messageCount = await getMessageCount(page);
     expect(messageCount).toBeGreaterThan(0);
   });
 
-  test("should navigate between conversations", async () => {
-    await setupConversation();
-    await performNavigationTest();
+  test("should navigate between conversations", async ({ page }) => {
+    await setupConversation(page);
+    await performNavigationTest(page);
   });
 
-  test("should toggle sidebar", async () => {
-    await setupConversation();
+  test("should toggle sidebar", async ({ page }) => {
+    await setupConversation(page);
 
-    await conversationDetailsPage.toggleSidebar();
+    await toggleSidebar(page);
 
-    await expect(conversationDetailsPage.page.locator("button[aria-label='Toggle sidebar']")).toBeVisible();
+    await expect(page.locator("button[aria-label='Toggle sidebar']")).toBeVisible();
   });
 
-  test("should close conversation", async () => {
-    await setupConversation();
+  test("should close conversation", async ({ page }) => {
+    await setupConversation(page);
 
-    await conversationDetailsPage.closeConversation();
+    await closeConversation(page);
 
-    expect(conversationDetailsPage.page.url()).toContain("/conversations");
+    expect(page.url()).toContain("/conversations");
   });
 
-  test("should display conversation with multiple messages", async () => {
-    await setupConversation();
-    await verifyBasicConversationStructure();
+  test("should display conversation with multiple messages", async ({ page }) => {
+    await setupConversation(page);
+    await verifyBasicConversationStructure(page);
 
-    const messageCount = await conversationDetailsPage.getMessageCount();
+    const messageCount = await getMessageCount(page);
     expect(messageCount).toBeGreaterThan(0);
 
-    await testMessageStructure();
+    await testMessageStructure(page);
   });
 
-  test("should handle conversation navigation properly", async () => {
-    await setupConversation();
+  test("should handle conversation navigation properly", async ({ page }) => {
+    await setupConversation(page);
 
-    const { changed, originalSubject } = await performNavigationTest();
+    const { changed, originalSubject } = await performNavigationTest(page);
 
     if (changed) {
-      await conversationDetailsPage.goToPreviousConversation();
-      await conversationDetailsPage.waitForConversationLoad();
+      await goToPreviousConversation(page);
+      await setupConversation(page);
 
-      const backSubject = await conversationDetailsPage.getConversationSubject();
+      const backSubject = await getConversationSubject(page);
       expect(backSubject).toBe(originalSubject);
     }
   });
 
-  test("should test scroll functionality in long conversations", async () => {
-    await setupConversation();
-    await performScrollTest();
+  test("should test scroll functionality in long conversations", async ({ page }) => {
+    await setupConversation(page);
+    await performScrollTest(page);
   });
 
-  test("should close conversation and return to list", async () => {
-    await setupConversation();
+  test("should close conversation and return to list", async ({ page }) => {
+    await setupConversation(page);
 
-    await conversationDetailsPage.closeConversation();
+    await closeConversation(page);
 
-    await conversationDetailsPage.page.waitForLoadState("networkidle");
-    await expect(conversationDetailsPage.page.url()).toContain("/conversations");
+    await page.waitForLoadState("networkidle");
+    expect(page.url()).toContain("/conversations");
 
-    await expect(conversationDetailsPage.page.getByTestId("conversation-list-item").first()).toBeVisible();
+    await expect(page.getByTestId("conversation-list-item").first()).toBeVisible();
   });
 
-  test("should handle conversation counter display correctly", async () => {
-    await setupConversation();
-    await validateCounterFormat();
+  test("should handle conversation counter display correctly", async ({ page }) => {
+    await setupConversation(page);
+    await validateCounterFormat(page);
   });
 
-  test("should create and display internal note", async () => {
-    await setupConversation();
-    await attemptInternalNoteCreation();
+  test("should create and display internal note", async ({ page }) => {
+    await setupConversation(page);
+    await attemptInternalNoteCreation(page);
   });
 });

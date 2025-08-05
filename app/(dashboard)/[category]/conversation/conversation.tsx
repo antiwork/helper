@@ -165,7 +165,7 @@ const MessageThreadPanel = ({
   return (
     <div className="grow overflow-y-auto relative" ref={scrollRef} data-testid="message-thread-panel">
       <div ref={contentRef as React.RefObject<HTMLDivElement>} className="relative">
-        <div className="flex flex-col gap-8 px-4 py-4 h-full" data-testid="message-thread-container">
+        <div className="flex flex-col gap-8 px-4 py-4 h-full">
           {conversationInfo && (
             <MessageThread
               conversation={conversationInfo}
@@ -243,7 +243,7 @@ const ConversationHeader = ({
           </Button>
           <span
             className="text-sm text-muted-foreground whitespace-nowrap text-center mx-1"
-            data-testid="conversation-counter"
+            aria-label="Conversation counter"
           >
             {currentIndex + 1} of {currentTotal}
             {hasNextPage ? "+" : ""}

@@ -48,7 +48,7 @@ export const MessageThread = ({
           ),
         )}
         {conversation.summary && conversation.summary.length > 0 && (
-          <div className="mx-auto flex max-w-2xl flex-col gap-2" data-testid="conversation-summary">
+          <div className="mx-auto flex max-w-2xl flex-col gap-2">
             <div className="flex items-center gap-1 text-base text-muted-foreground">
               <MessagesSquare className="h-4 w-4 shrink-0" />
               Conversation summary

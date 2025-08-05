@@ -201,7 +201,7 @@ const MessageItem = ({
     >
       <div className={`flex ${rightAlignedMessage ? "justify-end" : ""}`}>
         <div className={`flex flex-col gap-2 ${rightAlignedMessage ? "items-end" : ""}`}>
-          <div className="flex items-center gap-1 text-xs text-muted-foreground" data-testid="message-header">
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
             {addSeparator(messageLabels, "·")}
           </div>
           <div className="flex items-start gap-2">
@@ -214,7 +214,6 @@ const MessageItem = ({
                     ? "border md:bg-muted md:border-none"
                     : "bg-muted",
               )}
-              data-testid="message-content"
             >
               {mainContent}
               {quotedContext ? (
@@ -236,7 +235,7 @@ const MessageItem = ({
               ) : null}
             </div>
           </div>
-          <div className="flex w-full items-center gap-3 text-sm text-muted-foreground" data-testid="message-footer">
+          <div className="flex w-full items-center gap-3 text-sm text-muted-foreground">
             {message.type === "message" && message.isMerged && (
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
