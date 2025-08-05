@@ -22,7 +22,9 @@ const verifyHmac = (body: string, providedHmac: string, timestamp: string): bool
   if (isNaN(timestampSeconds) || Math.abs(Date.now() / 1000 - timestampSeconds) > 5 * 60) return false;
 
   try {
-    const expectedHmac = createHmac("sha256", env.HASH_WORDS_SECRET ?? "default-hmac-secret").update(`${timestamp}.${body}`).digest("hex");
+    const expectedHmac = createHmac("sha256", env.HASH_WORDS_SECRET ?? "default-hmac-secret")
+      .update(`${timestamp}.${body}`)
+      .digest("hex");
     return timingSafeEqual(Buffer.from(providedHmac, "hex"), Buffer.from(expectedHmac, "hex"));
   } catch {
     return false;
