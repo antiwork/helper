@@ -36,9 +36,9 @@ export const searchSchema = z.object({
   reactionAfter: z.string().datetime().optional().describe("Filter tickets with reactions created after this date"),
   reactionBefore: z.string().datetime().optional().describe("Filter tickets with reactions created before this date"),
   events: z
-    .array(z.enum(["request_human_support", "resolved_by_ai"]))
+    .array(z.enum(["request_human_support"]))
     .optional()
-    .describe("Filter tickets that were escalated to humans or resolved by AI"),
+    .describe("Filter tickets that were escalated to humans"),
 
   closed: z
     .object({
