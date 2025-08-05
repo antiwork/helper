@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { SettingsPreferencesPage } from "../utils/page-objects/settingsPreferencesPage";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
@@ -16,32 +15,40 @@ test.describe("Settings - Preferences", () => {
   });
 
   test("should display mailbox name setting and allow editing", async ({ page }) => {
-    const preferencesPage = new SettingsPreferencesPage(page);
+    const mailboxNameSetting = page.locator('section:has(h2:text("Mailbox name"))');
+    const mailboxNameInput = page.locator('input[placeholder="Enter mailbox name"]');
 
-    await preferencesPage.expectMailboxNameSetting();
+    await expect(mailboxNameSetting).toBeVisible();
 
-    const originalName = await preferencesPage.getMailboxNameValue();
+    const originalName = await mailboxNameInput.inputValue();
     const testName = "Test Mailbox " + Date.now();
 
-    await preferencesPage.fillMailboxName(testName);
-    await preferencesPage.waitForSavingComplete();
+    await mailboxNameInput.fill(testName);
 
-    const updatedName = await preferencesPage.getMailboxNameValue();
+    await page.waitForFunction(
+      () => {
+        const savingIndicator = document.querySelector('[data-testid="saving-indicator"]');
+        return !savingIndicator || !savingIndicator.textContent?.includes("Saving");
+      },
+      { timeout: 10000 },
+    );
+
+    const updatedName = await mailboxNameInput.inputValue();
     expect(updatedName).toBe(testName);
 
-    await preferencesPage.fillMailboxName(originalName);
+    await mailboxNameInput.fill(originalName);
   });
 
   test("should display confetti setting and test confetti functionality", async ({ page }) => {
-    const preferencesPage = new SettingsPreferencesPage(page);
+    const confettiSetting = page.locator('section:has(h2:text("Confetti"))');
+    const testConfettiButton = page.locator('button:has-text("Test Confetti")');
 
-    await preferencesPage.expectConfettiSetting();
+    await expect(confettiSetting).toBeVisible();
 
-    const testButton = page.locator('button:has-text("Test Confetti")');
-    const isVisible = await testButton.isVisible();
+    const isVisible = await testConfettiButton.isVisible();
 
     if (isVisible) {
-      await preferencesPage.clickTestConfettiButton();
+      await testConfettiButton.click();
     }
   });
 });
