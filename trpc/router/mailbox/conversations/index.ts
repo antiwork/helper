@@ -15,6 +15,7 @@ import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { createReply, getLastAiGeneratedDraft, serializeResponseAiDraft } from "@/lib/data/conversationMessage";
 import { getGmailSupportEmail } from "@/lib/data/gmailSupportEmail";
 import { findSimilarConversations } from "@/lib/data/retrieval";
+import { followConversation, getFollowersForConversation, isUserFollowing, unfollowConversation } from "@/lib/data/conversationFollows";
 import { env } from "@/lib/env";
 import { mailboxProcedure } from "../procedure";
 import { filesRouter } from "./files";
@@ -317,5 +318,28 @@ export const conversationsRouter = {
       vipOverdue: vipOverdue[0]?.count ?? 0,
       vipExpectedResponseHours: ctx.mailbox.vipExpectedResponseHours,
     };
+  }),
+
+  follow: conversationProcedure.mutation(async ({ ctx }) => {
+    const follow = await followConversation(ctx.conversation.id, ctx.user.id);
+    return {
+      success: true,
+      followId: follow.id,
+    };
+  }),
+
+  unfollow: conversationProcedure.mutation(async ({ ctx }) => {
+    await unfollowConversation(ctx.conversation.id, ctx.user.id);
+    return {
+      success: true,
+    };
+  }),
+
+  isFollowing: conversationProcedure.query(async ({ ctx }) => {
+    return await isUserFollowing(ctx.conversation.id, ctx.user.id);
+  }),
+
+  getFollowers: conversationProcedure.query(async ({ ctx }) => {
+    return await getFollowersForConversation(ctx.conversation.id);
   }),
 } satisfies TRPCRouterRecord;

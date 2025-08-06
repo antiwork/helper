@@ -2,6 +2,7 @@ export * from "./mailboxes";
 export * from "./gmailSupportEmails";
 export * from "./conversations";
 export * from "./conversationEvents";
+export * from "./conversationFollows";
 export * from "./conversationMessages";
 export * from "./mailboxesMetadataApi";
 export * from "./faqs";

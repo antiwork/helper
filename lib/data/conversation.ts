@@ -19,6 +19,7 @@ import { captureExceptionAndLog } from "../shared/sentry";
 import { getMessages } from "./conversationMessage";
 import { getMailbox } from "./mailbox";
 import { determineVipStatus, getPlatformCustomer } from "./platformCustomer";
+import { sendFollowNotifications } from "./conversationFollowNotifications";
 
 type OptionalConversationAttributes = "slug" | "updatedAt" | "createdAt";
 
@@ -33,6 +34,40 @@ type NewConversation = Omit<typeof conversations.$inferInsert, OptionalConversat
 export type Conversation = typeof conversations.$inferSelect;
 
 export const CHAT_CONVERSATION_SUBJECT = "Chat";
+
+const generateEventDescription = (
+  updatedFields: readonly ("status" | "assignedToId" | "assignedToAI")[],
+  previous: typeof conversations.$inferSelect,
+  updated: typeof conversations.$inferSelect,
+): string | null => {
+  const changes: string[] = [];
+
+  for (const field of updatedFields) {
+    switch (field) {
+      case "status":
+        const prevStatus = previous.status || "open";
+        const newStatus = updated.status || "open";
+        changes.push(`Status changed from ${prevStatus} to ${newStatus}`);
+        break;
+      case "assignedToId":
+        if (updated.assignedToId) {
+          changes.push(previous.assignedToId ? "Reassigned to another team member" : "Assigned to a team member");
+        } else {
+          changes.push("Unassigned");
+        }
+        break;
+      case "assignedToAI":
+        if (updated.assignedToAI) {
+          changes.push("Assigned to AI");
+        } else if (previous.assignedToAI) {
+          changes.push("Unassigned from AI");
+        }
+        break;
+    }
+  }
+
+  return changes.length > 0 ? changes.join(", ") : null;
+};
 
 export const createConversation = async (
   conversation: NewConversation,
@@ -124,6 +159,20 @@ export const updateConversation = async (
       byUserId,
       reason: message,
     });
+
+    // Send notifications to followers
+    const eventDescription = generateEventDescription(updatesToLog, current, updatedConversation);
+    if (eventDescription) {
+      await sendFollowNotifications({
+        conversationId: id,
+        conversationSlug: updatedConversation.slug,
+        conversationSubject: updatedConversation.subjectPlaintext || "(No subject)",
+        eventType: type ?? "update",
+        eventDescription,
+        updatedByUserId: byUserId,
+        tx,
+      });
+    }
   }
   if (!current.assignedToAI && updatedConversation.assignedToAI) {
     const message = await tx.query.conversationMessages.findFirst({
