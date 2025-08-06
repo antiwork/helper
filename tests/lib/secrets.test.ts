@@ -103,4 +103,17 @@ describe("secrets", () => {
     consoleSpy.mockRestore();
     consoleWarnSpy.mockRestore();
   });
+  it("should use different cache keys for different secrets", async () => {
+    // Get the mocked cacheFor function
+    const cacheModule = await import("@/lib/cache");
+    const mockCacheFor = vi.mocked(cacheModule.cacheFor);
+
+    // Call with different secret names
+    await secretsModule.getOrCreateSecret("secret-1");
+    await secretsModule.getOrCreateSecret("secret-2");
+
+    // Verify cacheFor was called with different keys
+    expect(mockCacheFor).toHaveBeenCalledWith("vault-secret-secret-1");
+    expect(mockCacheFor).toHaveBeenCalledWith("vault-secret-secret-2");
+  });
 });
