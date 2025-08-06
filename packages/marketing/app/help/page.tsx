@@ -31,7 +31,7 @@ export default function HelpPage() {
                 <p className="text-sm text-gray-300">Learn the basics of setting up Helper for your support team</p>
               </Link>
               <Link
-                href="/docs/widget"
+                href="/docs/integrations"
                 className="border border-[#5A3A3A] rounded-lg p-4 hover:bg-[#5A3A3A] transition-colors"
               >
                 <h3 className="font-medium mb-2">Integration Guides</h3>
