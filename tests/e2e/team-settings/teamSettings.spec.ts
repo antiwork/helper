@@ -40,9 +40,9 @@ test.describe("Team Settings", () => {
   }
 
   function getInviteForm(page: any) {
-    return page
-      .locator("form")
-      .filter({ has: page.getByRole("button", { name: new RegExp(addMemberButton, "i") }) });
+  return page
+    .locator("form")
+    .filter({ has: page.getByRole("button", { name: addMemberButton }) });
   }
 
   function getMemberRow(page: any, email: string) {
