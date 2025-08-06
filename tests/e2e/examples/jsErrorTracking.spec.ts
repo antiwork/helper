@@ -38,33 +38,28 @@ test.describe("JavaScript Error Tracking Examples", () => {
   });
 
   test.describe("Manual JS Error Tracking", () => {
-    playwrightTest.use({ storageState: "tests/e2e/.auth/user.json" });
-    
-    playwrightTest("manual error checking at specific points", async ({ page }) => {
+    test("manual error checking at specific points", async ({ page }) => {
       const jsTracker = await createJSErrorTracker(page);
       
       await page.goto("/mine");
       await page.waitForLoadState("networkidle");
       
       await checkForJavaScriptErrors(page);
-
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await searchInput.fill("test search");
-
       await checkForJavaScriptErrors(page);
       
       await searchInput.clear();
-
       await checkForJavaScriptErrors(page);
     });
 
     playwrightTest("advanced error handling with custom logic", async ({ page }) => {
       const { JSErrorTracker } = await import("../utils/jsErrorTracker");
       const tracker = new JSErrorTracker(page);
-      
-      await page.goto("/mine");
 
       tracker.clearErrors();
+      
+      await page.goto("/mine");
 
       await page.click('button:has-text("open")');
 
