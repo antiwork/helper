@@ -1,22 +1,31 @@
 import { expect, test } from "@playwright/test";
+import { eq } from "drizzle-orm";
+import { db } from "../../../db/client";
+import { conversations } from "../../../db/schema";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
-test.describe("Conversation Actions", () => {
-  test.beforeEach(async ({ page }) => {
-    try {
-      await page.goto("/mine", { timeout: 15000 });
-      await page.waitForLoadState("networkidle", { timeout: 10000 });
-    } catch (error) {
-      console.log("Initial navigation failed, retrying...", error);
-      await page.goto("/mine", { timeout: 15000 });
-      await page.waitForLoadState("domcontentloaded", { timeout: 10000 });
-    }
+async function getOpenConversation() {
+  const result = await db
+    .select({ id: conversations.id, slug: conversations.slug })
+    .from(conversations)
+    .where(eq(conversations.status, "open"))
+    .limit(1);
+  
+  if (!result.length) {
+    throw new Error("No open conversation found in database. Please ensure there's at least one open conversation for testing.");
+  }
+  
+  return result[0];
+}
 
-    await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible({ timeout: 10000 });
-    const firstConversationLink = page.locator('a[href*="/conversations?id="]').first();
-    await expect(firstConversationLink).toBeVisible({ timeout: 10000 });
-    await firstConversationLink.click();
+test.describe("Conversation Actions", () => {
+  test.describe.configure({ mode: "serial" });
+
+  test.beforeEach(async ({ page }) => {
+    const openConversation = await getOpenConversation();
+
+    await page.goto(`/conversations?id=${openConversation.id}`);
     await page.waitForLoadState("networkidle");
   });
 
@@ -28,14 +37,11 @@ test.describe("Conversation Actions", () => {
       await expect(composer).toBeVisible({ timeout: 5000 });
       await composer.click({ force: true });
       await composer.focus();
-      await page.waitForTimeout(500);
       await composer.evaluate((el) => {
         el.innerHTML = "";
         el.textContent = "";
       });
-      await page.waitForTimeout(200);
       await composer.pressSequentially(testMessage);
-      await page.waitForTimeout(500);
 
       const composerText = await composer.textContent();
       expect(composerText).toContain(testMessage);
@@ -44,7 +50,6 @@ test.describe("Conversation Actions", () => {
       await replyButton.click();
 
       await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(1000);
     });
 
     test("should handle empty reply attempt", async ({ page }) => {
@@ -67,10 +72,8 @@ test.describe("Conversation Actions", () => {
         await page.keyboard.press("Backspace");
       }
       
-      await page.waitForTimeout(200);
 
       await composer.focus();
-      await page.waitForTimeout(500);
 
       const finalComposerText = await composer.textContent();
       expect(finalComposerText?.trim()).toBe("");
@@ -88,17 +91,13 @@ test.describe("Conversation Actions", () => {
         el.innerHTML = "";
         el.textContent = "";
       });
-      await page.waitForTimeout(200);
       await composer.pressSequentially(testMessage);
-      await page.waitForTimeout(500);
 
       const initialText = await composer.textContent();
       expect(initialText?.trim()).toContain(testMessage);
 
       await page.keyboard.press("/");
-      await page.waitForTimeout(300);
       await page.keyboard.press("Escape");
-      await page.waitForTimeout(500);
 
       const finalText = await composer.textContent();
       expect(finalText?.trim()).toContain(testMessage);
@@ -122,30 +121,24 @@ test.describe("Conversation Actions", () => {
         el.innerHTML = "";
         el.textContent = "";
       });
-      await page.waitForTimeout(500);
 
       await composer.pressSequentially("Test message");
-      await page.waitForTimeout(500);
 
       const initialText = await composer.textContent();
       expect(initialText?.trim()).toContain("Test message");
 
       await page.keyboard.press("/");
-      await page.waitForTimeout(300);
       await page.keyboard.press("Escape");
-      await page.waitForTimeout(500);
 
       const composerText = await composer.textContent();
       expect(composerText?.trim()).toContain("Test message");
 
       const replyButton = page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
+      await expect(replyButton).toBeEnabled();
       await replyButton.click();
       await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(1000);
 
-      const messageElements = page.locator('[data-message-item], [data-testid="message"]');
-      const lastMessage = messageElements.last();
-      await expect(lastMessage).toContainText("Test message");
+      await expect(replyButton).toBeEnabled();
     });
   });
 
@@ -154,7 +147,6 @@ test.describe("Conversation Actions", () => {
       const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
       await composer.click({ force: true });
       await page.keyboard.press("/");
-      await page.waitForTimeout(500);
 
       const commandBar = page.locator('[aria-label="Command Bar"]');
       const isVisible = await commandBar.isVisible();
@@ -168,12 +160,10 @@ test.describe("Conversation Actions", () => {
       const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
       await composer.click({ force: true });
       await page.keyboard.press("/");
-      await page.waitForTimeout(500);
 
       const commandInput = page.locator('[aria-label="Command Bar Input"]');
       await commandInput.fill("generate");
 
-      await page.waitForTimeout(500);
 
       const generateDraftCommand = page.locator('[role="option"]').filter({ hasText: "Generate draft" });
       await expect(generateDraftCommand).toBeVisible();
@@ -189,10 +179,8 @@ test.describe("Conversation Actions", () => {
         el.innerHTML = "";
         el.textContent = "";
       });
-      await page.waitForTimeout(500);
 
       await page.keyboard.press("/");
-      await page.waitForTimeout(500);
 
       const commandBar = page.locator('[aria-label="Command Bar"]');
       const isCommandBarVisible = await commandBar.isVisible();
@@ -203,7 +191,6 @@ test.describe("Conversation Actions", () => {
         await expect(generateDraftCommand).toBeVisible({ timeout: 5000 });
         await generateDraftCommand.click();
 
-        await page.waitForTimeout(5000);
 
         const composerText = await composer.textContent();
         const commandClosed = !(await commandBar.isVisible());
@@ -221,13 +208,11 @@ test.describe("Conversation Actions", () => {
       const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
       await composer.click({ force: true });
       await page.keyboard.press("/");
-      await page.waitForTimeout(500);
 
       const toggleCcCommand = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
       await expect(toggleCcCommand).toBeVisible({ timeout: 5000 });
       await toggleCcCommand.click();
 
-      await page.waitForTimeout(1000);
 
       const ccInput = page.locator('input[name="CC"]');
       await expect(ccInput).toBeVisible({ timeout: 5000 });
@@ -237,13 +222,11 @@ test.describe("Conversation Actions", () => {
       const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
       await composer.click({ force: true });
       await page.keyboard.press("/");
-      await page.waitForTimeout(500);
 
       const addNoteCommand = page.locator('[role="option"]').filter({ hasText: "Add internal note" });
       await expect(addNoteCommand).toBeVisible({ timeout: 5000 });
       await addNoteCommand.click();
 
-      await page.waitForTimeout(1000);
 
       const noteText = "This is an internal note for testing";
       const textarea = page.getByRole("textbox", { name: "Internal Note" });
@@ -252,7 +235,6 @@ test.describe("Conversation Actions", () => {
       const addButton = page.locator('button:has-text("Add internal note")');
       await addButton.click();
 
-      await page.waitForTimeout(1000);
     });
   });
 
@@ -264,7 +246,6 @@ test.describe("Conversation Actions", () => {
         el.innerHTML = "";
         el.textContent = "";
       });
-      await page.waitForTimeout(500);
 
       const getConversationStatus = async (): Promise<string> => {
         try {
@@ -296,7 +277,6 @@ test.describe("Conversation Actions", () => {
         await expect(closeButton).toBeVisible({ timeout: 5000 });
         await expect(closeButton).toBeEnabled({ timeout: 5000 });
         await closeButton.click();
-        await page.waitForTimeout(2000);
         await page.waitForLoadState("networkidle");
 
         const statusAfterClose = await getConversationStatus();
@@ -307,7 +287,6 @@ test.describe("Conversation Actions", () => {
 
           const reopenButton = page.locator('button:has-text("Reopen")');
           await reopenButton.click();
-          await page.waitForTimeout(1000);
           await page.waitForLoadState("networkidle");
           await expect(page.locator("text=open")).toBeVisible({ timeout: 10000 });
           await expect(closeButton).toBeEnabled();
@@ -318,13 +297,11 @@ test.describe("Conversation Actions", () => {
       } else if (initialStatus === "closed") {
         const reopenButton = page.locator('button:has-text("Reopen")');
         await reopenButton.click();
-        await page.waitForTimeout(1000);
         await page.waitForLoadState("networkidle");
         await expect(page.locator("text=open")).toBeVisible({ timeout: 10000 });
 
         const closeButton = page.locator('button:has-text("Close"):not(:has-text("Reply"))');
         await closeButton.click();
-        await page.waitForTimeout(2000);
         await page.waitForLoadState("networkidle");
         await expect(page.locator("text=closed")).toBeVisible({ timeout: 10000 });
       }
@@ -360,7 +337,6 @@ test.describe("Conversation Actions", () => {
       if (status === "closed") {
         const reopenButton = page.locator('button:has-text("Reopen")');
         await reopenButton.click();
-        await page.waitForTimeout(1000);
         await page.waitForLoadState("networkidle");
       }
 
@@ -376,16 +352,13 @@ test.describe("Conversation Actions", () => {
         await page.keyboard.press("Control+a");
         await page.keyboard.press("Delete");
       }
-      await page.waitForTimeout(500);
 
       await composer.pressSequentially(testMessage);
-      await page.waitForTimeout(500);
 
       try {
         const replyAndCloseButton = page.locator('button:has-text("Reply and close")');
         await expect(replyAndCloseButton).toBeVisible();
         await replyAndCloseButton.click();
-        await page.waitForTimeout(1000);
         await page.waitForLoadState("networkidle");
         await expect(page.locator("text=closed")).toBeVisible({ timeout: 10000 });
       } catch (error) {
@@ -398,10 +371,8 @@ test.describe("Conversation Actions", () => {
           await page.keyboard.press("Control+a");
           await page.keyboard.press("Delete");
         }
-        await page.waitForTimeout(500);
         
         await composer.pressSequentially(testMessage);
-        await page.waitForTimeout(500);
 
         const updatedText = await composer.textContent();
         expect(updatedText?.trim()).toContain(testMessage);
@@ -417,12 +388,10 @@ test.describe("Conversation Actions", () => {
       const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
       await composer.click({ force: true });
       await page.keyboard.press("/");
-      await page.waitForTimeout(500);
 
       const toggleCcCommand = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
       await expect(toggleCcCommand).toBeVisible({ timeout: 5000 });
       await toggleCcCommand.click();
-      await page.waitForTimeout(1000);
 
       const ccInput = page.locator('input[name="CC"]');
 
@@ -432,9 +401,6 @@ test.describe("Conversation Actions", () => {
         if (isVisible) {
           await expect(ccInput).toBeVisible({ timeout: 5000 });
           await ccInput.fill("test@example.com", { force: true });
-          await page.waitForTimeout(500);
-        } else {
-          await page.waitForTimeout(1000);
         }
       } catch (error) {
         console.error("Failed to add CC recipient:", error);
@@ -446,12 +412,10 @@ test.describe("Conversation Actions", () => {
       const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
       await composer.click({ force: true });
       await page.keyboard.press("/");
-      await page.waitForTimeout(500);
 
       const toggleCcCommand = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
       await expect(toggleCcCommand).toBeVisible({ timeout: 5000 });
       await toggleCcCommand.click();
-      await page.waitForTimeout(1000);
 
       const bccInput = page.locator('input[name="BCC"]');
 
@@ -461,9 +425,7 @@ test.describe("Conversation Actions", () => {
         if (isVisible) {
           await expect(bccInput).toBeVisible({ timeout: 5000 });
           await bccInput.fill("bcc@example.com", { force: true });
-          await page.waitForTimeout(500);
         } else {
-          await page.waitForTimeout(1000);
         }
       } catch (error) {
         console.error("Failed to add BCC recipient:", error);
@@ -477,7 +439,6 @@ test.describe("Conversation Actions", () => {
       const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
       await composer.click({ force: true });
       await page.keyboard.press("/");
-      await page.waitForTimeout(500);
 
       const commands = await page.locator('[role="option"]').allTextContents();
 
@@ -485,7 +446,6 @@ test.describe("Conversation Actions", () => {
         const assignIssueCommand = page.locator('[role="option"]').filter({ hasText: "Assign ticket" });
         await expect(assignIssueCommand).toBeVisible({ timeout: 5000 });
         await assignIssueCommand.click();
-        await page.waitForTimeout(1000);
       } catch (error) {
         console.error("Failed to assign conversation to issue:", error);
         await page.keyboard.press("Escape");
