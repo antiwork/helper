@@ -61,70 +61,43 @@ test.describe("In-App Chat Settings", () => {
   });
 
   test.describe("Chat Icon Visibility Settings", () => {
-    test("should enable and disable chat icon visibility", async ({ page }) => {
+    test("should configure chat icon visibility settings", async ({ page }) => {
       const chatIconSwitch = page.locator('[role="switch"]').first();
+      const chatIconSelect = page.getByLabel("chat-icon-visibility-select-trigger");
+      const allCustomersOption = page.getByRole("option", { name: "All customers" });
+      const revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
+      const minCustomerValueInput = page.getByLabel("min-customer-value-input");
       const widgetPreviewIndicator = page.getByText("Try it out →");
 
       const isChecked = await chatIconSwitch.isChecked();
       if (isChecked) {
         await chatIconSwitch.click();
-        await page.waitForTimeout(1000);
       }
 
       await chatIconSwitch.click();
-      await page.waitForTimeout(1000);
       await expect(chatIconSwitch).toBeChecked();
       await expect(widgetPreviewIndicator).toBeVisible();
 
       await chatIconSwitch.click();
-      await page.waitForTimeout(1000);
       await expect(chatIconSwitch).not.toBeChecked();
       await expect(widgetPreviewIndicator).not.toBeVisible();
-    });
 
-    test("should configure visibility for all customers", async ({ page }) => {
-      const chatIconSwitch = page.locator('[role="switch"]').first();
-      const chatIconSelect = page.getByLabel("chat-icon-visibility-select-trigger");
-      const allCustomersOption = page.getByRole("option", { name: "All customers" });
-      const minCustomerValueInput = page.getByLabel("min-customer-value-input");
-
-      const isChecked = await chatIconSwitch.isChecked();
-      if (!isChecked) {
-        await chatIconSwitch.click();
-        await page.waitForTimeout(500);
-      }
+      await chatIconSwitch.click();
+      await expect(chatIconSwitch).toBeChecked();
 
       await expect(chatIconSelect).toBeVisible();
       await chatIconSelect.click();
       await allCustomersOption.click();
-      await page.waitForTimeout(1000);
-
       await expect(minCustomerValueInput).not.toBeVisible();
-    });
 
-    test("should configure revenue-based visibility", async ({ page }) => {
-      const chatIconSwitch = page.locator('[role="switch"]').first();
-      const chatIconSelect = page.getByLabel("chat-icon-visibility-select-trigger");
-      const revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
-      const minCustomerValueInput = page.getByLabel("min-customer-value-input");
-
-      const isChecked = await chatIconSwitch.isChecked();
-      if (!isChecked) {
-        await chatIconSwitch.click();
-        await page.waitForTimeout(500);
-      }
-
-      await expect(chatIconSelect).toBeVisible();
       await chatIconSelect.click();
       await revenueBasedOption.click();
-      await page.waitForTimeout(500);
-
       await expect(minCustomerValueInput).toBeVisible();
 
       await minCustomerValueInput.fill("500");
-      await page.waitForTimeout(1000);
-
       await expect(minCustomerValueInput).toHaveValue("500");
+      
+      await expect(page.getByText("Saved").first()).toBeVisible({ timeout: 10000 });
     });
 
     test("should persist visibility settings across page reloads", async ({ page }) => {
@@ -136,15 +109,14 @@ test.describe("In-App Chat Settings", () => {
       const isChecked = await chatIconSwitch.isChecked();
       if (!isChecked) {
         await chatIconSwitch.click();
-        await page.waitForTimeout(500);
       }
 
       await expect(chatIconSelect).toBeVisible();
       await chatIconSelect.click();
       await revenueBasedOption.click();
-      await page.waitForTimeout(500);
       await minCustomerValueInput.fill("1000");
-      await page.waitForTimeout(1000);
+      await expect(minCustomerValueInput).toHaveValue("1000");
+      await expect(page.getByText("Saved").first()).toBeVisible({ timeout: 10000 });
 
       await page.reload();
       await page.waitForLoadState("networkidle");
@@ -156,52 +128,20 @@ test.describe("In-App Chat Settings", () => {
     });
   });
 
-  test.describe("Host URL Configuration", () => {
-    test("should set and clear host URL", async ({ page }) => {
+  test.describe("Host URL and Email Response Configuration", () => {
+    test("should configure host URL and email response settings", async ({ page }) => {
       const testUrl = "https://example.com";
       const hostUrlInput = page.getByLabel("Host URL");
-
-      await hostUrlInput.fill(testUrl);
-      await page.waitForTimeout(1000);
-
-      await expect(hostUrlInput).toHaveValue(testUrl);
-
-      await hostUrlInput.clear();
-      await page.waitForTimeout(1000);
-
-      await expect(hostUrlInput).toHaveValue("");
-    });
-
-    test("should persist host URL across page reloads", async ({ page }) => {
-      const testUrl = "https://my-app.com";
-      const hostUrlInput = page.getByLabel("Host URL");
-
-      await hostUrlInput.fill(testUrl);
-      await page.waitForTimeout(1000);
-
-      await page.reload();
-      await page.waitForLoadState("networkidle");
-      await expect(page.getByRole("heading", { name: "In-App Chat" })).toBeVisible();
-
-      await expect(hostUrlInput).toHaveValue(testUrl);
-    });
-
-    test("should validate URL format", async ({ page }) => {
-      const hostUrlInput = page.getByLabel("Host URL");
-
-      await hostUrlInput.fill("not-a-valid-url");
-      await page.waitForTimeout(1000);
-
-      await expect(hostUrlInput).toHaveValue("not-a-valid-url");
-    });
-  });
-
-  test.describe("Email Response Settings", () => {
-    test("should switch between email response modes", async ({ page }) => {
       const emailResponseTabs = page.getByLabel("email-response-tabs");
       const offTab = emailResponseTabs.getByRole("tab", { name: "Off" });
       const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
       const replyTab = emailResponseTabs.getByRole("tab", { name: "Reply" });
+
+      await hostUrlInput.fill(testUrl);
+      await expect(hostUrlInput).toHaveValue(testUrl);
+
+      await hostUrlInput.clear();
+      await expect(hostUrlInput).toHaveValue("");
 
       await offTab.click();
       await expect(offTab).toHaveAttribute("data-state", "active");
@@ -211,73 +151,46 @@ test.describe("In-App Chat Settings", () => {
 
       await replyTab.click();
       await expect(replyTab).toHaveAttribute("data-state", "active");
+      
+      await expect(page.getByText("Saved").first()).toBeVisible({ timeout: 10000 });
     });
 
-    test("should persist email response settings", async ({ page }) => {
+    test("should persist host URL and email settings across page reloads", async ({ page }) => {
+      const testUrl = "https://my-app.com";
+      const hostUrlInput = page.getByLabel("Host URL");
       const emailResponseTabs = page.getByLabel("email-response-tabs");
       const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
 
+      await hostUrlInput.fill(testUrl);
+      await expect(hostUrlInput).toHaveValue(testUrl);
+
       await draftTab.click();
-      await page.waitForTimeout(1000);
+      await expect(draftTab).toHaveAttribute("data-state", "active");
+      await expect(page.getByText("Saved").first()).toBeVisible({ timeout: 10000 });
 
       await page.reload();
       await page.waitForLoadState("networkidle");
       await expect(page.getByRole("heading", { name: "In-App Chat" })).toBeVisible();
 
+      await expect(hostUrlInput).toHaveValue(testUrl);
       await expect(draftTab).toHaveAttribute("data-state", "active");
     });
-  });
 
-  test.describe("Widget Integration", () => {
-    test("should show widget when enabled and hide when disabled", async ({ page }) => {
-      const chatIconSwitch = page.locator('[role="switch"]').first();
-      const widgetPreviewIndicator = page.getByText("Try it out →");
+    test("should validate URL format", async ({ page }) => {
+      const hostUrlInput = page.getByLabel("Host URL");
 
-      const isChecked = await chatIconSwitch.isChecked();
-      if (!isChecked) {
-        await chatIconSwitch.click();
-        await page.waitForTimeout(1000);
-      }
+      await hostUrlInput.fill("not-a-valid-url");
 
-      await expect(widgetPreviewIndicator).toBeVisible();
-
-      await chatIconSwitch.click();
-      await page.waitForTimeout(1000);
-
-      await expect(widgetPreviewIndicator).not.toBeVisible();
+      await expect(hostUrlInput).toHaveValue("not-a-valid-url");
     });
   });
 
-  test.describe("Form Validation and Error Handling", () => {
-    test("should handle numeric validation for minimum customer value", async ({ page }) => {
+  test.describe("Form Validation and Complete Workflow", () => {
+    test("should handle numeric validation and show saving indicators", async ({ page }) => {
       const chatIconSwitch = page.locator('[role="switch"]').first();
       const chatIconSelect = page.getByLabel("chat-icon-visibility-select-trigger");
       const revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
       const minCustomerValueInput = page.getByLabel("min-customer-value-input");
-
-      const isChecked = await chatIconSwitch.isChecked();
-      if (!isChecked) {
-        await chatIconSwitch.click();
-        await page.waitForTimeout(500);
-      }
-
-      await expect(chatIconSelect).toBeVisible();
-      await chatIconSelect.click();
-      await revenueBasedOption.click();
-      await page.waitForTimeout(500);
-
-      await minCustomerValueInput.fill("100");
-      await expect(minCustomerValueInput).toHaveValue("100");
-
-      await minCustomerValueInput.fill("99.99");
-      await page.waitForTimeout(1000);
-
-      await minCustomerValueInput.fill("-50");
-      await page.waitForTimeout(1000);
-    });
-
-    test("should show saving indicators", async ({ page }) => {
-      const chatIconSwitch = page.locator('[role="switch"]').first();
       const hostUrlInput = page.getByLabel("Host URL");
       const emailResponseTabs = page.getByLabel("email-response-tabs");
       const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
@@ -285,20 +198,28 @@ test.describe("In-App Chat Settings", () => {
       const isChecked = await chatIconSwitch.isChecked();
       if (!isChecked) {
         await chatIconSwitch.click();
-        await page.waitForTimeout(100);
       }
 
+      await expect(chatIconSelect).toBeVisible();
+      await chatIconSelect.click();
+      await revenueBasedOption.click();
+
+      await minCustomerValueInput.fill("100");
+      await expect(minCustomerValueInput).toHaveValue("100");
+
+      await minCustomerValueInput.fill("99.99");
+
+      await minCustomerValueInput.fill("-50");
+
       await hostUrlInput.fill("https://test.com");
-      await page.waitForTimeout(100);
+      await expect(hostUrlInput).toHaveValue("https://test.com");
 
       await draftTab.click();
-      await page.waitForTimeout(1000);
+      await expect(draftTab).toHaveAttribute("data-state", "active");
 
-      await expect(page.getByText("Saved")).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText("Saved").first()).toBeVisible({ timeout: 10000 });
     });
-  });
 
-  test.describe("Complete Workflow", () => {
     test("should configure all settings in a typical workflow", async ({ page }) => {
       const chatIconSwitch = page.locator('[role="switch"]').first();
       const chatIconSelect = page.getByLabel("chat-icon-visibility-select-trigger");
@@ -312,22 +233,22 @@ test.describe("In-App Chat Settings", () => {
       const isChecked = await chatIconSwitch.isChecked();
       if (!isChecked) {
         await chatIconSwitch.click();
-        await page.waitForTimeout(500);
       }
 
       await expect(chatIconSelect).toBeVisible();
       await chatIconSelect.click();
       await revenueBasedOption.click();
-      await page.waitForTimeout(500);
       await minCustomerValueInput.fill("250");
+      await expect(minCustomerValueInput).toHaveValue("250");
 
       await hostUrlInput.fill("https://mycompany.com");
+      await expect(hostUrlInput).toHaveValue("https://mycompany.com");
 
       await draftTab.click();
-
-      await page.waitForTimeout(1000);
+      await expect(draftTab).toHaveAttribute("data-state", "active");
 
       await expect(widgetPreviewIndicator).toBeVisible();
+      await expect(page.getByText("Saved").first()).toBeVisible({ timeout: 10000 });
 
       await page.reload();
       await page.waitForLoadState("networkidle");
