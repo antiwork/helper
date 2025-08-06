@@ -160,18 +160,6 @@ export const updateConversation = async (
       reason: message,
     });
 
-    // Trigger follow notifications
-    const eventDescription = generateEventDescription(updatesToLog, current, updatedConversation);
-    if (eventDescription) {
-      await triggerEvent("conversations/follow-notification", {
-        conversationId: id,
-        conversationSlug: updatedConversation.slug,
-        conversationSubject: updatedConversation.subjectPlaintext || "(No subject)",
-        eventType: "conversation_updated",
-        eventDescription,
-        updatedByUserId: byUserId || undefined,
-      });
-    }
   }
   if (!current.assignedToAI && updatedConversation.assignedToAI) {
     const message = await tx.query.conversationMessages.findFirst({
@@ -230,6 +218,20 @@ export const updateConversation = async (
     };
     await publishEvents();
   }
+
+  // Trigger follow notifications for any conversation update
+  if (updatesToLog.length > 0) {
+    const eventDescription = generateEventDescription(updatesToLog, current, updatedConversation);
+    await triggerEvent("conversations/follow-notification", {
+      conversationId: id,
+      conversationSlug: updatedConversation.slug,
+      conversationSubject: updatedConversation.subjectPlaintext || "(No subject)",
+      eventType: "conversation_updated",
+      eventDescription: eventDescription || "Conversation updated",
+      updatedByUserId: byUserId || undefined,
+    });
+  }
+
   return updatedConversation ?? null;
 };
 
