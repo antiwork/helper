@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { bigint, index, pgTable, text, unique } from "drizzle-orm/pg-core";
+import { bigint, index, pgTable, text, unique, uuid } from "drizzle-orm/pg-core";
 import { withTimestamps } from "../lib/with-timestamps";
 import { conversations } from "./conversations";
 import { userProfiles } from "./userProfiles";
@@ -12,7 +12,7 @@ export const conversationFollows = pgTable(
     conversationId: bigint("conversation_id", { mode: "number" })
       .notNull()
       .references(() => conversations.id, { onDelete: "cascade" }),
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
       .references(() => userProfiles.id, { onDelete: "cascade" }),
   },

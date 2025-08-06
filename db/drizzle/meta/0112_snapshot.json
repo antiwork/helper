@@ -1,5 +1,5 @@
 {
-  "id": "1370fce1-e770-4b1a-99db-3c009ccdb891",
+  "id": "e5376258-ea05-4c40-8b82-21bed75fb608",
   "prevId": "aca32d0b-e70f-456b-a140-659368455819",
   "version": "7",
   "dialect": "postgresql",
@@ -630,7 +630,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         }
@@ -665,9 +665,72 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "conversation_follows_created_at_idx": {
+          "name": "conversation_follows_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "conversation_follows_user_conversation_idx": {
+          "name": "conversation_follows_user_conversation_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "conversation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "conversation_follows_conversation_id_conversations_conversation_id_fk": {
+          "name": "conversation_follows_conversation_id_conversations_conversation_id_fk",
+          "tableFrom": "conversation_follows",
+          "tableTo": "conversations_conversation",
+          "columnsFrom": [
+            "conversation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "conversation_follows_user_id_user_profiles_id_fk": {
+          "name": "conversation_follows_user_id_user_profiles_id_fk",
+          "tableFrom": "conversation_follows",
+          "tableTo": "user_profiles",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "conversation_follows_conversation_user_unique": {
