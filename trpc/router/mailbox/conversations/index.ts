@@ -4,7 +4,7 @@ import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files, platformCustomers } from "@/db/schema";
+import { conversationFollowers, conversationMessages, conversations, files, platformCustomers } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
 import { generateDraftResponse } from "@/lib/ai/chat";
@@ -316,6 +316,92 @@ export const conversationsRouter = {
       assignedToMe,
       vipOverdue: vipOverdue[0]?.count ?? 0,
       vipExpectedResponseHours: ctx.mailbox.vipExpectedResponseHours,
+    };
+  }),
+
+  follow: conversationProcedure.mutation(async ({ ctx }) => {
+    return await db.transaction(async (tx) => {
+      try {
+        await tx
+          .insert(conversationFollowers)
+          .values({
+            conversationId: ctx.conversation.id,
+            userId: ctx.user.id,
+          })
+          .onConflictDoNothing();
+
+        return { success: true, following: true };
+      } catch (_error) {
+        // Follow conversation error logged
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to follow conversation",
+        });
+      }
+    });
+  }),
+  unfollow: conversationProcedure.mutation(async ({ ctx }) => {
+    return await db.transaction(async (tx) => {
+      try {
+        await tx
+          .delete(conversationFollowers)
+          .where(
+            and(
+              eq(conversationFollowers.conversationId, ctx.conversation.id),
+              eq(conversationFollowers.userId, ctx.user.id),
+            ),
+          );
+
+        return { success: true, following: false };
+      } catch (_error) {
+        // Unfollow conversation error logged
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to unfollow conversation",
+        });
+      }
+    });
+  }),
+
+  isFollowing: conversationProcedure.query(async ({ ctx }) => {
+    const follower = await db.query.conversationFollowers.findFirst({
+      where: and(
+        eq(conversationFollowers.conversationId, ctx.conversation.id),
+        eq(conversationFollowers.userId, ctx.user.id),
+      ),
+    });
+
+    return { following: !!follower };
+  }),
+
+  getFollowers: conversationProcedure.query(async ({ ctx }) => {
+    const followers = await db.query.conversationFollowers.findMany({
+      where: eq(conversationFollowers.conversationId, ctx.conversation.id),
+      with: {
+        user: {
+          columns: {
+            id: true,
+            displayName: true,
+          },
+          with: {
+            user: {
+              columns: {
+                email: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      followers: followers.map((f) => ({
+        id: f.user.id,
+        displayName: f.user.displayName,
+        email: f.user.user?.email || null,
+        followingSince: f.createdAt,
+      })),
+      count: followers.length,
     };
   }),
 } satisfies TRPCRouterRecord;
