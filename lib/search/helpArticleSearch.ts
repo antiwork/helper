@@ -90,11 +90,16 @@ function isFuzzyMatch(query: string, target: string): boolean {
   const queryChars = query.split('');
   const targetChars = target.split('');
   
-  // Count character overlaps
+  // Count character overlaps (prevent double-counting by removing matched chars)
+  const targetCharsCopy = [...targetChars];
   for (let i = 0; i < queryChars.length; i++) {
     const char = queryChars[i];
-    if (char && targetChars.includes(char)) {
-      matches++;
+    if (char) {
+      const targetIndex = targetCharsCopy.indexOf(char);
+      if (targetIndex !== -1) {
+        matches++;
+        targetCharsCopy.splice(targetIndex, 1);
+      }
     }
   }
   

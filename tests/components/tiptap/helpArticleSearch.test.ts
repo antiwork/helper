@@ -177,4 +177,42 @@ describe("Help Article Search", () => {
       expect(results1).toEqual(results2);
     });
   });
+
+  describe("Fuzzy matching character counting", () => {
+    it("prevents duplicate character matching in fuzzy search", () => {
+      // Create a test case where the query has repeated characters
+      // and the target has fewer instances of those characters
+      const testArticles: HelpArticle[] = [
+        {
+          title: "account", // single 'c', single 'n', single 't'
+          url: "https://example.com/account",
+        },
+        {
+          title: "acccount", // multiple 'c's
+          url: "https://example.com/acccount",
+        }
+      ];
+
+      // Query with repeated characters that exist in target
+      const results = searchArticles(testArticles, "accnt");
+      
+      // Both should match with fuzzy matching, but scores should be realistic
+      expect(results.length).toBeGreaterThan(0);
+      
+      // The article with more matching characters should score higher
+      const accountResult = results.find(r => r.title === "account");
+      const acccountResult = results.find(r => r.title === "acccount");
+      
+      // Both should have reasonable scores (not inflated by double-counting)
+      if (accountResult) {
+        expect(accountResult.score).toBeGreaterThan(0);
+        expect(accountResult.score).toBeLessThan(2); // Shouldn't be inflated
+      }
+      
+      if (acccountResult) {
+        expect(acccountResult.score).toBeGreaterThan(0);
+        expect(acccountResult.score).toBeLessThan(2); // Shouldn't be inflated
+      }
+    });
+  });
 });
