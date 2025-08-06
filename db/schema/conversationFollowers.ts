@@ -9,12 +9,8 @@ export const conversationFollowers = pgTable(
   {
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
-    conversationId: bigint("conversation_id", { mode: "number" })
-      .notNull()
-      .references(() => conversations.id, { onDelete: "cascade" }),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => userProfiles.id, { onDelete: "cascade" }),
+    conversationId: bigint("conversation_id", { mode: "number" }).notNull(),
+    userId: uuid("user_id").notNull(),
   },
   (table) => [
     index("conversation_followers_conversation_id_idx").on(table.conversationId),

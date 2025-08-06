@@ -8,8 +8,6 @@ CREATE TABLE "conversation_followers" (
 );
 --> statement-breakpoint
 ALTER TABLE "conversation_followers" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
-ALTER TABLE "conversation_followers" ADD CONSTRAINT "conversation_followers_conversation_id_conversations_conversation_id_fk" FOREIGN KEY ("conversation_id") REFERENCES "public"."conversations_conversation"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "conversation_followers" ADD CONSTRAINT "conversation_followers_user_id_user_profiles_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user_profiles"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "conversation_followers_conversation_id_idx" ON "conversation_followers" USING btree ("conversation_id");--> statement-breakpoint
 CREATE INDEX "conversation_followers_user_id_idx" ON "conversation_followers" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "conversation_followers_created_at_idx" ON "conversation_followers" USING btree ("created_at");--> statement-breakpoint

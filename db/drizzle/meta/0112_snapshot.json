@@ -1,5 +1,5 @@
 {
-  "id": "e7284f5f-99bc-4a75-b552-560d1c596ab9",
+  "id": "71642c0b-ac4a-4b41-b1af-d9e86bd5c049",
   "prevId": "aca32d0b-e70f-456b-a140-659368455819",
   "version": "7",
   "dialect": "postgresql",
@@ -703,34 +703,7 @@
           "with": {}
         }
       },
-      "foreignKeys": {
-        "conversation_followers_conversation_id_conversations_conversation_id_fk": {
-          "name": "conversation_followers_conversation_id_conversations_conversation_id_fk",
-          "tableFrom": "conversation_followers",
-          "tableTo": "conversations_conversation",
-          "columnsFrom": [
-            "conversation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "conversation_followers_user_id_user_profiles_id_fk": {
-          "name": "conversation_followers_user_id_user_profiles_id_fk",
-          "tableFrom": "conversation_followers",
-          "tableTo": "user_profiles",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "conversation_followers_conversation_user_unique": {
