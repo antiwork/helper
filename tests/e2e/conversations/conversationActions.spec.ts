@@ -227,14 +227,14 @@ test.describe("Conversation Actions", () => {
       await expect(addNoteCommand).toBeVisible();
       await addNoteCommand.click();
 
-
       const noteText = "This is an internal note for testing";
       const textarea = page.getByRole("textbox", { name: "Internal Note" });
       await textarea.fill(noteText);
 
+      await expect(textarea).toHaveValue(noteText);
+
       const addButton = page.locator('button:has-text("Add internal note")');
       await addButton.click();
-
     });
   });
 
@@ -401,6 +401,8 @@ test.describe("Conversation Actions", () => {
         if (isVisible) {
           await expect(ccInput).toBeVisible();
           await ccInput.fill("test@example.com", { force: true });
+          
+          await expect(ccInput).toHaveValue("test@example.com");
         }
       } catch (error) {
         console.error("Failed to add CC recipient:", error);
@@ -425,6 +427,8 @@ test.describe("Conversation Actions", () => {
         if (isVisible) {
           await expect(bccInput).toBeVisible();
           await bccInput.fill("bcc@example.com", { force: true });
+          
+          await expect(bccInput).toHaveValue("bcc@example.com");
         }
       } catch (error) {
         console.error("Failed to add BCC recipient:", error);
