@@ -15,6 +15,7 @@ import { generateFilePreview } from "./generateFilePreview";
 import { generateMailboxWeeklyReport, generateWeeklyReports } from "./generateWeeklyReports";
 import { handleAutoResponse } from "./handleAutoResponse";
 import { handleGmailWebhookEvent } from "./handleGmailWebhookEvent";
+import { handleFollowNotification } from "./handleFollowNotification";
 import { handleSlackAgentMessage } from "./handleSlackAgentMessage";
 import { importGmailThreads } from "./importGmailThreads";
 import { importRecentGmailThreads } from "./importRecentGmailThreads";
