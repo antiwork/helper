@@ -14,9 +14,12 @@ interface VaultSecret {
   updated_at: string;
 }
 
-const cache = cacheFor<string>(SECRET_CACHE_KEY);
+function getCacheForSecret(secretName: string) {
+  return cacheFor<string>(`${SECRET_CACHE_KEY}-${secretName}`);
+}
 
 export async function getOrCreateSecret(secretName: string): Promise<string> {
+  const cache = getCacheForSecret(secretName);
   const cachedSecret = await cache.get();
   if (cachedSecret) {
     return cachedSecret;
@@ -57,6 +60,7 @@ export async function getOrCreateSecret(secretName: string): Promise<string> {
 
 export async function getSecret(secretName: string): Promise<string | null> {
   try {
+    const cache = getCacheForSecret(secretName);
     const cachedSecret = await cache.get();
     if (cachedSecret) {
       return cachedSecret;
@@ -100,6 +104,7 @@ export async function updateSecret(secretName: string, newValue: string): Promis
     }
 
     // Update cache
+    const cache = getCacheForSecret(secretName);
     await cache.set(newValue, SECRET_CACHE_DURATION);
   } catch (error) {
     console.error(`Failed to update secret ${secretName}:`, error);
@@ -107,6 +112,9 @@ export async function updateSecret(secretName: string, newValue: string): Promis
   }
 }
 
-export async function clearSecretCache(): Promise<void> {
-  await cache.set("", 1); // Set to expire immediately
+export async function clearSecretCache(secretName?: string): Promise<void> {
+  if (secretName) {
+    const cache = getCacheForSecret(secretName);
+    await cache.set("", 1); // Set to expire immediately
+  }
 }
