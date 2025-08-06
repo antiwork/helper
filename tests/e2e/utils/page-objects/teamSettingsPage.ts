@@ -1,10 +1,11 @@
 import { expect, Page } from "@playwright/test";
 import { generateTestEmail } from "../test-helpers";
-import { BasePage } from "./basePage";
 
 type UserRole = "admin" | "member";
 
-export class TeamSettingsPage extends BasePage {
+export class TeamSettingsPage {
+  protected page: Page;
+
   private readonly addMemberButton = "Add Member";
   private readonly deleteButton = "Delete";
   private readonly confirmRemovalButton = "Confirm Removal";
@@ -18,16 +19,16 @@ export class TeamSettingsPage extends BasePage {
   private readonly validationEmailMessage = "Please enter a valid email address";
 
   constructor(page: Page) {
-    super(page);
+    this.page = page;
   }
 
   async navigateToTeamSettings() {
     if (this.page.url().includes("/settings/team")) {
-      await this.waitForPageLoad();
+      await this.page.waitForLoadState("networkidle");
       return;
     }
 
-    await this.goto("/settings/team");
+    await this.page.goto("/settings/team");
     await this.page.waitForLoadState("domcontentloaded");
     await this.waitForTeamSettingsHeader();
   }
