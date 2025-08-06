@@ -5,12 +5,12 @@ test.use({ storageState: "tests/e2e/.auth/user.json" });
 test.describe("Settings - Integrations", () => {
   test.beforeEach(async ({ page }) => {
     try {
-      await page.goto("/settings/integrations", { timeout: 15000 });
-      await page.waitForLoadState("networkidle", { timeout: 10000 });
+      await page.goto("/settings/integrations");
+      await page.waitForLoadState("networkidle");
     } catch (error) {
       console.log("Initial navigation failed, retrying...", error);
-      await page.goto("/settings/integrations", { timeout: 15000 });
-      await page.waitForLoadState("domcontentloaded", { timeout: 10000 });
+      await page.goto("/settings/integrations");
+      await page.waitForLoadState("domcontentloaded");
     }
   });
 
@@ -53,7 +53,7 @@ test.describe("Settings - Integrations", () => {
     const connectApiButton = page.locator('button:has-text("Connect API")');
     const toggleSchemaButton = page.locator('button:has-text("Enter OpenAPI schema instead")');
     const toggleUrlButton = page.locator('button:has-text("Enter OpenAPI URL instead")');
-    const apiSchemaTextarea = page.locator('[data-testid="api-schema-textarea"]');
+    const apiSchemaTextarea = page.locator('textarea#apiSchema');
     const apiUrlInput = page.locator('input[placeholder="https://yourapp.com/api"]');
     const cancelButton = page.locator('button:has-text("Cancel")');
 

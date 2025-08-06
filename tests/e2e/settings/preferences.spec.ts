@@ -5,12 +5,12 @@ test.use({ storageState: "tests/e2e/.auth/user.json" });
 test.describe("Settings - Preferences", () => {
   test.beforeEach(async ({ page }) => {
     try {
-      await page.goto("/settings/preferences", { timeout: 15000 });
-      await page.waitForLoadState("networkidle", { timeout: 10000 });
+      await page.goto("/settings/preferences");
+      await page.waitForLoadState("networkidle");
     } catch (error) {
       console.log("Initial navigation failed, retrying...", error);
-      await page.goto("/settings/preferences", { timeout: 15000 });
-      await page.waitForLoadState("domcontentloaded", { timeout: 10000 });
+      await page.goto("/settings/preferences");
+      await page.waitForLoadState("domcontentloaded");
     }
   });
 
@@ -30,7 +30,6 @@ test.describe("Settings - Preferences", () => {
         const savingIndicator = document.querySelector('[data-testid="saving-indicator"]');
         return !savingIndicator || !savingIndicator.textContent?.includes("Saving");
       },
-      { timeout: 10000 },
     );
 
     const updatedName = await mailboxNameInput.inputValue();
