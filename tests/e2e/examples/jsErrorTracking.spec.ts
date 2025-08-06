@@ -1,7 +1,5 @@
 import { test, expect } from "../baseTest";
-import { test as playwrightTest } from "@playwright/test";
 import { createJSErrorTracker, checkForJavaScriptErrors } from "../utils/test-helpers";
-
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 test.describe("JavaScript Error Tracking Examples", () => {
