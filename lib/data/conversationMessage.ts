@@ -411,6 +411,21 @@ export const createConversationMessage = async (
         conversationId: message.conversationId,
       },
     });
+
+    // Send follower notification for new messages
+    if (message.userId && (message.role === "user" || message.role === "staff")) {
+      eventsToSend.push({
+        name: "conversations/send-follower-notification" as const,
+        data: {
+          conversationId: message.conversationId,
+          eventType: "new_message" as const,
+          triggeredByUserId: message.userId,
+          eventDetails: {
+            message: message.body || undefined,
+          },
+        },
+      });
+    }
   }
 
   if (message.status === "queueing") {
