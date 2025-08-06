@@ -180,8 +180,11 @@ test.describe("In-App Chat Settings", () => {
       const hostUrlInput = page.getByLabel("Host URL");
 
       await hostUrlInput.fill("not-a-valid-url");
-
       await expect(hostUrlInput).toHaveValue("not-a-valid-url");
+
+      await hostUrlInput.clear();
+      await hostUrlInput.fill("https://valid-url.com");
+      await expect(hostUrlInput).toHaveValue("https://valid-url.com");
     });
   });
 
@@ -204,12 +207,14 @@ test.describe("In-App Chat Settings", () => {
       await chatIconSelect.click();
       await revenueBasedOption.click();
 
-      await minCustomerValueInput.fill("100");
-      await expect(minCustomerValueInput).toHaveValue("100");
-
       await minCustomerValueInput.fill("99.99");
+      await expect(minCustomerValueInput).toHaveValue("99.99");
 
       await minCustomerValueInput.fill("-50");
+      await expect(minCustomerValueInput).toHaveValue("-50");
+
+      await minCustomerValueInput.fill("100");
+      await expect(minCustomerValueInput).toHaveValue("100");
 
       await hostUrlInput.fill("https://test.com");
       await expect(hostUrlInput).toHaveValue("https://test.com");
