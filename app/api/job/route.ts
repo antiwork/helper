@@ -11,10 +11,10 @@ import { jobRuns } from "@/db/schema";
 import { cronJobs, eventJobs } from "@/jobs";
 import { EventData, EventName } from "@/jobs/trigger";
 import { NonRetriableError } from "@/jobs/utils";
-import { env } from "@/lib/env";
+import { getSecret } from "@/lib/secrets";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
-const verifyHmac = (body: string, providedHmac: string, timestamp: string): boolean => {
+const verifyHmac = async (body: string, providedHmac: string, timestamp: string): Promise<boolean> => {
   if (!timestamp) return false;
 
   // Prevent replay attacks by checking timestamp is recent (within 5 minutes)
@@ -22,9 +22,13 @@ const verifyHmac = (body: string, providedHmac: string, timestamp: string): bool
   if (isNaN(timestampSeconds) || Math.abs(Date.now() / 1000 - timestampSeconds) > 5 * 60) return false;
 
   try {
-    const expectedHmac = createHmac("sha256", env.HASH_WORDS_SECRET ?? "default-hmac-secret")
-      .update(`${timestamp}.${body}`)
-      .digest("hex");
+    const hmacSecret = await getSecret("jobs-hmac-secret");
+    if (!hmacSecret) {
+      console.error("Failed to get HMAC secret from vault");
+      return false;
+    }
+
+    const expectedHmac = createHmac("sha256", hmacSecret).update(`${timestamp}.${body}`).digest("hex");
     return timingSafeEqual(Buffer.from(providedHmac, "hex"), Buffer.from(expectedHmac, "hex"));
   } catch {
     return false;
@@ -81,7 +85,7 @@ export const POST = async (request: NextRequest) => {
     const providedHmac = authHeader.slice(7);
     const body = await request.text();
 
-    if (!verifyHmac(body, providedHmac, request.headers.get("x-timestamp") ?? "")) {
+    if (!(await verifyHmac(body, providedHmac, request.headers.get("x-timestamp") ?? ""))) {
       return new Response("Unauthorized", { status: 401 });
     }
 

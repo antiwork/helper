@@ -93,9 +93,6 @@ export const env = createEnv({
       .default("")
       .transform((v) => (v ? v.split(",").map((d) => d.trim()) : [])),
 
-    // HMAC secret for background jobs and hashed words
-    HASH_WORDS_SECRET: z.string().optional(),
-
     // Log SQL queries to the console
     DRIZZLE_LOGGING: z.string().optional(),
 
