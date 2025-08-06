@@ -7,7 +7,7 @@ import { TextSelection } from "@tiptap/pm/state";
 import { BubbleMenu, EditorContent, useEditor, type FocusPosition } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import partition from "lodash/partition";
-import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode, type Ref } from "react";
 import { toast } from "sonner";
 import UAParser from "ua-parser-js";
 import { isEmptyContent } from "@/app/(dashboard)/[category]/conversation/messageActions";
@@ -20,6 +20,7 @@ import { useRefToLatest } from "@/components/useRefToLatest";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import HelpArticlePopover from "./helpArticlePopover";
+import { searchHelpArticles } from "@/lib/search/helpArticleSearch";
 import Toolbar from "./toolbar";
 
 type TipTapEditorProps = {
@@ -358,7 +359,9 @@ const TipTapEditor = ({
     return editor.view.state.doc.textBetween(mentionState.range.from + 1, cursorPos, "", "");
   };
 
-  const filteredArticles = helpArticles.filter((a) => a.title.toLowerCase().includes(getMentionQuery().toLowerCase()));
+  const filteredArticles = useMemo(() => {
+    return searchHelpArticles(helpArticles, getMentionQuery(), 10);
+  }, [helpArticles, getMentionQuery()]);
 
   const handleSelectArticle = (article: { title: string; url: string }) => {
     if (!editor || !mentionState.range) return;
