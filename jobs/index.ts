@@ -57,6 +57,7 @@ export const eventJobs = {
   categorizeConversationToIssueGroup,
   publishRequestHumanSupport,
   handleSlackAgentMessage,
+  handleFollowNotification,
 };
 
 export const cronJobs = {
