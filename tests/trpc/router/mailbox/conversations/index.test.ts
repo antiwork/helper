@@ -173,7 +173,14 @@ describe("conversationsRouter", () => {
       });
       expect(updatedConversation!.closedAt).toBeNull();
 
-      expect(mockTriggerEvent).not.toHaveBeenCalled();
+      expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/follow-notification", {
+        conversationId: conversation.id,
+        conversationSlug: conversation.slug,
+        conversationSubject: conversation.subjectPlaintext || "(No subject)",
+        eventType: "conversation_updated",
+        eventDescription: "Status changed from open to spam",
+        updatedByUserId: user.id,
+      });
     });
   });
 
