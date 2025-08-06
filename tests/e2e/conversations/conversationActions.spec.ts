@@ -34,7 +34,7 @@ test.describe("Conversation Actions", () => {
       const testMessage = "This is a test reply message";
 
       const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
-      await expect(composer).toBeVisible({ timeout: 5000 });
+      await expect(composer).toBeVisible();
       await composer.click({ force: true });
       await composer.focus();
       await composer.evaluate((el) => {
@@ -188,7 +188,7 @@ test.describe("Conversation Actions", () => {
 
       try {
         const generateDraftCommand = page.locator('[role="option"]').filter({ hasText: "Generate draft" });
-        await expect(generateDraftCommand).toBeVisible({ timeout: 5000 });
+        await expect(generateDraftCommand).toBeVisible();
         await generateDraftCommand.click();
 
 
@@ -210,12 +210,12 @@ test.describe("Conversation Actions", () => {
       await page.keyboard.press("/");
 
       const toggleCcCommand = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
-      await expect(toggleCcCommand).toBeVisible({ timeout: 5000 });
+      await expect(toggleCcCommand).toBeVisible();
       await toggleCcCommand.click();
 
 
       const ccInput = page.locator('input[name="CC"]');
-      await expect(ccInput).toBeVisible({ timeout: 5000 });
+      await expect(ccInput).toBeVisible();
     });
 
     test("should access internal note functionality", async ({ page }) => {
@@ -224,7 +224,7 @@ test.describe("Conversation Actions", () => {
       await page.keyboard.press("/");
 
       const addNoteCommand = page.locator('[role="option"]').filter({ hasText: "Add internal note" });
-      await expect(addNoteCommand).toBeVisible({ timeout: 5000 });
+      await expect(addNoteCommand).toBeVisible();
       await addNoteCommand.click();
 
 
@@ -250,7 +250,7 @@ test.describe("Conversation Actions", () => {
       const getConversationStatus = async (): Promise<string> => {
         try {
           const statusElement = page.locator("text=OPEN").or(page.locator("text=CLOSED")).first();
-          const statusText = await statusElement.textContent({ timeout: 5000 });
+          const statusText = await statusElement.textContent();
 
           if (statusText?.includes("OPEN")) {
             return "open";
@@ -261,9 +261,9 @@ test.describe("Conversation Actions", () => {
           const closeButton = page.locator('button:has-text("Close"):not(:has-text("Reply"))');
           const reopenButton = page.locator('button:has-text("Reopen")');
 
-          if (await closeButton.isVisible({ timeout: 2000 })) {
+          if (await closeButton.isVisible()) {
             return "open";
-          } else if (await reopenButton.isVisible({ timeout: 2000 })) {
+          } else if (await reopenButton.isVisible()) {
             return "closed";
           }
         }
@@ -274,21 +274,21 @@ test.describe("Conversation Actions", () => {
 
       if (initialStatus === "open") {
         const closeButton = page.locator('button:has-text("Close"):not(:has-text("Reply"))');
-        await expect(closeButton).toBeVisible({ timeout: 5000 });
-        await expect(closeButton).toBeEnabled({ timeout: 5000 });
+        await expect(closeButton).toBeVisible();
+        await expect(closeButton).toBeEnabled();
         await closeButton.click();
         await page.waitForLoadState("networkidle");
 
         const statusAfterClose = await getConversationStatus();
 
         if (statusAfterClose === "closed") {
-          await expect(page.locator("text=closed")).toBeVisible({ timeout: 10000 });
+          await expect(page.locator("text=closed")).toBeVisible();
           await expect(closeButton).toBeDisabled();
 
           const reopenButton = page.locator('button:has-text("Reopen")');
           await reopenButton.click();
           await page.waitForLoadState("networkidle");
-          await expect(page.locator("text=open")).toBeVisible({ timeout: 10000 });
+          await expect(page.locator("text=open")).toBeVisible();
           await expect(closeButton).toBeEnabled();
           await expect(reopenButton).not.toBeVisible();
         } else {
@@ -298,12 +298,12 @@ test.describe("Conversation Actions", () => {
         const reopenButton = page.locator('button:has-text("Reopen")');
         await reopenButton.click();
         await page.waitForLoadState("networkidle");
-        await expect(page.locator("text=open")).toBeVisible({ timeout: 10000 });
+        await expect(page.locator("text=open")).toBeVisible();
 
         const closeButton = page.locator('button:has-text("Close"):not(:has-text("Reply"))');
         await closeButton.click();
         await page.waitForLoadState("networkidle");
-        await expect(page.locator("text=closed")).toBeVisible({ timeout: 10000 });
+        await expect(page.locator("text=closed")).toBeVisible();
       }
     });
 
@@ -313,7 +313,7 @@ test.describe("Conversation Actions", () => {
       const getConversationStatus = async (): Promise<string> => {
         try {
           const statusElement = page.locator("text=OPEN").or(page.locator("text=CLOSED")).first();
-          const statusText = await statusElement.textContent({ timeout: 5000 });
+          const statusText = await statusElement.textContent();
 
           if (statusText?.includes("OPEN")) {
             return "open";
@@ -324,9 +324,9 @@ test.describe("Conversation Actions", () => {
           const closeButton = page.locator('button:has-text("Close"):not(:has-text("Reply"))');
           const reopenButton = page.locator('button:has-text("Reopen")');
 
-          if (await closeButton.isVisible({ timeout: 2000 })) {
+          if (await closeButton.isVisible()) {
             return "open";
-          } else if (await reopenButton.isVisible({ timeout: 2000 })) {
+          } else if (await reopenButton.isVisible()) {
             return "closed";
           }
         }
@@ -360,7 +360,7 @@ test.describe("Conversation Actions", () => {
         await expect(replyAndCloseButton).toBeVisible();
         await replyAndCloseButton.click();
         await page.waitForLoadState("networkidle");
-        await expect(page.locator("text=closed")).toBeVisible({ timeout: 10000 });
+        await expect(page.locator("text=closed")).toBeVisible();
       } catch (error) {
         try {
           await composer.evaluate((el) => {
@@ -390,7 +390,7 @@ test.describe("Conversation Actions", () => {
       await page.keyboard.press("/");
 
       const toggleCcCommand = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
-      await expect(toggleCcCommand).toBeVisible({ timeout: 5000 });
+      await expect(toggleCcCommand).toBeVisible();
       await toggleCcCommand.click();
 
       const ccInput = page.locator('input[name="CC"]');
@@ -399,7 +399,7 @@ test.describe("Conversation Actions", () => {
         const isVisible = await ccInput.isVisible();
 
         if (isVisible) {
-          await expect(ccInput).toBeVisible({ timeout: 5000 });
+          await expect(ccInput).toBeVisible();
           await ccInput.fill("test@example.com", { force: true });
         }
       } catch (error) {
@@ -414,7 +414,7 @@ test.describe("Conversation Actions", () => {
       await page.keyboard.press("/");
 
       const toggleCcCommand = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
-      await expect(toggleCcCommand).toBeVisible({ timeout: 5000 });
+      await expect(toggleCcCommand).toBeVisible();
       await toggleCcCommand.click();
 
       const bccInput = page.locator('input[name="BCC"]');
@@ -423,9 +423,8 @@ test.describe("Conversation Actions", () => {
         const isVisible = await bccInput.isVisible();
 
         if (isVisible) {
-          await expect(bccInput).toBeVisible({ timeout: 5000 });
+          await expect(bccInput).toBeVisible();
           await bccInput.fill("bcc@example.com", { force: true });
-        } else {
         }
       } catch (error) {
         console.error("Failed to add BCC recipient:", error);
@@ -444,7 +443,7 @@ test.describe("Conversation Actions", () => {
 
       try {
         const assignIssueCommand = page.locator('[role="option"]').filter({ hasText: "Assign ticket" });
-        await expect(assignIssueCommand).toBeVisible({ timeout: 5000 });
+        await expect(assignIssueCommand).toBeVisible();
         await assignIssueCommand.click();
       } catch (error) {
         console.error("Failed to assign conversation to issue:", error);
