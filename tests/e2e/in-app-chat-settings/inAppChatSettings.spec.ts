@@ -39,7 +39,7 @@ test.describe("In-App Chat Settings", () => {
     test("should copy AI agent prompt", async ({ page }) => {
       const copyButton = page.getByLabel("Copy AI Prompt Vanilla");
       await copyButton.click();
-      await expect(copyButton).toContainText("Copied!", { timeout: 3000 });
+      await expect(copyButton).toContainText("Copied!");
     });
 
     test("should expand accordion sections", async ({ page }) => {
@@ -97,7 +97,7 @@ test.describe("In-App Chat Settings", () => {
       await minCustomerValueInput.fill("500");
       await expect(minCustomerValueInput).toHaveValue("500");
       
-      await expect(page.getByText("Saved").first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Saved").first()).toBeVisible();
     });
 
     test("should persist visibility settings across page reloads", async ({ page }) => {
@@ -116,7 +116,7 @@ test.describe("In-App Chat Settings", () => {
       await revenueBasedOption.click();
       await minCustomerValueInput.fill("1000");
       await expect(minCustomerValueInput).toHaveValue("1000");
-      await expect(page.getByText("Saved").first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Saved").first()).toBeVisible();
 
       await page.reload();
       await page.waitForLoadState("networkidle");
@@ -152,7 +152,7 @@ test.describe("In-App Chat Settings", () => {
       await replyTab.click();
       await expect(replyTab).toHaveAttribute("data-state", "active");
       
-      await expect(page.getByText("Saved").first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Saved").first()).toBeVisible();
     });
 
     test("should persist host URL and email settings across page reloads", async ({ page }) => {
@@ -166,7 +166,7 @@ test.describe("In-App Chat Settings", () => {
 
       await draftTab.click();
       await expect(draftTab).toHaveAttribute("data-state", "active");
-      await expect(page.getByText("Saved").first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Saved").first()).toBeVisible();
 
       await page.reload();
       await page.waitForLoadState("networkidle");
@@ -217,7 +217,7 @@ test.describe("In-App Chat Settings", () => {
       await draftTab.click();
       await expect(draftTab).toHaveAttribute("data-state", "active");
 
-      await expect(page.getByText("Saved").first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Saved").first()).toBeVisible();
     });
 
     test("should configure all settings in a typical workflow", async ({ page }) => {
@@ -248,7 +248,7 @@ test.describe("In-App Chat Settings", () => {
       await expect(draftTab).toHaveAttribute("data-state", "active");
 
       await expect(widgetPreviewIndicator).toBeVisible();
-      await expect(page.getByText("Saved").first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Saved").first()).toBeVisible();
 
       await page.reload();
       await page.waitForLoadState("networkidle");
