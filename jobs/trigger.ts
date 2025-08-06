@@ -130,6 +130,22 @@ const events = {
     }),
     jobs: ["handleSlackAgentMessage"],
   },
+  "conversations/follow-notification": {
+    data: z.object({
+      conversationId: z.number(),
+      conversationSlug: z.string(),
+      conversationSubject: z.string(),
+      eventType: z.enum([
+        "conversation_updated",
+        "message_created", 
+        "note_added",
+        "conversation_split",
+      ]),
+      eventDescription: z.string(),
+      updatedByUserId: z.string().optional(),
+    }),
+    jobs: ["handleFollowNotification"],
+  },
 };
 
 export type EventName = keyof typeof events;

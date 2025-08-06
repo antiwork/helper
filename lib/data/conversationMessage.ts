@@ -429,6 +429,27 @@ export const createConversationMessage = async (
     );
   }
 
+  // Trigger follow notifications for new messages
+  if (message.role !== "ai_assistant" && message.status !== "draft") {
+    // Get conversation details for notifications
+    const conversation = await tx.query.conversations.findFirst({
+      where: eq(conversations.id, message.conversationId),
+      columns: {
+        slug: true,
+        subjectPlaintext: true,
+      },
+    });
+
+    await triggerEvent("conversations/follow-notification", {
+      conversationId: message.conversationId,
+      conversationSlug: conversation?.slug || "",
+      conversationSubject: conversation?.subjectPlaintext || "(No subject)",
+      eventType: "message_created",
+      eventDescription: `New ${message.role} message added to conversation`,
+      updatedByUserId: message.userId || undefined,
+    });
+  }
+
   return message;
 };
 

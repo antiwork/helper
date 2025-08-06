@@ -7,7 +7,6 @@ import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
 import { conversationMessages, conversations, gmailSupportEmails, mailboxes, platformCustomers } from "@/db/schema";
 import { conversationEvents } from "@/db/schema/conversationEvents";
-import { triggerEvent } from "@/jobs/trigger";
 import { runAIQuery } from "@/lib/ai";
 import { extractAddresses } from "@/lib/emails";
 import { conversationChannelId, conversationsListChannelId } from "@/lib/realtime/channels";
@@ -19,7 +18,8 @@ import { captureExceptionAndLog } from "../shared/sentry";
 import { getMessages } from "./conversationMessage";
 import { getMailbox } from "./mailbox";
 import { determineVipStatus, getPlatformCustomer } from "./platformCustomer";
-import { sendFollowNotifications } from "./conversationFollowNotifications";
+import { triggerEvent } from "@/jobs/trigger";
+
 
 type OptionalConversationAttributes = "slug" | "updatedAt" | "createdAt";
 
@@ -160,17 +160,16 @@ export const updateConversation = async (
       reason: message,
     });
 
-    // Send notifications to followers
+    // Trigger follow notifications
     const eventDescription = generateEventDescription(updatesToLog, current, updatedConversation);
     if (eventDescription) {
-      await sendFollowNotifications({
+      await triggerEvent("conversations/follow-notification", {
         conversationId: id,
         conversationSlug: updatedConversation.slug,
         conversationSubject: updatedConversation.subjectPlaintext || "(No subject)",
-        eventType: type ?? "update",
+        eventType: "conversation_updated",
         eventDescription,
-        updatedByUserId: byUserId,
-        tx,
+        updatedByUserId: byUserId || undefined,
       });
     }
   }

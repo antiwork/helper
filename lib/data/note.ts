@@ -3,7 +3,10 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { BasicUserProfile } from "@/db/schema";
 import { notes } from "@/db/schema/notes";
+import { conversations } from "@/db/schema";
 import { finishFileUpload } from "./files";
+import { triggerEvent } from "@/jobs/trigger";
+
 
 export const addNote = async ({
   conversationId,
@@ -35,6 +38,25 @@ export const addNote = async ({
       .then(takeUniqueOrThrow);
 
     await finishFileUpload({ fileSlugs, noteId: note.id }, tx);
+
+    // Get conversation details for follow notifications
+    const conversation = await tx.query.conversations.findFirst({
+      where: eq(conversations.id, conversationId),
+      columns: {
+        slug: true,
+        subjectPlaintext: true,
+      },
+    });
+
+    // Trigger follow notifications for new notes
+    await triggerEvent("conversations/follow-notification", {
+      conversationId,
+      conversationSlug: conversation?.slug || "",
+      conversationSubject: conversation?.subjectPlaintext || "(No subject)",
+      eventType: "note_added",
+      eventDescription: `New note added to conversation`,
+      updatedByUserId: user?.id || undefined,
+    });
 
     return note;
   });
