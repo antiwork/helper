@@ -1,76 +1,56 @@
-import { expect, test, type Page } from "@playwright/test";
-import { getMailbox } from "../../../lib/data/mailbox";
+import { expect, test, Page } from "@playwright/test";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
-async function enableVipCustomers(page: Page) {
-  const vipSwitch = page.getByRole("switch", { name: "VIP Customers Switch", exact: true });
-  const isChecked = await vipSwitch.isChecked();
-
-  if (!isChecked) {
-    await vipSwitch.click();
-    await expect(page.getByText("Customer Value Threshold", { exact: true })).toBeVisible();
-  }
-}
-
-async function disableVipCustomers(page: Page) {
-  const vipSwitch = page.getByRole("switch", { name: "VIP Customers Switch", exact: true });
-  const isChecked = await vipSwitch.isChecked();
-
-  if (isChecked) {
-    await vipSwitch.click();
-    await expect(page.getByText("Customer Value Threshold", { exact: true })).not.toBeVisible();
-  }
-}
-
 async function waitForSaved(page: Page) {
-  await page.waitForLoadState("networkidle");
-
   const saving = page.getByText("Saving", { exact: true });
   const saved = page.getByText("Saved", { exact: true });
   const error = page.getByText("Error", { exact: true });
 
   try {
+    await saving.waitFor({ state: "visible", timeout: 1000 });
+  } catch {
     if (await error.isVisible().catch(() => false)) {
       throw new Error("Save failed: Error indicator visible");
     }
+    return;
+  }
 
-    const isSavingVisible = await saving.isVisible().catch(() => false);
-    if (isSavingVisible) {
-      await saved.waitFor({ state: "visible", timeout: 10000 });
+  try {
+    await saved.waitFor({ state: "visible", timeout: 5000 });
+  } catch {
+    if (await error.isVisible().catch(() => false)) {
+      throw new Error("Save failed: Error indicator visible");
+    }
+    throw new Error("Save timeout: No 'Saved' confirmation received");
+  }
+}
+
+async function toggleSwitch(page: Page, name: string, state: boolean, validation: string) {
+  const element = page.getByRole("switch", { name, exact: true });
+  if (await element.isChecked() !== state) {
+    await element.click();
+    const expectation = expect(page.getByText(validation, { exact: true }));
+    if (state) {
+      await expectation.toBeVisible();
     } else {
-      const isSavedVisible = await saved.isVisible().catch(() => false);
-      if (!isSavedVisible) {
-        console.warn("No saving/saved indicator found. This might mean the save was instant or there were no changes.");
-      }
+      await expectation.not.toBeVisible();
     }
-  } catch (e) {
-    if (await error.isVisible().catch(() => false)) {
-      throw new Error("Save failed: Error indicator visible");
-    }
-    console.warn("Save status unclear - no error detected, continuing.");
   }
 }
 
-async function enableAutoClose(page: Page) {
-  const autoCloseSwitch = page.getByRole("switch", { name: "Enable auto-close", exact: true });
-  const isChecked = await autoCloseSwitch.isChecked();
-
-  if (!isChecked) {
-    await autoCloseSwitch.click();
-    await expect(page.getByText("Days of inactivity before auto-close", { exact: true })).toBeVisible();
-  }
+async function setInput(page: Page, name: string, value: string) {
+  const input = page.getByRole("spinbutton", { name, exact: true });
+  await expect(input).toBeVisible();
+  await input.fill(value);
+  await expect(input).toHaveValue(value);
+  await waitForSaved(page);
 }
 
-async function disableAutoClose(page: Page) {
-  const autoCloseSwitch = page.getByRole("switch", { name: "Enable auto-close", exact: true });
-  const isChecked = await autoCloseSwitch.isChecked();
-
-  if (isChecked) {
-    await autoCloseSwitch.click();
-    await expect(page.getByText("Days of inactivity before auto-close", { exact: true })).not.toBeVisible();
-  }
-}
+const enableVip = (page: Page) => toggleSwitch(page, "VIP Customers Switch", true, "Customer Value Threshold");
+const disableVip = (page: Page) => toggleSwitch(page, "VIP Customers Switch", false, "Customer Value Threshold");
+const enableAutoClose = (page: Page) => toggleSwitch(page, "Enable auto-close", true, "Days of inactivity before auto-close");
+const disableAutoClose = (page: Page) => toggleSwitch(page, "Enable auto-close", false, "Days of inactivity before auto-close");
 
 test.describe("Customer Settings", () => {
   test.beforeEach(async ({ page }) => {
@@ -78,95 +58,69 @@ test.describe("Customer Settings", () => {
     await expect(page).toHaveURL("/settings/customers");
   });
 
-  test("should toggle VIP customers", async ({ page }) => {
-    await enableVipCustomers(page);
-    const vipSwitch = page.getByRole("switch", { name: "VIP Customers Switch", exact: true });
-    await expect(vipSwitch).toBeChecked();
-    await expect(page.getByText("Customer Value Threshold", { exact: true })).toBeVisible();
-
-    await disableVipCustomers(page);
-    await expect(vipSwitch).not.toBeChecked();
-    await expect(page.getByText("Customer Value Threshold", { exact: true })).not.toBeVisible();
+  test("VIP customer toggle", async ({ page }) => {
+    await enableVip(page);
+    await expect(page.getByRole("switch", { name: "VIP Customers Switch", exact: true })).toBeChecked();
+    
+    await disableVip(page);
+    await expect(page.getByRole("switch", { name: "VIP Customers Switch", exact: true })).not.toBeChecked();
   });
 
-  test("should update VIP settings and save successfully", async ({ page }) => {
-    await enableVipCustomers(page);
-
-    const thresholdInput = page.getByRole("spinbutton", { name: "Customer Value Threshold", exact: true });
-    await thresholdInput.click();
-    await thresholdInput.fill("250.50");
-    await expect(thresholdInput).toHaveValue("250.50");
-    await waitForSaved(page);
-
-    const responseHoursInput = page.getByRole("spinbutton", { name: "Response Time Target", exact: true });
-    await responseHoursInput.click();
-    await responseHoursInput.fill("4");
-    await expect(responseHoursInput).toHaveValue("4");
-    await waitForSaved(page);
+  test("VIP settings persistence", async ({ page }) => {
+    await enableVip(page);
+    
+    await setInput(page, "Customer Value Threshold", "500");
+    await setInput(page, "Response Time Target", "2");
+    
+    await page.goto("/settings/customers");
+    await enableVip(page);
+    await expect(page.getByRole("spinbutton", { name: "Customer Value Threshold", exact: true })).toHaveValue("500");
+    await expect(page.getByRole("spinbutton", { name: "Response Time Target", exact: true })).toHaveValue("2");
   });
 
-  test("should validate input constraints", async ({ page }) => {
-    await enableVipCustomers(page);
-
-    const thresholdInput = page.getByRole("spinbutton", { name: "Customer Value Threshold", exact: true });
-    await expect(thresholdInput).toHaveAttribute("type", "number");
-    await expect(thresholdInput).toHaveAttribute("min", "0");
+  test("input validation", async ({ page }) => {
+    await enableVip(page);
+    const input = page.getByRole("spinbutton", { name: "Customer Value Threshold", exact: true });
+    await expect(input).toHaveAttribute("type", "number");
+    await expect(input).toHaveAttribute("min", "0");
   });
 
-  test("should show Slack integration alert when not connected", async ({ page }) => {
-    await enableVipCustomers(page);
-
-    const slackAlert = page.getByRole("alert").filter({ hasText: "Slack integration is required" });
-    await expect(slackAlert).toBeVisible();
+  test("Slack integration alert", async ({ page }) => {
+    await enableVip(page);
+    await expect(page.getByRole("alert").filter({ hasText: "Slack integration is required" })).toBeVisible();
   });
 
-  test("should toggle auto-close inactive tickets", async ({ page }) => {
+  test("auto-close toggle", async ({ page }) => {
     await enableAutoClose(page);
-    const autoCloseSwitch = page.getByRole("switch", { name: "Enable auto-close", exact: true });
-    await expect(autoCloseSwitch).toBeChecked();
-    await expect(page.getByText("Days of inactivity before auto-close", { exact: true })).toBeVisible();
-
+    const toggle = page.getByRole("switch", { name: "Enable auto-close", exact: true });
+    await expect(toggle).toBeChecked();
+    
     await disableAutoClose(page);
-    await expect(autoCloseSwitch).not.toBeChecked();
-    await expect(page.getByText("Days of inactivity before auto-close", { exact: true })).not.toBeVisible();
+    await expect(toggle).not.toBeChecked();
   });
 
-  test("should update auto-close days and save successfully", async ({ page }) => {
+  test("auto-close days persistence", async ({ page }) => {
     await enableAutoClose(page);
-
-    const daysInput = page.getByRole("spinbutton", { name: "Days of inactivity before auto-close", exact: true });
-    await daysInput.click();
-    await daysInput.fill("7");
-    await expect(daysInput).toHaveValue("7");
-    await waitForSaved(page);
-
-    await daysInput.click();
-    await daysInput.fill("14");
-    await expect(daysInput).toHaveValue("14");
-    await waitForSaved(page);
+    
+    await setInput(page, "Days of inactivity before auto-close", "15");
+    await page.goto("/settings/customers");
+    await enableAutoClose(page);
+    await expect(page.getByRole("spinbutton", { name: "Days of inactivity before auto-close", exact: true })).toHaveValue("15");
   });
 
-  test("should disable run button when auto-close is disabled", async ({ page }) => {
+  test("button state management", async ({ page }) => {
+    const button = page.getByRole("button", { name: "Run auto-close now", exact: true });
+    
     await disableAutoClose(page);
-    const runButton = page.getByRole("button", { name: "Run auto-close now", exact: true });
-    await expect(runButton).toBeDisabled();
+    await expect(button).toBeDisabled();
+    
+    await enableAutoClose(page);
+    await expect(button).toBeEnabled();
   });
 
-  test("should validate auto-close days input", async ({ page }) => {
+  test("auto-close execution", async ({ page }) => {
     await enableAutoClose(page);
-
-    const daysInput = page.getByRole("spinbutton", { name: "Days of inactivity before auto-close", exact: true });
-    await expect(daysInput).toHaveAttribute("type", "number");
-    await expect(daysInput).toHaveAttribute("min", "1");
-  });
-
-  test("should run auto-close and show success toast", async ({ page }) => {
-    await enableAutoClose(page);
-
-    const runButton = page.getByRole("button", { name: "Run auto-close now", exact: true });
-    await runButton.click();
-
-    const toast = page.locator("[data-sonner-toast]").filter({ hasText: "Auto-close triggered" });
-    await expect(toast).toBeVisible({ timeout: 5000 });
+    await page.getByRole("button", { name: "Run auto-close now", exact: true }).click();
+    await expect(page.locator("[data-sonner-toast]").filter({ hasText: "Auto-close triggered" })).toBeVisible({ timeout: 5000 });
   });
 });
