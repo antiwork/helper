@@ -31,7 +31,7 @@ export default function HelpPage() {
                 <p className="text-sm text-gray-300">Learn the basics of setting up Helper for your support team</p>
               </Link>
               <Link
-                href="/docs/widget"
+                href="/docs/widget/06-custom"
                 className="border border-[#5A3A3A] rounded-lg p-4 hover:bg-[#5A3A3A] transition-colors"
               >
                 <h3 className="font-medium mb-2">Integration Guides</h3>
@@ -46,9 +46,6 @@ export default function HelpPage() {
               Our support team is available to assist you with any questions or issues you may have.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button className="bg-amber-500 hover:bg-amber-600 text-black" asChild>
-                <Link href="mailto:help@helper.ai">Contact Support</Link>
-              </Button>
               <Button variant="outlined" className="border-amber-500 text-amber-500 hover:bg-amber-500/10" asChild>
                 <Link href="/">Return to Home</Link>
               </Button>

@@ -66,14 +66,6 @@ export default function Page() {
           notice on this Service prior to the change becoming effective. We encourage you to periodically review this
           page for the latest information on our privacy practices.
         </section>
-        <section className="text-lg">
-          <h3>Contact Us</h3>
-          If you have any questions about this Privacy Policy, please contact us via email at{" "}
-          <a className="underline" href={`mailto:help@helper.ai`}>
-            help@helper.ai
-          </a>
-          .
-        </section>
       </main>
     </div>
   );
