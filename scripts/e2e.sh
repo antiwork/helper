@@ -52,7 +52,7 @@ done
 
 # If no arguments provided, default to basic playwright test
 if [ -z "$PLAYWRIGHT_COMMAND" ]; then
-    PLAYWRIGHT_COMMAND="playwright test"
+    PLAYWRIGHT_COMMAND="pnpm playwright test"
 fi
 
 echo "🚀 Starting E2E test run..."

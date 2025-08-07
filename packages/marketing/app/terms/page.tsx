@@ -87,13 +87,6 @@ export default function Page() {
           Any disputes arising out of or related to these Terms shall be governed by and construed in accordance with
           the laws of [Jurisdiction], without regard to its conflict of law principles.
         </section>
-        <section className="text-lg">
-          <h3>13. Contact Information</h3>
-          If you have any questions about these Terms, please contact us at{" "}
-          <a className="underline" href={`mailto:help@helper.ai`}>
-            help@helper.ai
-          </a>
-        </section>
       </main>
     </div>
   );
