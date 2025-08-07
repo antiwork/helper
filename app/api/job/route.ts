@@ -24,7 +24,6 @@ const verifyHmac = async (body: string, providedHmac: string, timestamp: string)
   try {
     const hmacSecret = await getSecret(SECRET_NAMES.JOBS_HMAC);
     if (!hmacSecret) {
-      console.error("Failed to get HMAC secret from vault");
       return false;
     }
 
