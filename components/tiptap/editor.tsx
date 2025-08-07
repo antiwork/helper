@@ -379,6 +379,7 @@ const TipTapEditor = ({
   }, [mentionState.isOpen, getMentionQuery(), filteredArticles.map((a) => a.url).join(",")]);
 
   const showActionButtons = !!actionButtons && (!toolbarOpen || isAboveMd);
+  const showFollowButton = !!followButton && (!toolbarOpen || isAboveMd);
 
   if (!editor) {
     return null;
@@ -470,7 +471,11 @@ const TipTapEditor = ({
           />
         </div>
         {showActionButtons ? <div className="flex-shrink-0 whitespace-nowrap">{actionButtons}</div> : null}
-        {followButton && <div className="flex-shrink-0 absolute right-0">{followButton}</div>}
+        {showFollowButton && (
+          <div className="flex-shrink-0 ml-4 md:absolute md:right-0 md:ml-0">
+            {followButton}
+          </div>
+        )}
       </div>
     </div>
   );
