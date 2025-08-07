@@ -10,7 +10,7 @@ import { jobRuns } from "@/db/schema";
 import { cronJobs, eventJobs } from "@/jobs";
 import { EventData, EventName } from "@/jobs/trigger";
 import { NonRetriableError } from "@/jobs/utils";
-import { getSecret } from "@/lib/secrets";
+import { getSecret, SECRET_NAMES } from "@/lib/secrets";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 const verifyHmac = async (body: string, providedHmac: string, timestamp: string): Promise<boolean> => {
@@ -21,7 +21,7 @@ const verifyHmac = async (body: string, providedHmac: string, timestamp: string)
   if (isNaN(timestampSeconds) || Math.abs(Date.now() / 1000 - timestampSeconds) > 5 * 60) return false;
 
   try {
-    const hmacSecret = await getSecret("jobs-hmac-secret");
+    const hmacSecret = await getSecret(SECRET_NAMES.JOBS_HMAC);
     if (!hmacSecret) {
       console.error("Failed to get HMAC secret from vault");
       return false;

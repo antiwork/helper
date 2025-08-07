@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { env } from "@/lib/env";
-import { getOrCreateSecret } from "@/lib/secrets";
+import { getOrCreateSecret, SECRET_NAMES } from "@/lib/secrets";
 
 export const setupCron = async (job: string, schedule: string) => {
   // eslint-disable-next-line no-console
@@ -37,7 +37,7 @@ export const cleanupOldCronJobs = async (currentJobs: string[]) => {
 
 export const setupJobFunctions = async () => {
   // Ensure the HMAC secret exists in vault
-  await getOrCreateSecret("jobs-hmac-secret");
+  await getOrCreateSecret(SECRET_NAMES.JOBS_HMAC);
 
   await db.execute(
     sql.raw(`
@@ -49,7 +49,7 @@ export const setupJobFunctions = async () => {
         hmac_payload text;
         response text;
       begin
-        select decrypted_secret into hmac_secret from vault.decrypted_secrets where name = 'jobs-hmac-secret';
+        select decrypted_secret into hmac_secret from vault.decrypted_secrets where name = '${SECRET_NAMES.JOBS_HMAC}';
         
         timestamp_str := extract(epoch from now())::text;
         hmac_payload := timestamp_str || '.' || job_body;
