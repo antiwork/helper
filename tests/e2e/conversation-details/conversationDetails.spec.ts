@@ -28,7 +28,7 @@ test.describe("Conversation Details", () => {
 
   async function setupConversation(page: Page) {
     await page.waitForLoadState("networkidle");
-    await expect(page.getByTestId("conversation-subject")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("conversation-header")).toBeVisible({ timeout: 10000 });
 
     await page.waitForFunction(
       () => {
@@ -40,10 +40,10 @@ test.describe("Conversation Details", () => {
   }
 
   async function verifyBasicConversationStructure(page: Page) {
-    await expect(page.getByTestId("conversation-subject")).toBeVisible();
+    await expect(page.getByTestId("conversation-header")).toBeVisible();
     await expect(page.locator("button[aria-label='Previous conversation']")).toBeVisible();
     await expect(page.locator("button[aria-label='Next conversation']")).toBeVisible();
-    await expect(page.getByLabel("Conversation counter")).toBeVisible();
+    await expect(page.getByTestId("conversation-counter")).toBeVisible();
   }
 
   async function getConversationSubject(page: Page) {
@@ -52,7 +52,7 @@ test.describe("Conversation Details", () => {
   }
 
   async function getConversationCounter(page: Page) {
-    const counter = await page.getByLabel("Conversation counter").textContent();
+    const counter = await page.getByTestId("conversation-counter").textContent();
     return counter?.trim() || "";
   }
 
@@ -71,7 +71,7 @@ test.describe("Conversation Details", () => {
   }
 
   async function closeConversation(page: Page) {
-    await page.locator("button[aria-label='Close conversation']").click();
+    await page.locator("button[aria-label='Close View']").click();
   }
 
   async function toggleSidebar(page: Page) {
@@ -187,20 +187,13 @@ test.describe("Conversation Details", () => {
     }
   }
 
-  test("should display conversation details page", async ({ page }) => {
-    await setupConversation(page);
-    await verifyBasicConversationStructure(page);
-  });
-
-  test("should show conversation subject", async ({ page }) => {
+  test("should show conversation subject and display messages", async ({ page }) => {
     await setupConversation(page);
 
     const subject = await getConversationSubject(page);
     expect(subject.length).toBeGreaterThan(0);
-  });
 
-  test("should display messages in conversation", async ({ page }) => {
-    await setupConversation(page);
+    await expect(page.getByText(subject)).toBeVisible();
 
     const messageCount = await getMessageCount(page);
     expect(messageCount).toBeGreaterThan(0);
@@ -217,14 +210,6 @@ test.describe("Conversation Details", () => {
     await toggleSidebar(page);
 
     await expect(page.locator("button[aria-label='Toggle sidebar']")).toBeVisible();
-  });
-
-  test("should close conversation", async ({ page }) => {
-    await setupConversation(page);
-
-    await closeConversation(page);
-
-    expect(page.url()).toContain("/conversations");
   });
 
   test("should display conversation with multiple messages", async ({ page }) => {

@@ -227,7 +227,7 @@ const ConversationHeader = ({
           iconOnly
           onClick={minimize}
           className="text-primary hover:text-foreground"
-          aria-label="Close conversation"
+          aria-label="Close View"
         >
           <X className="h-4 w-4" />
         </Button>
@@ -243,7 +243,7 @@ const ConversationHeader = ({
           </Button>
           <span
             className="text-sm text-muted-foreground whitespace-nowrap text-center mx-1"
-            aria-label="Conversation counter"
+            data-testid="conversation-counter"
           >
             {currentIndex + 1} of {currentTotal}
             {hasNextPage ? "+" : ""}

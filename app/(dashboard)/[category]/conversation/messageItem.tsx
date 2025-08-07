@@ -316,10 +316,7 @@ const MessageItem = ({
             {hasReasoning && !userMessage && (
               <Popover>
                 <PopoverTrigger asChild>
-                  <button
-                    className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                    aria-label="View AI reasoning"
-                  >
+                  <button className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
                     <Sparkles className="h-4 w-4" />
                     <span className="text-xs">View AI reasoning</span>
                   </button>
