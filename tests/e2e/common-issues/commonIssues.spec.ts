@@ -94,47 +94,44 @@ test.describe("Common Issues", () => {
     await navigateToCommonIssues(page);
   });
 
-  test("should create new common issue with title only", async ({ page }) => {
-    const testTitle = `Test Issue ${generateRandomString(8)}`;
-
-    await addCommonIssue(page, testTitle);
-    await expectCommonIssueVisible(page, testTitle);
-    await expectCommonIssueConversationCount(page, testTitle, 0);
-  });
-
-  test("should create new common issue with title and description", async ({ page }) => {
-    const testTitle = `Test Issue with Description ${generateRandomString(8)}`;
+  test("should create new common issues with form validation", async ({ page }) => {
+    const titleOnlyIssue = `Test Issue ${generateRandomString(8)}`;
+    const titleDescriptionIssue = `Test Issue with Description ${generateRandomString(8)}`;
     const testDescription = `This is a test description ${generateRandomString(8)}`;
 
-    await addCommonIssue(page, testTitle, testDescription);
-    await expectCommonIssueVisible(page, testTitle);
-    await expectCommonIssueDescription(page, testTitle, testDescription);
-    await expectCommonIssueConversationCount(page, testTitle, 0);
+    await openAddIssueForm(page);
+    await expectSaveButtonDisabled(page);
+
+    await fillIssueTitle(page, titleOnlyIssue);
+    await expectSaveButtonEnabled(page);
+    
+    await saveIssue(page);
+    await expectCommonIssueVisible(page, titleOnlyIssue);
+    await expectCommonIssueConversationCount(page, titleOnlyIssue, 0);
+
+    await addCommonIssue(page, titleDescriptionIssue, testDescription);
+    await expectCommonIssueVisible(page, titleDescriptionIssue);
+    await expectCommonIssueDescription(page, titleDescriptionIssue, testDescription);
+    await expectCommonIssueConversationCount(page, titleDescriptionIssue, 0);
   });
 
-  test("should edit existing common issue title", async ({ page }) => {
+  test("should edit existing common issue title and description", async ({ page }) => {
     const originalTitle = `Original Issue ${generateRandomString(8)}`;
     const newTitle = `Updated Issue ${generateRandomString(8)}`;
+    const originalDescription = `Original description ${generateRandomString(8)}`;
+    const newDescription = `Updated description ${generateRandomString(8)}`;
 
-    await addCommonIssue(page, originalTitle);
+    await addCommonIssue(page, originalTitle, originalDescription);
     await expectCommonIssueVisible(page, originalTitle);
+    await expectCommonIssueDescription(page, originalTitle, originalDescription);
 
     await editCommonIssue(page, originalTitle, newTitle);
     await expectCommonIssueVisible(page, newTitle);
     await expectCommonIssueNotVisible(page, originalTitle);
-  });
 
-  test("should edit existing common issue description", async ({ page }) => {
-    const testTitle = `Issue for Description Edit ${generateRandomString(8)}`;
-    const originalDescription = `Original description ${generateRandomString(8)}`;
-    const newDescription = `Updated description ${generateRandomString(8)}`;
-
-    await addCommonIssue(page, testTitle, originalDescription);
-    await expectCommonIssueVisible(page, testTitle);
-
-    await editCommonIssue(page, testTitle, testTitle, newDescription);
-    await expectCommonIssueVisible(page, testTitle);
-    await expectCommonIssueDescription(page, testTitle, newDescription);
+    await editCommonIssue(page, newTitle, newTitle, newDescription);
+    await expectCommonIssueVisible(page, newTitle);
+    await expectCommonIssueDescription(page, newTitle, newDescription);
   });
 
   test("should delete common issue", async ({ page }) => {
@@ -147,37 +144,25 @@ test.describe("Common Issues", () => {
     await expectCommonIssueNotVisible(page, testTitle);
   });
 
-  test("should search common issues", async ({ page }) => {
+  test("should search common issues by title and description", async ({ page }) => {
     const searchableTitle = `Searchable Issue ${generateRandomString(8)}`;
     const nonSearchableTitle = `Different Issue ${generateRandomString(8)}`;
+    const issueWithSearchableDescription = `Issue ${generateRandomString(8)}`;
+    const searchableDescription = `Searchable description ${generateRandomString(8)}`;
 
     await addCommonIssue(page, searchableTitle);
     await addCommonIssue(page, nonSearchableTitle);
+    await addCommonIssue(page, issueWithSearchableDescription, searchableDescription);
 
     await searchCommonIssues(page, "Searchable");
     await expectCommonIssueVisible(page, searchableTitle);
+    await expectCommonIssueVisible(page, issueWithSearchableDescription);
     await expectCommonIssueNotVisible(page, nonSearchableTitle);
 
     await searchCommonIssues(page, "");
     await expectCommonIssueVisible(page, searchableTitle);
     await expectCommonIssueVisible(page, nonSearchableTitle);
+    await expectCommonIssueVisible(page, issueWithSearchableDescription);
   });
 
-  test("should search common issues by description", async ({ page }) => {
-    const testTitle = `Issue ${generateRandomString(8)}`;
-    const searchableDescription = `Searchable description ${generateRandomString(8)}`;
-
-    await addCommonIssue(page, testTitle, searchableDescription);
-
-    await searchCommonIssues(page, "Searchable");
-    await expectCommonIssueVisible(page, testTitle);
-  });
-
-  test("should disable save button when title is empty", async ({ page }) => {
-    await openAddIssueForm(page);
-    await expectSaveButtonDisabled(page);
-
-    await fillIssueTitle(page, "Test Title");
-    await expectSaveButtonEnabled(page);
-  });
 });
