@@ -47,8 +47,9 @@ export const KnowledgeEditForm = ({
         </div>
       )}
       <div>
-        <Label>{originalContent ? "Suggested Change" : "Content"}</Label>
+        <Label htmlFor="knowledge-content-textarea">{originalContent ? "Suggested Change" : "Content"}</Label>
         <Textarea
+          id="knowledge-content-textarea"
           value={content}
           onChange={(e) => onChange?.(e.target.value)}
           className={cn("min-h-[10rem]", originalContent && "border-bright")}
@@ -153,7 +154,7 @@ const KnowledgeBankItem = ({ faq, suggestedReplacement, onDelete }: KnowledgeBan
   };
 
   return (
-    <div className="py-4">
+    <div className="py-4" data-testid="knowledge-bank-item">
       {editingContent ? (
         <KnowledgeEditForm
           content={editingContent}
@@ -188,6 +189,7 @@ const KnowledgeBankItem = ({ faq, suggestedReplacement, onDelete }: KnowledgeBan
               e.preventDefault();
               handleStartEditing();
             }}
+            aria-label="Edit knowledge"
           >
             <ReactMarkdown className={cn("prose prose-sm", !faq.enabled && "text-muted-foreground")}>
               {truncate(faq?.content, { length: 125 })}

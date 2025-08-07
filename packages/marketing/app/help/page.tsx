@@ -46,9 +46,6 @@ export default function HelpPage() {
               Our support team is available to assist you with any questions or issues you may have.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button className="bg-amber-500 hover:bg-amber-600 text-black" asChild>
-                <Link href="mailto:help@helper.ai">Contact Support</Link>
-              </Button>
               <Button variant="outlined" className="border-amber-500 text-amber-500 hover:bg-amber-500/10" asChild>
                 <Link href="/">Return to Home</Link>
               </Button>
