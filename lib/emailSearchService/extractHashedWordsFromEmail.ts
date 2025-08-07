@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import natural from "natural";
-import { getOrCreateSecret } from "@/lib/secrets";
+import { getOrCreateSecret, SECRET_NAMES } from "@/lib/secrets";
 
 /**
  * Extract words from email's subject and body. Returns a unique set of hashed words.
@@ -20,9 +20,11 @@ export async function extractHashedWordsFromEmail(params: {
   const stemmedWords = extractedWords.map((word) => natural.PorterStemmer.stem(word));
   extractedWords.push(...extractedWords, ...stemmedWords);
 
+  // Get the secret once
+  const secret = await getOrCreateSecret(SECRET_NAMES.HASH_WORDS);
+
   // Hash all words
-  const hashedWordsPromises = extractedWords.map((word) => hashWord(word));
-  const hashedWords = (await Promise.all(hashedWordsPromises)).filter(Boolean);
+  const hashedWords = extractedWords.map((word) => hashWord(word, secret)).filter(Boolean);
 
   // Create a unique set of hashed words
   return Array.from(new Set(hashedWords));
@@ -36,8 +38,7 @@ function extractWords(text: string): string[] {
     .filter(Boolean);
 }
 
-async function hashWord(word: string, length = 7): Promise<string> {
-  const secret = await getOrCreateSecret("hash-words-secret");
+function hashWord(word: string, secret: string, length = 7): string {
   const fullHash = crypto.createHmac("sha256", secret).update(word).digest("base64url");
   return fullHash.slice(0, length);
 }

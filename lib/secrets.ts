@@ -1,10 +1,14 @@
 import crypto from "crypto";
 import { sql } from "drizzle-orm";
+import { cache } from "react";
 import { db } from "@/db/client";
-import { cacheFor } from "@/lib/cache";
 
-const SECRET_CACHE_KEY = "vault-secret";
-const SECRET_CACHE_DURATION = 300; // 5 minutes
+export const SECRET_NAMES = {
+  JOBS_HMAC: "jobs-hmac-secret",
+  HASH_WORDS: "hash-words-secret",
+} as const;
+
+export type SecretName = (typeof SECRET_NAMES)[keyof typeof SECRET_NAMES];
 
 interface VaultSecret {
   id: string;
@@ -14,17 +18,7 @@ interface VaultSecret {
   updated_at: string;
 }
 
-function getCacheForSecret(secretName: string) {
-  return cacheFor<string>(`${SECRET_CACHE_KEY}-${secretName}`);
-}
-
-export async function getOrCreateSecret(secretName: string): Promise<string> {
-  const cache = getCacheForSecret(secretName);
-  const cachedSecret = await cache.get();
-  if (cachedSecret) {
-    return cachedSecret;
-  }
-
+export const getOrCreateSecret = cache(async (secretName: SecretName): Promise<string> => {
   try {
     // Check if secret exists in vault
     const existingSecret = await db.execute(
@@ -33,7 +27,6 @@ export async function getOrCreateSecret(secretName: string): Promise<string> {
 
     if (existingSecret.rows.length > 0) {
       const secret = existingSecret.rows[0] as unknown as VaultSecret;
-      await cache.set(secret.decrypted_secret, SECRET_CACHE_DURATION);
       return secret.decrypted_secret;
     }
 
@@ -43,36 +36,21 @@ export async function getOrCreateSecret(secretName: string): Promise<string> {
     // Create secret in vault
     await db.execute(sql`SELECT vault.create_secret(${newSecret}, ${secretName}, ${`Auto-generated ${secretName}`})`);
 
-    // Cache the new secret
-    await cache.set(newSecret, SECRET_CACHE_DURATION);
-
     return newSecret;
   } catch (error) {
     console.error(`Failed to get/create secret ${secretName}:`, error);
-
-    // Fallback to generating a temporary secret (not ideal but prevents crashes)
-    const fallbackSecret = crypto.randomUUID().replace(/-/g, "").slice(0, 32);
-    console.warn(`Using fallback secret for ${secretName} - this should be temporary`);
-
-    return fallbackSecret;
+    throw error;
   }
-}
+});
 
-export async function getSecret(secretName: string): Promise<string | null> {
+export const getSecret = cache(async (secretName: SecretName): Promise<string | null> => {
   try {
-    const cache = getCacheForSecret(secretName);
-    const cachedSecret = await cache.get();
-    if (cachedSecret) {
-      return cachedSecret;
-    }
-
     const result = await db.execute(
       sql`SELECT decrypted_secret FROM vault.decrypted_secrets WHERE name = ${secretName}`,
     );
 
     if (result.rows.length > 0) {
       const secret = result.rows[0] as unknown as VaultSecret;
-      await cache.set(secret.decrypted_secret, SECRET_CACHE_DURATION);
       return secret.decrypted_secret;
     }
 
@@ -81,9 +59,9 @@ export async function getSecret(secretName: string): Promise<string | null> {
     console.error(`Failed to get secret ${secretName}:`, error);
     return null;
   }
-}
+});
 
-export async function updateSecret(secretName: string, newValue: string): Promise<void> {
+export async function updateSecret(secretName: SecretName, newValue: string): Promise<void> {
   try {
     // Get the secret ID first
     const secretResult = await db.execute(sql`SELECT id FROM vault.secrets WHERE name = ${secretName}`);
@@ -102,19 +80,8 @@ export async function updateSecret(secretName: string, newValue: string): Promis
       // Create new secret if it doesn't exist
       await db.execute(sql`SELECT vault.create_secret(${newValue}, ${secretName}, ${`Created ${secretName}`})`);
     }
-
-    // Update cache
-    const cache = getCacheForSecret(secretName);
-    await cache.set(newValue, SECRET_CACHE_DURATION);
   } catch (error) {
     console.error(`Failed to update secret ${secretName}:`, error);
     throw error;
-  }
-}
-
-export async function clearSecretCache(secretName?: string): Promise<void> {
-  if (secretName) {
-    const cache = getCacheForSecret(secretName);
-    await cache.set("", 1); // Set to expire immediately
   }
 }
