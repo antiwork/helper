@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { waitForSettingsSaved } from "../utils/settingsHelpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
@@ -25,12 +26,7 @@ test.describe("Settings - Preferences", () => {
 
     await mailboxNameInput.fill(testName);
 
-    await page.waitForFunction(
-      () => {
-        const savingIndicator = document.querySelector('[data-testid="saving-indicator"]');
-        return !savingIndicator || !savingIndicator.textContent?.includes("Saving");
-      },
-    );
+    await waitForSettingsSaved(page);
 
     const updatedName = await mailboxNameInput.inputValue();
     expect(updatedName).toBe(testName);
@@ -39,15 +35,28 @@ test.describe("Settings - Preferences", () => {
   });
 
   test("should display confetti setting and test confetti functionality", async ({ page }) => {
-    const confettiSetting = page.locator('section:has(h2:text("Confetti"))');
+    const confettiSetting = page.locator('section:has(h2:text("Confetti Settings"))');
+    const confettiSwitch = page.locator('[aria-label="Confetti Settings Switch"]');
     const testConfettiButton = page.locator('button:has-text("Test Confetti")');
 
     await expect(confettiSetting).toBeVisible();
 
-    const isVisible = await testConfettiButton.isVisible();
+    const isInitiallyEnabled = await confettiSwitch.isChecked();
 
-    if (isVisible) {
-      await testConfettiButton.click();
+    if (!isInitiallyEnabled) {
+      await confettiSwitch.click();
+      await waitForSettingsSaved(page);
+      await expect(confettiSwitch).toBeChecked();
+    }
+
+    await expect(testConfettiButton).toBeVisible();
+    await testConfettiButton.click();
+
+    if (!isInitiallyEnabled) {
+      await confettiSwitch.click();
+      await waitForSettingsSaved(page);
+      await expect(confettiSwitch).not.toBeChecked();
+      await expect(testConfettiButton).not.toBeVisible();
     }
   });
 });
