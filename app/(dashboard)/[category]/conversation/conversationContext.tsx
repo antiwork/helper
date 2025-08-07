@@ -99,7 +99,7 @@ export const ConversationContextProvider = ({ children }: { children: React.Reac
               label: "Undo",
               onClick: async () => {
                 try {
-                  await update({ status: "open" });
+                  await update({ status: previousStatus ?? "open" });
                   navigateToConversation(conversationSlug);
                   toast.success("Conversation reopened");
                 } catch (e) {
