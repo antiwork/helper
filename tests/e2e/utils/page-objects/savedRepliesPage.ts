@@ -1,4 +1,5 @@
 import { expect, Locator, Page } from "@playwright/test";
+import { waitForToast } from "../toastHelpers";
 import { BasePage } from "./basePage";
 
 export class SavedRepliesPage extends BasePage {
@@ -213,31 +214,7 @@ export class SavedRepliesPage extends BasePage {
   }
 
   async waitForToast(message: string) {
-    try {
-      const toastSelectors = [
-        `[role="alert"]:has-text("${message}")`,
-        `[data-testid="toast"]:has-text("${message}")`,
-        `.toast:has-text("${message}")`,
-        `*:has-text("${message}")[role="status"]`,
-      ];
-
-      let toastFound = false;
-      for (const selector of toastSelectors) {
-        try {
-          await this.page.locator(selector).waitFor({ state: "visible", timeout: 2000 });
-          toastFound = true;
-          break;
-        } catch {
-          // Try next selector
-        }
-      }
-
-      if (!toastFound) {
-        await this.page.waitForSelector(`text="${message}"`, { timeout: 1000 });
-      }
-    } catch (error) {
-      console.log(`Toast message "${message}" not found, continuing...`);
-    }
+    await waitForToast(this.page, message);
   }
 
   async openCreateDialog() {
