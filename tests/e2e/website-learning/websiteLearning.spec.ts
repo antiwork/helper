@@ -40,11 +40,11 @@ test.describe("Website Learning UI Smoke Tests", () => {
 
   test("adds website with valid URL", async () => {
     const testSite = websiteLearningPage.generateTestWebsite();
-    
+
     await websiteLearningPage.clickAddWebsite();
     await websiteLearningPage.fillWebsiteUrl(testSite.url);
     await websiteLearningPage.submitAddWebsiteForm();
-    
+
     await websiteLearningPage.expectToastMessage("Website added!");
     await websiteLearningPage.expectWebsiteInList(testSite.name);
   });

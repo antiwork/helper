@@ -1,6 +1,6 @@
 import { expect, Locator, Page } from "@playwright/test";
-import { BasePage } from "./basePage";
 import { waitForToast } from "../toastHelpers";
+import { BasePage } from "./basePage";
 
 export class SavedRepliesPage extends BasePage {
   readonly pageTitle: Locator;

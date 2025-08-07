@@ -1,6 +1,6 @@
 import { expect, Page } from "@playwright/test";
-import { BasePage } from "./basePage";
 import { waitForToast } from "../toastHelpers";
+import { BasePage } from "./basePage";
 
 interface TestWebsite {
   name: string;
@@ -9,9 +9,10 @@ interface TestWebsite {
 
 export class WebsiteLearningPage extends BasePage {
   private readonly websiteLearningTitle = 'h2:has-text("Website Learning")';
-  private readonly websiteDescription = 'text="Helper will learn about your product by reading your websites to provide better responses."';
+  private readonly websiteDescription =
+    'text="Helper will learn about your product by reading your websites to provide better responses."';
   private readonly addWebsiteButton = 'button:has-text("Add website")';
-  private readonly urlInput = 'input#url';
+  private readonly urlInput = "input#url";
   private readonly urlLabel = 'label[for="url"]';
   private readonly cancelButton = 'button:has-text("Cancel")';
   private readonly submitButton = 'form button[type="submit"]';
@@ -84,7 +85,7 @@ export class WebsiteLearningPage extends BasePage {
     const websiteItem = this.page.locator(this.websiteItems).filter({
       has: this.page.locator(`text="${websiteName}"`),
     });
-    
+
     await expect(websiteItem).toBeVisible({ timeout: 15000 });
   }
 }
