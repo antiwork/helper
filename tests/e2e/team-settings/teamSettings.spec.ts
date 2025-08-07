@@ -8,17 +8,6 @@ test.use({ storageState: "tests/e2e/.auth/user.json" });
 test.describe.configure({ mode: "serial" });
 
 test.describe("Team Settings", () => {
-  const addMemberButton = "Add Member";
-  const deleteButton = "Delete";
-  const confirmRemovalButton = "Confirm Removal";
-  const adminRole = "Admin";
-  const memberRole = "Member";
-  const manageTeamHeader = "Manage Team Members";
-  const memberAddedMessage = "Team member added";
-  const memberRemovedMessage = "Member removed from the team";
-  const memberExistsMessage = "Member already exists";
-  const validationEmailMessage = "Please enter a valid email address";
-
   async function navigateToTeamSettings(page: any) {
     if (page.url().includes("/settings/team")) {
       await page.waitForLoadState("networkidle");
@@ -27,22 +16,22 @@ test.describe("Team Settings", () => {
 
     await page.goto("/settings/team");
     await page.waitForLoadState("domcontentloaded");
-    await page.waitForSelector(`h2:has-text("${manageTeamHeader}")`, {
+    await page.waitForSelector(`h2:has-text("Manage Team Members")`, {
       timeout: 10000,
     });
   }
 
   async function expectTeamSettingsPage(page: any) {
     await expect(page).toHaveURL(/.*settings\/team.*/);
-    await page.waitForSelector(`h2:has-text("${manageTeamHeader}")`, {
+    await page.waitForSelector(`h2:has-text("Manage Team Members")`, {
       timeout: 10000,
     });
   }
 
   function getInviteForm(page: any) {
-  return page
-    .locator("form")
-    .filter({ has: page.getByRole("button", { name: addMemberButton }) });
+    return page
+      .locator("form")
+      .filter({ has: page.getByRole("button", { name: "Add Member" }) });
   }
 
   function getMemberRow(page: any, email: string) {
@@ -73,7 +62,7 @@ test.describe("Team Settings", () => {
   }
 
   async function submitInvite(page: any) {
-    const submitButton = page.getByRole("button", { name: addMemberButton });
+    const submitButton = page.getByRole("button", { name: "Add Member" });
     await expect(submitButton).toBeVisible();
     await expect(submitButton).toBeEnabled();
     await submitButton.click();
@@ -88,14 +77,14 @@ test.describe("Team Settings", () => {
     const testEmail = email || generateTestEmail();
 
     await fillInviteForm(page, testEmail, `Test User ${Date.now()}`);
-    await selectRole(page, memberRole);
+    await selectRole(page, "Member");
     await submitInvite(page);
 
     return testEmail;
   }
 
   async function expectMemberInvited(page: any, email: string) {
-    await expectToast(page, memberAddedMessage);
+    await expectToast(page, "Team member added");
     await expectMemberInList(page, email);
   }
 
@@ -108,7 +97,7 @@ test.describe("Team Settings", () => {
     const deleteDialog = page.getByRole("dialog");
     await expect(deleteDialog).toBeVisible();
 
-    const confirmButton = deleteDialog.getByRole("button", { name: confirmRemovalButton });
+    const confirmButton = deleteDialog.getByRole("button", { name: "Confirm Removal" });
     await expect(confirmButton).toBeVisible();
     await confirmButton.click();
   }
@@ -117,12 +106,12 @@ test.describe("Team Settings", () => {
     const memberRow = getMemberRow(page, email);
     await expect(memberRow).toBeVisible({ timeout: 10000 });
 
-    const removeButton = memberRow.getByRole("button", { name: deleteButton });
+    const removeButton = memberRow.getByRole("button", { name: "Delete" });
     await expect(removeButton).toBeVisible();
     await removeButton.click();
 
     await confirmDeletion(page);
-    await expectToast(page, memberRemovedMessage);
+    await expectToast(page, "Member removed from the team");
   }
 
   async function expectMemberRemoved(page: any, email: string) {
@@ -140,7 +129,7 @@ test.describe("Team Settings", () => {
     await expect(permissionsSelector).toBeVisible();
     await permissionsSelector.click();
 
-    const roleText = role === "admin" ? adminRole : memberRole;
+    const roleText = role === "admin" ? "Admin" : "Member";
     const roleOption = page.getByRole("option", { name: roleText });
     await expect(roleOption).toBeVisible();
     await roleOption.click();
@@ -156,7 +145,7 @@ test.describe("Team Settings", () => {
     const memberRow = getMemberRow(page, email);
     await expect(memberRow).toBeVisible({ timeout: 10000 });
 
-    const roleText = role === "admin" ? adminRole : memberRole;
+    const roleText = role === "admin" ? "Admin" : "Member";
     const permissionsSelector = memberRow
       .getByRole("combobox")
       .filter({ has: page.locator("span").filter({ hasText: roleText }) });
@@ -223,12 +212,12 @@ test.describe("Team Settings", () => {
     await page.waitForTimeout(2000);
 
     await fillInviteForm(page, email, "Duplicate User");
-    await selectRole(page, memberRole);
+    await selectRole(page, "Member");
     await submitInvite(page);
   }
 
   async function expectDuplicateError(page: any) {
-    await expectToast(page, memberExistsMessage);
+    await expectToast(page, "Member already exists");
   }
 
   async function cancelInvite(page: any) {
