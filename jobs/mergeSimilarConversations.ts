@@ -128,7 +128,7 @@ Should the current conversation be merged into any of the others? If so, which o
     model: O4_MINI_MODEL,
     system: systemMessage,
     temperature: 0.0,
-    maxTokens: 500,
+    maxOutputTokens: 500,
     functionId: "merge-similar-conversations",
   });
 

@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { APICallError, CoreMessage, CoreTool, embed, generateObject, generateText } from "ai";
+import { APICallError, ModelMessage, CoreTool, embed, generateObject, generateText } from "ai";
 import { isWithinTokenLimit as isWithinTokenLimitForCompletion } from "gpt-tokenizer/model/gpt-4o";
 import { isWithinTokenLimit as isWithinTokenLimitForEmbeddings } from "gpt-tokenizer/model/text-embedding-3-small";
 import { z } from "zod";
@@ -70,13 +70,13 @@ export const generateCompletion = ({
   system?: string;
   model?: AvailableModel;
   temperature?: number;
-  maxTokens?: number;
+  maxOutputTokens?: number;
   maxSteps?: number;
   tools?: Record<string, CoreTool>;
   functionId?: string;
   metadata?: Record<string, string | number | boolean>;
   shortenPromptBy?: ShortenPromptOptions;
-} & ({ prompt: string; messages?: never } | { messages: CoreMessage[]; prompt?: never })) =>
+} & ({ prompt: string; messages?: never } | { messages: ModelMessage[]; prompt?: never })) =>
   retryOnPromptLengthError(shortenPromptBy, { system, prompt, messages }, (prompt) =>
     generateText({
       model: openai(model),
@@ -102,12 +102,12 @@ export const generateStructuredObject = <T>({
   model?: AvailableModel;
   system?: string;
   temperature?: number;
-  maxTokens?: number;
+  maxOutputTokens?: number;
   functionId?: string;
   metadata?: Record<string, string>;
   schema: z.ZodType<T>;
   shortenPromptBy?: ShortenPromptOptions;
-} & ({ prompt: string; messages?: never } | { messages: CoreMessage[]; prompt?: never })) =>
+} & ({ prompt: string; messages?: never } | { messages: ModelMessage[]; prompt?: never })) =>
   retryOnPromptLengthError(options.shortenPromptBy, { system, prompt, messages }, (prompt) =>
     generateObject<T>({
       model: openai(model),
@@ -147,7 +147,7 @@ const retryOnPromptLengthError = async <Result>(
 };
 
 const shortenPrompt = (
-  { system, prompt, messages }: { system?: string; prompt?: string; messages?: CoreMessage[] },
+  { system, prompt, messages }: { system?: string; prompt?: string; messages?: ModelMessage[] },
   ratio: number,
   shortenPromptBy: ShortenPromptOptions,
 ) => {
@@ -168,7 +168,7 @@ const shortenPrompt = (
       );
       result.messages = result.messages.map((message, index) =>
         index === longestMessageIndex && typeof message.content === "string"
-          ? ({ ...message, content: message.content.slice(0, Math.floor(message.content.length / 2)) } as CoreMessage)
+          ? ({ ...message, content: message.content.slice(0, Math.floor(message.content.length / 2)) } as ModelMessage)
           : message,
       );
     } else if (result.prompt && shortenPromptBy?.truncateMessages) {
@@ -191,7 +191,7 @@ const characterLength = ({
 }: {
   system?: string;
   prompt?: string;
-  messages?: CoreMessage[];
+  messages?: ModelMessage[];
 }) => {
   return (
     (system?.length ?? 0) +

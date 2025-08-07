@@ -111,7 +111,7 @@ const createTool = (
   requestMethod: method.toUpperCase() as Tool["requestMethod"],
   url: `${defaultHost}${path}`,
   headers: {},
-  parameters: [...(operation.parameters || []).map(parseParameter), ...parseRequestBody(operation.requestBody)],
+  inputSchema: [...(operation.parameters || []).map(parseParameter), ...parseRequestBody(operation.requestBody)],
   authenticationMethod: "bearer_token",
   authenticationToken: apiToken,
   authenticationTokenPlaintext: apiToken,

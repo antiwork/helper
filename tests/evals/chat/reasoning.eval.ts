@@ -71,7 +71,7 @@ evalite("Reasoning - Correct refund information", {
         tools: {
           find_last_order: {
             description: "Find the last order of the user",
-            parameters: {
+            inputSchema: {
               type: "object",
               properties: {
                 email: { type: "string", description: "The email of the user" },
@@ -186,7 +186,7 @@ evalite("Reasoning - Tool calling", {
         tools: {
           search_orders: {
             description: "Search for orders",
-            parameters: {
+            inputSchema: {
               type: "object",
               properties: {
                 email: { type: "string", description: "The email of the user" },
@@ -197,7 +197,7 @@ evalite("Reasoning - Tool calling", {
           },
           refund_order: {
             description: "Refund an order",
-            parameters: {
+            inputSchema: {
               type: "object",
               properties: {
                 order_id: { type: "string", description: "The ID of the order" },

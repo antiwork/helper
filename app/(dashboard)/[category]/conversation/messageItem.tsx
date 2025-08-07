@@ -42,8 +42,8 @@ function getPreviewUrl(file: AttachedFile): string {
       : "/images/attachment-preview-default.svg";
 }
 
-const hasReasoningMetadata = (metadata: any): metadata is { reasoning: string } => {
-  return metadata && typeof metadata.reasoning === "string";
+const hasReasoningMetadata = (metadata: any): metadata is { reasoningText: string } => {
+  return metadata && typeof metadata.reasoningText === "string";
 };
 
 const MessageContent = ({
@@ -326,7 +326,7 @@ const MessageItem = ({
                     <h4 className="font-medium">AI Reasoning</h4>
                     <div className="max-h-[300px] overflow-y-auto">
                       <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {isAIMessage && hasReasoningMetadata(message.metadata) && message.metadata.reasoning}
+                        {isAIMessage && hasReasoningMetadata(message.metadata) && message.metadata.reasoningText}
                       </p>
                     </div>
                   </div>

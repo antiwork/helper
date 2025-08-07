@@ -43,7 +43,7 @@ const categorizeWithAI = async (
   mailbox: Mailbox,
 ) => {
   if (availableIssueGroups.length === 0) {
-    return { matchedGroupId: null, reasoning: "No issue groups available for categorization" };
+    return { matchedGroupId: null, reasoningText: "No issue groups available for categorization" };
   }
 
   const result = await runAIObjectQuery({
@@ -51,7 +51,7 @@ const categorizeWithAI = async (
     queryType: "auto_assign_conversation",
     schema: z.object({
       matchedGroupId: z.number().nullable(),
-      reasoning: z.string(),
+      reasoningText: z.string(),
       confidenceScore: z.number().min(0).max(1).optional(),
     }),
     system: `You are an Intelligent Issue Categorization System that analyzes customer conversations and matches them to the most appropriate issue group.
@@ -188,7 +188,7 @@ export const categorizeConversationToIssueGroup = async ({ messageId }: { messag
       conversationId: conversation.id,
       assignedIssueGroupId: aiResult.matchedGroupId,
       issueGroupTitle: matchedGroup?.title,
-      aiReasoning: aiResult.reasoning,
+      aiReasoning: aiResult.reasoningText,
       confidenceScore: aiResult.confidenceScore,
     };
   }
@@ -196,7 +196,7 @@ export const categorizeConversationToIssueGroup = async ({ messageId }: { messag
   return {
     message: "No suitable issue group found for this conversation",
     conversationId: conversation.id,
-    aiReasoning: aiResult.reasoning,
+    aiReasoning: aiResult.reasoningText,
     confidenceScore: aiResult.confidenceScore,
     availableGroupsCount: availableIssueGroups.length,
   };

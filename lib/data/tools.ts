@@ -24,7 +24,7 @@ export const fetchOpenApiSpec = async (url: string, apiKey: string | null): Prom
     throw new Error(`Failed to fetch API spec from URL: ${response.statusText}`);
   }
 
-  return response.text();
+  return response.text.text();
 };
 
 export const importToolsFromSpec = async ({

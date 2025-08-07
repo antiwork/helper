@@ -56,7 +56,7 @@ describe("toolsRouter", () => {
             name: "Test Tool",
             slug: "test-tool",
             description: "A test tool",
-            parameters: {
+            inputSchema: {
               test: "params",
             },
           },

@@ -12,8 +12,8 @@ describe("trackAIUsageEvent", () => {
     const model = "o4-mini-2025-04-16";
     const queryType = "response_generator";
     const usage = {
-      promptTokens: 100,
-      completionTokens: 50,
+      inputTokens: 100,
+      outputTokens: 50,
       totalTokens: 150,
       cachedTokens: 0,
     };
@@ -36,8 +36,8 @@ describe("trackAIUsageEvent", () => {
     const model = "o4-mini-2025-04-16";
     const queryType = "response_generator";
     const usage = {
-      promptTokens: 100,
-      completionTokens: 50,
+      inputTokens: 100,
+      outputTokens: 50,
       totalTokens: 150,
       cachedTokens: 60,
     };
@@ -53,8 +53,8 @@ describe("trackAIUsageEvent", () => {
     expect(usageEvent).toMatchObject({
       modelName: model,
       queryType,
-      inputTokensCount: usage.promptTokens,
-      outputTokensCount: usage.completionTokens,
+      inputTokensCount: usage.inputTokens,
+      outputTokensCount: usage.outputTokens,
       cachedTokensCount: usage.cachedTokens,
       cost: "0.0002805",
     });
@@ -65,8 +65,8 @@ describe("trackAIUsageEvent", () => {
     const model = "o4-mini-2025-04-16";
     const queryType = "response_generator";
     const usage = {
-      promptTokens: 200,
-      completionTokens: 100,
+      inputTokens: 200,
+      outputTokens: 100,
       totalTokens: 300,
       cachedTokens: 100,
     };
@@ -81,8 +81,8 @@ describe("trackAIUsageEvent", () => {
     expect(usageEvent).toMatchObject({
       modelName: model,
       queryType,
-      inputTokensCount: usage.promptTokens,
-      outputTokensCount: usage.completionTokens,
+      inputTokensCount: usage.inputTokens,
+      outputTokensCount: usage.outputTokens,
       cachedTokensCount: usage.cachedTokens,
       cost: "0.0005775",
     });
@@ -109,8 +109,8 @@ describe("trackAIUsageEvent", () => {
 
     for (const testCase of testCases) {
       const usage = {
-        promptTokens: testCase.inputTokens,
-        completionTokens: testCase.outputTokens,
+        inputTokens: testCase.inputTokens,
+        outputTokens: testCase.outputTokens,
         totalTokens: testCase.inputTokens + testCase.outputTokens,
         cachedTokens: testCase.cachedTokens,
       };

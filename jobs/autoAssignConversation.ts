@@ -38,7 +38,7 @@ const getNonCoreTeamMembersWithMatchingKeywords = async (
     queryType: "auto_assign_conversation",
     schema: z.object({
       matches: z.record(z.string(), z.boolean()),
-      reasoning: z.string(),
+      reasoningText: z.string(),
       confidenceScore: z.number().optional(),
     }),
     system: `You are an Intelligent Support Routing System that connects customer inquiries to team members with the most relevant expertise.
@@ -195,7 +195,7 @@ export const autoAssignConversation = async ({ conversationId }: { conversationI
 
   await updateConversation(conversation.id, {
     set: { assignedToId: nextTeamMember.id },
-    message: aiResult ? aiResult.reasoning : "Core member assigned by round robin",
+    message: aiResult ? aiResult.reasoningText : "Core member assigned by round robin",
   });
 
   return {

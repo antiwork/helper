@@ -1,4 +1,4 @@
-import { CoreMessage } from "ai";
+import { ModelMessage } from "ai";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
@@ -11,7 +11,7 @@ import { getMailbox } from "@/lib/data/mailbox";
 
 const constructMessagesForConversationSummary = (
   emails: Pick<typeof conversationMessages.$inferSelect, "role" | "cleanedUpText" | "metadata">[],
-): CoreMessage[] => {
+): ModelMessage[] => {
   const allEmailsContent = emails
     .map((email) => {
       if (email.role === "tool") {

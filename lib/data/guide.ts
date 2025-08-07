@@ -13,7 +13,7 @@ type GuideSessionEventData = {
   state_analysis?: string;
   progress_evaluation?: string;
   challenges?: string;
-  reasoning?: string;
+  reasoningText?: string;
   [key: string]: unknown;
 };
 

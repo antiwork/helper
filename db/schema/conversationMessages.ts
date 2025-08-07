@@ -22,7 +22,7 @@ export type ToolMetadata = {
   parameters: Record<string, unknown>;
 };
 export type MessageMetadata = Partial<CustomerInfo> &
-  Record<string, unknown> & { reasoning?: string | null; includesScreenshot?: boolean };
+  Record<string, unknown> & { reasoningText?: string | null; includesScreenshot?: boolean };
 
 type MessageStatus = "queueing" | "sent" | "failed" | "draft" | "discarded";
 export type MessageRole = "user" | "staff" | "ai_assistant" | "tool";

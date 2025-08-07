@@ -51,9 +51,9 @@
     "with-test-env": "dotenv -e ./.env.test -e ./.env.test.local --"
   },
   "dependencies": {
-    "@ai-sdk/fireworks": "^0.1.10",
-    "@ai-sdk/openai": "^1.1.12",
-    "@ai-sdk/react": "^1.2.10",
+    "@ai-sdk/fireworks": "^1.0.2",
+    "@ai-sdk/openai": "^2.0.5",
+    "@ai-sdk/react": "^2.0.8",
     "@helperai/react": "workspace:*",
     "@helperai/sdk": "workspace:*",
     "@hookform/resolvers": "3.3.4",
@@ -101,7 +101,7 @@
     "@vercel/analytics": "^1.4.1",
     "@vercel/functions": "^1.5.2",
     "@vercel/otel": "^1.10.0",
-    "ai": "^4.1.41",
+    "ai": "^5.0.8",
     "canvas-confetti": "^1.9.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -164,7 +164,7 @@
     "ua-parser-js": "^1.0.37",
     "undici": "^7.9.0",
     "use-stick-to-bottom": "^1.0.40",
-    "zod": "^3.24.3",
+    "zod": "^3.25.0",
     "zustand": "^5.0.0"
   },
   "devDependencies": {

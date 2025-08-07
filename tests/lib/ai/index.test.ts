@@ -1,5 +1,5 @@
 import { userFactory } from "@tests/support/factories/users";
-import { CoreMessage, CoreTool, GenerateTextResult } from "ai";
+import { ModelMessage, CoreTool, GenerateTextResult } from "ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { runAIObjectQuery, runAIQuery } from "@/lib/ai";
@@ -15,7 +15,7 @@ const mockCompletionResponse = {
   toolCalls: [],
   toolResults: [],
   finishReason: "stop",
-  usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+  usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
   warnings: [],
   steps: [],
   response: {
@@ -28,10 +28,10 @@ const mockCompletionResponse = {
   experimental_output: undefined as never,
   experimental_providerMetadata: {},
   request: {},
-  reasoning: "",
-  reasoningDetails: [],
+  reasoningText: "",
+  reasoning: [],
   sources: [],
-  providerMetadata: {},
+  providerOptions: {},
   files: [],
 } satisfies GenerateTextResult<Record<string, CoreTool>, undefined>;
 
@@ -46,13 +46,13 @@ describe("runAIQuery", () => {
 
   it("calls generateCompletion with correct parameters", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const messages: CoreMessage[] = [{ role: "user", content: "Hello" }];
+    const messages: ModelMessage[] = [{ role: "user", content: "Hello" }];
 
     await runAIQuery({
       messages,
       mailbox,
       queryType: "response_generator",
-      maxTokens: 500,
+      maxOutputTokens: 500,
     });
 
     expect(core.generateCompletion).toHaveBeenCalledWith({
@@ -60,7 +60,7 @@ describe("runAIQuery", () => {
       messages,
       model: core.GPT_4_1_MODEL,
       temperature: 0,
-      maxTokens: 500,
+      maxOutputTokens: 500,
       maxSteps: undefined,
       system: undefined,
       tools: undefined,
@@ -71,7 +71,7 @@ describe("runAIQuery", () => {
 
   it("uses custom parameters when provided", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const messages: CoreMessage[] = [{ role: "user", content: "Hello" }];
+    const messages: ModelMessage[] = [{ role: "user", content: "Hello" }];
 
     await runAIQuery({
       messages,
@@ -80,7 +80,7 @@ describe("runAIQuery", () => {
       model: "o4-mini-2025-04-16",
       system: "Custom system prompt",
       temperature: 0.5,
-      maxTokens: 1000,
+      maxOutputTokens: 1000,
     });
 
     expect(core.generateCompletion).toHaveBeenCalledWith({
@@ -89,7 +89,7 @@ describe("runAIQuery", () => {
       messages,
       model: "o4-mini-2025-04-16",
       temperature: 0.5,
-      maxTokens: 1000,
+      maxOutputTokens: 1000,
       maxSteps: undefined,
       tools: undefined,
       shortenPromptBy: undefined,
@@ -105,8 +105,8 @@ describe("runAIQuery", () => {
     vi.mocked(core.generateCompletion).mockResolvedValueOnce({
       text: "Test response",
       usage: {
-        promptTokens: 10,
-        completionTokens: 5,
+        inputTokens: 10,
+        outputTokens: 5,
         totalTokens: 15,
       },
       experimental_providerMetadata: {
@@ -114,10 +114,10 @@ describe("runAIQuery", () => {
           cachedPromptTokens: 0,
         },
       },
-      reasoning: "",
-      reasoningDetails: [],
+      reasoningText: "",
+      reasoning: [],
       sources: [],
-      providerMetadata: {},
+      providerOptions: {},
       experimental_output: undefined as never,
       toolCalls: [],
       toolResults: [],
@@ -148,8 +148,8 @@ describe("runAIQuery", () => {
       model,
       usage: {
         cachedTokens: 0,
-        promptTokens: 10,
-        completionTokens: 5,
+        inputTokens: 10,
+        outputTokens: 5,
         totalTokens: 15,
       },
     });
@@ -157,7 +157,7 @@ describe("runAIQuery", () => {
 
   it("retries on failure", async () => {
     const { mailbox } = await userFactory.createRootUser();
-    const messages: CoreMessage[] = [{ role: "user", content: "Hello" }];
+    const messages: ModelMessage[] = [{ role: "user", content: "Hello" }];
 
     vi.spyOn(core, "generateCompletion")
       .mockRejectedValueOnce(new Error("API Error"))
@@ -167,10 +167,10 @@ describe("runAIQuery", () => {
       messages,
       mailbox,
       queryType: "response_generator",
-      maxTokens: 500,
+      maxOutputTokens: 500,
     });
 
-    expect(result.text).toBe("Retry successful");
+    expect(result.text.text).toBe("Retry successful");
     expect(core.generateCompletion).toHaveBeenCalledTimes(2);
   });
 });
@@ -183,7 +183,7 @@ describe("runAIObjectQuery", () => {
         throw new Error("Not implemented");
       },
       ...mockCompletionResponse,
-      providerMetadata: {},
+      providerOptions: {},
     });
   });
 
@@ -199,8 +199,8 @@ describe("runAIObjectQuery", () => {
     vi.mocked(core.generateStructuredObject).mockResolvedValueOnce({
       object: { name: "John Doe", age: 30 },
       usage: {
-        promptTokens: 10,
-        completionTokens: 5,
+        inputTokens: 10,
+        outputTokens: 5,
         totalTokens: 15,
       },
       finishReason: "stop",
@@ -216,7 +216,7 @@ describe("runAIObjectQuery", () => {
           cachedPromptTokens: 100,
         },
       },
-      providerMetadata: {},
+      providerOptions: {},
       logprobs: [],
       toJsonResponse: () => {
         throw new Error("Not implemented");
@@ -239,8 +239,8 @@ describe("runAIObjectQuery", () => {
       model,
       usage: {
         cachedTokens: 100,
-        promptTokens: 10,
-        completionTokens: 5,
+        inputTokens: 10,
+        outputTokens: 5,
         totalTokens: 15,
       },
     });

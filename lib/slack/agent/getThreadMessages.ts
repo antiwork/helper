@@ -1,6 +1,6 @@
 import type { Block, ImageBlock, RichTextBlockElement, RichTextElement } from "@slack/types";
 import { KnownBlock, WebClient } from "@slack/web-api";
-import { CoreMessage } from "ai";
+import { ModelMessage } from "ai";
 import { cache } from "react";
 
 const convertRichTextBlockElementToMarkdown = (element: RichTextBlockElement): string => {
@@ -155,7 +155,7 @@ const messageToMarkdown = ({ text, blocks }: { text?: string; blocks?: Block[] }
 };
 
 export const getThreadMessages = cache(
-  async (token: string, channelId: string, threadTs: string, botUserId: string): Promise<CoreMessage[]> => {
+  async (token: string, channelId: string, threadTs: string, botUserId: string): Promise<ModelMessage[]> => {
     const client = new WebClient(token);
     const { messages } = await client.conversations.replies({
       channel: channelId,
@@ -179,7 +179,7 @@ export const getThreadMessages = cache(
         {
           role: isBot ? "assistant" : "user",
           content: content.replace(`<@${botUserId}>`, "@Helper"),
-        } satisfies CoreMessage,
+        } satisfies ModelMessage,
       ];
     });
 

@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/nextjs";
 import { waitUntil } from "@vercel/functions";
-import { type Message } from "ai";
+import { type UIMessage } from "ai";
 import { eq } from "drizzle-orm";
 import { ReadPageToolConfig } from "@helperai/sdk";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
@@ -22,7 +22,7 @@ import { ToolRequestBody } from "@/packages/client/dist";
 export const maxDuration = 60;
 
 interface ChatRequestBody {
-  message: Message;
+  message: UIMessage;
   token: string;
   conversationSlug: string;
   readPageTool: ReadPageToolConfig | null;

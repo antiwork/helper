@@ -1,4 +1,4 @@
-import { Message } from "ai";
+import { UIMessage } from "ai";
 import { create } from "zustand";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 
@@ -11,8 +11,8 @@ type WidgetViewState = {
   setIsNewConversation: (isNew: boolean) => void;
   handleSelectConversation: (slug: string) => string;
   handleNewConversation: () => void;
-  showingPromptInfo?: { promptInfo: PromptInfo; message: Message; allMessages: Message[] };
-  togglePromptInfo: (promptInfo?: { promptInfo: PromptInfo; message: Message; allMessages: Message[] }) => void;
+  showingPromptInfo?: { promptInfo: PromptInfo; message: UIMessage; allMessages: UIMessage[] };
+  togglePromptInfo: (promptInfo?: { promptInfo: PromptInfo; message: UIMessage; allMessages: UIMessage[] }) => void;
 };
 
 export const useWidgetView = create<WidgetViewState>((set) => ({

@@ -3,7 +3,7 @@ import { fireworks } from "@ai-sdk/fireworks";
 import { TRPCError } from "@trpc/server";
 import {
   appendClientMessage,
-  convertToCoreMessages,
+  convertToModelMessages,
   createDataStreamResponse,
   DataStreamWriter,
   formatDataStreamPart,
@@ -11,8 +11,8 @@ import {
   LanguageModelUsage,
   LanguageModelV1,
   streamText,
-  type CoreMessage,
-  type Message,
+  type ModelMessage,
+  type UIMessage,
   type TextStreamPart,
   type Tool,
 } from "ai";
@@ -74,7 +74,7 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
     model: openai(GPT_4_1_MINI_MODEL),
     system: SUMMARY_PROMPT,
     prompt: text,
-    maxTokens: SUMMARY_MAX_TOKENS,
+    maxOutputTokens: SUMMARY_MAX_TOKENS,
   });
 
   return summary;
@@ -108,7 +108,7 @@ const loadScreenshotAttachments = async (messages: (typeof conversationMessages.
   );
 };
 
-export const loadPreviousMessages = async (conversationId: number, latestMessageId?: number): Promise<Message[]> => {
+export const loadPreviousMessages = async (conversationId: number, latestMessageId?: number): Promise<UIMessage[]> => {
   const conversationMessages = await getMessagesOnly(conversationId);
   const attachments = await loadScreenshotAttachments(conversationMessages);
 
@@ -150,7 +150,7 @@ const buildPromptMessages = async (
   query: string,
   guideEnabled = false,
 ): Promise<{
-  messages: CoreMessage[];
+  messages: ModelMessage[];
   sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
   promptInfo: Omit<PromptInfo, "availableTools">;
 }> => {
@@ -205,15 +205,15 @@ const generateReasoning = async ({
   dataStream,
 }: {
   tools: Record<string, Tool>;
-  systemMessages: CoreMessage[];
-  coreMessages: CoreMessage[];
+  systemMessages: ModelMessage[];
+  coreMessages: ModelMessage[];
   reasoningModel: LanguageModelV1;
   email: string | null;
   conversationId: number;
   traceId?: string | null;
   evaluation?: boolean;
   dataStream?: DataStreamWriter;
-}): Promise<{ reasoning: string | null; usage: LanguageModelUsage | null }> => {
+}): Promise<{ reasoningText: string | null; usage: LanguageModelUsage | null }> => {
   const toolsAvailable = Object.keys(tools).map((tool) => {
     const toolObj = tools[tool] as Tool & { description: string };
     const params = toolObj?.parameters.shape;
@@ -233,7 +233,7 @@ const generateReasoning = async ({
       : message,
   );
 
-  const reasoningSystemMessages: CoreMessage[] = [
+  const reasoningSystemMessages: ModelMessage[] = [
     {
       role: "system",
       content: `The following tools are available:\n${toolsAvailable.join("\n")}`,
@@ -291,7 +291,7 @@ const generateReasoning = async ({
           },
         });
       } else if (!textPart.includes("<think>") && !finished) {
-        dataStream?.writeData({ reasoning: textPart });
+        dataStream?.writeData({ reasoningText: textPart });
       }
     }
 
@@ -300,17 +300,17 @@ const generateReasoning = async ({
     const reasoning = thinkMatch?.[1]?.trim() ?? null;
 
     dataStream?.writeMessageAnnotation({
-      reasoning: { message: reasoning, reasoningTimeSeconds: Math.round((Date.now() - startTime) / 1000) },
+      reasoningText: { message: reasoning, reasoningTimeSeconds: Math.round((Date.now() - startTime) / 1000) },
     });
 
-    return { reasoning, usage: await usage };
+    return { reasoningText, usage: await usage };
   } catch (error) {
     if (evaluation) {
       captureExceptionAndThrowIfDevelopment(error);
     } else {
       captureExceptionAndLog(error);
     }
-    return { reasoning: null, usage: null };
+    return { reasoningText: null, usage: null };
   }
 };
 
@@ -329,7 +329,7 @@ export const generateAIResponse = async ({
   guideEnabled = false,
   tools: clientProvidedTools,
 }: {
-  messages: Message[];
+  messages: UIMessage[];
   mailbox: Mailbox;
   conversationId: number;
   email: string | null;
@@ -352,10 +352,10 @@ export const generateAIResponse = async ({
   dataStream?: DataStreamWriter;
   tools?: Record<string, ToolRequestBody>;
 }) => {
-  const lastMessage = messages.findLast((m: Message) => m.role === "user");
+  const lastMessage = messages.findLast((m: UIMessage) => m.role === "user");
   const query = lastMessage?.content || "";
 
-  const coreMessages = convertToCoreMessages(messages, { tools: {} });
+  const coreMessages = convertToModelMessages(messages, { tools: {} });
   const {
     messages: systemMessages,
     sources,
@@ -366,7 +366,7 @@ export const generateAIResponse = async ({
   if (readPageTool) {
     tools[readPageTool.toolName] = {
       description: readPageTool.toolDescription,
-      parameters: z.object({}),
+      inputSchema: z.object({}),
     };
   }
 
@@ -374,7 +374,7 @@ export const generateAIResponse = async ({
     Object.entries(clientProvidedTools).forEach(([toolName, tool]) => {
       const toolDefinition: Tool = {
         description: tool.description,
-        parameters: z.object(
+        inputSchema: z.object(
           Object.fromEntries(
             Object.entries(tool.parameters).map(([key, value]) => {
               let type: z.ZodType = value.type === "string" ? z.string() : z.number();
@@ -418,7 +418,7 @@ export const generateAIResponse = async ({
 
   let reasoning: string | null = null;
   if (addReasoning) {
-    const { reasoning: reasoningText, usage } = await generateReasoning({
+    const { reasoningText: reasoningText, usage } = await generateReasoning({
       tools,
       systemMessages,
       coreMessages,
@@ -436,8 +436,8 @@ export const generateAIResponse = async ({
         model: "fireworks/deepseek-r1",
         queryType: "reasoning",
         usage: {
-          promptTokens: usage?.promptTokens ?? 0,
-          completionTokens: usage?.completionTokens ?? 0,
+          inputTokens: usage?.inputTokens ?? 0,
+          outputTokens: usage?.outputTokens ?? 0,
           totalTokens: usage?.totalTokens ?? 0,
           cachedTokens: 0,
         },
@@ -461,7 +461,7 @@ export const generateAIResponse = async ({
     temperature: 0.1,
     seed: evaluation ? 100 : undefined,
     experimental_transform: hideToolResults(),
-    experimental_providerMetadata: {
+    providerOptions: {
       openai: {
         store: true,
         metadata: {
@@ -499,7 +499,7 @@ export const generateAIResponse = async ({
         await onFinish({
           text,
           finishReason,
-          experimental_providerMetadata: { ...experimental_providerMetadata, reasoning },
+          experimental_providerMetadata: { ...experimental_providerMetadata, reasoningText },
           steps,
           traceId,
           sources: sources.map((source) => ({ url: source.url, pageTitle: source.pageTitle })),
@@ -554,7 +554,7 @@ const createAssistantMessage = (
   text: string,
   options?: {
     traceId?: string | null;
-    reasoning?: string | null;
+    reasoningText?: string | null;
     sendEmail?: boolean;
   },
 ) => {
@@ -570,7 +570,7 @@ const createAssistantMessage = (
     isFlaggedAsBad: false,
     metadata: {
       trace_id: options?.traceId,
-      reasoning: options?.reasoning,
+      reasoningText: options?.reasoningText,
     },
   });
 };
@@ -642,12 +642,12 @@ export const respondWithAI = async ({
   mailbox: Mailbox;
   userEmail: string | null;
   sendEmail: boolean;
-  message: Message;
+  message: UIMessage;
   messageId: number;
   readPageTool: ReadPageToolConfig | null;
   guideEnabled: boolean;
   onResponse?: (result: {
-    messages: Message[];
+    messages: UIMessage[];
     platformCustomer: PlatformCustomer | null;
     isPromptConversation: boolean;
     isFirstMessage: boolean;
@@ -681,7 +681,7 @@ export const respondWithAI = async ({
 
     const assistantMessage = await createAssistantMessage(conversation.id, messageId, text, {
       traceId,
-      reasoning,
+      reasoningText,
       sendEmail,
     });
     onResponse?.({
@@ -751,7 +751,7 @@ export const respondWithAI = async ({
 
           if (finishReason !== "stop" && finishReason !== "tool-calls") return;
 
-          const reasoning = experimental_providerMetadata?.reasoning;
+          const reasoning = experimental_providerMetadata?.reasoningText;
           const responseText = hasRequestHumanSupportCall
             ? "_Escalated to a human! You will be contacted soon here and by email._"
             : text;
@@ -778,21 +778,32 @@ export const respondWithAI = async ({
           });
 
           for (const source of uniqueMarkdownSources) {
-            dataStream.writeSource({
-              sourceType: "url",
-              id: source.id ?? "",
-              url: source.url ?? "",
-              title: source.title ?? "",
+            dataStream.write({
+              'type': 'source',
+
+              'value': {
+                sourceType: "url",
+                id: source.id ?? "",
+                url: source.url ?? "",
+                title: source.title ?? "",
+              }
             });
           }
 
           if (isHelperUser) {
-            dataStream.writeMessageAnnotation({ promptInfo });
+            dataStream.write({
+              'type': 'message-annotations',
+              'value': [{ promptInfo }]
+            });
           }
 
-          dataStream.writeMessageAnnotation({
-            id: assistantMessage.id.toString(),
-            traceId,
+          dataStream.write({
+            'type': 'message-annotations',
+
+            'value': [{
+              id: assistantMessage.id.toString(),
+              traceId,
+            }]
           });
 
           if (finishReason === "stop" && isFirstMessage && !hasSensitiveToolCall && !hasRequestHumanSupportCall) {
@@ -829,8 +840,12 @@ const createTextResponse = (text: string, messageId: string) => {
         },
       });
       dataStream.merge(textStream);
-      dataStream.writeMessageAnnotation({
-        id: messageId,
+      dataStream.write({
+        'type': 'message-annotations',
+
+        'value': [{
+          id: messageId,
+        }]
       });
     },
   });
@@ -878,7 +893,7 @@ export const generateDraftResponse = async (
   for await (const _ of result.textStream) {
     // awaiting result.text doesn't appear to work without this
   }
-  const draftResponse = await convertMarkdownToHtml(await result.text);
+  const draftResponse = await convertMarkdownToHtml(await result.text.text);
   const newDraft = await db.transaction(async (tx) => {
     if (oldDraft) {
       await tx

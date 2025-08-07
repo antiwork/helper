@@ -1,5 +1,5 @@
 import { retry } from "@lifeomic/attempt";
-import { CoreMessage, GenerateTextResult, Tool } from "ai";
+import { ModelMessage, GenerateTextResult, Tool } from "ai";
 import { z } from "zod";
 import { aiUsageEvents } from "@/db/schema/aiUsageEvents";
 import { mailboxes } from "@/db/schema/mailboxes";
@@ -16,13 +16,13 @@ import {
 export { generateCompletion, generateEmbedding };
 
 type CommonAIQueryOptions = {
-  messages: CoreMessage[];
+  messages: ModelMessage[];
   mailbox: typeof mailboxes.$inferSelect;
   queryType: (typeof aiUsageEvents.$inferSelect)["queryType"];
   model?: AvailableModel;
   system?: string;
   temperature?: number;
-  maxTokens?: number;
+  maxOutputTokens?: number;
   functionId?: string;
   shortenPromptBy?: ShortenPromptOptions;
 };
@@ -34,7 +34,7 @@ export const runAIQuery = async ({
   model = COMPLETION_MODEL,
   system,
   temperature = 0.0,
-  maxTokens,
+  maxOutputTokens,
   maxSteps,
   tools,
   functionId,
@@ -47,7 +47,7 @@ export const runAIQuery = async ({
         model,
         system,
         temperature,
-        maxTokens,
+        maxOutputTokens,
         maxSteps,
         tools,
         functionId,
@@ -65,7 +65,7 @@ export const runAIObjectQuery = async <T>({
   model = COMPLETION_MODEL,
   system,
   temperature = 0.0,
-  maxTokens = 500,
+  maxOutputTokens = 500,
   functionId,
   shortenPromptBy,
 }: CommonAIQueryOptions & {
@@ -79,7 +79,7 @@ export const runAIObjectQuery = async <T>({
         model,
         system,
         temperature,
-        maxTokens,
+        maxOutputTokens,
         functionId,
         shortenPromptBy,
       }),

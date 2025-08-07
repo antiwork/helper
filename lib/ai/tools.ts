@@ -108,7 +108,7 @@ export const buildTools = async (
   const tools: Record<string, Tool> = {
     knowledge_base: tool({
       description: "search the knowledge base",
-      parameters: z.object({
+      inputSchema: z.object({
         query: z.string().describe("query to search the knowledge base"),
       }),
       execute: ({ query }) => reasoningMiddleware(searchKnowledgeBase(query)),
@@ -118,7 +118,7 @@ export const buildTools = async (
   if (guideEnabled) {
     tools[GUIDE_USER_TOOL_NAME] = tool({
       description: "call this tool to guide the user in the interface instead of returning a text response",
-      parameters: z.object({
+      inputSchema: z.object({
         title: z.string().describe("title of the guide that will be displayed to the user"),
         instructions: z.string().describe("instructions for the guide based on the current page and knowledge base"),
       }),
@@ -128,7 +128,7 @@ export const buildTools = async (
   if (!email) {
     tools.set_user_email = tool({
       description: "Set the email address for the current anonymous user, so that the user can be contacted later",
-      parameters: z.object({
+      inputSchema: z.object({
         email: z.string().email().describe("email address to set for the user"),
       }),
       execute: ({ email }) => reasoningMiddleware(setUserEmail(conversationId, email)),
@@ -138,7 +138,7 @@ export const buildTools = async (
   if (includeHumanSupport) {
     tools.request_human_support = tool({
       description: REQUEST_HUMAN_SUPPORT_DESCRIPTION,
-      parameters: z.object({
+      inputSchema: z.object({
         reason: z
           .string()
           .describe(
@@ -156,7 +156,7 @@ export const buildTools = async (
   if (metadataApi && email) {
     tools.fetch_user_information = tool({
       description: "fetch user related information",
-      parameters: z.object({
+      inputSchema: z.object({
         reason: z.string().describe("reason for fetching user information"),
       }),
       execute: () => reasoningMiddleware(fetchUserInformation(email)),
@@ -173,7 +173,7 @@ export const buildTools = async (
 
       tools[slug] = tool({
         description: aiTool.description,
-        parameters: aiTool.parameters,
+        inputSchema: aiTool.parameters,
         execute: aiTool.available
           ? async (params) => {
               if (aiTool.customerEmailParameter && email) {

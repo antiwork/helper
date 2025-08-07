@@ -13,7 +13,7 @@ type Reasoning = {
 export default function MessageElement({
   messageId,
   message,
-  reasoning,
+  reasoningText,
   hideReasoning,
   token,
   conversationSlug,
@@ -21,7 +21,7 @@ export default function MessageElement({
 }: {
   messageId: string | undefined;
   message: MessageWithReaction;
-  reasoning: Reasoning | null;
+  reasoningText: Reasoning | null;
   hideReasoning: boolean;
   token: string | null;
   conversationSlug: string | null;

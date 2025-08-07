@@ -255,7 +255,7 @@ const createSettingsPageRecords = async () => {
     slug: "reset_password",
     requestMethod: "POST",
     url: "http://app.gumroad.dev/internal/helper/users/send_reset_password_instructions",
-    parameters: [
+    inputSchema: [
       {
         in: "body",
         name: "email",
@@ -273,7 +273,7 @@ const createSettingsPageRecords = async () => {
     slug: "resend_last_receipt",
     requestMethod: "POST",
     url: "http://app.gumroad.dev/internal/helper/purchases/resend_last_receipt",
-    parameters: [
+    inputSchema: [
       {
         in: "body",
         name: "email",

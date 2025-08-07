@@ -14,7 +14,7 @@ const fetchPageTitle = async (url: string): Promise<string> => {
     const response = await fetch(url, {
       headers: { "User-Agent": "Helper Website Crawler" },
     });
-    const html = await response.text();
+    const html = await response.text.text();
 
     const titleMatch = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
     return titleMatch?.[1] ? titleMatch[1].trim() : new URL(url).hostname;

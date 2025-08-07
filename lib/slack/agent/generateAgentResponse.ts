@@ -1,4 +1,4 @@
-import { CoreMessage, Tool, tool } from "ai";
+import { ModelMessage, Tool, tool } from "ai";
 import { and, eq, inArray, isNull, notInArray, or, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { getBaseUrl } from "@/components/constants";
@@ -33,7 +33,7 @@ const _searchFiltersSchema = searchToolSchema.omit({ cursor: true, limit: true }
 type SearchFiltersInput = z.infer<typeof _searchFiltersSchema>;
 
 export const generateAgentResponse = async (
-  messages: CoreMessage[],
+  messages: ModelMessage[],
   mailbox: Mailbox,
   slackUserId: string | null,
   showStatus: (status: string | null, tool?: { toolName: string; parameters: Record<string, unknown> }) => void,
@@ -126,7 +126,7 @@ export const generateAgentResponse = async (
   const tools: Record<string, Tool> = {
     getUsers: tool({
       description: "Get IDs, names and emails of all team members",
-      parameters: z.object({}),
+      inputSchema: z.object({}),
       execute: async () => {
         showStatus(`Checking members...`, { toolName: "getMembers", parameters: {} });
         const members = await db
@@ -148,7 +148,7 @@ export const generateAgentResponse = async (
     getUserReplyCounts: tool({
       description:
         "Check how many replies members sent to tickets in a given time period. This is NOT the same as closed tickets: use the countTickets tool to get the number of closed tickets.",
-      parameters: z.object({
+      inputSchema: z.object({
         startDate: z.string().datetime(),
         endDate: z.string().datetime(),
       }),
@@ -160,7 +160,7 @@ export const generateAgentResponse = async (
     searchTickets: tool({
       description:
         "Search tickets/conversations with various filtering options. Use `nextCursor` to paginate through results; if it's set then pass it as `cursor` to get the next page of results.",
-      parameters: searchToolSchema,
+      inputSchema: searchToolSchema,
       execute: async (input) => {
         showStatus(`Searching tickets...`, { toolName: "searchTickets", parameters: input });
         try {
@@ -178,7 +178,7 @@ export const generateAgentResponse = async (
     }),
     countTickets: tool({
       description: "Count the number of tickets matching the search criteria",
-      parameters: searchToolSchema.omit({ cursor: true, limit: true }),
+      inputSchema: searchToolSchema.omit({ cursor: true, limit: true }),
       execute: async (input) => {
         showStatus(`Counting tickets...`, { toolName: "countTickets", parameters: input });
         const { where } = await searchConversations(mailbox, { ...input, limit: 1 });
@@ -187,7 +187,7 @@ export const generateAgentResponse = async (
     }),
     getAverageResponseTime: tool({
       description: "Get the average response time for tickets in a given time period",
-      parameters: z.object({
+      inputSchema: z.object({
         startDate: z.string().datetime(),
         endDate: z.string().datetime(),
         filters: searchToolSchema.omit({ cursor: true, limit: true }),
@@ -211,7 +211,7 @@ export const generateAgentResponse = async (
     }),
     getTicket: tool({
       description: "Get a ticket by ID",
-      parameters: z.object({
+      inputSchema: z.object({
         id: z
           .union([z.string(), z.number()])
           .describe(
@@ -229,7 +229,7 @@ export const generateAgentResponse = async (
     getTicketMessages: tool({
       description:
         "Get the messages of a ticket by ID. This includes messages from the user and replies from the team.",
-      parameters: z.object({
+      inputSchema: z.object({
         id: z
           .union([z.string(), z.number()])
           .describe(
@@ -278,7 +278,7 @@ export const generateAgentResponse = async (
     }),
     assignTickets: tool({
       description: "Assign tickets to a team member or the current user",
-      parameters: z.object({
+      inputSchema: z.object({
         userId: z.string(),
         ids: z.array(z.union([z.string(), z.number()])).optional(),
         filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
@@ -290,7 +290,7 @@ export const generateAgentResponse = async (
     }),
     unassignTickets: tool({
       description: "Unassign tickets from a team member or the current user",
-      parameters: z.object({
+      inputSchema: z.object({
         ids: z.array(z.union([z.string(), z.number()])).optional(),
         filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
       }),
@@ -300,7 +300,7 @@ export const generateAgentResponse = async (
     }),
     closeTickets: tool({
       description: "Close tickets/conversations matching various filtering options",
-      parameters: z.object({
+      inputSchema: z.object({
         ids: z.array(z.union([z.string(), z.number()])).optional(),
         filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
       }),
@@ -310,7 +310,7 @@ export const generateAgentResponse = async (
     }),
     reopenTickets: tool({
       description: "Reopen tickets/conversations matching various filtering options",
-      parameters: z.object({
+      inputSchema: z.object({
         ids: z.array(z.union([z.string(), z.number()])).optional(),
         filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
       }),
@@ -320,7 +320,7 @@ export const generateAgentResponse = async (
     }),
     markTicketsAsSpam: tool({
       description: "Mark tickets/conversations matching various filtering options as spam",
-      parameters: z.object({
+      inputSchema: z.object({
         ids: z.array(z.union([z.string(), z.number()])).optional(),
         filters: searchToolSchema.omit({ cursor: true, limit: true }).optional(),
       }),
@@ -331,7 +331,7 @@ export const generateAgentResponse = async (
     searchKnowledgeBase: tool({
       description:
         "Search the knowledge base for information when other tools cannot answer the user's question. Use this as a fallback when the question is about topics not covered by ticket management tools.",
-      parameters: z.object({
+      inputSchema: z.object({
         query: z.string().describe("The search query to find relevant knowledge base articles"),
       }),
       execute: async ({ query }) => {
@@ -359,7 +359,7 @@ export const generateAgentResponse = async (
   if (confirmedReplyText) {
     tools.sendReply = tool({
       description: "Send the confirmed reply to a ticket.",
-      parameters: z.object({
+      inputSchema: z.object({
         ticketId: z.union([z.string(), z.number()]),
         // We ignore this because we already have confirmedReplyText, but it helps encourage the LLM to call the tool
         replyText: z.string(),
@@ -381,7 +381,7 @@ export const generateAgentResponse = async (
   } else {
     tools.confirmReplyText = tool({
       description: "Confirm the message to reply to a ticket with before sending the reply",
-      parameters: z.object({
+      inputSchema: z.object({
         ticketId: z.union([z.string(), z.number()]),
         proposedMessage: z
           .string()
@@ -406,14 +406,14 @@ export const generateAgentResponse = async (
   if (confirmedKnowledgeBaseEntry) {
     tools.saveKnowledgeBaseEntry = tool({
       description: "Save the confirmed knowledge base entry.",
-      parameters: z.object({
+      inputSchema: z.object({
         entry: z.string(),
-        reasoning: z.string(),
+        reasoningText: z.string(),
       }),
-      execute: async ({ entry, reasoning }) => {
+      execute: async ({ entry, reasoningText }) => {
         showStatus(`Saving knowledge base entry...`, {
           toolName: "saveKnowledgeBaseEntry",
-          parameters: { entry, reasoning },
+          parameters: { entry, reasoningText },
         });
         try {
           const faq = await db
@@ -439,15 +439,15 @@ export const generateAgentResponse = async (
     tools.confirmKnowledgeBaseEntry = tool({
       description:
         "Generate and confirm a knowledge base entry based on the current conversation context before adding it to the knowledge base",
-      parameters: z.object({
+      inputSchema: z.object({
         entry: z.string().describe("The complete entry content to be added to the knowledge base"),
-        reasoning: z.string().describe("Why this information should be added to the knowledge base"),
+        reasoningText: z.string().describe("Why this information should be added to the knowledge base"),
       }),
       // eslint-disable-next-line require-await
-      execute: async ({ entry, reasoning }) => {
+      execute: async ({ entry, reasoningText }) => {
         showStatus(`Confirming knowledge base entry...`, {
           toolName: "confirmKnowledgeBaseEntry",
-          parameters: { entry, reasoning },
+          parameters: { entry, reasoningText },
         });
         return {
           message:
@@ -505,7 +505,7 @@ If asked to do something inappropriate, harmful, or outside your capabilities, p
     .find((call) => call.toolName === "confirmKnowledgeBaseEntry");
 
   return {
-    text: result.text.replace(/\[(.*?)\]\((.*?)\)/g, "<$2|$1>").replace(/\*\*/g, "*"),
+    text: result.text.text.replace(/\[(.*?)\]\((.*?)\)/g, "<$2|$1>").replace(/\*\*/g, "*"),
     confirmReplyText,
     confirmKnowledgeBaseEntry,
   };

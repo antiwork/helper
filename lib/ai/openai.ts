@@ -5,8 +5,7 @@ import { env, isAIMockingEnabled } from "@/lib/env";
 const openai = isAIMockingEnabled
   ? createMockOpenAI()
   : createOpenAI({
-      apiKey: env.OPENAI_API_KEY,
-      compatibility: "strict",
-    });
+  apiKey: env.OPENAI_API_KEY
+});
 
 export default openai;

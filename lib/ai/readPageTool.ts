@@ -35,7 +35,7 @@ const convertHtmlToMarkdown = async (html: string, currentURL: string): Promise<
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
-  return await response.text();
+  return await response.text.text();
 };
 
 export const generateReadPageTool = async (
@@ -78,7 +78,7 @@ export const generateReadPageTool = async (
     mailbox,
     queryType: "read_page_tool",
     temperature: 0.2,
-    maxTokens: 200,
+    maxOutputTokens: 200,
   });
 
   const result = {

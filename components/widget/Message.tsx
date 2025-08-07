@@ -1,4 +1,4 @@
-import type { JSONValue, Message } from "ai";
+import type { JSONValue, UIMessage } from "ai";
 import cx from "classnames";
 import { Paperclip } from "lucide-react";
 import HumanizedTime from "@/components/humanizedTime";
@@ -9,7 +9,7 @@ import { PromptInfo } from "@/lib/ai/promptInfo";
 
 const USER_ROLE = "user";
 
-export type MessageWithReaction = Message & {
+export type MessageWithReaction = UIMessage & {
   reactionType: "thumbs-up" | "thumbs-down" | null;
   reactionFeedback: string | null;
   reactionCreatedAt: string | null;
@@ -17,7 +17,7 @@ export type MessageWithReaction = Message & {
 
 type Props = {
   message: MessageWithReaction;
-  allMessages: Message[];
+  allMessages: UIMessage[];
   conversationSlug: string | null;
   token: string | null;
   data: JSONValue[] | null;
@@ -26,7 +26,7 @@ type Props = {
   hideReasoning?: boolean;
 };
 
-export default function Message({
+export default function UIMessage({
   message,
   allMessages,
   conversationSlug,
@@ -56,15 +56,15 @@ export default function Message({
 
   let reasoning =
     message.annotations?.find(
-      (annotation): annotation is { reasoning: { message: string; reasoningTimeSeconds: number } } =>
+      (annotation): annotation is { reasoningText: { message: string; reasoningTimeSeconds: number } } =>
         typeof annotation === "object" && annotation !== null && "reasoning" in annotation,
-    )?.reasoning ?? null;
+    )?.reasoningText ?? null;
 
   if (!reasoning) {
     const reasoningFromData = data
       ?.flatMap((item) =>
-        item && typeof item === "object" && "reasoning" in item && typeof item.reasoning === "string"
-          ? [item.reasoning]
+        item && typeof item === "object" && "reasoning" in item && typeof item.reasoningText === "string"
+          ? [item.reasoningText]
           : [],
       )
       .join("");

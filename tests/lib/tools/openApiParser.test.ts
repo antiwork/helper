@@ -89,7 +89,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         requestMethod: "GET",
         url: "https://api.example.com/products",
         headers: {},
-        parameters: [],
+        inputSchema: [],
         authenticationMethod: "bearer_token",
         authenticationToken: "123",
         authenticationTokenPlaintext: "123",
@@ -106,7 +106,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         requestMethod: "POST",
         url: "https://api.example.com/products",
         headers: {},
-        parameters: [],
+        inputSchema: [],
         authenticationMethod: "bearer_token",
         authenticationToken: "123",
         authenticationTokenPlaintext: "123",
@@ -123,7 +123,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         requestMethod: "PUT",
         url: "https://api.example.com/products/{id}",
         headers: {},
-        parameters: [
+        inputSchema: [
           {
             name: "id",
             type: "number",
@@ -148,7 +148,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         requestMethod: "DELETE",
         url: "https://api.example.com/products/{id}",
         headers: {},
-        parameters: [
+        inputSchema: [
           {
             name: "id",
             type: "number",
@@ -206,7 +206,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         requestMethod: "GET",
         url: "https://api.example.com/products",
         headers: {},
-        parameters: [],
+        inputSchema: [],
         authenticationMethod: "bearer_token",
         authenticationToken: "123",
         authenticationTokenPlaintext: "123",
@@ -273,7 +273,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         requestMethod: "GET",
         url: "https://api.example.com/products",
         headers: {},
-        parameters: [],
+        inputSchema: [],
         authenticationMethod: "bearer_token",
         authenticationToken: "123",
         authenticationTokenPlaintext: "123",
@@ -393,7 +393,7 @@ describe("parseToolsFromOpenAPISpec", () => {
         requestMethod: "POST",
         url: "https://api.example.com/products",
         headers: {},
-        parameters: [
+        inputSchema: [
           {
             name: "name",
             type: "string",

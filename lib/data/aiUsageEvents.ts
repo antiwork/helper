@@ -25,8 +25,8 @@ export const trackAIUsageEvent = async ({
   queryType: (typeof aiUsageEvents.$inferSelect)["queryType"];
   usage: GenerateTextResult<any, any>["usage"] & { cachedTokens: number };
 }) => {
-  const inputTokensCount = usage.promptTokens;
-  const outputTokensCount = usage.completionTokens;
+  const inputTokensCount = usage.inputTokens;
+  const outputTokensCount = usage.outputTokens;
   const cachedTokensCount = usage.cachedTokens ?? 0;
 
   mailbox ??= assertDefined(await getMailbox());

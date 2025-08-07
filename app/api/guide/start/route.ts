@@ -50,7 +50,7 @@ export const POST = withWidgetAuth(async ({ request }, { session }) => {
           state_analysis: result.state_analysis,
           progress_evaluation: result.progress_evaluation,
           challenges: result.challenges,
-          reasoning: result.reasoning,
+          reasoningText: result.reasoningText,
         },
       }),
     );

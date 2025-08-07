@@ -1,5 +1,5 @@
 import { openai } from "@ai-sdk/openai";
-import { type Message } from "ai";
+import { type UIMessage } from "ai";
 import { traceAISDKModel } from "evalite/ai-sdk";
 import { vi } from "vitest";
 import { z } from "zod";
@@ -63,7 +63,7 @@ export const buildMessagesWithMocks = ({
   mailboxName = null,
   tools = {},
 }: {
-  messages: Message[];
+  messages: UIMessage[];
   promptRetrievalData: PromptRetrievalData;
   getPastConversationsPrompt?: string | null;
   mailboxName?: string | null;
@@ -88,7 +88,7 @@ const parseMessagesWithMocks = (input: string) => {
   Object.entries(parsedTools).forEach(([name, tool]) => {
     toolsMock[name] = {
       description: tool.description,
-      parameters: generateZodSchema(tool.parameters),
+      inputSchema: generateZodSchema(tool.parameters),
       execute: () => Promise.resolve(tool.executeReturn),
     };
   });

@@ -1,4 +1,4 @@
-import type { CoreAssistantMessage, CoreMessage, CoreToolMessage } from "ai";
+import type { CoreAssistantMessage, ModelMessage, CoreToolMessage } from "ai";
 import { conversationMessages } from "@/db/schema";
 import type { ToolMetadata } from "@/db/schema/conversationMessages";
 import { HELPER_TO_AI_ROLES_MAPPING } from "@/lib/ai/constants";
@@ -40,10 +40,10 @@ export function buildToolMessages(
   return [toolUseMessage, toolMessage];
 }
 
-export function buildMessagesFromHistory(messages: (typeof conversationMessages.$inferSelect)[]): CoreMessage[] {
+export function buildMessagesFromHistory(messages: (typeof conversationMessages.$inferSelect)[]): ModelMessage[] {
   return messages
     .filter((message) => message.cleanedUpText?.trim())
-    .flatMap((message): CoreMessage | CoreMessage[] => {
+    .flatMap((message): ModelMessage | ModelMessage[] => {
       const content = message.cleanedUpText?.trim() || message.body?.trim();
       if (!content) return [];
 

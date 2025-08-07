@@ -77,7 +77,7 @@ export const ThreadView = ({ conversation }: { conversation: ConversationDetails
       tools: {
         getCurrentTime: {
           description: "Get the current time",
-          parameters: {},
+          inputSchema: {},
           url: "/widget/test/custom/tool",
         },
       },

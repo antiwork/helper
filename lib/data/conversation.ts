@@ -1,5 +1,5 @@
 import "server-only";
-import { type Message } from "ai";
+import { type UIMessage } from "ai";
 import { and, asc, desc, eq, inArray, isNull, not, SQLWrapper } from "drizzle-orm";
 import { cache } from "react";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
@@ -376,7 +376,7 @@ export const getRelatedConversations = async (
 
 export const generateConversationSubject = async (
   conversationId: number,
-  messages: Message[],
+  messages: UIMessage[],
   mailbox: typeof mailboxes.$inferSelect,
 ) => {
   const subject =
@@ -389,7 +389,7 @@ export const generateConversationSubject = async (
             queryType: "response_generator",
             system:
               "Generate a brief, clear subject line (max 50 chars) that summarizes the main point of these messages. Respond with only the subject line, no other text.",
-            maxTokens: 50,
+            maxOutputTokens: 50,
             temperature: 0,
             functionId: "generate-conversation-subject",
           })

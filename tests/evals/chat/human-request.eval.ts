@@ -9,7 +9,7 @@ const REASONING_ENABLED = true;
 
 const tool = {
   description: REQUEST_HUMAN_SUPPORT_DESCRIPTION,
-  parameters: {
+  inputSchema: {
     type: "object",
     properties: {
       reason: { type: "string", description: "reason for escalation" },

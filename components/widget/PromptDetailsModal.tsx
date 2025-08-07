@@ -1,4 +1,4 @@
-import type { Message } from "ai";
+import type { UIMessage } from "ai";
 import { ChevronDown, ChevronRight, Info, X } from "lucide-react";
 import { useState } from "react";
 import { JsonView } from "@/components/jsonView";
@@ -7,8 +7,8 @@ import { PromptInfo } from "@/lib/ai/promptInfo";
 
 type Props = {
   onClose: () => void;
-  allMessages: Message[];
-  message: Message;
+  allMessages: UIMessage[];
+  message: UIMessage;
   promptInfo: PromptInfo;
 };
 

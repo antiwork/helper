@@ -48,7 +48,7 @@ export const emailKeywordsExtractor = async (params: {
       queryType: "email_keywords_extractor",
       model: O4_MINI_MODEL,
       functionId: "email-keywords-extractor",
-      maxTokens: 500,
+      maxOutputTokens: 500,
     })
   ).text;
 

@@ -1,5 +1,5 @@
 import { openai } from "@ai-sdk/openai";
-import { appendClientMessage, createDataStreamResponse, generateText, Message, streamText, tool } from "ai";
+import { appendClientMessage, createDataStreamResponse, generateText, UIMessage, streamText, tool } from "ai";
 import { z } from "zod";
 import { withWidgetAuth } from "@/app/api/widget/utils";
 import { getGuideSessionActions, getGuideSessionByUuid } from "@/lib/data/guide";
@@ -79,7 +79,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
   const guideSession = assertDefined(await getGuideSessionByUuid(sessionId));
   const guideSessionActions = await getGuideSessionActions(guideSession.id);
 
-  const previousMessages: Message[] = guideSessionActions.map((action) => {
+  const previousMessages: UIMessage[] = guideSessionActions.map((action) => {
     const actionData = action.data as {
       currentState: string;
       actionType: string;
@@ -136,7 +136,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
   const tools = {
     AgentOutput: tool({
       description: "Required tool to complete the task, provide the current state, next goal and the action to take",
-      parameters: z
+      inputSchema: z
         .object({
           current_state: z.object({
             evaluation_previous_goal: z.string(),
@@ -230,25 +230,27 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
               ...messages,
               {
                 role: "assistant",
-                content: [
+
+                parts: [
                   {
                     type: "tool-call",
                     toolCallId: toolCall.toolCallId,
                     toolName: toolCall.toolName,
                     args: toolCall.args,
                   },
-                ],
+                ]
               },
               {
                 role: "tool" as const,
-                content: [
+
+                parts: [
                   {
                     type: "tool-result",
                     toolCallId: toolCall.toolCallId,
                     toolName: toolCall.toolName,
                     result: error.message,
                   },
-                ],
+                ]
               },
             ],
             tools,

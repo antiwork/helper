@@ -37,14 +37,14 @@ export const buildAITools = (tools: Tool[], email: string | null) => {
     if (!email && !tool.availableInAnonymousChat) {
       acc[tool.slug] = {
         description: `${tool.name} - This tool requires you to be logged in. Please log in and try again.`,
-        parameters: z.object({}),
+        inputSchema: z.object({}),
         customerEmailParameter: tool.customerEmailParameter,
         available: false,
       };
     } else {
       acc[tool.slug] = {
         description: `${tool.name} - ${tool.description}`,
-        parameters: buildParameterSchema(tool, { useEmailParameter: true, email }),
+        inputSchema: buildParameterSchema(tool, { useEmailParameter: true, email }),
         customerEmailParameter: tool.customerEmailParameter,
         available: true,
       };
@@ -90,7 +90,7 @@ export const callToolApi = async (
     try {
       responseBody = await response.clone().json();
     } catch {
-      responseBody = await response.text();
+      responseBody = await response.text.text();
     }
     await createToolEvent({
       conversationId: conversation.id,
@@ -172,18 +172,18 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
     tools: {
       close: {
         description: "Close the conversation",
-        parameters: z.object({}),
+        inputSchema: z.object({}),
         execute: async () => {},
       },
       spam: {
         description: "Mark the conversation as spam",
-        parameters: z.object({}),
+        inputSchema: z.object({}),
         execute: async () => {},
       },
       assign: {
         description:
           'Assign the conversation to a user. The ID must be one of those indicated by "Assigned to user ID" in the similar conversations section. Do not use this tool if no user IDs of assigned similar conversations exist.',
-        parameters: z.object({
+        inputSchema: z.object({
           userId: z.string(),
         }),
         execute: async () => {},
@@ -194,7 +194,7 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
       })),
     },
     temperature: 0.5,
-    maxTokens: 1000,
+    maxOutputTokens: 1000,
     system: LIST_AVAILABLE_TOOLS_SYSTEM_PROMPT,
     prompt,
     maxSteps: 1,

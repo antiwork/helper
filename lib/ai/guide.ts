@@ -30,7 +30,7 @@ const PlanResultSchema = z.object({
     .describe(
       "List 3-4 concrete next steps to take, filling several fields in the same form can be considered as one step",
     ),
-  reasoning: z.string().describe("Explain your reasoning for the suggested next steps"),
+  reasoningText: z.string().describe("Explain your reasoning for the suggested next steps"),
   title: z.string().describe("Title of the guide session"),
 });
 

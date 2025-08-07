@@ -7,21 +7,21 @@ const createMockLanguageModel = () =>
     doGenerate: async () => ({
       text: "This is a mock response for testing purposes.",
       finishReason: "stop" as const,
-      usage: { promptTokens: 10, completionTokens: 20 },
+      usage: { inputTokens: 10, outputTokens: 20 },
       rawCall: { rawPrompt: null, rawSettings: {} },
     }),
     // eslint-disable-next-line require-await
     doStream: async () => ({
       stream: new ReadableStream({
         start(controller) {
-          controller.enqueue({ type: "text-delta" as const, textDelta: "Mock " });
-          controller.enqueue({ type: "text-delta" as const, textDelta: "streaming " });
-          controller.enqueue({ type: "text-delta" as const, textDelta: "response" });
+          controller.enqueue({ type: 'text' as const, textDelta: "Mock " });
+          controller.enqueue({ type: 'text' as const, textDelta: "streaming " });
+          controller.enqueue({ type: 'text' as const, textDelta: "response" });
           controller.enqueue({
             type: "finish" as const,
             finishReason: "stop" as const,
             logprobs: undefined,
-            usage: { completionTokens: 3, promptTokens: 10 },
+            usage: { outputTokens: 3, inputTokens: 10 },
           });
           controller.close();
         },

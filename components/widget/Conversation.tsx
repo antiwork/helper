@@ -195,7 +195,7 @@ export default function Conversation({
         },
       });
       if (!response.ok) {
-        const text = await response.text().catch(() => null);
+        const text = await response.text.text().catch(() => null);
         captureExceptionAndLog(new Error(`Failed to fetch conversation: ${response.status}`), {
           extra: { conversationSlug, text },
         });

@@ -15,7 +15,7 @@ export const toolsFactory = {
       url: faker.internet.url(),
       requestMethod: "POST",
       headers: null,
-      parameters: null,
+      inputSchema: null,
       authenticationMethod: "bearer_token",
       authenticationToken,
       authenticationTokenPlaintext: authenticationToken,
