@@ -37,6 +37,7 @@ type TipTapEditorProps = {
   ariaLabel?: string;
   className?: string;
   actionButtons?: ReactNode;
+  followButton?: ReactNode;
   isRecordingSupported: boolean;
   isRecording: boolean;
   startRecording: () => void;
@@ -92,6 +93,7 @@ const TipTapEditor = ({
   ariaLabel,
   className,
   actionButtons,
+  followButton,
   isRecordingSupported,
   isRecording,
   startRecording,
@@ -468,6 +470,7 @@ const TipTapEditor = ({
           />
         </div>
         {showActionButtons ? <div className="flex-shrink-0 whitespace-nowrap">{actionButtons}</div> : null}
+        {followButton && <div className="flex-shrink-0 absolute right-0">{followButton}</div>}
       </div>
     </div>
   );

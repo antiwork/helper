@@ -9,9 +9,10 @@ import { api } from "@/trpc/react";
 interface FollowButtonProps {
   conversationSlug: string;
   className?: string;
+  size?: "sm" | "default";
 }
 
-export const FollowButton = ({ conversationSlug, className }: FollowButtonProps) => {
+export const FollowButton = ({ conversationSlug, className, size = "sm" }: FollowButtonProps) => {
   const [isOptimistic, setIsOptimistic] = useState<boolean | null>(null);
 
   const { data: followStatus, isLoading } = api.mailbox.conversations.isFollowing.useQuery({ conversationSlug });
@@ -73,7 +74,7 @@ export const FollowButton = ({ conversationSlug, className }: FollowButtonProps)
         <TooltipTrigger asChild>
           <Button
             variant={isFollowing ? "default" : "outlined"}
-            size="sm"
+            size={size}
             onClick={handleToggleFollow}
             disabled={isLoading || isPending}
             className={cn(
