@@ -27,6 +27,7 @@ let nextConfig: NextConfig = {
     "/conversations": ["node_modules/canvas"],
     "/api/job": ["node_modules/canvas"],
   },
+  devIndicators: process.env.IS_TEST_ENV === "1" ? false : undefined,
   turbopack: {
     rules: {
       "*.svg": {
