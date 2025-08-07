@@ -20,7 +20,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ nam
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
-        "Cache-Control": "max-age=300, s-maxage=86400",
+        "Cache-Control": "public, max-age=300, s-maxage=86400",
       },
     });
   } catch (error) {
