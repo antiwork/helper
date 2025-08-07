@@ -4,7 +4,6 @@ import CopyToClipboard from "react-copy-to-clipboard";
 import { toast } from "sonner";
 import { AssignPopoverButton } from "@/app/(dashboard)/[category]/conversation/assignPopoverButton";
 import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
-import { FollowButton } from "@/app/(dashboard)/[category]/conversation/followButton";
 import { IssueAssignButton } from "@/app/(dashboard)/[category]/conversation/issueAssignButton";
 import { useConversationListContext } from "@/app/(dashboard)/[category]/list/conversationListContext";
 import { Conversation } from "@/app/types/global";
@@ -119,10 +118,6 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
           <span className="text-muted-foreground">Issue</span>
           <div className="min-w-0">
             <IssueAssignButton initialIssueGroupId={conversation.issueGroupId} />
-          </div>
-          <span className="text-muted-foreground">Follow</span>
-          <div className="min-w-0">
-            <FollowButton conversationSlug={conversation.slug} />
           </div>
         </div>
       </div>
