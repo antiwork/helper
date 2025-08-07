@@ -64,13 +64,8 @@ describe("secrets", () => {
   it("should handle database errors gracefully", async () => {
     mockDb.execute.mockRejectedValue(new Error("Database error"));
 
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
     await expect(secretsModule.getOrCreateSecret(secretsModule.SECRET_NAMES.JOBS_HMAC)).rejects.toThrow(
       "Database error",
     );
-    expect(consoleSpy).toHaveBeenCalled();
-
-    consoleSpy.mockRestore();
   });
 });

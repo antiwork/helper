@@ -38,7 +38,6 @@ export const getOrCreateSecret = cache(async (secretName: SecretName): Promise<s
 
     return newSecret;
   } catch (error) {
-    console.error(`Failed to get/create secret ${secretName}:`, error);
     throw error;
   }
 });
@@ -55,8 +54,7 @@ export const getSecret = cache(async (secretName: SecretName): Promise<string | 
     }
 
     return null;
-  } catch (error) {
-    console.error(`Failed to get secret ${secretName}:`, error);
+  } catch {
     return null;
   }
 });
@@ -81,7 +79,6 @@ export async function updateSecret(secretName: SecretName, newValue: string): Pr
       await db.execute(sql`SELECT vault.create_secret(${newValue}, ${secretName}, ${`Created ${secretName}`})`);
     }
   } catch (error) {
-    console.error(`Failed to update secret ${secretName}:`, error);
     throw error;
   }
 }
