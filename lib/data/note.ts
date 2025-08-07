@@ -1,3 +1,4 @@
+import { and, eq } from "drizzle-orm";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { BasicUserProfile } from "@/db/schema";
@@ -48,4 +49,34 @@ export const addNote = async ({
 
     return note;
   });
+};
+
+export const updateNote = async ({ noteId, message, userId }: { noteId: number; message: string; userId: string }) => {
+  const [updatedNote] = await db
+    .update(notes)
+    .set({
+      body: message,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .returning();
+
+  if (!updatedNote) {
+    throw new Error("Note not found or unauthorized");
+  }
+
+  return updatedNote;
+};
+
+export const deleteNote = async ({ noteId, userId }: { noteId: number; userId: string }) => {
+  const [deletedNote] = await db
+    .delete(notes)
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .returning();
+
+  if (!deletedNote) {
+    throw new Error("Note not found or unauthorized");
+  }
+
+  return deletedNote;
 };

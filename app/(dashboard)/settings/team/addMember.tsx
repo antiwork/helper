@@ -17,6 +17,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
   const [emailInput, setEmailInput] = useState("");
   const [displayNameInput, setDisplayNameInput] = useState("");
   const [permissions, setPermissions] = useState<"member" | "admin" | undefined>(undefined);
+  const [emailTouched, setEmailTouched] = useState(false);
 
   const utils = api.useUtils();
 
@@ -57,7 +58,13 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
   const canAddMember = isValidEmail && displayNameInput.trim().length > 0 && !isAdding && permissions;
 
   return (
-    <div className="flex gap-4">
+    <form
+      className="flex gap-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        inviteMember();
+      }}
+    >
       <div className="relative flex-1">
         <Label className="sr-only" htmlFor="email-input">
           Email Address
@@ -67,6 +74,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
           placeholder="Email address"
           value={emailInput}
           onChange={(e) => setEmailInput(e.target.value)}
+          onBlur={() => setEmailTouched(true)}
           disabled={isAdding}
         />
         {emailInput && (
@@ -77,6 +85,9 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
           >
             <X className="h-4 w-4 text-gray-400" aria-hidden="true" />
           </button>
+        )}
+        {emailInput && emailTouched && !isValidEmail && (
+          <div className="text-xs text-red-500 mt-1">Please enter a valid email address</div>
         )}
       </div>
       <div className="relative flex-1">
@@ -114,7 +125,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
           </SelectContent>
         </Select>
       </div>
-      <Button onClick={inviteMember} disabled={!canAddMember}>
+      <Button type="submit" disabled={!canAddMember}>
         {isAdding ? (
           <>Adding...</>
         ) : (
@@ -124,6 +135,6 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
           </>
         )}
       </Button>
-    </div>
+    </form>
   );
 }
