@@ -304,7 +304,6 @@ ${NODE_HMAC_SAMPLE_CODE}
                   <TooltipTrigger>
                     <Button
                       variant="subtle"
-                      aria-label="Copy AI Prompt Vanilla"
                       onClick={() => {
                         navigator.clipboard.writeText(plainJSPrompt);
                         setIsCopied(true);
@@ -447,7 +446,6 @@ ${WIDGET_SAMPLE_CODE}
                   <TooltipTrigger>
                     <Button
                       variant="subtle"
-                      aria-label="Copy AI Prompt React"
                       onClick={() => {
                         navigator.clipboard.writeText(reactPrompt);
                         setIsCopied(true);
@@ -622,12 +620,8 @@ export default async function RootLayout({
             <div className="space-y-4">
               <div className="flex flex-col space-y-2">
                 <Label>Show chat icon for</Label>
-                <Select
-                  value={mode}
-                  onValueChange={(mode) => setMode(mode as WidgetMode)}
-                  aria-label="chat-icon-visibility-select"
-                >
-                  <SelectTrigger className="w-[350px]" aria-label="chat-icon-visibility-select-trigger">
+                <Select value={mode} onValueChange={(mode) => setMode(mode as WidgetMode)}>
+                  <SelectTrigger className="w-[350px]">
                     <SelectValue placeholder="Select when to show chat icon" />
                   </SelectTrigger>
                   <SelectContent>
@@ -647,7 +641,6 @@ export default async function RootLayout({
                     className="max-w-[200px]"
                     min="0"
                     step="1"
-                    aria-label="min-customer-value-input"
                   />
                 </div>
               )}
@@ -687,11 +680,7 @@ export default async function RootLayout({
           description="Automatically respond to emails as if the customer was using the chat widget."
         >
           <div className="space-y-4">
-            <Tabs
-              value={autoRespond}
-              onValueChange={(value) => setAutoRespond(value as "off" | "draft" | "reply")}
-              aria-label="email-response-tabs"
-            >
+            <Tabs value={autoRespond} onValueChange={(value) => setAutoRespond(value as "off" | "draft" | "reply")}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="off">Off</TabsTrigger>
                 <TabsTrigger value="draft">Draft</TabsTrigger>

@@ -37,9 +37,10 @@ test.describe("In-App Chat Settings", () => {
     });
 
     test("should copy AI agent prompt", async ({ page }) => {
-      const copyButton = page.getByLabel("Copy AI Prompt Vanilla");
+      const copyButton = page.getByRole("button", { name: "Copy AI agent prompt" }).first();
+      await expect(copyButton).toBeVisible();
       await copyButton.click();
-      await expect(copyButton).toContainText("Copied!");
+      await expect(page.getByText("Copied!").first()).toBeVisible();
     });
 
     test("should expand accordion sections", async ({ page }) => {
@@ -63,10 +64,10 @@ test.describe("In-App Chat Settings", () => {
   test.describe("Chat Icon Visibility Settings", () => {
     test("should configure chat icon visibility settings", async ({ page }) => {
       const chatIconSwitch = page.locator('[role="switch"]').first();
-      const chatIconSelect = page.getByLabel("chat-icon-visibility-select-trigger");
+      const chatIconSelect = page.getByText("Show chat icon for").locator("..").locator('[role="combobox"]');
       const allCustomersOption = page.getByRole("option", { name: "All customers" });
       const revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
-      const minCustomerValueInput = page.getByLabel("min-customer-value-input");
+      const minCustomerValueInput = page.locator('#min-value');
       const widgetPreviewIndicator = page.getByText("Try it out →");
 
       const isChecked = await chatIconSwitch.isChecked();
@@ -102,9 +103,9 @@ test.describe("In-App Chat Settings", () => {
 
     test("should persist visibility settings across page reloads", async ({ page }) => {
       const chatIconSwitch = page.locator('[role="switch"]').first();
-      const chatIconSelect = page.getByLabel("chat-icon-visibility-select-trigger");
+      const chatIconSelect = page.getByText("Show chat icon for").locator("..").locator('[role="combobox"]');
       const revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
-      const minCustomerValueInput = page.getByLabel("min-customer-value-input");
+      const minCustomerValueInput = page.locator('#min-value');
 
       const isChecked = await chatIconSwitch.isChecked();
       if (!isChecked) {
@@ -132,7 +133,7 @@ test.describe("In-App Chat Settings", () => {
     test("should configure host URL and email response settings", async ({ page }) => {
       const testUrl = "https://example.com";
       const hostUrlInput = page.getByLabel("Host URL");
-      const emailResponseTabs = page.getByLabel("email-response-tabs");
+      const emailResponseTabs = page.locator('[role="tablist"]').filter({ has: page.getByRole("tab", { name: "Off" }) });
       const offTab = emailResponseTabs.getByRole("tab", { name: "Off" });
       const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
       const replyTab = emailResponseTabs.getByRole("tab", { name: "Reply" });
@@ -158,7 +159,7 @@ test.describe("In-App Chat Settings", () => {
     test("should persist host URL and email settings across page reloads", async ({ page }) => {
       const testUrl = "https://my-app.com";
       const hostUrlInput = page.getByLabel("Host URL");
-      const emailResponseTabs = page.getByLabel("email-response-tabs");
+      const emailResponseTabs = page.locator('[role="tablist"]').filter({ has: page.getByRole("tab", { name: "Off" }) });
       const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
 
       await hostUrlInput.fill(testUrl);
@@ -191,11 +192,11 @@ test.describe("In-App Chat Settings", () => {
   test.describe("Form Validation and Complete Workflow", () => {
     test("should handle numeric validation and show saving indicators", async ({ page }) => {
       const chatIconSwitch = page.locator('[role="switch"]').first();
-      const chatIconSelect = page.getByLabel("chat-icon-visibility-select-trigger");
+      const chatIconSelect = page.getByText("Show chat icon for").locator("..").locator('[role="combobox"]');
       const revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
-      const minCustomerValueInput = page.getByLabel("min-customer-value-input");
+      const minCustomerValueInput = page.locator('#min-value');
       const hostUrlInput = page.getByLabel("Host URL");
-      const emailResponseTabs = page.getByLabel("email-response-tabs");
+      const emailResponseTabs = page.locator('[role="tablist"]').filter({ has: page.getByRole("tab", { name: "Off" }) });
       const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
 
       const isChecked = await chatIconSwitch.isChecked();
@@ -227,11 +228,11 @@ test.describe("In-App Chat Settings", () => {
 
     test("should configure all settings in a typical workflow", async ({ page }) => {
       const chatIconSwitch = page.locator('[role="switch"]').first();
-      const chatIconSelect = page.getByLabel("chat-icon-visibility-select-trigger");
+      const chatIconSelect = page.getByText("Show chat icon for").locator("..").locator('[role="combobox"]');
       const revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
-      const minCustomerValueInput = page.getByLabel("min-customer-value-input");
+      const minCustomerValueInput = page.locator('#min-value');
       const hostUrlInput = page.getByLabel("Host URL");
-      const emailResponseTabs = page.getByLabel("email-response-tabs");
+      const emailResponseTabs = page.locator('[role="tablist"]').filter({ has: page.getByRole("tab", { name: "Off" }) });
       const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
       const widgetPreviewIndicator = page.getByText("Try it out →");
 
