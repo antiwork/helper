@@ -1,8 +1,8 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { waitForToast } from "../toastHelpers";
-import { BasePage } from "./basePage";
 
-export class SavedRepliesPage extends BasePage {
+export class SavedRepliesPage {
+  protected page: Page;
   readonly pageTitle: Locator;
   readonly searchInput: Locator;
   readonly newReplyButton: Locator;
@@ -33,7 +33,7 @@ export class SavedRepliesPage extends BasePage {
   readonly copyButton: Locator;
 
   constructor(page: Page) {
-    super(page);
+    this.page = page;
 
     this.pageTitle = page.locator('h1:has-text("Saved replies")');
     this.searchInput = page.locator('input[placeholder="Search saved replies..."]').first();
@@ -66,8 +66,8 @@ export class SavedRepliesPage extends BasePage {
   }
 
   async navigateToSavedReplies() {
-    await this.goto(`/saved-replies`);
-    await this.waitForPageLoad();
+    await this.page.goto(`/saved-replies`);
+    await this.page.waitForLoadState("networkidle");
   }
   async expectPageVisible() {
     await expect(this.pageTitle).toBeVisible();

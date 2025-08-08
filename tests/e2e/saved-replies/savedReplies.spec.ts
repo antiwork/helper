@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { BasePage } from "../utils/page-objects/basePage";
 import { SavedRepliesPage } from "../utils/page-objects/savedRepliesPage";
 import { debugWait, generateRandomString, takeDebugScreenshot } from "../utils/test-helpers";
 
@@ -313,11 +312,8 @@ test.describe("Saved Replies Management", () => {
   });
 
   test("should handle loading states properly", async ({ page }) => {
-    // Create base page instance for improved navigation
-    const basePage = new (class extends BasePage {})(page);
-
     // Navigate to page and check for loading states
-    await basePage.goto("/saved-replies");
+    await page.goto("/saved-replies");
 
     // Loading skeletons might be visible briefly
     // This test ensures the page loads correctly
@@ -331,20 +327,17 @@ test.describe("Saved Replies Management", () => {
   });
 
   test("should maintain authentication state", async ({ page }) => {
-    // Create base page instance for improved navigation
-    const basePage = new (class extends BasePage {})(page);
-
     // First verify we're authenticated and on the correct page
     await savedRepliesPage.expectPageVisible();
     const currentUrl = page.url();
     expect(currentUrl).toMatch(/.*saved-replies.*/);
 
     // Test navigation away and back to verify auth persists
-    await basePage.goto("/mine");
+    await page.goto("/mine");
     await page.waitForLoadState("networkidle");
 
     // Navigate back to saved replies to test auth persistence
-    await basePage.goto("/saved-replies");
+    await page.goto("/saved-replies");
     await page.waitForLoadState("networkidle");
 
     // Should remain authenticated and stay on the saved replies page
@@ -355,16 +348,13 @@ test.describe("Saved Replies Management", () => {
   });
 
   test("should navigate between conversations and saved replies", async ({ page }) => {
-    // Create base page instance for robust navigation
-    const basePage = new (class extends BasePage {})(page);
-
     // Test direct navigation to conversations page
-    await basePage.goto("/mine");
+    await page.goto("/mine");
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveURL(/.*mine.*/);
 
     // Navigate back to saved replies
-    await basePage.goto("/saved-replies");
+    await page.goto("/saved-replies");
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveURL(/.*saved-replies.*/);
     await savedRepliesPage.expectPageVisible();
