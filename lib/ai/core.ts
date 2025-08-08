@@ -84,7 +84,7 @@ export const generateCompletion = ({
 } & ({ prompt: string; messages?: never } | { messages: CoreMessage[]; prompt?: never })) =>
   retryOnPromptLengthError(shortenPromptBy, { system, prompt, messages }, (prompt) =>
     generateText({
-      model: openai(model),
+      model: openai(model, { structuredOutputs: false }),
       temperature,
       ...options,
       ...prompt,
@@ -115,7 +115,7 @@ export const generateStructuredObject = <T>({
 } & ({ prompt: string; messages?: never } | { messages: CoreMessage[]; prompt?: never })) =>
   retryOnPromptLengthError(options.shortenPromptBy, { system, prompt, messages }, (prompt) =>
     generateObject<T>({
-      model: openai(model),
+      model: openai(model, { structuredOutputs: false }),
       temperature,
       ...options,
       ...prompt,
