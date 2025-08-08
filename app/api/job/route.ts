@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "crypto";
+import * as Sentry from "@sentry/nextjs";
 import { waitUntil } from "@vercel/functions";
 import { eq, sql } from "drizzle-orm";
 import { NextRequest } from "next/server";
@@ -37,6 +38,8 @@ const retrySeconds: Record<number, number> = {
 
 const handleJob = async (jobRun: typeof jobRuns.$inferSelect, handler: Promise<any>) => {
   try {
+    Sentry.setTag("job", jobRun.job);
+    Sentry.setExtra("data", jobRun.data);
     // eslint-disable-next-line no-console
     console.log(`Running job ${jobRun.id} (${jobRun.job} ${JSON.stringify(jobRun.data)})`);
     const result = await handler;

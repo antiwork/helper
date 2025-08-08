@@ -6,7 +6,7 @@ import { mailboxes } from "@/db/schema/mailboxes";
 import { trackAIUsageEvent } from "@/lib/data/aiUsageEvents";
 import {
   AvailableModel,
-  COMPLETION_MODEL,
+  CHAT_MODEL,
   generateCompletion,
   generateEmbedding,
   generateStructuredObject,
@@ -31,7 +31,7 @@ export const runAIQuery = async ({
   messages,
   mailbox,
   queryType,
-  model = COMPLETION_MODEL,
+  model = CHAT_MODEL,
   system,
   temperature = 0.0,
   maxTokens,
@@ -62,7 +62,7 @@ export const runAIObjectQuery = async <T>({
   mailbox,
   queryType,
   schema,
-  model = COMPLETION_MODEL,
+  model = CHAT_MODEL,
   system,
   temperature = 0.0,
   maxTokens = 500,

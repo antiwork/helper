@@ -60,7 +60,7 @@ export const listenToRealtimeEvent = async <Data = any>(
         // eslint-disable-next-line no-console
         console.debug("Received realtime event:", channel, event, { ...payload, data });
       }
-      channelObject.eventListeners[event]!.forEach((listener) =>
+      channelObject.eventListeners[event]?.forEach((listener) =>
         listener({ id: payload.id as string, data: data as Data }),
       );
     });
