@@ -17,7 +17,6 @@ import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
 import { savedRepliesRouter } from "./savedReplies";
 import { slackRouter } from "./slack";
-import { toolsRouter } from "./tools";
 import { websitesRouter } from "./websites";
 
 export { mailboxProcedure };
@@ -112,7 +111,6 @@ export const mailboxRouter = {
   members: membersRouter,
   slack: slackRouter,
   github: githubRouter,
-  tools: toolsRouter,
   customers: customersRouter,
   websites: websitesRouter,
   metadataEndpoint: metadataEndpointRouter,
