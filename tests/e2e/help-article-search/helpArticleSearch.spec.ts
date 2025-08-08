@@ -1,8 +1,57 @@
 import { expect, test } from "@playwright/test";
+import { db } from "../../../db/client";
+import { conversations } from "../../../db/schema";
+import { authUsers } from "../../../db/supabaseSchema/auth";
+import { userProfiles } from "../../../db/schema";
+import { eq } from "drizzle-orm";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 test.describe("Help Article Search", () => {
+  let testConversationId: number | null = null;
+  let testUserId: string | null = null;
+
+  test.beforeAll(async () => {
+    // Find the test user
+    const user = await db
+      .select({
+        id: userProfiles.id,
+        displayName: userProfiles.displayName,
+        email: authUsers.email
+      })
+      .from(userProfiles)
+      .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+      .where(eq(authUsers.email, 'support@gumroad.com'))
+      .limit(1);
+    
+    if (user.length > 0) {
+      testUserId = user[0].id;
+      
+      // Create a test conversation for this user
+      const [conversation] = await db
+        .insert(conversations)
+        .values({
+          emailFrom: "test@example.com",
+          emailFromName: "Test User",
+          subject: "Test conversation for help article search",
+          subjectPlaintext: "Test conversation for help article search",
+          status: "open",
+          conversationProvider: "gmail",
+          assignedToId: testUserId,
+        })
+        .returning();
+      
+      testConversationId = conversation.id;
+    }
+  });
+
+  test.afterAll(async () => {
+    // Clean up the test conversation
+    if (testConversationId) {
+      await db.delete(conversations).where(eq(conversations.id, testConversationId));
+    }
+  });
+
   test.beforeEach(async ({ page }) => {
     await page.goto("/mine", { timeout: 15000 });
     await page.waitForLoadState("networkidle", { timeout: 10000 });
@@ -22,14 +71,11 @@ test.describe("Help Article Search", () => {
     
     await page.keyboard.type("@");
     
-    // Wait for popover to appear in document body
-    await page.waitForSelector(
-      'body > div:has(span:has-text("Search help center articles"))',
-      { timeout: 10000 }
-    );
-    
-    const searchLabel = page.locator('body > div:has(span:has-text("Search help center articles"))');
-    await expect(searchLabel).toBeVisible();
+    // Wait for popover to appear using cross-browser compatible selector
+    const popover = page.locator('body > div').filter({
+      has: page.locator('span', { hasText: "Search help center articles" }),
+    });
+    await expect(popover).toBeVisible({ timeout: 10000 });
   });
 
   test("should show help articles in popover", async ({ page }) => {
@@ -39,17 +85,19 @@ test.describe("Help Article Search", () => {
     
     await page.keyboard.type("@");
     
-    // Wait for popover to appear
-    await page.waitForSelector(
-      'body > div:has(span:has-text("Search help center articles"))',
-      { timeout: 10000 }
-    );
+    // Wait for popover to appear using cross-browser compatible selector
+    const popover = page.locator('body > div').filter({
+      has: page.locator('span', { hasText: "Search help center articles" }),
+    });
+    await expect(popover).toBeVisible({ timeout: 10000 });
     
-    // Wait for articles to actually appear
-    await page.waitForSelector('body > div li:has(span.font-medium)', { timeout: 5000 });
+    // Wait for articles to appear using cross-browser compatible selector
+    const articleItems = page.locator('body > div li').filter({
+      has: page.locator('span.font-medium'),
+    });
+    await expect(articleItems.first()).toBeVisible({ timeout: 5000 });
     
     // Check that articles are displayed
-    const articleItems = page.locator('body > div li:has(span.font-medium)');
     const count = await articleItems.count();
     expect(count).toBeGreaterThan(0);
   });
@@ -61,20 +109,22 @@ test.describe("Help Article Search", () => {
     
     await page.keyboard.type("@");
     
-    // Wait for popover to appear
-    await page.waitForSelector(
-      'body > div:has(span:has-text("Search help center articles"))',
-      { timeout: 10000 }
-    );
+    // Wait for popover to appear using cross-browser compatible selector
+    const popover = page.locator('body > div').filter({
+      has: page.locator('span', { hasText: "Search help center articles" }),
+    });
+    await expect(popover).toBeVisible({ timeout: 10000 });
     
-    // Wait for articles to actually appear
-    await page.waitForSelector('body > div li:has(span.font-medium)', { timeout: 5000 });
+    // Wait for articles to appear using cross-browser compatible selector
+    const articleItems = page.locator('body > div li').filter({
+      has: page.locator('span.font-medium'),
+    });
+    await expect(articleItems.first()).toBeVisible({ timeout: 5000 });
     
     // Type search query
     await page.keyboard.type("account");
     
     // Check that filtered results are shown
-    const articleItems = page.locator('body > div li:has(span.font-medium)');
     const count = await articleItems.count();
     expect(count).toBeGreaterThan(0);
     
@@ -91,23 +141,23 @@ test.describe("Help Article Search", () => {
     
     await page.keyboard.type("@");
     
-    // Wait for popover to appear
-    await page.waitForSelector(
-      'body > div:has(span:has-text("Search help center articles"))',
-      { timeout: 10000 }
-    );
+    // Wait for popover to appear using cross-browser compatible selector
+    const popover = page.locator('body > div').filter({
+      has: page.locator('span', { hasText: "Search help center articles" }),
+    });
+    await expect(popover).toBeVisible({ timeout: 10000 });
     
-    // Wait for articles to actually appear
-    await page.waitForSelector('body > div li:has(span.font-medium)', { timeout: 5000 });
+    // Wait for articles to appear using cross-browser compatible selector
+    const articleItems = page.locator('body > div li').filter({
+      has: page.locator('span.font-medium'),
+    });
+    await expect(articleItems.first()).toBeVisible({ timeout: 5000 });
     
     // Select first article
     await page.keyboard.press("Enter");
     
     // Wait for popover to disappear
-    await page.waitForSelector(
-      'body > div:has(span:has-text("Search help center articles"))',
-      { timeout: 5000, state: 'hidden' }
-    );
+    await expect(popover).not.toBeVisible({ timeout: 5000 });
     
     // Check that link was inserted
     const content = await editor.innerHTML();
@@ -122,18 +172,16 @@ test.describe("Help Article Search", () => {
     
     await page.keyboard.type("@");
     
-    // Wait for popover to appear
-    await page.waitForSelector(
-      'body > div:has(span:has-text("Search help center articles"))',
-      { timeout: 10000 }
-    );
+    // Wait for popover to appear using cross-browser compatible selector
+    const popover = page.locator('body > div').filter({
+      has: page.locator('span', { hasText: "Search help center articles" }),
+    });
+    await expect(popover).toBeVisible({ timeout: 10000 });
     
+    // Close popover with Escape key
     await page.keyboard.press("Escape");
     
     // Wait for popover to disappear
-    await page.waitForSelector(
-      'body > div:has(span:has-text("Search help center articles"))',
-      { timeout: 5000, state: 'hidden' }
-    );
+    await expect(popover).not.toBeVisible({ timeout: 5000 });
   });
 }); 
