@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { generateTestEmail, takeDebugScreenshot } from "../utils/test-helpers";
 
 type UserRole = "admin" | "member";
@@ -29,9 +29,7 @@ test.describe("Team Settings", () => {
   }
 
   function getInviteForm(page: any) {
-    return page
-      .locator("form")
-      .filter({ has: page.getByRole("button", { name: "Add Member" }) });
+    return page.locator("form").filter({ has: page.getByRole("button", { name: "Add Member" }) });
   }
 
   function getMemberRow(page: any, email: string) {
