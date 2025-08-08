@@ -65,7 +65,7 @@ export const runAIObjectQuery = async <T>({
   model = CHAT_MODEL,
   system,
   temperature = 0.0,
-  maxTokens = 500,
+  maxTokens = 5000, // including reasoning
   functionId,
   shortenPromptBy,
 }: CommonAIQueryOptions & {
