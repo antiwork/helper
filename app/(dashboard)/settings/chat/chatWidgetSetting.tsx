@@ -301,7 +301,7 @@ ${NODE_HMAC_SAMPLE_CODE}
               Get started
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
-                  <TooltipTrigger>
+                  <TooltipTrigger asChild>
                     <Button
                       variant="subtle"
                       onClick={() => {
@@ -443,7 +443,7 @@ ${WIDGET_SAMPLE_CODE}
               Get started
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
-                  <TooltipTrigger>
+                  <TooltipTrigger asChild>
                     <Button
                       variant="subtle"
                       onClick={() => {
@@ -697,7 +697,9 @@ export default async function RootLayout({
         </div>
       )}
 
-      <HelperWidgetScript host={typeof window !== "undefined" ? window.location.origin : ""} showToggleButton />
+      {showChatWidget && (
+        <HelperWidgetScript host={typeof window !== "undefined" ? window.location.origin : ""} showToggleButton />
+      )}
     </div>
   );
 };

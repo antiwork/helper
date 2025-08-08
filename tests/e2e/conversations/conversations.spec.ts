@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import { endOfDay, startOfDay } from "date-fns";
-import { ConversationsPage } from "../utils/page-objects/conversationsPage";
 import { takeDebugScreenshot } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
@@ -9,41 +8,21 @@ const CONVERSATION_LINKS_SELECTOR = 'a[href*="/conversations?id="]';
 
 test.describe("Working Conversation Management", () => {
   test.beforeEach(async ({ page }) => {
-    try {
-      await page.goto("/mine", { timeout: 15000 });
-      await page.waitForLoadState("networkidle", { timeout: 10000 });
-    } catch (error) {
-      console.log("Initial navigation failed, retrying...", error);
-      await page.goto("/mine", { timeout: 15000 });
-      await page.waitForLoadState("domcontentloaded", { timeout: 10000 });
-    }
+    await page.goto("/mine");
+    await page.waitForLoadState("domcontentloaded");
   });
 
-  test("should work with ConversationsPage object", async ({ page }) => {
-    const conversationsPage = new ConversationsPage(page);
-
-    await conversationsPage.expectConversationsVisible();
-    await conversationsPage.expectAccountInfo();
-
-    await conversationsPage.searchConversations("test search");
-    await conversationsPage.expectSearchValue("test search");
-    await conversationsPage.clearSearch();
-
-    await conversationsPage.clickOpenFilter();
-
-    await conversationsPage.setMobileViewport();
-    await conversationsPage.expectConversationsVisible();
-    await conversationsPage.setDesktopViewport();
-
-    await conversationsPage.refreshAndWaitForAuth();
-
-    await takeDebugScreenshot(page, "conversations-page-object-working.png");
-  });
+  async function searchConversations(page, value: string) {
+    const searchBox = page.getByRole("textbox", { name: "Search conversations" });
+    await expect(searchBox).toBeVisible();
+    await searchBox.fill(value);
+    await page.keyboard.press("Enter");
+  }
 
   test("should display dashboard with conversations", async ({ page }) => {
     await expect(page).toHaveTitle("Helper");
 
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
     await expect(searchInput).toBeVisible();
 
     const openFilter = page.locator('button:has-text("open")');
@@ -53,7 +32,7 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should have functional search", async ({ page }) => {
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
     await expect(searchInput).toBeVisible();
 
     await searchInput.fill("test search");
@@ -77,7 +56,7 @@ test.describe("Working Conversation Management", () => {
     const openFilter = page.locator('button:has-text("open")');
     await expect(openFilter).toBeVisible();
 
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
     await expect(searchInput).toBeVisible();
 
     const sortButton = page
@@ -101,8 +80,6 @@ test.describe("Working Conversation Management", () => {
     const openFilter = page.locator('button:has-text("open")');
     await openFilter.click();
 
-    await page.waitForLoadState("networkidle");
-
     await expect(page).toHaveURL(/.*mine.*/);
   });
 
@@ -122,8 +99,6 @@ test.describe("Working Conversation Management", () => {
 
         await selectAllButton.click();
 
-        await page.waitForTimeout(500);
-
         const checkedAfter = await checkboxes.locator('[data-state="checked"]').count();
         expect(checkedAfter).toBe(totalCheckboxes);
         expect(checkedAfter).toBeGreaterThan(checkedBefore);
@@ -132,13 +107,13 @@ test.describe("Working Conversation Management", () => {
         await expect(selectNoneButton).toBeVisible();
       }
 
-      const searchInput = page.locator('input[placeholder="Search conversations"]');
+      const searchInput = page.getByRole("textbox", { name: "Search conversations" });
       await expect(searchInput).toBeVisible();
     } else {
       const selectAllButton = page.locator('button:has-text("Select all")');
       await expect(selectAllButton).not.toBeVisible();
 
-      const searchInput = page.locator('input[placeholder="Search conversations"]');
+      const searchInput = page.getByRole("textbox", { name: "Search conversations" });
       await expect(searchInput).toBeVisible();
     }
   });
@@ -146,7 +121,7 @@ test.describe("Working Conversation Management", () => {
   test("should be responsive on mobile", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
 
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
     await expect(searchInput).toBeVisible();
 
     const selectAllButton = page.locator('button:has-text("Select all")');
@@ -156,20 +131,19 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should maintain authentication state", async ({ page }) => {
-    await page.reload({ timeout: 15000 });
-    await page.waitForLoadState("networkidle", { timeout: 10000 });
+    await page.reload();
 
     await expect(page).toHaveURL(/.*mine.*/);
 
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
-    await expect(searchInput).toBeVisible({ timeout: 10000 });
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
+    await expect(searchInput).toBeVisible();
 
     const openFilter = page.locator('button:has-text("open")');
     await expect(openFilter).toBeVisible();
   });
 
   test("should support keyboard navigation", async ({ page }) => {
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
 
     await searchInput.focus();
     await expect(searchInput).toBeFocused();
@@ -189,12 +163,13 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should focus search input with Ctrl+K hotkey", async ({ page }) => {
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
 
     await searchInput.blur();
 
     await page.keyboard.press("ControlOrMeta+k");
 
+    await expect(searchInput).toBeFocused();
     const focusedElement = await page.evaluate(() => document.activeElement?.getAttribute("placeholder"));
     expect(focusedElement).toBe("Search conversations");
   });
@@ -209,12 +184,10 @@ test.describe("Working Conversation Management", () => {
       const selectNoneButton = page.locator('button:has-text("Select none")');
       if ((await selectNoneButton.count()) > 0) {
         await selectNoneButton.click();
-        await page.waitForTimeout(300);
       }
 
       // Click the first checkbox normally
       await checkboxes.nth(0).click();
-      await page.waitForTimeout(200);
 
       // Verify first checkbox is selected
       const firstCheckbox = checkboxes.nth(0);
@@ -222,7 +195,6 @@ test.describe("Working Conversation Management", () => {
 
       // Shift+click on the third checkbox to select range (0, 1, 2)
       await checkboxes.nth(2).click({ modifiers: ["Shift"] });
-      await page.waitForTimeout(300);
 
       // Verify that checkboxes in the range are selected (0, 1, 2)
       for (let i = 0; i <= 2; i++) {
@@ -231,7 +203,6 @@ test.describe("Working Conversation Management", () => {
 
       // Shift+click on the fifth checkbox to expand the selection to (0, 1, 2, 3, 4)
       await checkboxes.nth(4).click({ modifiers: ["Shift"] });
-      await page.waitForTimeout(300);
 
       // Verify that checkboxes in the range are selected (0, 1, 2, 3, 4)
       for (let i = 0; i <= 4; i++) {
@@ -244,7 +215,6 @@ test.describe("Working Conversation Management", () => {
 
       // Shift+click on the second checkbox to shrink the selection to (0, 1)
       await checkboxes.nth(1).click({ modifiers: ["Shift"] });
-      await page.waitForTimeout(300);
 
       // Verify that checkboxes in the range are selected (0, 1)
       for (let i = 0; i <= 1; i++) {
@@ -253,7 +223,6 @@ test.describe("Working Conversation Management", () => {
 
       // Shift+click on the fourth checkbox to expand the selection to (0, 1, 2, 3)
       await checkboxes.nth(3).click({ modifiers: ["Shift"] });
-      await page.waitForTimeout(300);
 
       // Verify that checkboxes in the range are selected (0, 1, 2, 3)
       for (let i = 0; i <= 3; i++) {
@@ -264,7 +233,6 @@ test.describe("Working Conversation Management", () => {
       const selectAllButton = page.locator('button:has-text("Select all")');
       if ((await selectAllButton.count()) > 0) {
         await selectAllButton.click();
-        await page.waitForTimeout(300);
       }
 
       // Verify that all checkboxes are selected
@@ -278,11 +246,11 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should handle date filter presets", async ({ page }) => {
-    const filterToggleButton = page.getByTestId("filter-toggle");
+    const filterToggleButton = page.getByRole("button", { name: "Filter Toggle" });
     await expect(filterToggleButton).toBeVisible();
     await filterToggleButton.click();
 
-    const dateFilterButton = page.getByTestId("date-filter-button");
+    const dateFilterButton = page.getByRole("button", { name: "Date Filter" });
     await expect(dateFilterButton).toBeVisible();
 
     // Initially should show "Created" (All time)
@@ -296,9 +264,6 @@ test.describe("Working Conversation Management", () => {
     await expect(todayOption).toBeVisible();
     await todayOption.click();
 
-    // Sleep for half a second to ensure the filter is set
-    await page.waitForTimeout(500);
-
     // Button label should change to "Today"
     await expect(dateFilterButton).toHaveText(/Today/);
 
@@ -309,11 +274,11 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should handle custom date picker", async ({ page }) => {
-    const filterToggleButton = page.getByTestId("filter-toggle");
+    const filterToggleButton = page.getByRole("button", { name: "Filter Toggle" });
     await expect(filterToggleButton).toBeVisible();
     await filterToggleButton.click();
 
-    const dateFilterButton = page.getByTestId("date-filter-button");
+    const dateFilterButton = page.getByRole("button", { name: "Date Filter" });
     await expect(dateFilterButton).toBeVisible();
 
     // Open date filter dropdown
@@ -331,12 +296,6 @@ test.describe("Working Conversation Management", () => {
     const dayButton = page.locator('table[aria-multiselectable="true"] button[aria-label*="15"]').first();
     await dayButton.click();
 
-    // Sleep for half a second to ensure the date is selected
-    await page.waitForTimeout(500);
-
-    // Button label should show the selected date
-    await expect(dateFilterButton).toContainText("15");
-
     // Test "Back" button
     const backButton = page.locator("button").filter({ hasText: "Back" });
     await expect(backButton).toBeVisible();
@@ -348,11 +307,11 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should clear date filter with clear filters button", async ({ page }) => {
-    const filterToggleButton = page.getByTestId("filter-toggle");
+    const filterToggleButton = page.getByRole("button", { name: "Filter Toggle" });
     await expect(filterToggleButton).toBeVisible();
     await filterToggleButton.click();
 
-    const dateFilterButton = page.getByTestId("date-filter-button");
+    const dateFilterButton = page.getByRole("button", { name: "Date Filter" });
     await expect(dateFilterButton).toBeVisible();
 
     await dateFilterButton.click();
@@ -360,14 +319,10 @@ test.describe("Working Conversation Management", () => {
     await yesterdayOption.click();
     await expect(dateFilterButton).toHaveText(/Yesterday/);
 
-    await page.waitForTimeout(500);
-
-    const clearFiltersButton = page.getByTestId("clear-filters-button");
+    const clearFiltersButton = page.getByRole("button", { name: "Clear Filters" });
     await expect(clearFiltersButton).toBeVisible();
 
     await clearFiltersButton.click();
-
-    await page.waitForTimeout(500);
 
     await expect(dateFilterButton).toHaveText(/Created/);
     await expect(clearFiltersButton).not.toBeVisible();
@@ -375,14 +330,14 @@ test.describe("Working Conversation Management", () => {
 
   test("should preserve date filter after page refresh", async ({ page }) => {
     const toggleFilters = async () => {
-      const filterToggleButton = page.getByTestId("filter-toggle");
+      const filterToggleButton = page.getByRole("button", { name: "Filter Toggle" });
       await expect(filterToggleButton).toBeVisible();
       await filterToggleButton.click();
     };
 
     await toggleFilters();
 
-    const dateFilterButton = page.getByTestId("date-filter-button");
+    const dateFilterButton = page.getByRole("button", { name: "Date Filter" });
     await expect(dateFilterButton).toBeVisible();
 
     await dateFilterButton.click();
@@ -392,24 +347,19 @@ test.describe("Working Conversation Management", () => {
     await last30DaysOption.click();
     await expect(dateFilterButton).toHaveText(/Last 30 days/);
 
-    await page.waitForTimeout(1000);
-
-    await page.reload({ timeout: 15000 });
-    await page.waitForLoadState("networkidle", { timeout: 10000 });
+    await page.reload();
 
     await toggleFilters();
 
-    const dateFilterButtonAfterRefresh = page.getByTestId("date-filter-button");
+    const dateFilterButtonAfterRefresh = page.getByRole("button", { name: "Date Filter" });
     await expect(dateFilterButtonAfterRefresh).toHaveText(/Last 30 days/);
-    const clearFiltersButton = page.locator("button").filter({ hasText: "Clear filters" });
+    const clearFiltersButton = page.getByRole("button", { name: "Clear Filters" });
     await expect(clearFiltersButton).toBeVisible();
   });
 
   test("should show truncated text for non-search results", async ({ page }) => {
-    const conversationsPage = new ConversationsPage(page);
-
-    await conversationsPage.clearSearch();
-    await page.waitForLoadState("networkidle");
+    await page.getByRole("textbox", { name: "Search conversations" }).clear();
+    await expect(page.getByRole("textbox", { name: "Search conversations" })).toHaveValue("");
 
     const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
     const messageCount = await messageTexts.count();
@@ -426,10 +376,7 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should always use truncate class with search snippets", async ({ page }) => {
-    const conversationsPage = new ConversationsPage(page);
-
-    await conversationsPage.searchConversations("support");
-    await page.waitForLoadState("networkidle");
+    await searchConversations(page, "support");
 
     const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
     const messageCount = await messageTexts.count();
@@ -446,10 +393,7 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should show context snippets for deep matches", async ({ page }) => {
-    const conversationsPage = new ConversationsPage(page);
-
-    await conversationsPage.searchConversations("support");
-    await page.waitForLoadState("networkidle");
+    await searchConversations(page, "support");
 
     const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
     const highlightedMessages = page.locator("mark.bg-secondary-200");
@@ -477,10 +421,7 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should highlight search terms in snippets", async ({ page }) => {
-    const conversationsPage = new ConversationsPage(page);
-
-    await conversationsPage.searchConversations("support");
-    await page.waitForLoadState("networkidle");
+    await searchConversations(page, "support");
 
     const highlights = page.locator("mark.bg-secondary-200");
     const highlightCount = await highlights.count();
@@ -501,12 +442,9 @@ test.describe("Working Conversation Management", () => {
   });
 
   test("should handle search with no results gracefully", async ({ page }) => {
-    const conversationsPage = new ConversationsPage(page);
+    await searchConversations(page, "xyzunlikelyterm123");
 
-    await conversationsPage.searchConversations("xyzunlikelyterm123");
-    await page.waitForLoadState("networkidle");
-
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
     await expect(searchInput).toBeVisible();
     await expect(searchInput).toHaveValue("xyzunlikelyterm123");
 

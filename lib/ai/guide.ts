@@ -2,7 +2,7 @@ import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { O4_MINI_MODEL } from "./core";
+import { MINI_MODEL } from "./core";
 
 const PLAN_PROMPT = `You are a planning agent that helps break down tasks into smaller steps and reason about the current state. Your role is to:
 
@@ -43,7 +43,7 @@ export async function generateGuidePlan(title: string, instructions: string): Pr
 
   try {
     const result = await generateObject({
-      model: openai(O4_MINI_MODEL),
+      model: openai(MINI_MODEL),
       system: PLAN_PROMPT,
       prompt,
       schema: PlanResultSchema,

@@ -252,7 +252,13 @@ const MessageItem = ({
   });
 
   return (
-    <div data-message-item data-type={message.type} data-id={message.id} className="responsive-break-words grid">
+    <div
+      data-message-item
+      data-type={message.type}
+      data-id={message.id}
+      className="responsive-break-words grid"
+      data-testid="message-item"
+    >
       <div className={`flex ${rightAlignedMessage ? "justify-end" : ""}`}>
         <div className={`flex flex-col gap-2 ${rightAlignedMessage ? "items-end" : ""}`}>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">

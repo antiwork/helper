@@ -181,7 +181,7 @@ const CommonIssuesSetting = () => {
         ) : (
           <>
             {filteredIssueGroups.map((group) => (
-              <div key={group.id} className="py-4">
+              <div key={group.id} className="py-4" data-testid="common-issue-item">
                 {editingIssue?.id === group.id ? (
                   <CommonIssueEditForm
                     title={editingIssue.title}
