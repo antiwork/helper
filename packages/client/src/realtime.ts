@@ -43,7 +43,7 @@ export const listenToRealtimeEvent = <Data = any>(
           { ...payload, data },
         );
       }
-      channelObject.eventListeners[event]!.forEach((listener) =>
+      channelObject.eventListeners[event]?.forEach((listener) =>
         listener({ id: payload.id as string, data: data as Data }),
       );
     });
