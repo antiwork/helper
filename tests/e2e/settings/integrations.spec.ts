@@ -53,7 +53,7 @@ test.describe("Settings - Integrations", () => {
     const connectApiButton = page.locator('button:has-text("Connect API")');
     const toggleSchemaButton = page.locator('button:has-text("Enter OpenAPI schema instead")');
     const toggleUrlButton = page.locator('button:has-text("Enter OpenAPI URL instead")');
-    const apiSchemaTextarea = page.locator('textarea#apiSchema');
+    const apiSchemaTextarea = page.locator("textarea#apiSchema");
     const apiUrlInput = page.locator('input[placeholder="https://yourapp.com/api"]');
     const cancelButton = page.locator('button:has-text("Cancel")');
 
