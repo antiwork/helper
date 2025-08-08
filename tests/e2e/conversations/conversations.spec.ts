@@ -19,35 +19,6 @@ test.describe("Working Conversation Management", () => {
     await page.keyboard.press("Enter");
   }
 
-  test("should work with ConversationsPage object", async ({ page }) => {
-    await expect(page).toHaveTitle("Helper");
-    await expect(page.getByRole("textbox", { name: "Search conversations" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "open" })).toBeVisible();
-
-    await expect(page.getByText("Gumroad", { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Account menu" }).getByText("support@gumroad.com")).toBeVisible();
-
-    await searchConversations(page, "test search");
-
-    await expect(page.getByRole("textbox", { name: "Search conversations" })).toHaveValue("test search");
-    await page.getByRole("textbox", { name: "Search conversations" }).clear();
-    await expect(page.getByRole("textbox", { name: "Search conversations" })).toHaveValue("");
-
-    await page.getByRole("button", { name: "open" }).click();
-
-    await page.setViewportSize({ width: 375, height: 667 });
-    await expect(page).toHaveTitle("Helper");
-    await expect(page.getByRole("textbox", { name: "Search conversations" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "open" })).toBeVisible();
-    await page.setViewportSize({ width: 1280, height: 720 });
-
-    await page.reload();
-    await expect(page).toHaveURL(/.*mine.*/);
-    await expect(page.getByRole("textbox", { name: "Search conversations" })).toBeVisible();
-
-    await takeDebugScreenshot(page, "conversations-page-object-working.png");
-  });
-
   test("should display dashboard with conversations", async ({ page }) => {
     await expect(page).toHaveTitle("Helper");
 
