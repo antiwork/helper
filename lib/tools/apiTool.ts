@@ -7,8 +7,7 @@ import { conversationEvents, conversationMessages, conversations, ToolMetadata }
 import type { Tool } from "@/db/schema/tools";
 import openai from "@/lib/ai/openai";
 import { ConversationMessage, createToolEvent } from "@/lib/data/conversationMessage";
-import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
-import { fetchMetadata, findSimilarConversations } from "@/lib/data/retrieval";
+import { findSimilarConversations } from "@/lib/data/retrieval";
 import { cleanUpTextForAI, isWithinTokenLimit, O4_MINI_MODEL } from "../ai/core";
 import type { Conversation } from "../data/conversation";
 
@@ -132,12 +131,7 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
     orderBy: (messages, { asc }) => [asc(messages.createdAt)],
   });
 
-  let metadataPrompt = "";
-  const metadataApi = await getMetadataApiByMailbox();
-  if (conversation.emailFrom && metadataApi) {
-    const metadata = await fetchMetadata(conversation.emailFrom);
-    metadataPrompt = metadata ? `Metadata: ${JSON.stringify(metadata, null, 2)}` : "";
-  }
+  const metadataPrompt = "";
 
   const formattedMessages = messages.map(
     (message) => `${message.role}: ${cleanUpTextForAI(message.cleanedUpText ?? message.body ?? "")}`,

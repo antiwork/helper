@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from "crypto";
+import crypto, { createHash, randomUUID } from "crypto";
 import { fireworks } from "@ai-sdk/fireworks";
 import { TRPCError } from "@trpc/server";
 import {
@@ -42,7 +42,6 @@ import { createAndUploadFile, downloadFile, getFileUrl } from "@/lib/data/files"
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
-import { createHmacDigest } from "@/lib/metadataApiClient";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLog, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
 
@@ -586,7 +585,7 @@ const callToolEndpoint = async (
   }
 
   const requestBody = { email, parameters, requestTimestamp: Math.floor(Date.now() / 1000) };
-  const hmacDigest = createHmacDigest(mailbox.widgetHMACSecret, { json: requestBody });
+  const hmacDigest = crypto.createHmac("sha256", mailbox.widgetHMACSecret).update(JSON.stringify(requestBody)).digest();
   const hmacSignature = hmacDigest.toString("base64");
 
   try {

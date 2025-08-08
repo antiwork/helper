@@ -8,12 +8,7 @@ import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
 import { handleAutoResponse } from "@/jobs/handleAutoResponse";
 import * as aiChat from "@/lib/ai/chat";
-import * as platformCustomer from "@/lib/data/platformCustomer";
-import * as retrieval from "@/lib/data/retrieval";
-
 vi.mock("@/lib/ai/chat");
-vi.mock("@/lib/data/retrieval");
-vi.mock("@/lib/data/platformCustomer");
 vi.mock("@sentry/nextjs", () => ({
   setContext: vi.fn(),
   captureException: vi.fn(),
@@ -37,8 +32,6 @@ describe("handleAutoResponse", () => {
         },
       } as any;
     });
-    vi.mocked(retrieval.fetchMetadata).mockResolvedValue(null);
-    vi.spyOn(platformCustomer, "upsertPlatformCustomer").mockResolvedValue({} as any);
   });
 
   it("generates a draft response when autoRespondEmailToChat is 'draft'", async () => {
@@ -75,28 +68,6 @@ describe("handleAutoResponse", () => {
     expect(updatedConversation?.status).toBe("closed");
   });
 
-  it("fetches and stores customer metadata and upsert platform customer if emailFrom is present", async () => {
-    const mockMetadata = { metadata: { key: "value" } };
-    vi.mocked(retrieval.fetchMetadata).mockResolvedValue(mockMetadata as any);
-    const { conversation } = await conversationFactory.create({ assignedToAI: true });
-    const { message } = await conversationMessagesFactory.create(conversation.id, {
-      role: "user",
-      emailFrom: "customer@example.com",
-      body: "Test email body",
-    });
-
-    await handleAutoResponse({ messageId: message.id });
-
-    expect(retrieval.fetchMetadata).toHaveBeenCalledWith("customer@example.com");
-    const updatedMessage = await db.query.conversationMessages.findFirst({
-      where: eq(conversationMessages.id, message.id),
-    });
-    expect(updatedMessage?.metadata).toEqual(mockMetadata);
-    expect(platformCustomer.upsertPlatformCustomer).toHaveBeenCalledWith({
-      email: "customer@example.com",
-      customerMetadata: mockMetadata.metadata,
-    });
-  });
 
   it("skips if conversation is spam", async () => {
     const { conversation } = await conversationFactory.create({ status: "spam" });

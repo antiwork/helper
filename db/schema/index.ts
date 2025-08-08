@@ -3,7 +3,6 @@ export * from "./gmailSupportEmails";
 export * from "./conversations";
 export * from "./conversationEvents";
 export * from "./conversationMessages";
-export * from "./mailboxesMetadataApi";
 export * from "./faqs";
 export * from "./platformCustomers";
 export * from "./files";

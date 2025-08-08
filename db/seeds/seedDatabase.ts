@@ -12,13 +12,12 @@ import { toolsFactory } from "@tests/support/factories/tools";
 import { addDays, addHours, subDays, subHours } from "date-fns";
 import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
-import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { indexConversationMessage } from "@/jobs/indexConversation";
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/server";
-import { conversationMessages, conversations, mailboxesMetadataApi, userProfiles } from "../schema";
+import { conversationMessages, conversations, userProfiles } from "../schema";
 
 const getTables = async () => {
   const result = await db.execute(sql`
@@ -81,8 +80,8 @@ export const seedDatabase = async () => {
           },
         });
 
-        const user = assertDefined(data.user, `Failed to create user: ${email}`);
         if (error) throw error;
+        const user = assertDefined(data.user, `Failed to create user: ${email}`);
 
         await db
           .update(userProfiles)
@@ -103,7 +102,10 @@ export const seedDatabase = async () => {
         try {
           await platformCustomerFactory.create({ email: conversation.emailFrom });
         } catch (error) {
-          console.error("Seed process create platform customer factory failed:", error);
+          // Ignore duplicate key errors since multiple conversations can have the same email
+          if (error && typeof error === "object" && "code" in error && error.code !== "23505") {
+            console.error("Seed process create platform customer factory failed:", error);
+          }
         }
       }
 
@@ -292,18 +294,6 @@ const createSettingsPageRecords = async () => {
   await faqsFactory.create({
     content: "Deleting your account can be done from Settings > Account > Delete Account.",
   });
-
-  await db
-    .insert(mailboxesMetadataApi)
-    .values({
-      url: faker.internet.url(),
-      isEnabled: true,
-      hmacSecret: crypto.randomUUID().replace(/-/g, ""),
-      createdAt: faker.date.past(),
-      updatedAt: faker.date.recent(),
-    })
-    .returning()
-    .then(takeUniqueOrThrow);
 };
 
 if (env.NODE_ENV !== "development" && env.VERCEL_ENV !== "preview") {

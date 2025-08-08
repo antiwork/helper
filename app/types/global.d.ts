@@ -1,11 +1,6 @@
 import type { UnsavedFileInfo } from "@/components/fileUploadContext";
 import { RouterOutputs } from "@/trpc";
 
-export type MetadataEndpoint = {
-  url: string;
-  hmacSecret: string;
-};
-
 export type FAQ = RouterOutputs["mailbox"]["faqs"]["list"][number];
 
 export type DraftedEmail = {

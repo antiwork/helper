@@ -9,8 +9,6 @@ import { updateConversation } from "@/lib/data/conversation";
 import { ensureCleanedUpText, getTextWithConversationSubject } from "@/lib/data/conversationMessage";
 import { getMailbox } from "@/lib/data/mailbox";
 import { createMessageNotification } from "@/lib/data/messageNotifications";
-import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
-import { fetchMetadata } from "@/lib/data/retrieval";
 
 export const handleAutoResponse = async ({
   messageId,
@@ -47,20 +45,6 @@ export const handleAutoResponse = async ({
 
   await ensureCleanedUpText(message);
 
-  const customerMetadata = message.emailFrom ? await fetchMetadata(message.emailFrom) : null;
-  if (customerMetadata) {
-    await db
-      .update(conversationMessages)
-      .set({ metadata: customerMetadata ?? null })
-      .where(eq(conversationMessages.id, messageId));
-
-    if (message.emailFrom) {
-      await upsertPlatformCustomer({
-        email: message.emailFrom,
-        customerMetadata: customerMetadata.metadata,
-      });
-    }
-  }
 
   const mailbox = await getMailbox();
   if (!mailbox) return { message: "Skipped - mailbox not found" };

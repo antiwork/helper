@@ -6,8 +6,6 @@ import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { conversationMessages, MessageRole } from "@/db/schema/conversationMessages";
-import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
-import { fetchMetadata } from "@/lib/data/retrieval";
 import { buildAITools, callToolApi, generateSuggestedActions, ToolApiError } from "@/lib/tools/apiTool";
 
 vi.mock("ai", () => ({
@@ -15,13 +13,6 @@ vi.mock("ai", () => ({
   generateText: vi.fn(),
 }));
 
-vi.mock("@/lib/data/mailboxMetadataApi", () => ({
-  getMetadataApiByMailbox: vi.fn(),
-}));
-
-vi.mock("@/lib/data/retrieval", () => ({
-  fetchMetadata: vi.fn(),
-}));
 
 describe("apiTools", () => {
   beforeEach(() => {
@@ -292,7 +283,6 @@ describe("apiTools", () => {
         body: "Test message",
       });
 
-      vi.mocked(getMetadataApiByMailbox).mockResolvedValueOnce(null);
       const { tool } = await toolsFactory.create({
         slug: "test-tool",
         parameters: [{ name: "param1", type: "string", required: true, in: "body" }],
@@ -309,45 +299,6 @@ describe("apiTools", () => {
       expect(result[0]?.parameters).toEqual({ param1: "value1" });
     });
 
-    it("includes metadata in tool generation when available", async () => {
-      const { conversation } = await conversationFactory.create();
-      const metadata = {
-        metadata: {
-          name: "Test Customer",
-          value: 100,
-          links: { profile: "https://example.com" },
-        },
-        prompt: "Test prompt",
-      };
-
-      vi.mocked(getMetadataApiByMailbox).mockResolvedValueOnce({
-        id: 1,
-        url: "test",
-        isEnabled: true,
-        hmacSecret: "test",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        deletedAt: null,
-        unused_mailboxId: 1,
-      });
-      vi.mocked(fetchMetadata).mockResolvedValueOnce(metadata);
-      vi.mocked(generateText).mockResolvedValueOnce({
-        toolCalls: [{ toolName: "test-tool", args: { param1: "value1" } }],
-      } as any);
-
-      const { tool } = await toolsFactory.create({
-        slug: "test-tool",
-        parameters: [{ name: "param1", type: "string", required: true, in: "body" }],
-      });
-
-      await generateSuggestedActions(conversation, [tool]);
-
-      expect(generateText).toHaveBeenCalledWith(
-        expect.objectContaining({
-          prompt: expect.stringContaining(JSON.stringify(metadata, null, 2)),
-        }),
-      );
-    });
 
     it("includes relevant messages in conversation context", async () => {
       const { conversation } = await conversationFactory.create();
@@ -369,7 +320,6 @@ describe("apiTools", () => {
         });
       }
 
-      vi.mocked(getMetadataApiByMailbox).mockResolvedValueOnce(null);
       vi.mocked(generateText).mockResolvedValueOnce({
         toolCalls: [{ toolName: "test-tool", args: {} }],
       } as any);

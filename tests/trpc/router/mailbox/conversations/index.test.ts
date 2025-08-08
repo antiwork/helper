@@ -1,7 +1,6 @@
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { fileFactory } from "@tests/support/factories/files";
-import { mailboxMetadataApiFactory } from "@tests/support/factories/mailboxesMetadataApi";
 import { platformCustomerFactory } from "@tests/support/factories/platformCustomers";
 import { userFactory } from "@tests/support/factories/users";
 import { mockTriggerEvent } from "@tests/support/jobsUtils";
@@ -72,34 +71,6 @@ describe("conversationsRouter", () => {
       });
     });
 
-    it("sorts by platformCustomers.value with nulls last", async () => {
-      await mailboxMetadataApiFactory.create();
-      await conversationFactory.create({
-        emailFrom: "high@example.com",
-      });
-      await conversationFactory.create({
-        emailFrom: "low@example.com",
-      });
-      await conversationFactory.create({
-        emailFrom: "no-value@example.com",
-      });
-      await platformCustomerFactory.create({
-        email: "high@example.com",
-        value: "1000",
-      });
-      await platformCustomerFactory.create({
-        email: "low@example.com",
-        value: "500",
-      });
-      // No platformCustomer for no-value@example.com
-      const caller = createCaller(await createTestTRPCContext(user));
-      const result = await caller.mailbox.conversations.list({ ...defaultParams, status: ["open"] });
-      expect(result.conversations.map((c) => c.emailFrom)).toEqual([
-        "high@example.com",
-        "low@example.com",
-        "no-value@example.com",
-      ]);
-    });
   });
 
   describe("count", () => {

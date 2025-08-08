@@ -1,9 +1,9 @@
 import "server-only";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { eq, isNull, sql } from "drizzle-orm";
 import { cache } from "react";
 import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
-import { mailboxes, mailboxesMetadataApi } from "@/db/schema";
+import { mailboxes } from "@/db/schema";
 import { env } from "@/lib/env";
 import { getGitHubInstallUrl } from "@/lib/github/client";
 import { uninstallSlackApp } from "@/lib/slack/client";
@@ -35,24 +35,12 @@ const getSlackConnectUrl = (): string | null => {
   return `https://slack.com/oauth/v2/authorize?${params.toString()}`;
 };
 
-export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => {
-  const metadataEndpoint = await db.query.mailboxesMetadataApi.findFirst({
-    where: and(isNull(mailboxesMetadataApi.deletedAt), eq(mailboxesMetadataApi.isEnabled, true)),
-    columns: {
-      isEnabled: true,
-      deletedAt: true,
-      url: true,
-      hmacSecret: true,
-    },
-  });
-
+export const getMailboxInfo = (mailbox: typeof mailboxes.$inferSelect) => {
   return {
     id: mailbox.id,
     name: mailbox.name,
     slug: mailbox.slug,
     preferences: mailbox.preferences,
-    hasMetadataEndpoint: !!metadataEndpoint,
-    metadataEndpoint: metadataEndpoint ?? null,
     slackConnected: !!mailbox.slackBotToken,
     slackConnectUrl: env.SLACK_CLIENT_ID ? getSlackConnectUrl() : null,
     slackAlertChannel: mailbox.slackAlertChannel,

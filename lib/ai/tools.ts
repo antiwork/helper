@@ -5,44 +5,13 @@ import { assertDefined } from "@/components/utils/assert";
 import { triggerEvent } from "@/jobs/trigger";
 import { GUIDE_USER_TOOL_NAME, REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
 import { getConversationById, updateConversation, updateOriginalConversation } from "@/lib/data/conversation";
-import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
-import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
-import { fetchMetadata, getPastConversationsPrompt } from "@/lib/data/retrieval";
+import { getPastConversationsPrompt } from "@/lib/data/retrieval";
 import { getMailboxToolsForChat } from "@/lib/data/tools";
-import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
-
-const fetchUserInformation = async (email: string) => {
-  try {
-    const metadata = await fetchMetadata(email);
-    return metadata?.prompt;
-  } catch (error) {
-    captureExceptionAndLog(error, {
-      extra: { email },
-    });
-    return "Error fetching metadata";
-  }
-};
 
 const searchKnowledgeBase = async (query: string) => {
   const documents = await getPastConversationsPrompt(query);
   return documents ?? "No past conversations found";
-};
-
-const updateCustomerMetadata = async (email: string) => {
-  try {
-    const customerMetadata = (await fetchMetadata(email))?.metadata ?? null;
-    if (customerMetadata) {
-      await upsertPlatformCustomer({
-        email,
-        customerMetadata,
-      });
-    }
-  } catch (error) {
-    captureExceptionAndLog(error, {
-      extra: { email },
-    });
-  }
 };
 
 const requestHumanSupport = async (conversationId: number, email: string | null, reason: string, newEmail?: string) => {
@@ -64,8 +33,6 @@ const requestHumanSupport = async (conversationId: number, email: string | null,
   });
 
   if (email) {
-    waitUntil(updateCustomerMetadata(email));
-
     waitUntil(
       triggerEvent("conversations/human-support-requested", {
         conversationId: conversation.id,
@@ -95,8 +62,6 @@ export const buildTools = async (
   includeMailboxTools = true,
   reasoningMiddlewarePrompt?: string,
 ): Promise<Record<string, Tool>> => {
-  const metadataApi = await getMetadataApiByMailbox();
-
   const reasoningMiddleware = async (result: Promise<string | undefined> | string | undefined) => {
     const resultString = await result;
     if (reasoningMiddlewarePrompt && resultString) {
@@ -150,16 +115,6 @@ export const buildTools = async (
       }),
       execute: ({ reason, email: newEmail }) =>
         reasoningMiddleware(requestHumanSupport(conversationId, email, reason, newEmail)),
-    });
-  }
-
-  if (metadataApi && email) {
-    tools.fetch_user_information = tool({
-      description: "fetch user related information",
-      parameters: z.object({
-        reason: z.string().describe("reason for fetching user information"),
-      }),
-      execute: () => reasoningMiddleware(fetchUserInformation(email)),
     });
   }
 
