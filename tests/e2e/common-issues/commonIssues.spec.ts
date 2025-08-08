@@ -45,7 +45,7 @@ async function addCommonIssue(page: Page, title: string, description?: string) {
 async function editCommonIssue(page: Page, currentTitle: string, newTitle: string, newDescription?: string) {
   const issueItem = await findIssueItem(page, currentTitle);
   await issueItem.getByRole("button", { name: "Edit" }).click();
-  
+
   await fillIssueTitle(page, newTitle);
   if (newDescription !== undefined) {
     await fillIssueDescription(page, newDescription);
@@ -104,7 +104,7 @@ test.describe("Common Issues", () => {
 
     await fillIssueTitle(page, titleOnlyIssue);
     await expectSaveButtonEnabled(page);
-    
+
     await saveIssue(page);
     await expectCommonIssueVisible(page, titleOnlyIssue);
     await expectCommonIssueConversationCount(page, titleOnlyIssue, 0);
@@ -164,5 +164,4 @@ test.describe("Common Issues", () => {
     await expectCommonIssueVisible(page, nonSearchableTitle);
     await expectCommonIssueVisible(page, issueWithSearchableDescription);
   });
-
 });
