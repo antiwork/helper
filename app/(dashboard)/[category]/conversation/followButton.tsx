@@ -64,8 +64,8 @@ export const FollowButton = ({ conversationSlug, className, size = "sm" }: Follo
   const buttonText = isFollowing ? "Following" : "Follow";
   const Icon = isFollowing ? Bell : BellOff;
   const tooltipText = isFollowing
-    ? "Click to stop receiving notifications for this conversation"
-    : "Click to receive notifications when this conversation is updated";
+    ? "Stop receiving notifications for this conversation"
+    : "Receive notifications when this conversation is updated";
 
   return (
     <TooltipProvider>
