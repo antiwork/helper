@@ -95,7 +95,7 @@ const FollowerNotificationEmail = (props: Props) => {
     <Html>
       <Head />
       <Preview>
-        {title}: {conversationSubject}
+        {title}
       </Preview>
       <Body
         style={{
