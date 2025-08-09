@@ -12,7 +12,9 @@ test.describe("Website Learning UI Smoke Tests", () => {
 
   test("displays the website learning section and add website form", async ({ page }) => {
     await expect(page.getByRole("heading", { name: "Website Learning" })).toBeVisible();
-    await expect(page.getByText("Helper will learn about your product by reading your websites to provide better responses.")).toBeVisible();
+    await expect(
+      page.getByText("Helper will learn about your product by reading your websites to provide better responses."),
+    ).toBeVisible();
     await expect(page.getByRole("button", { name: "Add website" })).toBeVisible();
     await page.getByRole("button", { name: "Add website" }).click();
     await expect(page.locator('label[for="url"]')).toBeVisible();
