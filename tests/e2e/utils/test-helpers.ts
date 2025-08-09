@@ -111,7 +111,7 @@ export async function loadWidget(
   await page.click("[data-helper-toggle]", { timeout: 15000 });
   await expect(page.locator("iframe")).toBeVisible({ timeout: 15000 });
 
-  const widgetFrame = page.frameLocator('iframe.helper-widget-iframe');
+  const widgetFrame = page.frameLocator("iframe.helper-widget-iframe");
   await expect(widgetFrame.getByRole("textbox", { name: "Ask a question" })).toBeVisible({ timeout: 15000 });
 
   return { widgetFrame };
