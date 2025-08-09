@@ -421,7 +421,7 @@ export const createConversationMessage = async (
           eventType: "new_message" as const,
           triggeredByUserId: message.userId,
           eventDetails: {
-            message: message.body || undefined,
+            message: message.cleanedUpText || undefined,
           },
         },
       });
