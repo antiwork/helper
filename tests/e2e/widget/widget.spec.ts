@@ -136,12 +136,11 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
 
     await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("Second message");
     await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
-    await widgetFrame
-      .locator('[data-testid="message"][data-message-role="assistant"]')
-      .waitFor({ state: "visible", timeout: 30000 });
 
     const secondCount = await widgetFrame.locator('[data-testid="message"]').count();
     expect(secondCount).toBeGreaterThan(firstCount);
+
+    await expect(widgetFrame.locator('[data-testid="message"][data-message-role="assistant"]')).toHaveCount(2);
     expect(chatResponses.length).toBeGreaterThanOrEqual(2);
   });
 
