@@ -100,7 +100,6 @@ export const toolsRouter = {
             baseUrl: input.url,
             schema: input.schema,
             authenticationToken: input.apiKey,
-            authenticationTokenPlaintext: input.apiKey,
           })
           .returning()
           .then(takeUniqueOrThrow);

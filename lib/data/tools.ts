@@ -51,7 +51,7 @@ export const importToolsFromSpec = async ({
       .update(toolsTable)
       .set({
         ...tool,
-        authenticationTokenPlaintext: tool.authenticationToken,
+        authenticationToken: tool.authenticationToken,
         enabled: existingTool?.enabled ?? true,
         availableInChat: existingTool?.availableInChat ?? false,
         availableInAnonymousChat: existingTool?.availableInAnonymousChat ?? false,
@@ -64,7 +64,7 @@ export const importToolsFromSpec = async ({
     await db.insert(toolsTable).values(
       toolsToInsert.map((tool) => ({
         ...tool,
-        authenticationTokenPlaintext: tool.authenticationToken,
+        authenticationToken: tool.authenticationToken,
         toolApiId,
       })),
     );

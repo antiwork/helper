@@ -11,7 +11,7 @@ export async function searchEmailsByKeywords(
   filters: SQL[] = [],
   orderBy: SQL[] = [desc(conversationMessages.id)],
 ) {
-  const searchIndex = extractHashedWordsFromEmail({ body: keywords }).join(" ");
+  const searchIndex = (await extractHashedWordsFromEmail({ body: keywords })).join(" ");
   const searchResult = await db
     .select({
       id: conversationMessages.id,

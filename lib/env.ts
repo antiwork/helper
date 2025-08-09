@@ -34,12 +34,6 @@ export const env = createEnv({
     // Set this for both local development and when deploying
     OPENAI_API_KEY: isAIMockingEnabled ? z.string().min(1).default("mock-openai-api-key") : z.string().min(1), // API key from https://platform.openai.com for AI models
 
-    // Set this before deploying
-    ENCRYPT_COLUMN_SECRET: defaultUnlessDeployed(
-      z.string().regex(/^[a-f0-9]{32}$/, "must be a random 32-character hex string"),
-      "1234567890abcdef1234567890abcdef",
-    ),
-
     // Set these before or after deploying for email sending and receiving
     RESEND_API_KEY: z.string().min(1).optional(),
     RESEND_FROM_ADDRESS: z.string().min(1).optional(),
@@ -98,9 +92,6 @@ export const env = createEnv({
       .string()
       .default("")
       .transform((v) => (v ? v.split(",").map((d) => d.trim()) : [])),
-
-    // Use a separate key for the search index. Defaults to ENCRYPT_COLUMN_SECRET if not set.
-    HASH_WORDS_SECRET: z.string().optional(),
 
     // Log SQL queries to the console
     DRIZZLE_LOGGING: z.string().optional(),

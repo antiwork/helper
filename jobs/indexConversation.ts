@@ -22,7 +22,7 @@ export const indexConversationMessage = async ({ messageId }: { messageId: numbe
   const messageBody = await ensureCleanedUpText(message);
 
   // Collect words from subject and body
-  const uniqueHashedWords = extractHashedWordsFromEmail({
+  const uniqueHashedWords = await extractHashedWordsFromEmail({
     emailFrom: conversation.emailFrom,
     subject: conversation.subject,
     body: messageBody,
