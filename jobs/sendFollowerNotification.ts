@@ -127,12 +127,11 @@ export const sendFollowerNotification = async (payload: SendFollowerNotification
     });
 
     const emailResults = await Promise.allSettled(emailPromises);
-    const successful = emailResults.filter((result) => result.status === "fulfilled" && result.value?.success).length;
 
     return {
       conversationId,
       eventType,
-      notificationsSent: successful,
+      emailResults,
       totalFollowers: followers.length,
     };
   } catch (error) {
