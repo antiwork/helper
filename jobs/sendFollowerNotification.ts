@@ -85,8 +85,6 @@ export const sendFollowerNotification = async (payload: SendFollowerNotification
     const triggeredByName = triggeredByUser?.displayName || triggeredByUser?.user?.email || "Someone";
 
     const conversationLink = `${env.AUTH_URL}/conversations/${conversation.slug}`;
-    const baseSubject = `Update on conversation: ${conversation.subject}`;
-
     const { Resend } = await import("resend");
     const resend = new Resend(env.RESEND_API_KEY);
 
@@ -96,21 +94,22 @@ export const sendFollowerNotification = async (payload: SendFollowerNotification
         return { success: false, reason: "No email address" };
       }
 
+      const eventDescription = 
+        eventType === "new_message"
+          ? "New message"
+          : eventType === "status_change"
+            ? "Status changed"
+            : eventType === "assignment_change"
+              ? "Assignment changed"
+              : eventType === "note_added"
+                ? "New note"
+                : "Update";
+
       try {
         await resend.emails.send({
           from: env.RESEND_FROM_ADDRESS!,
           to: assertDefined(email),
-          subject: `${baseSubject}${
-            eventType === "new_message"
-              ? " - New message"
-              : eventType === "status_change"
-                ? " - Status changed"
-                : eventType === "assignment_change"
-                  ? " - Assignment changed"
-                  : eventType === "note_added"
-                    ? " - New note"
-                    : ""
-          }`,
+          subject: `${eventDescription} in "${conversation.subject}"`,
           react: FollowerNotificationEmail({
             eventType,
             triggeredByName,
