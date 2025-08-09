@@ -27,7 +27,7 @@ export const conversationFollowersRelations = relations(conversationFollowers, (
     fields: [conversationFollowers.conversationId],
     references: [conversations.id],
   }),
-  user: one(userProfiles, {
+  userProfile: one(userProfiles, {
     fields: [conversationFollowers.userId],
     references: [userProfiles.id],
   }),

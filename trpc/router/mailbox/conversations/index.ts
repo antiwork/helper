@@ -367,34 +367,4 @@ export const conversationsRouter = {
     return { following: !!follower };
   }),
 
-  getFollowers: conversationProcedure.query(async ({ ctx }) => {
-    const followers = await db.query.conversationFollowers.findMany({
-      where: eq(conversationFollowers.conversationId, ctx.conversation.id),
-      with: {
-        user: {
-          columns: {
-            id: true,
-            displayName: true,
-          },
-          with: {
-            user: {
-              columns: {
-                email: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    return {
-      followers: followers.map((f) => ({
-        id: f.user.id,
-        displayName: f.user.displayName,
-        email: f.user.user?.email || null,
-        followingSince: f.createdAt,
-      })),
-      count: followers.length,
-    };
-  }),
 } satisfies TRPCRouterRecord;

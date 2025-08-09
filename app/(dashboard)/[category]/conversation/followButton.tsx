@@ -1,5 +1,4 @@
 import { Bell, BellOff } from "lucide-react";
-import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -13,43 +12,43 @@ interface FollowButtonProps {
 }
 
 export const FollowButton = ({ conversationSlug, className, size = "sm" }: FollowButtonProps) => {
-  const [isOptimistic, setIsOptimistic] = useState<boolean | null>(null);
-
   const { data: followStatus, isLoading } = api.mailbox.conversations.isFollowing.useQuery({ conversationSlug });
 
   const utils = api.useUtils();
 
   const followMutation = api.mailbox.conversations.follow.useMutation({
     onMutate: () => {
-      setIsOptimistic(true);
+      utils.mailbox.conversations.isFollowing.setData({ conversationSlug }, (data) => 
+        data ? { ...data, following: true } : { following: true }
+      );
     },
     onSuccess: () => {
       toast.success("Following conversation");
       utils.mailbox.conversations.isFollowing.invalidate();
-      setIsOptimistic(null);
     },
     onError: (_error) => {
       toast.error("Failed to follow conversation");
-      setIsOptimistic(null);
+      utils.mailbox.conversations.isFollowing.invalidate();
     },
   });
 
   const unfollowMutation = api.mailbox.conversations.unfollow.useMutation({
     onMutate: () => {
-      setIsOptimistic(false);
+      utils.mailbox.conversations.isFollowing.setData({ conversationSlug }, (data) => 
+        data ? { ...data, following: false } : { following: false }
+      );
     },
     onSuccess: () => {
       toast.success("Unfollowed conversation");
       utils.mailbox.conversations.isFollowing.invalidate();
-      setIsOptimistic(null);
     },
     onError: (_error) => {
       toast.error("Failed to unfollow conversation");
-      setIsOptimistic(null);
+      utils.mailbox.conversations.isFollowing.invalidate();
     },
   });
 
-  const isFollowing = isOptimistic ?? followStatus?.following ?? false;
+  const isFollowing = followStatus?.following ?? false;
   const isPending = followMutation.isPending || unfollowMutation.isPending;
 
   const handleToggleFollow = () => {

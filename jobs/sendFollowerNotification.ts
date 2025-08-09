@@ -51,7 +51,7 @@ export const sendFollowerNotificationJob = async (payload: SendFollowerNotificat
         ne(conversationFollowers.userId, triggeredByUserId),
       ),
       with: {
-        user: {
+        userProfile: {
           with: {
             user: {
               columns: {
@@ -93,7 +93,7 @@ export const sendFollowerNotificationJob = async (payload: SendFollowerNotificat
     const resend = new Resend(env.RESEND_API_KEY);
 
     const emailPromises = followers.map(async (follower) => {
-      const email = follower.user.user?.email;
+      const email = follower.userProfile.user?.email;
       if (!email) {
         return { success: false, reason: "No email address" };
       }
