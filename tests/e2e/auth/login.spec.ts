@@ -19,25 +19,14 @@ test.describe("Working Authentication", () => {
     await page.fill("#email", "support@gumroad.com");
     await page.click('button[type="submit"]');
 
-    await debugWait(page, 3000);
+    await expect(page).toHaveURL(/.*mine.*/, { timeout: 40000 });
 
-    // Wait for potential OTP form or automatic redirect in development
-    await debugWait(page, 2000);
+    await page.waitForLoadState("networkidle");
 
-    const finalUrl = page.url();
+    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    await expect(searchInput).toBeVisible();
 
-    if (finalUrl.includes("mine")) {
-      await page.waitForLoadState("networkidle");
-
-      const searchInput = page.locator('input[placeholder="Search conversations"]');
-      await expect(searchInput).toBeVisible();
-
-      await takeDebugScreenshot(page, "successful-login.png");
-    } else {
-      // Still on login page - this is expected in a development environment
-      await takeDebugScreenshot(page, "login-status.png");
-      await expect(page.locator("#email")).toBeVisible();
-    }
+    await takeDebugScreenshot(page, "successful-login.png");
   });
 
   test("should handle different email addresses", async ({ page }) => {

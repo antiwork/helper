@@ -17,26 +17,14 @@ setup("authenticate", async ({ page }) => {
   // Submit email form
   await page.click('button[type="submit"]');
 
-  await page.waitForTimeout(3000);
+  await expect(page).toHaveURL(/.*mine.*/, { timeout: 40000 });
 
-  try {
-    await expect(page).toHaveURL(/.*mine.*/, { timeout: 40000 });
+  await page.waitForLoadState("networkidle");
 
-    await page.waitForLoadState("networkidle");
+  const searchInput = page.locator('input[placeholder="Search conversations"]');
+  await expect(searchInput).toBeVisible({ timeout: 15000 });
 
-    const searchInput = page.locator('input[placeholder="Search conversations"]');
-    await expect(searchInput).toBeVisible({ timeout: 15000 });
-
-    await takeDebugScreenshot(page, "authenticated-dashboard.png");
-  } catch (error) {
-    const currentUrl = page.url();
-    if (currentUrl.includes("/login")) {
-      console.log("Staying on login page - acceptable for development environment");
-      await takeDebugScreenshot(page, "dev-login-state.png");
-    } else {
-      throw error;
-    }
-  }
+  await takeDebugScreenshot(page, "authenticated-dashboard.png");
 
   // Save authentication state
   await page.context().storageState({ path: authFile });
