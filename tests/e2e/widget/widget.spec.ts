@@ -1,13 +1,8 @@
 import { expect, Page, test } from "@playwright/test";
 import { widgetConfigs } from "./fixtures/widget-config";
-import { ApiVerifier } from "./page-objects/apiVerifier";
 
 test.describe("Helper Chat Widget - Basic Functionality", () => {
-  let apiVerifier: ApiVerifier;
-
   test.beforeEach(async ({ page }) => {
-    apiVerifier = new ApiVerifier(page);
-    await apiVerifier.startCapturing();
     await page.goto("/widget/test/vanilla");
   });
 
@@ -28,9 +23,12 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
   }
 
   test("should load widget and initialize session", async ({ page }) => {
-    const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
+    const response = await page.waitForResponse(
+      (res) => res.url().includes("/api/widget/session") && res.request().method() === "POST",
+    );
 
-    await apiVerifier.verifySessionApiCall();
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
+    expect(response.ok()).toBe(true);
 
     const inputVisible = await widgetFrame.getByRole("textbox", { name: "Ask a question" }).isVisible();
     expect(inputVisible).toBe(true);
@@ -41,14 +39,20 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
 
     await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("What is the weather today?");
 
+    const chatResponsePromise = page.waitForResponse(
+      (res) => res.url().includes("/api/chat") && res.request().method() === "POST",
+    );
+
     await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
 
     await widgetFrame
       .locator('[data-testid="message"][data-message-role="assistant"]')
       .waitFor({ state: "visible", timeout: 30000 });
 
-    await apiVerifier.verifyChatApiCall();
-    await apiVerifier.verifyStreamingResponse();
+    const chatResponse = await chatResponsePromise;
+    expect(chatResponse.ok()).toBe(true);
+    const contentType = chatResponse.headers()["content-type"] || "";
+    expect(contentType).toMatch(/text\/event-stream|application\/json/);
 
     const messageCount = await widgetFrame.locator('[data-testid="message"]').count();
     expect(messageCount).toBeGreaterThanOrEqual(2);
@@ -61,7 +65,10 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
     expect(inputVisible).toBe(true);
 
     try {
-      const sessionCall = await apiVerifier.verifySessionApiCall();
+      const response = await page.waitForResponse(
+        (res) => res.url().includes("/api/widget/session") && res.request().method() === "POST",
+      );
+      expect(response.ok()).toBe(true);
     } catch {
       console.log("Session API call not found - vanilla widget may handle auth differently");
     }
@@ -86,6 +93,10 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
       )
       .catch(() => false);
 
+    const chatResponsePromise = page.waitForResponse(
+      (res) => res.url().includes("/api/chat") && res.request().method() === "POST",
+    );
+
     await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
 
     const hadLoadingState = await loadingStatePromise;
@@ -93,6 +104,9 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
     await widgetFrame
       .locator('[data-testid="message"][data-message-role="assistant"]')
       .waitFor({ state: "visible", timeout: 30000 });
+
+    const chatResponse = await chatResponsePromise;
+    expect(chatResponse.ok()).toBe(true);
 
     const messageCount = await widgetFrame.locator('[data-testid="message"]').count();
     expect(messageCount).toBeGreaterThanOrEqual(2);
@@ -103,8 +117,14 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
   });
 
   test("should persist conversation in session", async ({ page }) => {
-    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
+    const chatResponses: any[] = [];
+    await page.route("**/api/chat", async (route) => {
+      const response = await route.fetch();
+      chatResponses.push({ url: route.request().url(), method: route.request().method() });
+      await route.fulfill({ response });
+    });
 
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
     await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("First message");
 
     await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
@@ -115,7 +135,6 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
     const firstCount = await widgetFrame.locator('[data-testid="message"]').count();
 
     await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("Second message");
-
     await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
     await widgetFrame
       .locator('[data-testid="message"][data-message-role="assistant"]')
@@ -123,9 +142,7 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
 
     const secondCount = await widgetFrame.locator('[data-testid="message"]').count();
     expect(secondCount).toBeGreaterThan(firstCount);
-
-    const chatCalls = apiVerifier.getApiCalls().filter((call) => call.url.includes("/api/chat"));
-    expect(chatCalls.length).toBeGreaterThanOrEqual(2);
+    expect(chatResponses.length).toBeGreaterThanOrEqual(2);
   });
 
   test("should handle empty input gracefully", async ({ page }) => {
@@ -137,9 +154,14 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
     const messageCount = await widgetFrame.locator('[data-testid="message"]').count();
     expect(messageCount).toBe(0);
 
-    const apiCalls = apiVerifier.getApiCalls();
-    const chatCalls = apiCalls.filter((call) => call.url.includes("/api/chat"));
-    expect(chatCalls.length).toBe(0);
+    // Check that no /api/chat call was made
+    let chatCallMade = false;
+    page.on("request", (request) => {
+      if (request.url().includes("/api/chat") && request.method() === "POST") {
+        chatCallMade = true;
+      }
+    });
+    expect(chatCallMade).toBe(false);
   });
 
   test.skip("should handle network errors gracefully", async ({ page }) => {

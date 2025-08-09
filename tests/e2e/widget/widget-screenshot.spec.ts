@@ -1,16 +1,11 @@
 import { expect, Page, test } from "@playwright/test";
 import { widgetConfigs } from "./fixtures/widget-config";
-import { ApiVerifier } from "./page-objects/apiVerifier";
 
 // Configure tests to run serially to avoid resource contention
 test.describe.configure({ mode: "serial" });
 
 test.describe("Helper Chat Widget - Screenshot Functionality", () => {
-  let apiVerifier: ApiVerifier;
-
   test.beforeEach(async ({ page }) => {
-    apiVerifier = new ApiVerifier(page);
-    await apiVerifier.startCapturing();
     await page.goto("/widget/test/vanilla");
   });
 
@@ -31,7 +26,6 @@ test.describe("Helper Chat Widget - Screenshot Functionality", () => {
   }
 
   test.afterEach(async ({ page }) => {
-    // Clean up any resources to prevent interference between tests
     try {
       await page.close();
     } catch {
@@ -110,24 +104,29 @@ test.describe("Helper Chat Widget - Screenshot Functionality", () => {
       (window as any).HelperWidget.takeScreenshot = () => Promise.reject(new Error("Screenshot failed"));
     });
 
+    let chatRequestBody: any = null;
+    await page.route("**/api/chat", async (route) => {
+      const body = route.request().postData();
+      chatRequestBody = body ? JSON.parse(body) : undefined;
+      const response = await route.fetch();
+      await route.fulfill({ response });
+    });
+
     await widgetFrame
       .getByRole("textbox", { name: "Ask a question" })
       .fill("Can you help me understand what's on my screen?");
     await widgetFrame.locator('[data-testid="screenshot-checkbox"]').check();
     await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
 
-    // Wait for the message to be sent (even though screenshot failed)
     await widgetFrame
       .locator('[data-testid="message"][data-message-role="assistant"]')
       .waitFor({ state: "visible", timeout: 30000 });
 
     // Verify the message was sent without screenshot
-    const chatCall = await apiVerifier.verifyChatApiCall();
     const hasScreenshot =
-      chatCall?.body?.messages?.some(
+      chatRequestBody?.messages?.some(
         (msg: any) => msg.experimental_attachments?.length > 0 || msg.attachments?.length > 0 || msg.screenshot,
       ) || false;
-
     expect(hasScreenshot).toBe(false);
 
     const messagesSent = await widgetFrame.locator('[data-testid="message"]').count();
@@ -215,23 +214,27 @@ test.describe("Helper Chat Widget - Screenshot Functionality", () => {
   test("should send message without screenshot when checkbox unchecked", async ({ page }) => {
     const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
 
-    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("What is the weather today?");
+    let chatRequestBody: any = null;
+    await page.route("**/api/chat", async (route) => {
+      const body = route.request().postData();
+      chatRequestBody = body ? JSON.parse(body) : undefined;
+      const response = await route.fetch();
+      await route.fulfill({ response });
+    });
 
+    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("What is the weather today?");
     await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
     await widgetFrame
       .locator('[data-testid="message"][data-message-role="assistant"]')
       .waitFor({ state: "visible", timeout: 30000 });
 
-    const chatCall = await apiVerifier.verifyChatApiCall();
-
     // For the vanilla widget, the body structure might be simpler
     const hasScreenshot =
-      chatCall?.body?.messages?.some(
+      chatRequestBody?.messages?.some(
         (msg: any) => msg.experimental_attachments?.length > 0 || msg.attachments?.length > 0 || msg.screenshot,
       ) ||
-      chatCall?.body?.screenshot ||
+      chatRequestBody?.screenshot ||
       false;
-
     expect(hasScreenshot).toBe(false);
   });
 
