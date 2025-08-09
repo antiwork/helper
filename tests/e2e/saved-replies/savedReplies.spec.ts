@@ -359,22 +359,9 @@ test.describe("Saved Replies Management", () => {
       // Wait for UI to update
       await page.waitForTimeout(1000);
 
-      // No longer rely on overall count – instead verify our specific reply exists
-      const newCount = await getSavedReplyCount(page);
-
-      let foundReply = false;
-      for (let i = 0; i < newCount; i++) {
-        try {
-          const title = await getSavedReplyTitle(page, i);
-          if (title.includes(testName)) {
-            foundReply = true;
-            break;
-          }
-        } catch {
-          // ignore and keep checking
-        }
-      }
-      expect(foundReply).toBe(true);
+      // Use the title-based helper function to verify the reply exists
+      const createdReply = await findSavedReplyByTitle(page, testName);
+      await expect(createdReply).toBeVisible({ timeout: 5000 });
 
       await takeDebugScreenshot(page, "saved-reply-created.png");
     }
