@@ -89,7 +89,7 @@ export const sendFollowerNotification = async (payload: SendFollowerNotification
     const resend = new Resend(env.RESEND_API_KEY);
 
     const emailPromises = followers.map(async (follower) => {
-      const email = follower.user.email;
+      const email = follower.user?.email;
       if (!email) {
         return { success: false, reason: "No email address" };
       }
@@ -127,7 +127,7 @@ export const sendFollowerNotification = async (payload: SendFollowerNotification
       }
     });
 
-    const emailResults = await Promise.allSettled(emailPromises);
+    const emailResults = await Promise.all(emailPromises);
 
     return {
       conversationId,
