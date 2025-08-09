@@ -1,13 +1,13 @@
 import { expect, Page } from "@playwright/test";
 import { waitForToast } from "../toastHelpers";
-import { BasePage } from "./basePage";
 
 interface TestWebsite {
   name: string;
   url: string;
 }
 
-export class WebsiteLearningPage extends BasePage {
+export class WebsiteLearningPage {
+  protected page: Page;
   private readonly websiteLearningTitle = 'h2:has-text("Website Learning")';
   private readonly websiteDescription =
     'text="Helper will learn about your product by reading your websites to provide better responses."';
@@ -20,12 +20,12 @@ export class WebsiteLearningPage extends BasePage {
   private readonly externalLinks = 'a[target="_blank"]';
 
   constructor(page: Page) {
-    super(page);
+    this.page = page;
   }
 
   async navigateToKnowledgeSettings() {
-    await this.goto("/settings/knowledge");
-    await this.waitForPageLoad();
+    await this.page.goto("/settings/knowledge");
+    await this.page.waitForLoadState("networkidle");
   }
 
   async expectWebsiteLearningSection() {
