@@ -113,14 +113,23 @@ async function clickSaveButton(page: Page) {
 
   // Map each button to its waitFor promise, returning the button when visible
   const buttonPromises = [
-    updateBtn.waitFor({ state: "visible", timeout: 5000 }).then(() => updateBtn).catch(() => null),
-    addBtn.waitFor({ state: "visible", timeout: 5000 }).then(() => addBtn).catch(() => null),
-    saveBtn.waitFor({ state: "visible", timeout: 5000 }).then(() => saveBtn).catch(() => null),
+    updateBtn
+      .waitFor({ state: "visible", timeout: 5000 })
+      .then(() => updateBtn)
+      .catch(() => null),
+    addBtn
+      .waitFor({ state: "visible", timeout: 5000 })
+      .then(() => addBtn)
+      .catch(() => null),
+    saveBtn
+      .waitFor({ state: "visible", timeout: 5000 })
+      .then(() => saveBtn)
+      .catch(() => null),
   ];
 
   // Wait for the first button to become visible and capture it
   const winningButton = await Promise.race(buttonPromises);
-  
+
   if (!winningButton) {
     throw new Error("No save button (Add/Update/Save) found");
   }
@@ -192,12 +201,14 @@ async function editSavedReplyByTitle(page: Page, originalTitle: string, newName:
 
 async function copySavedReplyByTitle(page: Page, title: string) {
   const replyCard = await findSavedReplyByTitle(page, title);
-  
+
   // Ensure the reply exists
   await expect(replyCard).toBeVisible({ timeout: 5000 });
-  
+
   // Find and click the copy button within this specific card
-  const copyButton = replyCard.locator('[data-testid="copy-button"], button[title*="copy" i], button[aria-label*="copy" i]').first();
+  const copyButton = replyCard
+    .locator('[data-testid="copy-button"], button[title*="copy" i], button[aria-label*="copy" i]')
+    .first();
   await expect(copyButton).toBeVisible({ timeout: 5000 });
   await copyButton.click();
 }
