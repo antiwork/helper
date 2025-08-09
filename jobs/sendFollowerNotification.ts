@@ -106,14 +106,15 @@ export const sendFollowerNotification = async (payload: SendFollowerNotification
                 : "Update";
 
       try {
+        const sanitizedSubject = (conversation.subject || "Untitled").replace(/[\r\n]/g, "");
         await resend.emails.send({
           from: env.RESEND_FROM_ADDRESS!,
           to: assertDefined(email),
-          subject: `${eventDescription} in "${conversation.subject}"`,
+          subject: `${eventDescription} in "${sanitizedSubject}"`,
           react: FollowerNotificationEmail({
             eventType,
             triggeredByName,
-            conversationSubject: conversation.subject || "Untitled",
+            conversationSubject: sanitizedSubject,
             customerEmail: conversation.emailFrom || "Unknown",
             conversationLink,
             eventDetails,
