@@ -19,7 +19,7 @@ type SendFollowerNotificationPayload = {
   };
 };
 
-export const sendFollowerNotificationJob = async (payload: SendFollowerNotificationPayload) => {
+export const sendFollowerNotification = async (payload: SendFollowerNotificationPayload) => {
   try {
     const { conversationId, eventType, triggeredByUserId, eventDetails } = payload;
 
