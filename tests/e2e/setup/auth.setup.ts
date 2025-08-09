@@ -19,21 +19,6 @@ setup("authenticate", async ({ page }) => {
 
   await page.waitForTimeout(3000);
 
-  const otpInputs = page.locator("[data-input-otp-slot]");
-  const otpCount = await otpInputs.count();
-
-  if (otpCount > 0) {
-    try {
-      for (let i = 0; i < otpCount; i++) {
-        await otpInputs.nth(i).fill("1");
-      }
-      await page.click('button[type="submit"]');
-      await page.waitForTimeout(2000);
-    } catch (error) {
-      console.log("OTP filling failed, continuing with dev fallback");
-    }
-  }
-
   try {
     await expect(page).toHaveURL(/.*mine.*/, { timeout: 40000 });
 

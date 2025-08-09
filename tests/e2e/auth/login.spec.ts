@@ -29,26 +29,11 @@ test.describe("Working Authentication", () => {
 
     const currentUrl = page.url();
 
-    if (currentUrl.includes("/login")) {
-      const otpInputs = page.locator("[data-input-otp-slot]");
-      const otpCount = await otpInputs.count();
-
-      if (otpCount > 0) {
-        try {
-          for (let i = 0; i < Math.min(6, otpCount); i++) {
-            await otpInputs.nth(i).fill("1");
-          }
-
-          await debugWait(page, 2000);
-        } catch (error) {
-          // OTP filling failed, checking if we can proceed anyway
-        }
-      }
-    }
+    await debugWait(page, 2000);
 
     const finalUrl = page.url();
 
-    if (finalUrl.includes("mailboxes") || finalUrl.includes("mine")) {
+    if (finalUrl.includes("mine")) {
       await page.waitForLoadState("networkidle");
 
       const searchInput = page.locator('input[placeholder="Search conversations"]');
@@ -56,24 +41,7 @@ test.describe("Working Authentication", () => {
 
       await takeDebugScreenshot(page, "successful-login.png");
     } else {
-      // Still on login page - this is expected in a test environment without proper OTP setup
-      // Verify we at least got to the OTP step (shows the process is working)
-      const otpInputs = page.locator("[data-input-otp-slot]");
-      const hasOtpForm = (await otpInputs.count()) > 0;
-
-      if (hasOtpForm) {
-        await takeDebugScreenshot(page, "otp-form.png");
-      } else {
-        const errorMessage = page.locator(".text-destructive, .text-red-500");
-        const hasError = (await errorMessage.count()) > 0;
-
-        if (hasError) {
-          const errorText = await errorMessage.first().textContent();
-        }
-
-        await takeDebugScreenshot(page, "login-status.png");
-      }
-
+      await takeDebugScreenshot(page, "login-status.png");
       await expect(page.locator("#email")).toBeVisible();
     }
   });
@@ -116,7 +84,7 @@ test.describe("Working Authentication", () => {
 
     const mobileUrl = page.url();
 
-    if (mobileUrl.includes("mailboxes") || mobileUrl.includes("mine")) {
+    if (mobileUrl.includes("mine")) {
       await page.waitForLoadState("networkidle");
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible({ timeout: 15000 });
