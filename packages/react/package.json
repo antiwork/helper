@@ -70,6 +70,7 @@
     "@types/node": "^22.15.3",
     "@types/react": "^19.0.0",
     "@vitest/coverage-v8": "^1.0.4",
+    "esbuild-fix-imports-plugin": "^1.0.21",
     "glob-promise": "^6.0.0",
     "jsdom": "^23.2.0",
     "react": "^19.1.0",
