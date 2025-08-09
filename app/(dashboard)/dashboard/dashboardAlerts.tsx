@@ -65,6 +65,11 @@ export const DashboardAlerts = () => {
   ].filter(Boolean);
 
   return alerts.length > 0 ? (
-    <div className="flex overflow-x-auto snap-x snap-mandatory p-4 gap-2 md:snap-none bg-sidebar">{alerts}</div>
+    <div
+      className="flex overflow-x-auto snap-x snap-mandatory p-4 gap-2 md:snap-none bg-sidebar"
+      data-testid="dashboard-alerts"
+    >
+      {alerts}
+    </div>
   ) : null;
 };
