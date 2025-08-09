@@ -165,9 +165,7 @@ export function AppSidebar() {
                         <span className="group-data-[collapsible=icon]:hidden">All</span>
                       </Link>
                     </SidebarMenuButton>
-                    {openCounts && openCounts.conversations > 0 && (
-                      <SidebarMenuBadge>{openCounts.conversations}</SidebarMenuBadge>
-                    )}
+                    {openCounts && openCounts.all > 0 && <SidebarMenuBadge>{openCounts.all}</SidebarMenuBadge>}
                   </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroup>

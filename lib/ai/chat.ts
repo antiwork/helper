@@ -24,8 +24,7 @@ import { ToolRequestBody } from "@helperai/client";
 import { ReadPageToolConfig } from "@helperai/sdk";
 import { db } from "@/db/client";
 import { conversationMessages, files, MessageMetadata, ToolMetadata } from "@/db/schema";
-import { triggerEvent } from "@/jobs/trigger";
-import { COMPLETION_MODEL, GPT_4_1_MINI_MODEL, GPT_4_1_MODEL, isWithinTokenLimit } from "@/lib/ai/core";
+import { CHAT_MODEL, isWithinTokenLimit, MINI_MODEL } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { CHAT_SYSTEM_PROMPT, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
@@ -43,7 +42,6 @@ import { createAndUploadFile, downloadFile, getFileUrl } from "@/lib/data/files"
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
-import { env } from "@/lib/env";
 import { createHmacDigest } from "@/lib/metadataApiClient";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLog, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
@@ -73,7 +71,7 @@ export const checkTokenCountAndSummarizeIfNeeded = async (text: string): Promise
   }
 
   const { text: summary } = await generateText({
-    model: openai(GPT_4_1_MINI_MODEL),
+    model: openai(MINI_MODEL),
     system: SUMMARY_PROMPT,
     prompt: text,
     maxTokens: SUMMARY_MAX_TOKENS,
@@ -324,7 +322,7 @@ export const generateAIResponse = async ({
   readPageTool = null,
   onFinish,
   dataStream,
-  model = openai(COMPLETION_MODEL),
+  model = openai(CHAT_MODEL, { structuredOutputs: false }),
   addReasoning = false,
   reasoningModel = REASONING_MODEL,
   evaluation = false,
@@ -492,7 +490,7 @@ export const generateAIResponse = async ({
       if (!evaluation) {
         await trackAIUsageEvent({
           mailbox,
-          model: GPT_4_1_MODEL,
+          model: CHAT_MODEL,
           queryType: "chat_completion",
           usage: openAIUsage,
         });
@@ -762,14 +760,6 @@ export const respondWithAI = async ({
             hasRequestHumanSupportCall,
             traceId,
             reasoning,
-          );
-          await triggerEvent(
-            "conversations/check-resolution",
-            {
-              conversationId: conversation.id,
-              messageId: assistantMessage.id,
-            },
-            { sleepSeconds: env.NODE_ENV === "development" ? 5 * 60 : 24 * 60 * 60 },
           );
 
           // Extract sources from markdown links like [(1)](url)

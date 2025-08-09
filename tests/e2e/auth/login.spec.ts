@@ -1,17 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { LoginPage } from "../utils/page-objects/loginPage";
 import { debugWait, takeDebugScreenshot } from "../utils/test-helpers";
 
 test.describe("Working Authentication", () => {
-  let loginPage: LoginPage;
-
-  test.beforeEach(async ({ page }) => {
-    loginPage = new LoginPage(page);
-    await debugWait(page, 1000);
-  });
-
   test("should display login form", async ({ page }) => {
-    await loginPage.navigateToLogin();
+    await page.goto("/login");
+    await expect(page).toHaveTitle(/Helper/);
 
     await expect(page.locator("#email")).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
@@ -20,15 +13,15 @@ test.describe("Working Authentication", () => {
   });
 
   test("should login successfully and redirect to dashboard", async ({ page }) => {
-    await loginPage.navigateToLogin();
+    await page.goto("/login");
+    await expect(page).toHaveTitle(/Helper/);
 
     await page.fill("#email", "support@gumroad.com");
     await page.click('button[type="submit"]');
 
     await debugWait(page, 3000);
 
-    const currentUrl = page.url();
-
+    // Wait for potential OTP form or automatic redirect in development
     await debugWait(page, 2000);
 
     const finalUrl = page.url();
@@ -37,17 +30,19 @@ test.describe("Working Authentication", () => {
       await page.waitForLoadState("networkidle");
 
       const searchInput = page.locator('input[placeholder="Search conversations"]');
-      await expect(searchInput).toBeVisible({ timeout: 15000 });
+      await expect(searchInput).toBeVisible();
 
       await takeDebugScreenshot(page, "successful-login.png");
     } else {
+      // Still on login page - this is expected in a development environment
       await takeDebugScreenshot(page, "login-status.png");
       await expect(page.locator("#email")).toBeVisible();
     }
   });
 
   test("should handle different email addresses", async ({ page }) => {
-    await loginPage.navigateToLogin();
+    await page.goto("/login");
+    await expect(page).toHaveTitle(/Helper/);
 
     await page.fill("#email", "different@example.com");
     await page.click('button[type="submit"]');
@@ -59,7 +54,8 @@ test.describe("Working Authentication", () => {
   });
 
   test("should handle empty email submission", async ({ page }) => {
-    await loginPage.navigateToLogin();
+    await page.goto("/login");
+    await expect(page).toHaveTitle(/Helper/);
 
     await page.click('button[type="submit"]');
 
@@ -72,7 +68,8 @@ test.describe("Working Authentication", () => {
   test("should be responsive on mobile", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
 
-    await loginPage.navigateToLogin();
+    await page.goto("/login");
+    await expect(page).toHaveTitle(/Helper/);
 
     await expect(page.locator("#email")).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
@@ -87,7 +84,7 @@ test.describe("Working Authentication", () => {
     if (mobileUrl.includes("mine")) {
       await page.waitForLoadState("networkidle");
       const searchInput = page.locator('input[placeholder="Search conversations"]');
-      await expect(searchInput).toBeVisible({ timeout: 15000 });
+      await expect(searchInput).toBeVisible();
     } else {
       await expect(page.locator("#email")).toBeVisible();
     }
@@ -96,7 +93,8 @@ test.describe("Working Authentication", () => {
   });
 
   test("should support dark mode", async ({ page }) => {
-    await loginPage.navigateToLogin();
+    await page.goto("/login");
+    await expect(page).toHaveTitle(/Helper/);
 
     await page.evaluate(() => {
       document.documentElement.classList.add("dark");

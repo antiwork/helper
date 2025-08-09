@@ -3,7 +3,7 @@ import { parseAsArrayOf, parseAsBoolean, parseAsInteger, parseAsString, parseAsS
 
 export const useConversationsListInput = () => {
   const params = useParams<{
-    category: "conversations" | "assigned" | "unassigned" | "mine";
+    category: "all" | "assigned" | "unassigned" | "mine";
   }>();
   const [searchParams, setSearchParams] = useQueryStates({
     status: parseAsStringEnum(["open", "closed", "spam"] as const),
@@ -17,8 +17,9 @@ export const useConversationsListInput = () => {
     isVip: parseAsBoolean,
     isPrompt: parseAsBoolean,
     reactionType: parseAsStringEnum(["thumbs-up", "thumbs-down"] as const),
-    events: parseAsArrayOf(parseAsStringEnum(["request_human_support", "resolved_by_ai"] as const)),
+    events: parseAsArrayOf(parseAsStringEnum(["request_human_support"] as const)),
     issueGroupId: parseAsInteger,
+    isAssigned: parseAsBoolean,
   });
 
   const input = {
@@ -36,6 +37,7 @@ export const useConversationsListInput = () => {
     reactionType: searchParams.reactionType ?? undefined,
     events: searchParams.events ?? undefined,
     issueGroupId: searchParams.issueGroupId ?? undefined,
+    isAssigned: searchParams.isAssigned ?? undefined,
   };
 
   return { input, searchParams, setSearchParams };
