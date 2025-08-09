@@ -84,7 +84,7 @@ export const sendFollowerNotification = async (payload: SendFollowerNotification
 
     const triggeredByName = triggeredByUser?.displayName || triggeredByUser?.user?.email || "Someone";
 
-    const conversationLink = `${env.AUTH_URL || "https://helperai.dev"}/conversations/${conversation.slug}`;
+    const conversationLink = `${env.AUTH_URL}/conversations/${conversation.slug}`;
     const baseSubject = `Update on conversation: ${conversation.subject}`;
 
     const { Resend } = await import("resend");
