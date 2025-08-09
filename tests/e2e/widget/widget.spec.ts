@@ -1,46 +1,63 @@
-import { expect, test } from "@playwright/test";
-import { testData } from "./fixtures/test-data";
+import { expect, Page, test } from "@playwright/test";
 import { widgetConfigs } from "./fixtures/widget-config";
 import { ApiVerifier } from "./page-objects/apiVerifier";
-import { WidgetPage } from "./page-objects/widgetPage";
 
 test.describe("Helper Chat Widget - Basic Functionality", () => {
-  let widgetPage: WidgetPage;
   let apiVerifier: ApiVerifier;
 
   test.beforeEach(async ({ page }) => {
-    widgetPage = new WidgetPage(page);
     apiVerifier = new ApiVerifier(page);
     await apiVerifier.startCapturing();
+    await page.goto("/widget/test/vanilla");
   });
 
-  test("should load widget and initialize session", async () => {
-    await widgetPage.loadWidget(widgetConfigs.anonymous);
+  async function loadWidget(page: Page, config?: { token?: string; email?: string; name?: string; userId?: string }) {
+    if (config) {
+      await page.evaluate((cfg) => {
+        (window as any).helperWidgetConfig = { ...cfg };
+      }, config);
+    }
+  
+    await page.click("[data-helper-toggle]", { timeout: 15000 });
+    await expect(page.locator("iframe")).toBeVisible({ timeout: 15000 });
+  
+    const widgetFrame = page.locator("iframe").first().contentFrame();
+    await expect(widgetFrame.getByRole("textbox", { name: "Ask a question" })).toBeVisible({ timeout: 15000 });
+  
+    return { widgetFrame };
+  }
+
+  test("should load widget and initialize session", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
 
     await apiVerifier.verifySessionApiCall();
 
-    const inputVisible = await widgetPage.chatInput.isVisible();
+    const inputVisible = await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).isVisible();
     expect(inputVisible).toBe(true);
   });
 
-  test("should send message and receive AI response", async () => {
-    await widgetPage.loadWidget(widgetConfigs.authenticated);
+  test("should send message and receive AI response", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
 
-    await widgetPage.sendMessage(testData.messages.simple);
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("What is the weather today?");
 
-    await widgetPage.waitForResponse();
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+
+    await widgetFrame
+      .locator('[data-testid="message"][data-message-role="assistant"]')
+      .waitFor({ state: "visible", timeout: 30000 });
 
     await apiVerifier.verifyChatApiCall();
     await apiVerifier.verifyStreamingResponse();
 
-    const messageCount = await widgetPage.getMessageCount();
+    const messageCount = await widgetFrame.locator('[data-testid="message"]').count();
     expect(messageCount).toBeGreaterThanOrEqual(2);
   });
 
-  test("should handle authenticated user data", async () => {
-    await widgetPage.loadWidget(widgetConfigs.authenticated);
+  test("should handle authenticated user data", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
 
-    const inputVisible = await widgetPage.chatInput.isVisible();
+    const inputVisible = await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).isVisible();
     expect(inputVisible).toBe(true);
 
     try {
@@ -50,12 +67,12 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
     }
   });
 
-  test("should show loading state during message sending", async () => {
-    await widgetPage.loadWidget(widgetConfigs.anonymous);
+  test("should show loading state during message sending", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
 
-    await widgetPage.chatInput.fill(testData.messages.simple);
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("What is the weather today?");
 
-    const loadingStatePromise = widgetPage.page
+    const loadingStatePromise = page
       .waitForFunction(
         () => {
           const frame = document.querySelector("iframe");
@@ -69,13 +86,15 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
       )
       .catch(() => false);
 
-    await widgetPage.sendButton.click();
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
 
     const hadLoadingState = await loadingStatePromise;
 
-    await widgetPage.waitForResponse();
+    await widgetFrame
+      .locator('[data-testid="message"][data-message-role="assistant"]')
+      .waitFor({ state: "visible", timeout: 30000 });
 
-    const messageCount = await widgetPage.getMessageCount();
+    const messageCount = await widgetFrame.locator('[data-testid="message"]').count();
     expect(messageCount).toBeGreaterThanOrEqual(2);
 
     if (!hadLoadingState) {
@@ -83,31 +102,39 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
     }
   });
 
-  test("should persist conversation in session", async () => {
-    await widgetPage.loadWidget(widgetConfigs.authenticated);
+  test("should persist conversation in session", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
 
-    await widgetPage.sendMessage("First message");
-    await widgetPage.waitForResponse();
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("First message");
 
-    const firstCount = await widgetPage.getMessageCount();
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+    await widgetFrame
+      .locator('[data-testid="message"][data-message-role="assistant"]')
+      .waitFor({ state: "visible", timeout: 30000 });
 
-    await widgetPage.sendMessage("Second message");
-    await widgetPage.waitForResponse();
+    const firstCount = await widgetFrame.locator('[data-testid="message"]').count();
 
-    const secondCount = await widgetPage.getMessageCount();
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("Second message");
+
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+    await widgetFrame
+      .locator('[data-testid="message"][data-message-role="assistant"]')
+      .waitFor({ state: "visible", timeout: 30000 });
+
+    const secondCount = await widgetFrame.locator('[data-testid="message"]').count();
     expect(secondCount).toBeGreaterThan(firstCount);
 
     const chatCalls = apiVerifier.getApiCalls().filter((call) => call.url.includes("/api/chat"));
     expect(chatCalls.length).toBeGreaterThanOrEqual(2);
   });
 
-  test("should handle empty input gracefully", async () => {
-    await widgetPage.loadWidget(widgetConfigs.anonymous);
+  test("should handle empty input gracefully", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
 
-    await widgetPage.chatInput.fill("");
-    await widgetPage.sendButton.click();
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("");
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
 
-    const messageCount = await widgetPage.getMessageCount();
+    const messageCount = await widgetFrame.locator('[data-testid="message"]').count();
     expect(messageCount).toBe(0);
 
     const apiCalls = apiVerifier.getApiCalls();
@@ -118,21 +145,27 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
   test.skip("should handle network errors gracefully", async ({ page }) => {
     await page.route("**/api/chat", (route) => route.abort("failed"));
 
-    await widgetPage.loadWidget(widgetConfigs.anonymous);
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
 
-    await widgetPage.sendMessage(testData.messages.simple);
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("What is the weather today?");
 
-    const errorMessage = await widgetPage.getErrorMessage();
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+
+    const errorMessage = await widgetFrame.locator('[data-testid="error-message"]').textContent();
     expect(errorMessage).toContain("Failed to send message");
   });
 
-  test("should maintain proper message order", async () => {
-    await widgetPage.loadWidget(widgetConfigs.authenticated);
+  test("should maintain proper message order", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
 
-    await widgetPage.sendMessage("Question 1");
-    await widgetPage.waitForResponse();
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("Question 1");
 
-    await widgetPage.page.waitForFunction(
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+    await widgetFrame
+      .locator('[data-testid="message"][data-message-role="assistant"]')
+      .waitFor({ state: "visible", timeout: 30000 });
+
+    await page.waitForFunction(
       async () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
         return true;
@@ -140,24 +173,28 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
       { timeout: 1000 },
     );
 
-    const countAfterFirst = await widgetPage.getMessageCount();
+    const countAfterFirst = await widgetFrame.locator('[data-testid="message"]').count();
     expect(countAfterFirst).toBeGreaterThanOrEqual(2);
 
-    await widgetPage.sendMessage("Question 2");
-    await widgetPage.waitForResponse();
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("Question 2");
 
-    let finalCount = await widgetPage.getMessageCount();
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+    await widgetFrame
+      .locator('[data-testid="message"][data-message-role="assistant"]')
+      .waitFor({ state: "visible", timeout: 30000 });
+
+    let finalCount = await widgetFrame.locator('[data-testid="message"]').count();
     let attempts = 0;
     while (finalCount < 4 && attempts < 10) {
-      await widgetPage.page.waitForTimeout(500);
-      finalCount = await widgetPage.getMessageCount();
+      await page.waitForTimeout(500);
+      finalCount = await widgetFrame.locator('[data-testid="message"]').count();
       attempts++;
     }
 
     expect(finalCount).toBeGreaterThanOrEqual(4);
 
     try {
-      const messages = await widgetPage.widgetFrame.locator('[data-testid="message"]').all();
+      const messages = await widgetFrame.locator('[data-testid="message"]').all();
       if (messages.length >= 4) {
         const getRoles = async () => {
           const roles = await Promise.all(messages.slice(0, 4).map((msg) => msg.getAttribute("data-message-role")));
@@ -167,7 +204,7 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
         let roles = await getRoles();
 
         if (!roles[0] || !roles[1] || !roles[2] || !roles[3]) {
-          await widgetPage.page.waitForTimeout(1000);
+          await page.waitForTimeout(1000);
           roles = await getRoles();
         }
 

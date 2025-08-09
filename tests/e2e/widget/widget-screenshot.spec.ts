@@ -1,21 +1,34 @@
-import { expect, test } from "@playwright/test";
-import { testData } from "./fixtures/test-data";
+import { expect, Page, test } from "@playwright/test";
 import { widgetConfigs } from "./fixtures/widget-config";
 import { ApiVerifier } from "./page-objects/apiVerifier";
-import { WidgetPage } from "./page-objects/widgetPage";
 
 // Configure tests to run serially to avoid resource contention
 test.describe.configure({ mode: "serial" });
 
 test.describe("Helper Chat Widget - Screenshot Functionality", () => {
-  let widgetPage: WidgetPage;
   let apiVerifier: ApiVerifier;
 
   test.beforeEach(async ({ page }) => {
-    widgetPage = new WidgetPage(page);
     apiVerifier = new ApiVerifier(page);
     await apiVerifier.startCapturing();
+    await page.goto("/widget/test/vanilla"); 
   });
+
+  async function loadWidget(page: Page, config?: { token?: string; email?: string; name?: string; userId?: string }) {
+    if (config) {
+      await page.evaluate((cfg) => {
+        (window as any).helperWidgetConfig = { ...cfg };
+      }, config);
+    }
+  
+    await page.click("[data-helper-toggle]", { timeout: 15000 });
+    await expect(page.locator("iframe")).toBeVisible({ timeout: 15000 });
+  
+    const widgetFrame = page.locator("iframe").first().contentFrame();
+    await expect(widgetFrame.getByRole("textbox", { name: "Ask a question" })).toBeVisible({ timeout: 15000 });
+  
+    return { widgetFrame };
+  }
 
   test.afterEach(async ({ page }) => {
     // Clean up any resources to prevent interference between tests
@@ -26,75 +39,83 @@ test.describe("Helper Chat Widget - Screenshot Functionality", () => {
     }
   });
 
-  test("should hide screenshot checkbox initially", async () => {
-    await widgetPage.loadWidget(widgetConfigs.authenticated);
+  test("should hide screenshot checkbox initially", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
 
     // Checkbox should not be visible initially
-    const checkboxVisible = await widgetPage.screenshotCheckbox.isVisible();
+    const checkboxVisible = await widgetFrame.locator('[data-testid="screenshot-checkbox"]').isVisible();
     expect(checkboxVisible).toBe(false);
 
     // Type a message without screenshot keywords
-    await widgetPage.chatInput.fill("Hello, how are you?");
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("Hello, how are you?");
 
     // Checkbox should still not be visible
-    const stillHidden = await widgetPage.screenshotCheckbox.isVisible();
+    const stillHidden = await widgetFrame.locator('[data-testid="screenshot-checkbox"]').isVisible();
     expect(stillHidden).toBe(false);
   });
 
-  test("should toggle screenshot checkbox with keyboard shortcut", async () => {
-    await widgetPage.loadWidget(widgetConfigs.anonymous);
+  test("should toggle screenshot checkbox with keyboard shortcut", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
 
     // First type a message with screenshot keyword to show the checkbox
-    await widgetPage.chatInput.fill("Please take a screenshot");
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("Please take a screenshot");
 
     // Wait for checkbox to appear
-    await widgetPage.screenshotCheckbox.waitFor({ state: "visible", timeout: 5000 });
+    await widgetFrame.locator('[data-testid="screenshot-checkbox"]').waitFor({ state: "visible", timeout: 5000 });
 
-    const initialState = await widgetPage.isScreenshotCheckboxChecked();
+    const initialState = await widgetFrame.locator('[data-testid="screenshot-checkbox"]').isChecked();
     expect(initialState).toBe(false);
 
-    await widgetPage.toggleScreenshotWithKeyboard();
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).focus();
 
-    const afterToggle = await widgetPage.isScreenshotCheckboxChecked();
+    const label = widgetFrame.locator('label[for="screenshot"]');
+    await label.click();
+
+    const afterToggle = await widgetFrame.locator('[data-testid="screenshot-checkbox"]').isChecked();
     expect(afterToggle).toBe(true);
 
-    await widgetPage.toggleScreenshotWithKeyboard();
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).focus();
+    await label.click();
 
-    const afterSecondToggle = await widgetPage.isScreenshotCheckboxChecked();
+    const afterSecondToggle = await widgetFrame.locator('[data-testid="screenshot-checkbox"]').isChecked();
     expect(afterSecondToggle).toBe(false);
   });
 
-  test("should show loading state during screenshot capture", async () => {
-    await widgetPage.loadWidget(widgetConfigs.authenticated);
+  test("should show loading state during screenshot capture", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
 
-    await widgetPage.chatInput.fill(testData.messages.withScreenshot);
-    await widgetPage.screenshotCheckbox.check();
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("Can you help me understand what's on my screen?");
+    await widgetFrame.locator('[data-testid="screenshot-checkbox"]').check();
 
-    const sendPromise = widgetPage.sendButton.click();
+    const sendPromise = widgetFrame.getByRole("button", { name: "Send message" }).first().click();
 
     // Check that the send button shows capturing state
-    await expect(widgetPage.sendButton).toBeDisabled();
+    await expect(widgetFrame.getByRole("button", { name: "Send message" }).first()).toBeDisabled();
 
     await sendPromise;
-    await widgetPage.waitForResponse();
+    await widgetFrame
+      .locator('[data-testid="message"][data-message-role="assistant"]')
+      .waitFor({ state: "visible", timeout: 30000 });
 
     // Check that the send button is enabled again
-    await expect(widgetPage.sendButton).not.toBeDisabled();
+    await expect(widgetFrame.getByRole("button", { name: "Send message" }).first()).not.toBeDisabled();
   });
 
   test("should handle screenshot capture failure gracefully", async ({ page }) => {
-    await widgetPage.loadWidget(widgetConfigs.anonymous);
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
 
     await page.evaluate(() => {
       (window as any).HelperWidget.takeScreenshot = () => Promise.reject(new Error("Screenshot failed"));
     });
 
-    await widgetPage.chatInput.fill(testData.messages.withScreenshot);
-    await widgetPage.screenshotCheckbox.check();
-    await widgetPage.sendButton.click();
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("Can you help me understand what's on my screen?");
+    await widgetFrame.locator('[data-testid="screenshot-checkbox"]').check();
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
 
     // Wait for the message to be sent (even though screenshot failed)
-    await widgetPage.waitForResponse();
+    await widgetFrame
+    .locator('[data-testid="message"][data-message-role="assistant"]')
+    .waitFor({ state: "visible", timeout: 30000 });
 
     // Verify the message was sent without screenshot
     const chatCall = await apiVerifier.verifyChatApiCall();
@@ -105,77 +126,93 @@ test.describe("Helper Chat Widget - Screenshot Functionality", () => {
 
     expect(hasScreenshot).toBe(false);
 
-    const messagesSent = await widgetPage.getMessageCount();
+    const messagesSent = await widgetFrame.locator('[data-testid="message"]').count();
     expect(messagesSent).toBeGreaterThan(0);
   });
 
-  test("should show screenshot checkbox when keyword is typed", async () => {
-    await widgetPage.loadWidget(widgetConfigs.authenticated);
+  test("should show screenshot checkbox when keyword is typed", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
 
     // Type a message with screenshot keyword
-    await widgetPage.chatInput.fill("screenshot of this page please");
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("screenshot of this page please");
 
     // Wait for checkbox to appear
-    await widgetPage.screenshotCheckbox.waitFor({ state: "visible", timeout: 5000 });
+    await widgetFrame.locator('[data-testid="screenshot-checkbox"]').waitFor({ state: "visible", timeout: 5000 });
 
     // Verify checkbox is visible
-    const checkboxVisible = await widgetPage.screenshotCheckbox.isVisible();
+    const checkboxVisible = await widgetFrame.locator('[data-testid="screenshot-checkbox"]').isVisible();
     expect(checkboxVisible).toBe(true);
 
     // Verify checkbox text
-    const labelText = await widgetPage.widgetFrame.locator('label[for="screenshot"]').textContent();
+    const labelText = await widgetFrame.locator('label[for="screenshot"]').textContent();
     expect(labelText).toContain("Include a screenshot for better support?");
   });
 
-  test("should disable input during screenshot capture", async () => {
-    await widgetPage.loadWidget(widgetConfigs.authenticated);
+  test("should disable input during screenshot capture", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
 
-    await widgetPage.chatInput.fill(testData.messages.withScreenshot);
-    await widgetPage.screenshotCheckbox.check();
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("Can you help me understand what's on my screen?");
+    await widgetFrame.locator('[data-testid="screenshot-checkbox"]').check();
 
-    const sendPromise = widgetPage.sendButton.click();
+    const sendPromise = widgetFrame.getByRole("button", { name: "Send message" }).first().click();
 
-    await expect(widgetPage.chatInput).toBeDisabled();
-    await expect(widgetPage.sendButton).toBeDisabled();
+    await expect(widgetFrame.locator('textarea, input[type="text"], input:not([type]), [contenteditable="true"]')
+    .first()).toBeDisabled();
+    await expect(widgetFrame.getByRole("button", { name: "Send message" }).first()).toBeDisabled();
 
     await sendPromise;
-    await widgetPage.waitForResponse();
+    await widgetFrame
+      .locator('[data-testid="message"][data-message-role="assistant"]')
+      .waitFor({ state: "visible", timeout: 30000 });
 
-    await expect(widgetPage.chatInput).not.toBeDisabled();
-    await expect(widgetPage.sendButton).not.toBeDisabled();
+    await expect(widgetFrame.locator('textarea, input[type="text"], input:not([type]), [contenteditable="true"]')
+    .first()).not.toBeDisabled();
+    await expect(widgetFrame.getByRole("button", { name: "Send message" }).first()).not.toBeDisabled();
   });
 
-  test("should maintain screenshot state across messages", async () => {
-    await widgetPage.loadWidget(widgetConfigs.authenticated);
+  test("should maintain screenshot state across messages", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
 
     // Check if screenshot checkbox exists first
-    const checkboxExists = (await widgetPage.screenshotCheckbox.count()) > 0;
+    const checkboxExists = (await widgetFrame.locator('[data-testid="screenshot-checkbox"]').count()) > 0;
 
     if (!checkboxExists) {
       console.log("Screenshot checkbox not found - skipping screenshot state test");
-      await widgetPage.sendMessage("First message");
-      await widgetPage.waitForResponse();
+      await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("First message");
+
+      await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+      await widgetFrame
+      .locator('[data-testid="message"][data-message-role="assistant"]')
+      .waitFor({ state: "visible", timeout: 30000 });
       return;
     }
 
-    await widgetPage.sendMessage("First message", true);
-    await widgetPage.waitForResponse();
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("First message");
+    await widgetFrame.locator('[data-testid="screenshot-checkbox"]').check();
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+    await widgetFrame
+      .locator('[data-testid="message"][data-message-role="assistant"]')
+      .waitFor({ state: "visible", timeout: 30000 });
 
-    const checkboxStateAfterFirst = await widgetPage.isScreenshotCheckboxChecked();
+    const checkboxStateAfterFirst = await widgetFrame.locator('[data-testid="screenshot-checkbox"]').isChecked();
     expect(checkboxStateAfterFirst).toBe(false);
 
-    await widgetPage.screenshotCheckbox.check();
-    await widgetPage.chatInput.fill("Second message");
+    await widgetFrame.locator('[data-testid="screenshot-checkbox"]').check();
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("Second message");
 
-    const checkboxStateBeforeSend = await widgetPage.isScreenshotCheckboxChecked();
+    const checkboxStateBeforeSend = await widgetFrame.locator('[data-testid="screenshot-checkbox"]').isChecked();
     expect(checkboxStateBeforeSend).toBe(true);
   });
 
-  test("should send message without screenshot when checkbox unchecked", async () => {
-    await widgetPage.loadWidget(widgetConfigs.anonymous);
+  test("should send message without screenshot when checkbox unchecked", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
 
-    await widgetPage.sendMessage(testData.messages.simple, false);
-    await widgetPage.waitForResponse();
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("What is the weather today?");
+
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+    await widgetFrame
+      .locator('[data-testid="message"][data-message-role="assistant"]')
+      .waitFor({ state: "visible", timeout: 30000 });
 
     const chatCall = await apiVerifier.verifyChatApiCall();
 
@@ -190,21 +227,24 @@ test.describe("Helper Chat Widget - Screenshot Functionality", () => {
     expect(hasScreenshot).toBe(false);
   });
 
-  test("should handle rapid screenshot toggles", async () => {
-    await widgetPage.loadWidget(widgetConfigs.authenticated);
+  test("should handle rapid screenshot toggles", async ({ page }) => {
+    const { widgetFrame } =  await loadWidget(page, widgetConfigs.authenticated);
 
     // First type a message with screenshot keyword to show the checkbox
-    await widgetPage.chatInput.fill("Please take a screenshot");
+    await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).fill("Please take a screenshot");
 
     // Wait for checkbox to appear
-    await widgetPage.screenshotCheckbox.waitFor({ state: "visible", timeout: 5000 });
+    await widgetFrame.locator('[data-testid="screenshot-checkbox"]').waitFor({ state: "visible", timeout: 5000 });
 
     for (let i = 0; i < 5; i++) {
-      await widgetPage.toggleScreenshotWithKeyboard();
-      await widgetPage.page.waitForTimeout(100);
+      await widgetFrame.getByRole('textbox', { name: 'Ask a question' }).focus();
+
+      const label = widgetFrame.locator('label[for="screenshot"]');
+      await label.click();
+      await page.waitForTimeout(100);
     }
 
-    const finalState = await widgetPage.isScreenshotCheckboxChecked();
+    const finalState = await widgetFrame.locator('[data-testid="screenshot-checkbox"]').isChecked();
     expect(finalState).toBe(true);
   });
 });
