@@ -1,4 +1,5 @@
 import { and, eq, ne } from "drizzle-orm";
+import { Resend } from "resend";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationFollowers, conversations, userProfiles } from "@/db/schema";
@@ -85,7 +86,6 @@ export const sendFollowerNotification = async (payload: SendFollowerNotification
     const triggeredByName = triggeredByUser?.displayName || triggeredByUser?.user?.email || "Someone";
 
     const conversationLink = `${env.AUTH_URL}/conversations/${conversation.slug}`;
-    const { Resend } = await import("resend");
     const resend = new Resend(env.RESEND_API_KEY);
 
     const emailPromises = followers.map(async (follower) => {
