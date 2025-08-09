@@ -77,7 +77,10 @@ async function clickAlert(page: Page, alertType: "assigned" | "vip") {
 
 async function getEventCount(page: Page) {
   // Wait for events to load first
-  await page.waitForTimeout(2000);
+  await Promise.race([
+    page.locator('a[href*="/conversations?id="]').first().waitFor({ state: "visible" }),
+    page.locator('text="No conversations yet."').first().waitFor({ state: "visible" }),
+  ]);
 
   const eventGrid = page.getByTestId("realtime-events-grid");
   await expect(eventGrid).toBeVisible();
@@ -89,9 +92,7 @@ async function getEventCount(page: Page) {
 
 async function scrollToLoadMore(page: Page) {
   // Scroll to the bottom of the page to trigger infinite scroll sentinel
-  await page.evaluate(() =>
-    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })
-  );
+  await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }));
 
   await page.waitForTimeout(1000); // Wait for potential new events to load
 }
