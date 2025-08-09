@@ -365,6 +365,7 @@ export const conversationsRouter = {
 
   isFollowing: conversationProcedure.query(async ({ ctx }) => {
     const follower = await db.query.conversationFollowers.findFirst({
+      columns: { id: true },
       where: and(
         eq(conversationFollowers.conversationId, ctx.conversation.id),
         eq(conversationFollowers.userId, ctx.user.id),
