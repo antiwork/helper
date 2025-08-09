@@ -43,7 +43,9 @@ export const addNote = async ({
         conversationId,
         eventType: "note_added" as const,
         triggeredByUserId: user.id,
-        eventDetails: {},
+        eventDetails: {
+          note: note.body || undefined,
+        },
       });
     }
 
