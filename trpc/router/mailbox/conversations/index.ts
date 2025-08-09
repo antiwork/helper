@@ -321,23 +321,15 @@ export const conversationsRouter = {
 
   follow: conversationProcedure.mutation(async ({ ctx }) => {
     return await db.transaction(async (tx) => {
-      try {
-        await tx
-          .insert(conversationFollowers)
-          .values({
-            conversationId: ctx.conversation.id,
-            userId: ctx.user.id,
-          })
-          .onConflictDoNothing();
+      await tx
+        .insert(conversationFollowers)
+        .values({
+          conversationId: ctx.conversation.id,
+          userId: ctx.user.id,
+        })
+        .onConflictDoNothing();
 
-        return { success: true, following: true };
-      } catch (_error) {
-        // Follow conversation error logged
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to follow conversation",
-        });
-      }
+      return { success: true, following: true };
     });
   }),
   unfollow: conversationProcedure.mutation(async ({ ctx }) => {
