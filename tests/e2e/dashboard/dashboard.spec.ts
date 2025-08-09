@@ -88,11 +88,10 @@ async function getEventCount(page: Page) {
 }
 
 async function scrollToLoadMore(page: Page) {
-  // Scroll to the bottom of the events grid using data-testid
-  const eventsGrid = page.getByTestId("realtime-events-grid");
-  await eventsGrid.evaluate((el) => {
-    el.scrollIntoView({ behavior: "smooth", block: "end" });
-  });
+  // Scroll to the bottom of the page to trigger infinite scroll sentinel
+  await page.evaluate(() =>
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })
+  );
 
   await page.waitForTimeout(1000); // Wait for potential new events to load
 }
