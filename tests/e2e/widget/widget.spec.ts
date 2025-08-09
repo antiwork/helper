@@ -35,13 +35,12 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
   });
 
   test("should send message and receive AI response", async ({ page }) => {
-    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
-
-    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("What is the weather today?");
-
     const chatResponsePromise = page.waitForResponse(
       (res) => res.url().includes("/api/chat") && res.request().method() === "POST",
     );
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
+
+    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("What is the weather today?");
 
     await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
 
@@ -59,19 +58,15 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
   });
 
   test("should handle authenticated user data", async ({ page }) => {
+    const response = await page.waitForResponse(
+      (res) => res.url().includes("/api/widget/session") && res.request().method() === "POST",
+    );
     const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
 
     const inputVisible = await widgetFrame.getByRole("textbox", { name: "Ask a question" }).isVisible();
     expect(inputVisible).toBe(true);
 
-    try {
-      const response = await page.waitForResponse(
-        (res) => res.url().includes("/api/widget/session") && res.request().method() === "POST",
-      );
-      expect(response.ok()).toBe(true);
-    } catch {
-      console.log("Session API call not found - vanilla widget may handle auth differently");
-    }
+    expect(response.ok()).toBe(true);
   });
 
   test("should show loading state during message sending", async ({ page }) => {
@@ -145,6 +140,13 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
   });
 
   test("should handle empty input gracefully", async ({ page }) => {
+    // Check that no /api/chat call was made
+    let chatCallMade = false;
+    page.on("request", (request) => {
+      if (request.url().includes("/api/chat") && request.method() === "POST") {
+        chatCallMade = true;
+      }
+    });
     const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
 
     await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("");
@@ -153,13 +155,6 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
     const messageCount = await widgetFrame.locator('[data-testid="message"]').count();
     expect(messageCount).toBe(0);
 
-    // Check that no /api/chat call was made
-    let chatCallMade = false;
-    page.on("request", (request) => {
-      if (request.url().includes("/api/chat") && request.method() === "POST") {
-        chatCallMade = true;
-      }
-    });
     expect(chatCallMade).toBe(false);
   });
 
