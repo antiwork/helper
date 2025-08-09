@@ -186,20 +186,18 @@ export const updateConversation = async (
     if (byUserId && updatesToLog.length > 0) {
       const notificationEvents = [];
 
-      if (current.status !== updatedConversation.status) {
-        if (updatedConversation.status !== "spam") {
-          notificationEvents.push(
-            triggerEvent("conversations/send-follower-notification", {
-              conversationId: updatedConversation.id,
-              eventType: "status_change" as const,
-              triggeredByUserId: byUserId,
-              eventDetails: {
-                oldStatus: current.status || "open",
-                newStatus: updatedConversation.status || "open",
-              },
-            }),
-          );
-        }
+      if (current.status !== updatedConversation.status && updatedConversation.status !== "spam") {
+        notificationEvents.push(
+          triggerEvent("conversations/send-follower-notification", {
+            conversationId: updatedConversation.id,
+            eventType: "status_change" as const,
+            triggeredByUserId: byUserId,
+            eventDetails: {
+              oldStatus: current.status || "open",
+              newStatus: updatedConversation.status || "open",
+            },
+          }),
+        );
       }
 
       if (current.assignedToId !== updatedConversation.assignedToId) {
