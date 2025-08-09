@@ -111,26 +111,23 @@ async function clickSaveButton(page: Page) {
   const createDialog = page.locator('[role="dialog"]:has-text("New saved reply")');
   const editDialog = page.locator('[role="dialog"]:has-text("Edit saved reply")');
 
-  // Wait for any of the possible save buttons to appear
-  await Promise.race([
-    addBtn.waitFor({ state: "visible", timeout: 5000 }).catch(() => null),
-    updateBtn.waitFor({ state: "visible", timeout: 5000 }).catch(() => null),
-    saveBtn.waitFor({ state: "visible", timeout: 5000 }).catch(() => null),
-  ]);
+  // Map each button to its waitFor promise, returning the button when visible
+  const buttonPromises = [
+    updateBtn.waitFor({ state: "visible", timeout: 5000 }).then(() => updateBtn).catch(() => null),
+    addBtn.waitFor({ state: "visible", timeout: 5000 }).then(() => addBtn).catch(() => null),
+    saveBtn.waitFor({ state: "visible", timeout: 5000 }).then(() => saveBtn).catch(() => null),
+  ];
 
-  // Try clicking the buttons in order of preference
-  if (await updateBtn.isVisible()) {
-    await updateBtn.scrollIntoViewIfNeeded();
-    await updateBtn.click();
-  } else if (await addBtn.isVisible()) {
-    await addBtn.scrollIntoViewIfNeeded();
-    await addBtn.click();
-  } else if (await saveBtn.isVisible()) {
-    await saveBtn.scrollIntoViewIfNeeded();
-    await saveBtn.click();
-  } else {
+  // Wait for the first button to become visible and capture it
+  const winningButton = await Promise.race(buttonPromises);
+  
+  if (!winningButton) {
     throw new Error("No save button (Add/Update/Save) found");
   }
+
+  // Click the winning button directly
+  await winningButton.scrollIntoViewIfNeeded();
+  await winningButton.click();
 
   // Wait for either dialog to close
   await Promise.race([
@@ -449,16 +446,20 @@ test.describe("Saved Replies Management", () => {
 
   test("should copy saved reply to clipboard", async ({ page }) => {
     const replyCount = await getSavedReplyCount(page);
+    let testName: string;
 
     if (replyCount === 0) {
       // If no replies exist, create one first
-      const testName = `Copy Target ${generateRandomString()}`;
+      testName = `Copy Target ${generateRandomString()}`;
       const testContent = `Copy content ${generateRandomString()}`;
       await createSavedReply(page, testName, testContent);
       await page.waitForTimeout(1000);
+    } else {
+      // Use the first existing reply's title
+      testName = await getSavedReplyTitle(page, 0);
     }
 
-    await clickCopyButton(page, 0);
+    await copySavedReplyByTitle(page, testName);
     await expectClipboardContent(page);
 
     await takeDebugScreenshot(page, "saved-reply-copied.png");
