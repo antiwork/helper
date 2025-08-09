@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { ConversationsPage } from "../utils/page-objects/conversationsPage";
 import { takeDebugScreenshot } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
@@ -18,8 +17,9 @@ test.describe("Working Conversation Follow/Unfollow", () => {
 
 
   test("should display follow button in conversation sidebar", async ({ page }) => {
-    const conversationsPage = new ConversationsPage(page);
-    await conversationsPage.expectConversationsVisible();
+    await expect(page).toHaveTitle("Helper");
+    await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible();
+    await expect(page.locator('button:has-text("open")')).toBeVisible();
     
     const conversationLinks = page.locator('a[href*="/conversations?id="]');
     const conversationCount = await conversationLinks.count();
@@ -38,8 +38,9 @@ test.describe("Working Conversation Follow/Unfollow", () => {
   });
 
   test("should toggle follow state when clicking follow button", async ({ page }) => {
-    const conversationsPage = new ConversationsPage(page);
-    await conversationsPage.expectConversationsVisible();
+    await expect(page).toHaveTitle("Helper");
+    await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible();
+    await expect(page.locator('button:has-text("open")')).toBeVisible();
     
     const conversationLinks = page.locator('a[href*="/conversations?id="]');
     if (await conversationLinks.count() === 0) {
@@ -79,8 +80,9 @@ test.describe("Working Conversation Follow/Unfollow", () => {
   });
 
   test("should show correct button states", async ({ page }) => {
-    const conversationsPage = new ConversationsPage(page);
-    await conversationsPage.expectConversationsVisible();
+    await expect(page).toHaveTitle("Helper");
+    await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible();
+    await expect(page.locator('button:has-text("open")')).toBeVisible();
     
     const conversationLinks = page.locator('a[href*="/conversations?id="]');
     if (await conversationLinks.count() === 0) {
@@ -104,8 +106,9 @@ test.describe("Working Conversation Follow/Unfollow", () => {
   });
 
   test("should show tooltip on hover", async ({ page }) => {
-    const conversationsPage = new ConversationsPage(page);
-    await conversationsPage.expectConversationsVisible();
+    await expect(page).toHaveTitle("Helper");
+    await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible();
+    await expect(page.locator('button:has-text("open")')).toBeVisible();
     
     const conversationLinks = page.locator('a[href*="/conversations?id="]');
     if (await conversationLinks.count() === 0) {
@@ -132,8 +135,9 @@ test.describe("Working Conversation Follow/Unfollow", () => {
   });
 
   test("should handle follow/unfollow errors gracefully", async ({ page }) => {
-    const conversationsPage = new ConversationsPage(page);
-    await conversationsPage.expectConversationsVisible();
+    await expect(page).toHaveTitle("Helper");
+    await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible();
+    await expect(page.locator('button:has-text("open")')).toBeVisible();
     
     const conversationLinks = page.locator('a[href*="/conversations?id="]');
     if (await conversationLinks.count() === 0) {
@@ -168,8 +172,9 @@ test.describe("Working Conversation Follow/Unfollow", () => {
   });
 
   test("should preserve follow state on page refresh", async ({ page }) => {
-    const conversationsPage = new ConversationsPage(page);
-    await conversationsPage.expectConversationsVisible();
+    await expect(page).toHaveTitle("Helper");
+    await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible();
+    await expect(page.locator('button:has-text("open")')).toBeVisible();
     
     const conversationLinks = page.locator('a[href*="/conversations?id="]');
     if (await conversationLinks.count() === 0) {
@@ -232,8 +237,9 @@ test.describe("Working Conversation Follow/Unfollow", () => {
   test("should work correctly on mobile viewport", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     
-    const conversationsPage = new ConversationsPage(page);
-    await conversationsPage.expectConversationsVisible();
+    await expect(page).toHaveTitle("Helper");
+    await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible();
+    await expect(page.locator('button:has-text("open")')).toBeVisible();
     
     const conversationLinks = page.locator('a[href*="/conversations?id="]');
     if (await conversationLinks.count() === 0) {
@@ -263,8 +269,9 @@ test.describe("Working Conversation Follow/Unfollow", () => {
   });
 
   test("should handle multiple rapid clicks gracefully", async ({ page }) => {
-    const conversationsPage = new ConversationsPage(page);
-    await conversationsPage.expectConversationsVisible();
+    await expect(page).toHaveTitle("Helper");
+    await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible();
+    await expect(page.locator('button:has-text("open")')).toBeVisible();
     
     const conversationLinks = page.locator('a[href*="/conversations?id="]');
     if (await conversationLinks.count() === 0) {
