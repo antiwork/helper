@@ -1,6 +1,6 @@
 import { mailboxes } from "@/db/schema";
 import { runAIQuery } from "./ai";
-import { O4_MINI_MODEL } from "./ai/core";
+import { MINI_MODEL } from "./ai/core";
 
 const examples: [email: string, keywords: string][] = [
   [
@@ -46,7 +46,7 @@ export const emailKeywordsExtractor = async (params: {
       temperature: 0,
       messages: [{ role: "user", content: `${params.subject}\n\n${params.body}` }],
       queryType: "email_keywords_extractor",
-      model: O4_MINI_MODEL,
+      model: MINI_MODEL,
       functionId: "email-keywords-extractor",
       maxTokens: 500,
     })

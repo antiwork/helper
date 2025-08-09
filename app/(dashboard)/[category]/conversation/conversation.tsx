@@ -163,7 +163,7 @@ const MessageThreadPanel = ({
   const { data: conversationInfo } = useConversationContext();
 
   return (
-    <div className="grow overflow-y-auto relative" ref={scrollRef}>
+    <div className="grow overflow-y-auto relative" ref={scrollRef} data-testid="message-thread-panel">
       <div ref={contentRef as React.RefObject<HTMLDivElement>} className="relative">
         <div className="flex flex-col gap-8 px-4 py-4 h-full">
           {conversationInfo && (
@@ -218,26 +218,46 @@ const ConversationHeader = ({
         !conversationInfo && "hidden",
       )}
       style={{ minHeight: 48 }}
+      data-testid="conversation-header"
     >
       <div className="flex items-center min-w-0 flex-shrink-0 z-10 lg:w-44">
-        <Button variant="ghost" size="sm" iconOnly onClick={minimize} className="text-primary hover:text-foreground">
+        <Button
+          variant="ghost"
+          size="sm"
+          iconOnly
+          onClick={minimize}
+          className="text-primary hover:text-foreground"
+          aria-label="Close View"
+        >
           <X className="h-4 w-4" />
         </Button>
         <div className="flex items-center ml-2">
-          <Button variant="ghost" size="sm" iconOnly onClick={moveToPreviousConversation}>
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            onClick={moveToPreviousConversation}
+            aria-label="Previous conversation"
+          >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm text-muted-foreground whitespace-nowrap text-center mx-1">
+          <span
+            className="text-sm text-muted-foreground whitespace-nowrap text-center mx-1"
+            data-testid="conversation-counter"
+          >
             {currentIndex + 1} of {currentTotal}
             {hasNextPage ? "+" : ""}
           </span>
-          <Button variant="ghost" size="sm" iconOnly onClick={moveToNextConversation}>
+          <Button variant="ghost" size="sm" iconOnly onClick={moveToNextConversation} aria-label="Next conversation">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
       <div className="flex-1 min-w-0 flex justify-center">
-        <div className="truncate text-base font-semibold text-foreground text-center max-w-full">
+        <div
+          className="truncate text-base font-semibold text-foreground text-center max-w-full"
+          data-testid="conversation-subject"
+        >
           {subject ?? "(no subject)"}
         </div>
       </div>
@@ -249,6 +269,7 @@ const ConversationHeader = ({
           size="sm"
           iconOnly
           onClick={() => setSidebarVisible(!sidebarVisible)}
+          aria-label="Toggle sidebar"
         >
           {isAboveSm ? (
             sidebarVisible ? (
