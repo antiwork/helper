@@ -1,3 +1,4 @@
+import { conversationFollowersFactory } from "@tests/support/factories/conversationFollowers";
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { fileFactory } from "@tests/support/factories/files";
@@ -8,7 +9,7 @@ import { mockTriggerEvent } from "@tests/support/jobsUtils";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
-import { conversations, mailboxes } from "@/db/schema";
+import { conversationFollowers, conversations, mailboxes } from "@/db/schema";
 import type { authUsers } from "@/db/supabaseSchema/auth";
 import { createCaller } from "@/trpc";
 
@@ -28,6 +29,7 @@ let user: typeof authUsers.$inferSelect;
 
 beforeEach(async () => {
   vi.clearAllMocks();
+  await db.delete(conversationFollowers);
   await db.delete(conversations);
   await db.delete(mailboxes);
   ({ user } = await userFactory.createRootUser({
@@ -213,6 +215,133 @@ describe("conversationsRouter", () => {
       expect(updatedFile).toMatchObject({
         id: file.id,
         messageId: null,
+      });
+    });
+  });
+
+  describe("follow", () => {
+    it("allows a user to follow a conversation", async () => {
+      const { conversation } = await conversationFactory.create();
+      const caller = createCaller(await createTestTRPCContext(user));
+
+      const result = await caller.mailbox.conversations.follow({
+        conversationSlug: conversation.slug,
+      });
+
+      expect(result).toMatchObject({
+        success: true,
+        following: true,
+      });
+
+      const followers = await db.query.conversationFollowers.findMany({
+        where: (conversationFollowers, { eq }) => eq(conversationFollowers.conversationId, conversation.id),
+      });
+
+      expect(followers).toHaveLength(1);
+      expect(followers[0]).toMatchObject({
+        conversationId: conversation.id,
+        userId: user.id,
+      });
+    });
+
+    it("handles duplicate follows gracefully", async () => {
+      const { conversation } = await conversationFactory.create();
+      await conversationFollowersFactory.create({
+        conversationId: conversation.id,
+        userId: user.id,
+      });
+
+      const caller = createCaller(await createTestTRPCContext(user));
+
+      const result = await caller.mailbox.conversations.follow({
+        conversationSlug: conversation.slug,
+      });
+
+      expect(result).toMatchObject({
+        success: true,
+        following: true,
+      });
+
+      const followers = await db.query.conversationFollowers.findMany({
+        where: (conversationFollowers, { eq }) => eq(conversationFollowers.conversationId, conversation.id),
+      });
+
+      expect(followers).toHaveLength(1);
+    });
+  });
+
+  describe("unfollow", () => {
+    it("allows a user to unfollow a conversation", async () => {
+      const { conversation } = await conversationFactory.create();
+      await conversationFollowersFactory.create({
+        conversationId: conversation.id,
+        userId: user.id,
+      });
+
+      const caller = createCaller(await createTestTRPCContext(user));
+
+      const result = await caller.mailbox.conversations.unfollow({
+        conversationSlug: conversation.slug,
+      });
+
+      expect(result).toMatchObject({
+        success: true,
+        following: false,
+      });
+
+      const followers = await db.query.conversationFollowers.findMany({
+        where: (conversationFollowers, { eq }) => eq(conversationFollowers.conversationId, conversation.id),
+      });
+
+      expect(followers).toHaveLength(0);
+    });
+
+    it("handles unfollowing when not following gracefully", async () => {
+      const { conversation } = await conversationFactory.create();
+
+      const caller = createCaller(await createTestTRPCContext(user));
+
+      const result = await caller.mailbox.conversations.unfollow({
+        conversationSlug: conversation.slug,
+      });
+
+      expect(result).toMatchObject({
+        success: true,
+        following: false,
+      });
+    });
+  });
+
+  describe("isFollowing", () => {
+    it("returns true when user is following the conversation", async () => {
+      const { conversation } = await conversationFactory.create();
+      await conversationFollowersFactory.create({
+        conversationId: conversation.id,
+        userId: user.id,
+      });
+
+      const caller = createCaller(await createTestTRPCContext(user));
+
+      const result = await caller.mailbox.conversations.isFollowing({
+        conversationSlug: conversation.slug,
+      });
+
+      expect(result).toMatchObject({
+        following: true,
+      });
+    });
+
+    it("returns false when user is not following the conversation", async () => {
+      const { conversation } = await conversationFactory.create();
+
+      const caller = createCaller(await createTestTRPCContext(user));
+
+      const result = await caller.mailbox.conversations.isFollowing({
+        conversationSlug: conversation.slug,
+      });
+
+      expect(result).toMatchObject({
+        following: false,
       });
     });
   });
