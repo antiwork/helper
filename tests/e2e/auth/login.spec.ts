@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { debugWait, takeDebugScreenshot } from "../utils/test-helpers";
+import { takeDebugScreenshot } from "../utils/test-helpers";
 
 test.describe("Working Authentication", () => {
   test("should display login form", async ({ page }) => {
@@ -36,7 +36,7 @@ test.describe("Working Authentication", () => {
     await page.fill("#email", "different@example.com");
     await page.click('button[type="submit"]');
 
-    await debugWait(page, 2000);
+    await page.waitForLoadState("networkidle");
 
     const currentUrl = page.url();
     expect(currentUrl).toContain(process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3020");
@@ -66,12 +66,11 @@ test.describe("Working Authentication", () => {
     await page.fill("#email", "support@gumroad.com");
     await page.click('button[type="submit"]');
 
-    await debugWait(page, 3000);
+    await page.waitForLoadState("networkidle");
 
     const mobileUrl = page.url();
 
     if (mobileUrl.includes("mine")) {
-      await page.waitForLoadState("networkidle");
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible();
     } else {
