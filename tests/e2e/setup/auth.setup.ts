@@ -17,13 +17,17 @@ setup("authenticate", async ({ page }) => {
   // Submit email form
   await page.click('button[type="submit"]');
 
+  // Wait for successful authentication - be flexible about redirect path
   await expect(page).toHaveURL(/.*mine.*/, { timeout: 40000 });
 
+  // Wait for page to fully load
   await page.waitForLoadState("networkidle");
 
+  // Verify we're authenticated by checking for the search input (key dashboard element)
   const searchInput = page.locator('input[placeholder="Search conversations"]');
   await expect(searchInput).toBeVisible({ timeout: 15000 });
 
+  // Take screenshot of authenticated state
   await takeDebugScreenshot(page, "authenticated-dashboard.png");
 
   // Save authentication state
