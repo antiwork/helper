@@ -334,24 +334,16 @@ export const conversationsRouter = {
   }),
   unfollow: conversationProcedure.mutation(async ({ ctx }) => {
     return await db.transaction(async (tx) => {
-      try {
-        await tx
-          .delete(conversationFollowers)
-          .where(
-            and(
-              eq(conversationFollowers.conversationId, ctx.conversation.id),
-              eq(conversationFollowers.userId, ctx.user.id),
-            ),
-          );
+      await tx
+        .delete(conversationFollowers)
+        .where(
+          and(
+            eq(conversationFollowers.conversationId, ctx.conversation.id),
+            eq(conversationFollowers.userId, ctx.user.id),
+          ),
+        );
 
-        return { success: true, following: false };
-      } catch (_error) {
-        // Unfollow conversation error logged
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to unfollow conversation",
-        });
-      }
+      return { success: true, following: false };
     });
   }),
 
