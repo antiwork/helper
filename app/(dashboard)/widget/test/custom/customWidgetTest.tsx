@@ -16,7 +16,7 @@ export const CustomWidgetTest = () => {
   const handleCreate = async () => {
     try {
       const result = await createConversation.mutateAsync({});
-      router.push(`/widget/test/custom/${result.conversationSlug}`);
+      router.push(`/widget/test/custom/${result.conversationSlug}${location.search}`);
     } catch (error) {
       captureExceptionAndLog(error);
     }
@@ -46,7 +46,7 @@ export const CustomWidgetTest = () => {
       <div className="flex-1 overflow-y-auto">
         <ConversationTable
           conversations={conversations}
-          onSelectConversation={(slug) => router.push(`/widget/test/custom/${slug}`)}
+          onSelectConversation={(slug) => router.push(`/widget/test/custom/${slug}${location.search}`)}
         />
       </div>
     </div>

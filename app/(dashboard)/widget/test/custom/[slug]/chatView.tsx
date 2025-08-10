@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { Paperclip, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ConversationDetails } from "@helperai/client";
-import { useHelperClient } from "@helperai/react";
+import { MessageContent, useHelperClient } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -98,13 +98,11 @@ export const ChatView = ({ conversation }: { conversation: ConversationDetails }
             <div
               className={cn(
                 "rounded-lg p-3 max-w-[80%]",
-                message.role === "user"
-                  ? "bg-primary text-primary-foreground ml-auto"
-                  : "bg-secondary text-secondary-foreground",
+                message.role === "user" ? "border border-bright ml-auto" : "bg-secondary text-secondary-foreground",
               )}
               key={message.id}
             >
-              <div>{message.content ? message.content : JSON.stringify(message)}</div>
+              <MessageContent className="prose" message={message} />
               <AttachmentDisplay attachments={[...message.publicAttachments, ...message.privateAttachments]} />
             </div>
           ))}
