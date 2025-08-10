@@ -195,7 +195,7 @@ const CommonIssuesSetting = () => {
             </div>
             {!searchQuery && (
               <Button
-                variant="outline"
+                variant="outlined"
                 onClick={handleGenerateIssues}
                 disabled={generateMutation.isPending}
                 className="mx-auto"
