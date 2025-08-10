@@ -27,6 +27,7 @@ export const mergeSimilarConversations = async ({ messageId }: { messageId: numb
             cleanedUpText: true,
             createdAt: true,
           },
+          orderBy: (messages, { asc }) => [asc(messages.createdAt)],
         },
         events: {
           where: eq(conversationEvents.type, "request_human_support"),
