@@ -182,7 +182,6 @@ export const updateConversation = async (
     };
     await publishEvents();
 
-    // Send follower notifications for relevant changes
     if (byUserId && updatesToLog.length > 0) {
       const notificationEvents = [];
 

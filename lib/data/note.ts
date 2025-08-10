@@ -36,16 +36,12 @@ export const addNote = async ({
       .then(takeUniqueOrThrow);
 
     await finishFileUpload({ fileSlugs, noteId: note.id }, tx);
-
-    // Send follower notification for new notes
     if (user?.id) {
       await triggerEvent("conversations/send-follower-notification", {
         conversationId,
         eventType: "note_added" as const,
         triggeredByUserId: user.id,
-        eventDetails: {
-          note: note.body || undefined,
-        },
+        eventDetails: {},
       });
     }
 
