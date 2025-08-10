@@ -190,9 +190,7 @@ const CommonIssuesSetting = () => {
           </>
         ) : filteredIssueGroups.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground space-y-4">
-            <div>
-              {searchQuery ? "No common issues found matching your search." : "No common issues created yet."}
-            </div>
+            <div>{searchQuery ? "No common issues found matching your search." : "No common issues created yet."}</div>
             {!searchQuery && (
               <Button
                 variant="outlined"
