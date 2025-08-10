@@ -145,7 +145,6 @@ const WebsiteCrawlSetting = () => {
                   key={website.id}
                   className="group relative flex items-center gap-4 rounded-lg border p-4 hover:bg-muted/50"
                   role="listitem"
-                  aria-label={`Configure ${website.name}`}
                 >
                   <div className="flex-1 min-w-0 space-y-2">
                     <div className="flex items-center gap-2">

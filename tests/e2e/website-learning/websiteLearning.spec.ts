@@ -51,7 +51,9 @@ test.describe("Website Learning UI Smoke Tests", () => {
     await page.waitForLoadState("networkidle");
 
     await waitForToast(page, "Website added!");
-    const websiteItem = page.getByRole("listitem", { name: `Configure ${testName}` });
+    const websiteItem = page.getByRole("listitem").filter({
+      has: page.getByRole("link", { name: testUrl }),
+    });
     await expect(websiteItem).toBeVisible();
   });
 });
