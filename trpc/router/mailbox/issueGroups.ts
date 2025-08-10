@@ -298,4 +298,40 @@ export const issueGroupsRouter = {
 
     return { success: true };
   }),
+
+  generateFromConversations: mailboxProcedure.mutation(async ({ ctx }) => {
+    const { generateCommonIssuesFromConversations } = await import("@/lib/ai/generateCommonIssues");
+    
+    const result = await generateCommonIssuesFromConversations(ctx.mailbox);
+    
+    if (result.issues.length === 0) {
+      throw new TRPCError({ 
+        code: "BAD_REQUEST", 
+        message: "No common issues could be generated from existing conversations" 
+      });
+    }
+
+    const createdIssues = await Promise.all(
+      result.issues.map(issue => 
+        db.insert(issueGroups)
+          .values({
+            title: issue.title,
+            description: issue.description,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .returning()
+          .then(takeUniqueOrThrow)
+      )
+    );
+
+    return { 
+      createdIssues: createdIssues.length,
+      issues: createdIssues.map(issue => ({
+        id: issue.id,
+        title: issue.title,
+        description: issue.description,
+      }))
+    };
+  }),
 } satisfies TRPCRouterRecord;
