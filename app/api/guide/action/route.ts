@@ -205,7 +205,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     }),
   };
 
-  const model = openai("gpt-4.1", { parallelToolCalls: false });
+  const model = openai(CHAT_MODEL, { reasoningEffort: "low", parallelToolCalls: false });
 
   return createDataStreamResponse({
     execute: (dataStream) => {
