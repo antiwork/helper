@@ -1,11 +1,11 @@
 /* eslint-disable no-console */
-import { and, eq, gt, isNotNull, isNull, or } from "drizzle-orm";
+import { and, eq, gt, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, gmailSupportEmails, toolApis, tools } from "@/db/schema";
 
 const BATCH_SIZE = 1000;
 
-export const migrateEncryptedToPlaintext = async () => {
+const migrateEncryptedToPlaintext = async () => {
   console.log("Starting migration of encrypted data to plaintext columns...");
 
   try {
@@ -24,9 +24,10 @@ export const migrateEncryptedToPlaintext = async () => {
 
 const migrateConversationMessages = async () => {
   console.log("🔄 Migrating conversation messages...");
-  let lastId = 0;
+  let lastId = 3085616;
   let processed = 0;
   let errors = 0;
+  let isFirst = true;
 
   while (true) {
     const batch = await db
@@ -44,29 +45,35 @@ const migrateConversationMessages = async () => {
         ),
       )
       .orderBy(conversationMessages.id)
-      .limit(BATCH_SIZE);
+      .limit(isFirst ? 10 : 50);
+
+    isFirst = false;
 
     if (batch.length === 0) break;
 
-    // Process batch
-    for (const message of batch) {
-      try {
-        await db
-          .update(conversationMessages)
-          .set({
-            bodyPlaintext: message.body,
-            cleanedUpTextPlaintext: message.cleanedUpText,
-          })
-          .where(eq(conversationMessages.id, message.id));
-      } catch (error) {
-        console.error(`Failed to migrate message ${message.id}:`, error);
-        errors++;
-      }
+    try {
+      const bodyConditions = batch.reduce((acc, m) => sql`${acc} WHEN id = ${m.id} THEN ${m.body}`, sql.empty());
+      const cleanedUpTextConditions = batch.reduce(
+        (acc, m) => sql`${acc} WHEN id = ${m.id} THEN ${m.cleanedUpText}`,
+        sql.empty(),
+      );
+
+      await db.execute(sql`
+        UPDATE messages 
+        SET 
+          body = CASE ${bodyConditions} END,
+          cleaned_up_text = CASE ${cleanedUpTextConditions} END
+        WHERE id IN ${batch.map((m) => m.id)}
+      `);
+
+      processed += batch.length;
+    } catch (error) {
+      console.error(`Failed to migrate batch starting at ID ${batch[0]?.id}:`, error);
+      errors += batch.length;
     }
 
-    processed += batch.length;
     lastId = batch[batch.length - 1]?.id ?? lastId;
-    console.log(`  Migrated ${processed} conversation messages (${errors} errors)`);
+    console.log(`  Migrated ${processed} conversation messages up to ${lastId} (${errors} errors)`);
   }
 
   console.log(`✅ Conversation messages migration complete: ${processed} processed, ${errors} errors`);

@@ -3,7 +3,7 @@
 import { Paperclip, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ConversationDetails } from "@helperai/client";
-import { useCreateMessage, useRealtimeEvents } from "@helperai/react";
+import { MessageContent, useCreateMessage, useRealtimeEvents } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -93,7 +93,7 @@ export const ThreadView = ({ conversation }: { conversation: ConversationDetails
               <div className="text-sm text-muted-foreground">
                 {message.role === "user" ? "You" : (message.staffName ?? "Helper")}
               </div>
-              <div>{message.content || "No content"}</div>
+              <MessageContent className="prose" message={message} />
               <AttachmentDisplay attachments={[...message.publicAttachments, ...message.privateAttachments]} />
             </div>
           ))}

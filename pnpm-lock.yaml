@@ -665,6 +665,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^1.0.4
         version: 1.6.1(vitest@3.2.4(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.15.3)(jiti@2.4.2)(jsdom@23.2.0)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1))
+      esbuild-fix-imports-plugin:
+        specifier: ^1.0.21
+        version: 1.0.21
       glob-promise:
         specifier: ^6.0.0
         version: 6.0.7(glob@11.0.2)
@@ -7492,6 +7495,9 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
+  esbuild-fix-imports-plugin@1.0.21:
+    resolution: {integrity: sha512-Ee4W4fU5nPL2klGqtPciRm8Ke553EIa6By1jsw/aG7lvHtlrtuqxBEFD7BttsCVb0eUWW5bag3KA2BVwxMAZxQ==}
+
   esbuild-freebsd-64@0.14.47:
     resolution: {integrity: sha512-ZH8K2Q8/Ux5kXXvQMDsJcxvkIwut69KVrYQhza/ptkW50DC089bCVrJZZ3sKzIoOx+YPTrmsZvqeZERjyYrlvQ==}
     engines: {node: '>=12'}
@@ -11437,6 +11443,7 @@ packages:
   source-map@0.8.0-beta.0:
     resolution: {integrity: sha512-2ymg6oRBpebeZi9UUNsgQ89bhx01TcTkmNTGnNO88imTmbSgy4nfujrgVEFKWpMTEGA11EDkTt7mqObTPdigIA==}
     engines: {node: '>= 8'}
+    deprecated: The work that was done in this beta branch won't be included in future versions
 
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
@@ -20042,6 +20049,8 @@ snapshots:
   esbuild-darwin-arm64@0.14.47:
     optional: true
 
+  esbuild-fix-imports-plugin@1.0.21: {}
+
   esbuild-freebsd-64@0.14.47:
     optional: true
 
@@ -25692,7 +25701,7 @@ snapshots:
 
   tsx@4.19.4:
     dependencies:
-      esbuild: 0.25.3
+      esbuild: 0.25.5
       get-tsconfig: 4.10.0
     optionalDependencies:
       fsevents: 2.3.3

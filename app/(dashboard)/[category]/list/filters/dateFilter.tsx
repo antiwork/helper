@@ -214,7 +214,7 @@ export function DateFilter({
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
           <Button
-            data-testid="date-filter-button"
+            aria-label="Date Filter"
             variant={selectedPreset !== "allTime" ? "bright" : "outlined_subtle"}
             className="whitespace-nowrap"
           >

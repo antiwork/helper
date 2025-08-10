@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
+import { fixImportsPlugin } from "esbuild-fix-imports-plugin";
 import { glob } from "glob-promise";
 import { defineConfig, type Options } from "tsup";
 import { name, version } from "./package.json";
@@ -74,6 +75,7 @@ export default defineConfig((overrideOptions) => {
       PACKAGE_VERSION: `"${version}"`,
       __DEV__: `${!isProd}`,
     },
+    esbuildPlugins: [fixImportsPlugin() as any], // Clashing esbuild dependency versions :(
   };
 
   const esm: Options = {
