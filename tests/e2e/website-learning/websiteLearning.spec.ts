@@ -17,24 +17,24 @@ test.describe("Website Learning UI Smoke Tests", () => {
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Add website" })).toBeVisible();
     await page.getByRole("button", { name: "Add website" }).click();
-    await expect(page.locator('label[for="url"]')).toBeVisible();
-    await expect(page.locator("input#url")).toBeVisible();
+
+    await expect(page.getByRole("textbox", { name: "URL" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
-    await expect(page.locator('form button[type="submit"]')).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add website" })).toBeVisible();
   });
 
   test("hides form when cancelled", async ({ page }) => {
     await expect(page.getByRole("heading", { name: "Website Learning" })).toBeVisible();
     await page.getByRole("button", { name: "Add website" }).click();
     await page.getByRole("button", { name: "Cancel" }).click();
-    await expect(page.locator("input#url")).not.toBeVisible();
+    await expect(page.getByRole("textbox", { name: "URL" })).not.toBeVisible();
   });
 
   test("validates invalid URL format", async ({ page }) => {
     await expect(page.getByRole("heading", { name: "Website Learning" })).toBeVisible();
     await page.getByRole("button", { name: "Add website" }).click();
-    await page.locator("input#url").fill("invalid url");
-    await page.locator('form button[type="submit"]').click();
+    await page.getByRole("textbox", { name: "URL" }).fill("invalid url");
+    await page.getByRole("button", { name: "Add website" }).click();
     await page.waitForLoadState("networkidle");
     await expect(page.getByText("Failed to add website. Please try again.")).toBeVisible();
   });
@@ -44,14 +44,14 @@ test.describe("Website Learning UI Smoke Tests", () => {
     const timestamp = Date.now();
     const testUrl = `https://test-${timestamp}.example.com`;
     const testName = `test-${timestamp}.example.com`;
+
     await page.getByRole("button", { name: "Add website" }).click();
-    await page.locator("input#url").fill(testUrl);
-    await page.locator('form button[type="submit"]').click();
+    await page.getByRole("textbox", { name: "URL" }).fill(testUrl);
+    await page.getByRole("button", { name: "Add website" }).click();
     await page.waitForLoadState("networkidle");
+
     await waitForToast(page, "Website added!");
-    const websiteItem = page.locator('[data-testid="website-item"]').filter({
-      has: page.locator(`text="${testName}"`),
-    });
+    const websiteItem = page.getByRole("listitem", { name: `Configure ${testName}` });
     await expect(websiteItem).toBeVisible();
   });
 });
