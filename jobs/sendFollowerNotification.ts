@@ -85,7 +85,7 @@ export const sendFollowerNotification = async (payload: SendFollowerNotification
 
     const triggeredByName = triggeredByUser?.displayName || triggeredByUser?.user?.email || "Someone";
 
-    const conversationLink = `${env.AUTH_URL}/conversations/${conversation.slug}`;
+    const conversationLink = `${env.AUTH_URL}/conversations?id=${conversation.slug}`;
     const resend = new Resend(env.RESEND_API_KEY);
 
     const emailPromises = followers.map(async (follower) => {
