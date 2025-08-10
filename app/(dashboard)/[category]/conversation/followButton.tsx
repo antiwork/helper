@@ -18,33 +18,33 @@ export const FollowButton = ({ conversationSlug, className, size = "sm" }: Follo
 
   const followMutation = api.mailbox.conversations.follow.useMutation({
     onMutate: () => {
-      utils.mailbox.conversations.isFollowing.setData({ conversationSlug }, (data) => 
+      utils.mailbox.conversations.isFollowing.setData({ conversationSlug }, (data) =>
         data ? { ...data, following: true } : data,
       );
     },
     onSuccess: () => {
       toast.success("Following conversation");
-      utils.mailbox.conversations.isFollowing.invalidate();
+      utils.mailbox.conversations.isFollowing.invalidate({ conversationSlug });
     },
     onError: (_error) => {
       toast.error("Failed to follow conversation");
-      utils.mailbox.conversations.isFollowing.invalidate();
+      utils.mailbox.conversations.isFollowing.invalidate({ conversationSlug });
     },
   });
 
   const unfollowMutation = api.mailbox.conversations.unfollow.useMutation({
     onMutate: () => {
-      utils.mailbox.conversations.isFollowing.setData({ conversationSlug }, (data) => 
+      utils.mailbox.conversations.isFollowing.setData({ conversationSlug }, (data) =>
         data ? { ...data, following: false } : data,
       );
     },
     onSuccess: () => {
       toast.success("Unfollowed conversation");
-      utils.mailbox.conversations.isFollowing.invalidate();
+      utils.mailbox.conversations.isFollowing.invalidate({ conversationSlug });
     },
     onError: (_error) => {
       toast.error("Failed to unfollow conversation");
-      utils.mailbox.conversations.isFollowing.invalidate();
+      utils.mailbox.conversations.isFollowing.invalidate({ conversationSlug });
     },
   });
 
@@ -76,6 +76,8 @@ export const FollowButton = ({ conversationSlug, className, size = "sm" }: Follo
             size={size}
             onClick={handleToggleFollow}
             disabled={isLoading || isPending}
+            aria-pressed={isFollowing}
+            aria-label={isFollowing ? "Unfollow conversation" : "Follow conversation"}
             className={cn(
               "transition-all duration-200",
               isFollowing && "bg-blue-600 hover:bg-blue-700 text-white",
