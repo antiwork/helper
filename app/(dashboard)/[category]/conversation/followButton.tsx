@@ -19,7 +19,7 @@ export const FollowButton = ({ conversationSlug, className, size = "sm" }: Follo
   const followMutation = api.mailbox.conversations.follow.useMutation({
     onMutate: () => {
       utils.mailbox.conversations.isFollowing.setData({ conversationSlug }, (data) => 
-        data ? { ...data, following: true } : { following: true }
+        data ? { ...data, following: true } : data,
       );
     },
     onSuccess: () => {
@@ -35,7 +35,7 @@ export const FollowButton = ({ conversationSlug, className, size = "sm" }: Follo
   const unfollowMutation = api.mailbox.conversations.unfollow.useMutation({
     onMutate: () => {
       utils.mailbox.conversations.isFollowing.setData({ conversationSlug }, (data) => 
-        data ? { ...data, following: false } : { following: false }
+        data ? { ...data, following: false } : data,
       );
     },
     onSuccess: () => {
