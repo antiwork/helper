@@ -16,8 +16,6 @@ export const conversationFollowers = pgTable(
   (table) => [
     index("conversation_followers_conversation_id_idx").on(table.conversationId),
     index("conversation_followers_user_id_idx").on(table.userId),
-    index("conversation_followers_created_at_idx").on(table.createdAt),
-    index("conversation_followers_user_conversation_idx").on(table.userId, table.conversationId),
     unique("conversation_followers_conversation_user_unique").on(table.conversationId, table.userId),
   ],
 ).enableRLS();

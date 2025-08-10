@@ -1,5 +1,5 @@
 {
-  "id": "71642c0b-ac4a-4b41-b1af-d9e86bd5c049",
+  "id": "629f2949-17a1-4fdb-965b-935c6fa810bc",
   "prevId": "aca32d0b-e70f-456b-a140-659368455819",
   "version": "7",
   "dialect": "postgresql",
@@ -656,42 +656,6 @@
           "columns": [
             {
               "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "conversation_followers_created_at_idx": {
-          "name": "conversation_followers_created_at_idx",
-          "columns": [
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "conversation_followers_user_conversation_idx": {
-          "name": "conversation_followers_user_conversation_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "conversation_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
