@@ -305,9 +305,9 @@ export const issueGroupsRouter = {
     const result = await generateCommonIssuesSuggestions(ctx.mailbox);
     
     if (result.issues.length === 0) {
-      throw new TRPCError({ 
-        code: "BAD_REQUEST", 
-        message: "No common issues could be generated from existing conversations" 
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "No common issues could be generated from existing conversations",
       });
     }
 

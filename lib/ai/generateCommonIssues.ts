@@ -4,11 +4,13 @@ import { runAIObjectQuery } from "@/lib/ai";
 import { searchConversations } from "@/lib/data/conversation/search";
 
 const commonIssuesGenerationSchema = z.object({
-  issues: z.array(z.object({
-    title: z.string(),
-    description: z.string().optional(),
-    reasoning: z.string(),
-  })),
+  issues: z.array(
+    z.object({
+      title: z.string(),
+      description: z.string().optional(),
+      reasoning: z.string(),
+    }),
+  ),
 });
 
 type CommonIssuesGeneration = z.infer<typeof commonIssuesGenerationSchema>;
@@ -21,21 +23,21 @@ export const generateCommonIssuesSuggestions = async (
     status: ["open", "closed"],
     sort: "newest",
   });
-  
+
   const { results: conversations } = await list;
-  
+
   if (conversations.length === 0) {
     return { issues: [] };
   }
 
   const conversationSummaries = conversations
     .slice(0, 50)
-    .map(conv => ({
+    .map((conv) => ({
       subject: conv.subject,
       recentMessage: conv.recentMessageText,
       status: conv.status,
     }))
-    .filter(conv => conv.subject || conv.recentMessage);
+    .filter((conv) => conv.subject || conv.recentMessage);
 
   const systemPrompt = `
 You are analyzing customer support conversations to identify common issue patterns that should be grouped together.
@@ -65,12 +67,16 @@ Return only the most valuable and distinct common issue categories.
   const userPrompt = `
 Analyze these recent customer support conversations to identify common issue patterns:
 
-${conversationSummaries.map((conv, i) => 
-  `Conversation ${i + 1}:
-Subject: ${conv.subject || 'No subject'}
-Recent message: ${conv.recentMessage || 'No recent message'}
+${conversationSummaries
+  .map(
+    (conv, i) =>
+      `Conversation ${i + 1}:
+Subject: ${conv.subject || "No subject"}
+Recent message: ${conv.recentMessage || "No recent message"}
 Status: ${conv.status}
-`).join('\n')}
+`,
+  )
+  .join("\n")}
 
 Based on these conversations, what are the most common issue categories that would help organize similar future conversations?
 `;
