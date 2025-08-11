@@ -1,8 +1,0 @@
-- Refer to app as Helper not Helper AI
-- We have existing TypeScript tests using vitest. Fix the existing tests if required, but don't add any new tests unless explicitly told to do so
-- Name component files in lowerCamelCase, e.g. conversationList.tsx
-- Don't modify config files or package.json unless explicitly told to do so
-- Always design for light and dark mode
-- Always consider mobile and desktop devices (medium and large and extra large)
-- No explanatory comments please
-- When adding new rules, update both .cursorrules and .github/copilot-instructions.md to keep them synchronized
