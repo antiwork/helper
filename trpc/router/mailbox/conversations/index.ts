@@ -22,7 +22,6 @@ import { githubRouter } from "./github";
 import { messagesRouter } from "./messages";
 import { notesRouter } from "./notes";
 import { conversationProcedure } from "./procedure";
-import { toolsRouter } from "./tools";
 
 export const conversationsRouter = {
   list: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
@@ -251,7 +250,6 @@ export const conversationsRouter = {
   }),
   messages: messagesRouter,
   files: filesRouter,
-  tools: toolsRouter,
   notes: notesRouter,
   github: githubRouter,
 
