@@ -4,7 +4,6 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
-import { getLatestEvents } from "@/lib/data/dashboardEvent";
 import { getGuideSessionsForMailbox } from "@/lib/data/guide";
 import { getMailboxInfo } from "@/lib/data/mailbox";
 import { conversationsRouter } from "./conversations/index";
@@ -80,9 +79,6 @@ export const mailboxRouter = {
         .where(eq(mailboxes.id, ctx.mailbox.id));
     }),
 
-  latestEvents: mailboxProcedure
-    .input(z.object({ cursor: z.date().optional() }))
-    .query(({ ctx, input }) => getLatestEvents(ctx.mailbox, input.cursor)),
 
   getSessionsPaginated: mailboxProcedure
     .input(
