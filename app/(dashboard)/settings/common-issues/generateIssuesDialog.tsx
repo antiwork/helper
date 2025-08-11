@@ -1,7 +1,7 @@
 "use client";
 
 import { Edit2, Trash } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,12 @@ export function GenerateIssuesDialog({
 }: GenerateIssuesDialogProps) {
   const [editableSuggestions, setEditableSuggestions] = useState<GeneratedIssue[]>(suggestions);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (suggestions.length !== editableSuggestions.length) {
+      setEditableSuggestions(suggestions);
+    }
+  }, [suggestions.length]);
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);

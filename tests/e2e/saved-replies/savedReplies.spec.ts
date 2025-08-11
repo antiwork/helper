@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { debugWait, generateRandomString, takeDebugScreenshot } from "../utils/test-helpers";
 import { waitForToast } from "../utils/toastHelpers";
+import { createSavedReply } from "../utils/savedReplyHelpers";
 
 // Use the working authentication and grant clipboard permissions
 test.use({
@@ -247,13 +248,6 @@ async function openCreateDialog(page: Page) {
   }
 
   await expectCreateDialogVisible(page);
-}
-
-export async function createSavedReply(page: Page, name: string, content: string) {
-  await openCreateDialog(page);
-  await fillSavedReplyForm(page, name, content);
-  await clickSaveButton(page);
-  await waitForToast(page, "Saved reply created successfully");
 }
 
 async function deleteSavedReply(page: Page, index: number) {

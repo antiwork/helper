@@ -317,6 +317,7 @@ const CommonIssuesSetting = () => {
       )}
 
       <GenerateIssuesDialog
+        key={generatedSuggestions.length}
         isOpen={showGenerateDialog}
         onClose={() => setShowGenerateDialog(false)}
         suggestions={generatedSuggestions}
