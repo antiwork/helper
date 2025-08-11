@@ -4,7 +4,7 @@ import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files } from "@/db/schema";
+import { conversationFollowers, conversationMessages, conversations, files } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
 import { generateDraftResponse } from "@/lib/ai/chat";
@@ -125,7 +125,6 @@ export const conversationsRouter = {
         .values({
           slug: conversation.conversation_slug,
           subject: conversation.subject,
-          subjectPlaintext: conversation.subject,
           emailFrom: conversation.to_email_address,
           conversationProvider: "gmail",
         })
@@ -284,5 +283,46 @@ export const conversationsRouter = {
         {} as Record<string, number>,
       ),
     };
+  }),
+
+  follow: conversationProcedure.mutation(async ({ ctx }) => {
+    return await db.transaction(async (tx) => {
+      await tx
+        .insert(conversationFollowers)
+        .values({
+          conversationId: ctx.conversation.id,
+          userId: ctx.user.id,
+        })
+        .onConflictDoNothing();
+
+      return { success: true, following: true };
+    });
+  }),
+
+  unfollow: conversationProcedure.mutation(async ({ ctx }) => {
+    return await db.transaction(async (tx) => {
+      await tx
+        .delete(conversationFollowers)
+        .where(
+          and(
+            eq(conversationFollowers.conversationId, ctx.conversation.id),
+            eq(conversationFollowers.userId, ctx.user.id),
+          ),
+        );
+
+      return { success: true, following: false };
+    });
+  }),
+
+  isFollowing: conversationProcedure.query(async ({ ctx }) => {
+    const follower = await db.query.conversationFollowers.findFirst({
+      columns: { id: true },
+      where: and(
+        eq(conversationFollowers.conversationId, ctx.conversation.id),
+        eq(conversationFollowers.userId, ctx.user.id),
+      ),
+    });
+
+    return { following: !!follower };
   }),
 } satisfies TRPCRouterRecord;

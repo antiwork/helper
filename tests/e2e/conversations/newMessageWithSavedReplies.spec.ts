@@ -2,13 +2,12 @@ import { expect, test } from "@playwright/test";
 import { eq, or } from "drizzle-orm";
 import { db } from "../../../db/client";
 import { savedReplies } from "../../../db/schema";
-import { SavedRepliesPage } from "../utils/page-objects/savedRepliesPage";
+import { createSavedReply } from "../saved-replies/savedReplies.spec";
 import { generateRandomString, takeDebugScreenshot } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 test.describe("New Message with Saved Replies", () => {
-  let savedRepliesPage: SavedRepliesPage;
   let firstTestReplyName: string;
   let secondTestReplyName: string;
   let createdSavedReplies: string[] = [];
@@ -17,7 +16,6 @@ test.describe("New Message with Saved Replies", () => {
     // Create a new page for setup
     const context = await browser.newContext({ storageState: "tests/e2e/.auth/user.json" });
     const page = await context.newPage();
-    savedRepliesPage = new SavedRepliesPage(page);
 
     // Generate unique names for our test saved replies
     const uniqueId = generateRandomString();
@@ -28,25 +26,25 @@ test.describe("New Message with Saved Replies", () => {
     try {
       // Navigate with retry logic for improved reliability
       try {
-        await savedRepliesPage.navigateToSavedReplies();
+        await page.goto("/saved-replies");
         await page.waitForLoadState("networkidle", { timeout: 30000 });
       } catch (error) {
         console.log("Initial navigation failed, retrying...", error);
-        await savedRepliesPage.navigateToSavedReplies();
+        await page.goto("/saved-replies");
         await page.waitForLoadState("domcontentloaded", { timeout: 30000 });
       }
 
-      await savedRepliesPage.expectPageVisible();
+      await expect(page.locator('h1:has-text("Saved replies")')).toBeVisible();
       await page.waitForTimeout(1000);
 
       // Create first test saved reply
       const firstContent = `Hello! Thank you for contacting us. How can I help you today? - ${uniqueId}`;
-      await savedRepliesPage.createSavedReply(firstTestReplyName, firstContent);
+      await createSavedReply(page, firstTestReplyName, firstContent);
       await page.waitForTimeout(1000);
 
       // Create second test saved reply
       const secondContent = `This is a different saved reply for testing search functionality - ${uniqueId}`;
-      await savedRepliesPage.createSavedReply(secondTestReplyName, secondContent);
+      await createSavedReply(page, secondTestReplyName, secondContent);
       await page.waitForTimeout(1000);
     } catch (error) {
       console.error("Failed to create test saved replies:", error);
@@ -63,8 +61,6 @@ test.describe("New Message with Saved Replies", () => {
   });
 
   test.beforeEach(async ({ page }) => {
-    savedRepliesPage = new SavedRepliesPage(page);
-
     // Navigate to conversations page with improved error handling
     let navigationSuccessful = false;
     let retries = 0;
