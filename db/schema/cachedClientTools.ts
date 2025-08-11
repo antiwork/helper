@@ -1,14 +1,19 @@
 import { bigint, index, jsonb, pgTable, text } from "drizzle-orm/pg-core";
-import { withTimestamps } from "../lib/with-timestamps";
 import { ToolRequestBody } from "@helperai/client";
+import { withTimestamps } from "../lib/with-timestamps";
 
 export const cachedClientTools = pgTable(
   "cached_client_tools",
   {
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
-    customerEmail: text(),
+
+    // Fallback identifier if platformCustomerId is unavailable
+    customerEmail: text(), // now nullable
+
+    // Preferred identifier
     platformCustomerId: bigint("platform_customer_id", { mode: "number" }),
+
     tools: jsonb().$type<Record<string, ToolRequestBody>>().notNull(),
   },
   (table) => [

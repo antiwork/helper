@@ -2,11 +2,13 @@ import * as Sentry from "@sentry/nextjs";
 import { waitUntil } from "@vercel/functions";
 import { type Message } from "ai";
 import { eq } from "drizzle-orm";
+import { ToolRequestBody } from "@helperai/client";
 import { ReadPageToolConfig } from "@helperai/sdk";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { createUserMessage, respondWithAI } from "@/lib/ai/chat";
+import { cacheClientTools } from "@/lib/data/clientTools";
 import {
   CHAT_CONVERSATION_SUBJECT,
   generateConversationSubject,
@@ -17,8 +19,6 @@ import { publishToRealtime } from "@/lib/realtime/publish";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
 import { createClient } from "@/lib/supabase/server";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
-import { ToolRequestBody } from "@helperai/client";
-import { cacheClientTools } from "@/lib/data/clientTools";
 
 export const maxDuration = 60;
 
@@ -55,14 +55,8 @@ const getConversation = async (conversationSlug: string, session: WidgetSessionP
 export const OPTIONS = () => corsOptions("POST");
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
-  const {
-    message,
-    conversationSlug,
-    readPageTool,
-    guideEnabled,
-    tools,
-    customerSpecificTools,
-  }: ChatRequestBody = await request.json();
+  const { message, conversationSlug, readPageTool, guideEnabled, tools, customerSpecificTools }: ChatRequestBody =
+    await request.json();
 
   Sentry.setTag("conversation_slug", conversationSlug);
 
@@ -71,7 +65,13 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
   const userEmail = session.isAnonymous ? null : session.email || null;
   const attachments = message.experimental_attachments ?? [];
 
-  await cacheClientTools(tools, customerSpecificTools ? conversation.emailFrom ?? userEmail ?? null : null);
+  waitUntil(
+    cacheClientTools(tools, customerSpecificTools ? (conversation.emailFrom ?? userEmail ?? null) : null).catch(
+      (err) => {
+        Sentry.captureException(err);
+      },
+    ),
+  );
 
   const validationResult = validateAttachments(
     attachments.map((att) => ({

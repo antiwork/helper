@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
+import { startCase } from "lodash";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { tools } from "@/db/schema/tools";
@@ -45,7 +46,7 @@ export const toolsRouter = {
     const cachedTools = await getCachedClientTools(conversation.emailFrom);
     const cachedToolList = cachedTools
       ? Object.entries(cachedTools).map(([name, tool]) => ({
-          name,
+          name: startCase(name),
           slug: name,
           description: tool.description ?? "",
           parameterTypes: Object.entries(tool.parameters).map(([paramName, param]) => ({
