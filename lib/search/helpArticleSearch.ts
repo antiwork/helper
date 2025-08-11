@@ -14,7 +14,9 @@ export type SearchResult = HelpArticle & {
  * Provides better fuzzy matching, typo tolerance, and relevance scoring
  */
 export function searchHelpArticles(articles: HelpArticle[], query: string, limit = 10): SearchResult[] {
-  if (!query.trim()) {
+  const trimmedQuery = query.trim();
+  
+  if (!trimmedQuery) {
     // Return all articles when query is empty, sorted by title
     return articles
       .map(article => ({ ...article, score: 1 }))
@@ -41,7 +43,7 @@ export function searchHelpArticles(articles: HelpArticle[], query: string, limit
     shouldSort: true, // Sort results by score
   });
 
-  const fuseResults = fuse.search(query, { limit });
+  const fuseResults = fuse.search(trimmedQuery, { limit });
   
   return fuseResults.map((result) => ({
     ...result.item,
