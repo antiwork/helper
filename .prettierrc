@@ -1,8 +1,0 @@
-{
-  "printWidth": 120,
-  "plugins": ["prettier-plugin-tailwindcss", "@ianvs/prettier-plugin-sort-imports"],
-  "tailwindFunctions": ["cn", "cva"],
-  "tailwindStylesheet": "./app/globals.css",
-  "importOrder": ["^@helperai/", "^@/", "^[.]"],
-  "importOrderTypeScriptVersion": "5.6.2"
-}
