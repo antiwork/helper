@@ -1,6 +1,0 @@
-web: PORT=3010 pnpm dev:next
-email: pnpm dev:email
-sdk: pnpm --filter=@helperai/sdk dev
-sdk-types: pnpm --filter=@helperai/sdk dev:types
-react: pnpm --filter=@helperai/react dev
-marketing: pnpm --filter=@helperai/marketing dev
