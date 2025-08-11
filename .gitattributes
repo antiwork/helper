@@ -1,2 +1,0 @@
-# Treat Drizzle snapshot files as generated
-db/drizzle/meta/*snapshot.json linguist-generated=true
