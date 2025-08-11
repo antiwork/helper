@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { runAIObjectQuery } from "@/lib/ai";
+import { MINI_MODEL } from "@/lib/ai/core";
 import { generateConversationSummary } from "@/lib/ai/generateConversationSummary";
 
 // Mock the runAIObjectQuery function
@@ -74,6 +75,7 @@ describe("generateConversationSummary", () => {
     ];
 
     expect(runAIObjectQuery).toHaveBeenCalledWith({
+      model: MINI_MODEL,
       queryType: "conversation_summary",
       functionId: "generate-conversation-summary",
       system: expect.stringMatching(/summarize all the messages/),
@@ -172,6 +174,7 @@ describe("generateConversationSummary", () => {
     ];
 
     expect(runAIObjectQuery).toHaveBeenCalledWith({
+      model: MINI_MODEL,
       queryType: "conversation_summary",
       functionId: "generate-conversation-summary",
       system: expect.stringMatching(/summarize all the messages/),

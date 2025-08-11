@@ -1,33 +1,301 @@
-import { expect, test } from "@playwright/test";
-import { BasePage } from "../utils/page-objects/basePage";
-import { SavedRepliesPage } from "../utils/page-objects/savedRepliesPage";
+import { expect, test, type Page } from "@playwright/test";
 import { debugWait, generateRandomString, takeDebugScreenshot } from "../utils/test-helpers";
+import { waitForToast } from "../utils/toastHelpers";
 
-// Use the working authentication
-test.use({ storageState: "tests/e2e/.auth/user.json" });
+// Use the working authentication and grant clipboard permissions
+test.use({
+  storageState: "tests/e2e/.auth/user.json",
+  permissions: ["clipboard-read", "clipboard-write"],
+});
+
+// Helper functions
+async function navigateToSavedReplies(page: Page) {
+  await page.goto("/saved-replies");
+  await page.waitForLoadState("networkidle");
+}
+
+async function expectPageVisible(page: Page) {
+  await expect(page.locator('h1:has-text("Saved replies")')).toBeVisible();
+}
+
+async function expectSearchVisible(page: Page) {
+  await expect(page.locator('input[placeholder="Search saved replies..."]').first()).toBeVisible();
+}
+
+async function expectNewReplyButtonVisible(page: Page) {
+  const savedReplyCards = page.locator('[data-testid="saved-reply-card"]');
+  const floatingAddButton = page.locator("button.fixed");
+  const createOneButton = page.locator('button:has-text("Create one")');
+  const hasReplies = (await savedReplyCards.count()) > 0;
+
+  if (hasReplies) {
+    await expect(floatingAddButton).toBeVisible();
+  } else {
+    await expect(createOneButton).toBeVisible();
+  }
+}
+
+async function expectEmptyState(page: Page) {
+  await expect(page.locator('text="No saved replies yet"')).toBeVisible();
+  await expect(page.locator('button:has-text("Create one")')).toBeVisible();
+}
+
+async function expectSavedRepliesVisible(page: Page) {
+  await expect(page.locator('[data-testid="saved-reply-card"]').first()).toBeVisible();
+}
+
+async function expectCreateDialogVisible(page: Page) {
+  const createDialog = page.locator('[role="dialog"]:has-text("New saved reply")');
+  await expect(createDialog).toBeVisible();
+  await expect(page.locator('[role="dialog"] h2')).toContainText("New saved reply");
+}
+
+async function expectEditDialogVisible(page: Page) {
+  const editDialog = page.locator('[role="dialog"]:has-text("Edit saved reply")');
+  await expect(editDialog).toBeVisible();
+  await expect(page.locator('[role="dialog"] h2')).toContainText("Edit saved reply");
+}
+
+async function expectDeleteDialogVisible(page: Page) {
+  const deleteDialog = page.locator('[role="dialog"]:has-text("Are you sure you want to delete")');
+  await expect(deleteDialog).toBeVisible();
+  await expect(deleteDialog).toContainText("Are you sure you want to delete");
+}
+
+async function clickCreateOneButton(page: Page) {
+  await page.locator('button:has-text("Create one")').click();
+}
+
+async function clickFloatingAddButton(page: Page) {
+  await page.locator("button.fixed").click();
+}
+
+async function searchSavedReplies(page: Page, searchTerm: string) {
+  const searchInput = page.locator('input[placeholder="Search saved replies..."]').first();
+  await searchInput.fill(searchTerm);
+  await page.waitForTimeout(500);
+
+  try {
+    await page.waitForLoadState("networkidle", { timeout: 3000 });
+  } catch {
+    // Continue if networkidle times out
+  }
+
+  await page.waitForTimeout(200);
+}
+
+async function clearSearch(page: Page) {
+  const searchInput = page.locator('input[placeholder="Search saved replies..."]').first();
+  await searchInput.clear();
+  await page.waitForTimeout(500);
+  try {
+    await page.waitForLoadState("networkidle", { timeout: 3000 });
+  } catch {
+    // Continue if networkidle times out
+  }
+  await page.waitForTimeout(200);
+}
+
+async function fillSavedReplyForm(page: Page, name: string, content: string) {
+  const nameInput = page.locator('input[placeholder*="Welcome Message"]');
+  const contentEditor = page.locator('[role="textbox"][contenteditable="true"]');
+  await nameInput.fill(name);
+  await contentEditor.click();
+  await contentEditor.fill(content);
+}
+
+async function clickSaveButton(page: Page) {
+  const addBtn = page.locator('button:has-text("Add")');
+  const updateBtn = page.locator('button:has-text("Update")');
+  const saveBtn = page.locator('button:has-text("Save")');
+  const createDialog = page.locator('[role="dialog"]:has-text("New saved reply")');
+  const editDialog = page.locator('[role="dialog"]:has-text("Edit saved reply")');
+
+  // Map each button to its waitFor promise, returning the button when visible
+  const buttonPromises = [
+    updateBtn
+      .waitFor({ state: "visible", timeout: 5000 })
+      .then(() => updateBtn)
+      .catch(() => null),
+    addBtn
+      .waitFor({ state: "visible", timeout: 5000 })
+      .then(() => addBtn)
+      .catch(() => null),
+    saveBtn
+      .waitFor({ state: "visible", timeout: 5000 })
+      .then(() => saveBtn)
+      .catch(() => null),
+  ];
+
+  // Wait for the first button to become visible and capture it
+  const winningButton = await Promise.race(buttonPromises);
+
+  if (!winningButton) {
+    throw new Error("No save button (Add/Update/Save) found");
+  }
+
+  // Click the winning button directly
+  await winningButton.scrollIntoViewIfNeeded();
+  await winningButton.click();
+
+  // Wait for either dialog to close
+  await Promise.race([
+    createDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => null),
+    editDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => null),
+  ]);
+}
+
+async function clickCancelButton(page: Page) {
+  await page.locator('button:has-text("Cancel")').click();
+}
+
+async function clickCopyButton(page: Page, index = 0) {
+  await page.locator('[data-testid="copy-button"]').nth(index).click();
+}
+
+async function clickDeleteButtonInModal(page: Page) {
+  await page.locator('button:has-text("Delete"):not(:has-text("saved reply"))').click();
+}
+
+async function confirmDelete(page: Page) {
+  await page.locator('[role="dialog"] button:has-text("Yes")').click();
+}
+
+async function getSavedReplyCount(page: Page): Promise<number> {
+  return await page.locator('[data-testid="saved-reply-card"]').count();
+}
+
+async function getSavedReplyTitle(page: Page, index = 0): Promise<string> {
+  return (await page.locator('[data-testid="saved-reply-card"] .text-lg').nth(index).textContent()) || "";
+}
+
+async function getSavedReplyContent(page: Page, index = 0): Promise<string> {
+  return (await page.locator('[data-testid="saved-reply-card"] .text-muted-foreground').nth(index).textContent()) || "";
+}
+
+async function findSavedReplyByTitle(page: Page, title: string) {
+  // Find the saved reply card that contains the specific title
+  return page.locator('[data-testid="saved-reply-card"]').filter({ hasText: title });
+}
+
+async function editSavedReplyByTitle(page: Page, originalTitle: string, newName: string, newContent: string) {
+  const replyCard = await findSavedReplyByTitle(page, originalTitle);
+
+  // Ensure the reply exists
+  await expect(replyCard).toBeVisible({ timeout: 5000 });
+
+  // Click on the card to open edit dialog
+  await replyCard.click();
+  await expectEditDialogVisible(page);
+
+  const nameInput = page.locator('input[placeholder*="Welcome Message"]');
+  const contentEditor = page.locator('[role="textbox"][contenteditable="true"]');
+  await nameInput.clear();
+  await contentEditor.click();
+  await contentEditor.clear();
+
+  await fillSavedReplyForm(page, newName, newContent);
+  await clickSaveButton(page);
+  await waitForToast(page, "Saved reply updated successfully");
+}
+
+async function copySavedReplyByTitle(page: Page, title: string) {
+  const replyCard = await findSavedReplyByTitle(page, title);
+
+  // Ensure the reply exists
+  await expect(replyCard).toBeVisible({ timeout: 5000 });
+
+  // Find and click the copy button within this specific card
+  const copyButton = replyCard
+    .locator('[data-testid="copy-button"], button[title*="copy" i], button[aria-label*="copy" i]')
+    .first();
+  await expect(copyButton).toBeVisible({ timeout: 5000 });
+  await copyButton.click();
+}
+
+async function openCreateDialog(page: Page) {
+  await page.waitForTimeout(500);
+
+  const emptyState = page.locator('text="No saved replies yet"');
+  const floatingAddButton = page.locator("button.fixed");
+  const createOneButton = page.locator('button:has-text("Create one")');
+  const emptyStateVisible = await emptyState.isVisible().catch(() => false);
+
+  if (emptyStateVisible) {
+    await clickCreateOneButton(page);
+  } else {
+    const fabVisible = await floatingAddButton.isVisible().catch(() => false);
+
+    if (fabVisible) {
+      await clickFloatingAddButton(page);
+    } else {
+      try {
+        await Promise.race([
+          createOneButton.waitFor({ state: "visible", timeout: 5000 }).then(() => "createOne"),
+          floatingAddButton.waitFor({ state: "visible", timeout: 5000 }).then(() => "floating"),
+        ]).then(async (buttonType) => {
+          if (buttonType === "createOne") {
+            await clickCreateOneButton(page);
+          } else {
+            await clickFloatingAddButton(page);
+          }
+        });
+      } catch {
+        throw new Error("Neither 'Create one' nor floating add button found");
+      }
+    }
+  }
+
+  await expectCreateDialogVisible(page);
+}
+
+export async function createSavedReply(page: Page, name: string, content: string) {
+  await openCreateDialog(page);
+  await fillSavedReplyForm(page, name, content);
+  await clickSaveButton(page);
+  await waitForToast(page, "Saved reply created successfully");
+}
+
+async function deleteSavedReply(page: Page, index: number) {
+  await page.locator('[data-testid="saved-reply-card"]').nth(index).click();
+  await expectEditDialogVisible(page);
+
+  await clickDeleteButtonInModal(page);
+  await expectDeleteDialogVisible(page);
+  await confirmDelete(page);
+  await waitForToast(page, "Saved reply deleted successfully");
+}
+
+async function expectSearchResults(page: Page, expectedCount: number) {
+  if (expectedCount === 0) {
+    await expect(page.locator('text="No saved replies found matching your search"')).toBeVisible();
+  } else {
+    await expect(page.locator('[data-testid="saved-reply-card"]')).toHaveCount(expectedCount);
+  }
+}
+
+async function expectClipboardContent(page: Page) {
+  await waitForToast(page, "Saved reply copied to clipboard");
+}
 
 test.describe("Saved Replies Management", () => {
-  let savedRepliesPage: SavedRepliesPage;
-
   test.beforeEach(async ({ page }) => {
-    savedRepliesPage = new SavedRepliesPage(page);
-
     // Add delay to reduce database contention between tests
     await page.waitForTimeout(1000);
 
     // Navigate with retry logic for improved reliability
     try {
-      await savedRepliesPage.navigateToSavedReplies();
+      await navigateToSavedReplies(page);
       await page.waitForLoadState("networkidle", { timeout: 10000 });
     } catch (error) {
       console.log("Initial navigation failed, retrying...", error);
-      await savedRepliesPage.navigateToSavedReplies();
+      await navigateToSavedReplies(page);
       await page.waitForLoadState("domcontentloaded", { timeout: 10000 });
     }
   });
 
   test("should display saved replies page with proper title", async ({ page }) => {
-    await savedRepliesPage.expectPageVisible();
+    await expectPageVisible(page);
     await expect(page).toHaveTitle("Helper");
     await expect(page).toHaveURL(/.*saved-replies.*/);
 
@@ -36,12 +304,12 @@ test.describe("Saved Replies Management", () => {
 
   test("should show empty state when no saved replies exist", async ({ page }) => {
     // If there are existing replies, this test might not be applicable
-    const replyCount = await savedRepliesPage.getSavedReplyCount();
+    const replyCount = await getSavedReplyCount(page);
 
     if (replyCount === 0) {
-      await savedRepliesPage.expectEmptyState();
-      await expect(savedRepliesPage.searchInput).not.toBeVisible();
-      await expect(savedRepliesPage.newReplyButton).not.toBeVisible();
+      await expectEmptyState(page);
+      await expect(page.locator('input[placeholder="Search saved replies..."]').first()).not.toBeVisible();
+      await expect(page.locator('button:has-text("New saved reply")')).not.toBeVisible();
 
       await takeDebugScreenshot(page, "saved-replies-empty-state.png");
     } else {
@@ -51,24 +319,24 @@ test.describe("Saved Replies Management", () => {
   });
 
   test("should create a new saved reply from empty state", async ({ page }) => {
-    const initialCount = await savedRepliesPage.getSavedReplyCount();
+    const initialCount = await getSavedReplyCount(page);
 
     if (initialCount === 0) {
       const testName = `Welcome Message ${generateRandomString()}`;
       const testContent = `Hello! Welcome to our support. How can I help you today? - ${generateRandomString()}`;
 
-      await savedRepliesPage.createSavedReply(testName, testContent);
+      await createSavedReply(page, testName, testContent);
 
       // Verify the new reply appears
-      await savedRepliesPage.expectSavedRepliesVisible();
-      const newCount = await savedRepliesPage.getSavedReplyCount();
+      await expectSavedRepliesVisible(page);
+      const newCount = await getSavedReplyCount(page);
       expect(newCount).toBeGreaterThan(0);
 
       // Verify our specific reply was created by searching for it
       let foundReply = false;
       for (let i = 0; i < newCount; i++) {
         try {
-          const title = await savedRepliesPage.getSavedReplyTitle(i);
+          const title = await getSavedReplyTitle(page, i);
           if (title.includes(testName)) {
             foundReply = true;
             break;
@@ -86,63 +354,51 @@ test.describe("Saved Replies Management", () => {
   });
 
   test("should create a new saved reply when replies exist", async ({ page }) => {
-    const initialCount = await savedRepliesPage.getSavedReplyCount();
+    const initialCount = await getSavedReplyCount(page);
+    const createOneButton = page.locator('button:has-text("Create one")');
 
     // Ensure we can see the UI elements first
-    if (initialCount > 0 || (await savedRepliesPage.createOneButton.isVisible())) {
+    if (initialCount > 0 || (await createOneButton.isVisible())) {
       const testName = `Test Reply ${generateRandomString()}`;
       const testContent = `This is a test reply content - ${generateRandomString()}`;
 
-      await savedRepliesPage.createSavedReply(testName, testContent);
+      await createSavedReply(page, testName, testContent);
 
       // Wait for UI to update
       await page.waitForTimeout(1000);
 
-      // No longer rely on overall count – instead verify our specific reply exists
-      const newCount = await savedRepliesPage.getSavedReplyCount();
-
-      let foundReply = false;
-      for (let i = 0; i < newCount; i++) {
-        try {
-          const title = await savedRepliesPage.getSavedReplyTitle(i);
-          if (title.includes(testName)) {
-            foundReply = true;
-            break;
-          }
-        } catch {
-          // ignore and keep checking
-        }
-      }
-      expect(foundReply).toBe(true);
+      // Use the title-based helper function to verify the reply exists
+      const createdReply = await findSavedReplyByTitle(page, testName);
+      await expect(createdReply).toBeVisible({ timeout: 5000 });
 
       await takeDebugScreenshot(page, "saved-reply-created.png");
     }
   });
 
   test("should show search and new reply button when replies exist", async ({ page }) => {
-    const replyCount = await savedRepliesPage.getSavedReplyCount();
+    const replyCount = await getSavedReplyCount(page);
 
     if (replyCount > 0) {
-      await savedRepliesPage.expectSearchVisible();
-      await savedRepliesPage.expectNewReplyButtonVisible();
+      await expectSearchVisible(page);
+      await expectNewReplyButtonVisible(page);
 
       await takeDebugScreenshot(page, "saved-replies-with-search.png");
     }
   });
 
   test("should search saved replies with debounced input", async ({ page }) => {
-    const replyCount = await savedRepliesPage.getSavedReplyCount();
+    const replyCount = await getSavedReplyCount(page);
 
     if (replyCount > 0) {
       // Test search functionality
-      await savedRepliesPage.searchSavedReplies("nonexistent-term-12345");
-      await savedRepliesPage.expectSearchResults(0);
+      await searchSavedReplies(page, "nonexistent-term-12345");
+      await expectSearchResults(page, 0);
 
       // Clear search
-      await savedRepliesPage.clearSearch();
+      await clearSearch(page);
 
       // Should show all replies again
-      const allRepliesCount = await savedRepliesPage.getSavedReplyCount();
+      const allRepliesCount = await getSavedReplyCount(page);
       expect(allRepliesCount).toBeGreaterThan(0);
 
       await takeDebugScreenshot(page, "saved-replies-search-test.png");
@@ -150,26 +406,27 @@ test.describe("Saved Replies Management", () => {
   });
 
   test("should maintain search input focus during typing", async ({ page }) => {
-    const replyCount = await savedRepliesPage.getSavedReplyCount();
+    const replyCount = await getSavedReplyCount(page);
 
     if (replyCount > 0) {
+      const searchInput = page.locator('input[placeholder="Search saved replies..."]').first();
       // Focus on search input and wait for it to be properly focused
-      await savedRepliesPage.searchInput.focus();
-      await expect(savedRepliesPage.searchInput).toBeFocused();
+      await searchInput.focus();
+      await expect(searchInput).toBeFocused();
 
       // Type more slowly to avoid overwhelming React re-renders
-      await savedRepliesPage.searchInput.type("test", { delay: 100 });
+      await searchInput.type("test", { delay: 100 });
 
       // Wait for any debounced operations to complete
       await page.waitForTimeout(400);
 
       // Verify focus is maintained - use more reliable check
-      await expect(savedRepliesPage.searchInput).toBeFocused();
+      await expect(searchInput).toBeFocused();
 
       // Also verify the value was typed correctly
-      await expect(savedRepliesPage.searchInput).toHaveValue("test");
+      await expect(searchInput).toHaveValue("test");
 
-      await savedRepliesPage.clearSearch();
+      await clearSearch(page);
     }
   });
 
@@ -179,57 +436,42 @@ test.describe("Saved Replies Management", () => {
     const updatedTitle = `Updated ${generateRandomString()}`;
     const updatedContent = `Updated content - ${generateRandomString()}`;
 
-    // Create a reply specifically for this edit test
-    await savedRepliesPage.createSavedReply(testName, testContent);
+    await createSavedReply(page, testName, testContent);
+
+    await page.waitForTimeout(2000);
+    await expectSavedRepliesVisible(page);
+
+    await editSavedReplyByTitle(page, testName, updatedTitle, updatedContent);
+
     await page.waitForTimeout(1000);
 
-    const replyCount = await savedRepliesPage.getSavedReplyCount();
-    let targetIndex = -1;
-    for (let i = 0; i < replyCount; i++) {
-      try {
-        const title = await savedRepliesPage.getSavedReplyTitle(i);
-        if (title.includes(testName)) {
-          targetIndex = i;
-          break;
-        }
-      } catch {
-        // continue searching
-      }
-    }
-    expect(targetIndex).toBeGreaterThanOrEqual(0);
+    const updatedReply = await findSavedReplyByTitle(page, updatedTitle);
+    await expect(updatedReply).toBeVisible({ timeout: 5000 });
 
-    await savedRepliesPage.editSavedReply(targetIndex, updatedTitle, updatedContent);
-
-    const updatedTitleActual = await savedRepliesPage.getSavedReplyTitle(targetIndex);
-    expect(updatedTitleActual).toContain(updatedTitle);
+    // Ensure the original title no longer exists
+    const originalReply = await findSavedReplyByTitle(page, testName);
+    await expect(originalReply).not.toBeVisible();
 
     await takeDebugScreenshot(page, "saved-reply-edited.png");
   });
 
   test("should copy saved reply to clipboard", async ({ page }) => {
-    const testName = `Copy Target ${generateRandomString()}`;
-    const testContent = `Copy content ${generateRandomString()}`;
+    const replyCount = await getSavedReplyCount(page);
+    let testName: string;
 
-    await savedRepliesPage.createSavedReply(testName, testContent);
-    await page.waitForTimeout(1000);
-
-    const replyCount = await savedRepliesPage.getSavedReplyCount();
-    let targetIndex = -1;
-    for (let i = 0; i < replyCount; i++) {
-      try {
-        const title = await savedRepliesPage.getSavedReplyTitle(i);
-        if (title.includes(testName)) {
-          targetIndex = i;
-          break;
-        }
-      } catch {
-        // continue searching
-      }
+    if (replyCount === 0) {
+      // If no replies exist, create one first
+      testName = `Copy Target ${generateRandomString()}`;
+      const testContent = `Copy content ${generateRandomString()}`;
+      await createSavedReply(page, testName, testContent);
+      await page.waitForTimeout(1000);
+    } else {
+      // Use the first existing reply's title
+      testName = await getSavedReplyTitle(page, 0);
     }
-    expect(targetIndex).toBeGreaterThanOrEqual(0);
 
-    await savedRepliesPage.clickCopyButton(targetIndex);
-    await savedRepliesPage.expectClipboardContent();
+    await copySavedReplyByTitle(page, testName);
+    await expectClipboardContent(page);
 
     await takeDebugScreenshot(page, "saved-reply-copied.png");
   });
@@ -240,12 +482,12 @@ test.describe("Saved Replies Management", () => {
     const testName = `Delete Me ${uniqueId}`;
     const testContent = `This reply will be deleted - ${uniqueId}`;
 
-    await savedRepliesPage.createSavedReply(testName, testContent);
+    await createSavedReply(page, testName, testContent);
 
     // Wait for creation to complete
     await page.waitForTimeout(1000);
 
-    const initialCount = await savedRepliesPage.getSavedReplyCount();
+    const initialCount = await getSavedReplyCount(page);
     expect(initialCount).toBeGreaterThan(0);
 
     // Find and delete the reply we just created
@@ -254,7 +496,7 @@ test.describe("Saved Replies Management", () => {
 
     for (let i = 0; i < initialCount; i++) {
       try {
-        const title = await savedRepliesPage.getSavedReplyTitle(i);
+        const title = await getSavedReplyTitle(page, i);
         if (title.includes(uniqueId)) {
           replyIndex = i;
           foundTargetReply = true;
@@ -266,18 +508,18 @@ test.describe("Saved Replies Management", () => {
     }
 
     if (foundTargetReply && replyIndex >= 0) {
-      await savedRepliesPage.deleteSavedReply(replyIndex);
+      await deleteSavedReply(page, replyIndex);
 
       // Wait for deletion to complete
       await page.waitForTimeout(1000);
 
       // Verify the specific reply was deleted by checking it's no longer findable
-      const newCount = await savedRepliesPage.getSavedReplyCount();
+      const newCount = await getSavedReplyCount(page);
       let stillFound = false;
 
       for (let i = 0; i < newCount; i++) {
         try {
-          const title = await savedRepliesPage.getSavedReplyTitle(i);
+          const title = await getSavedReplyTitle(page, i);
           if (title.includes(uniqueId)) {
             stillFound = true;
             break;
@@ -297,88 +539,80 @@ test.describe("Saved Replies Management", () => {
 
   test("should handle form validation", async ({ page }) => {
     // Open create dialog
-    await savedRepliesPage.openCreateDialog();
+    await openCreateDialog(page);
 
     // Try to save without filling required fields
-    await savedRepliesPage.clickSaveButton();
+    await clickSaveButton(page);
 
     // Should show validation errors or prevent submission
     // Dialog should remain open
-    await savedRepliesPage.expectCreateDialogVisible();
+    await expectCreateDialogVisible(page);
 
     // Cancel the dialog
-    await savedRepliesPage.clickCancelButton();
+    await clickCancelButton(page);
 
     await takeDebugScreenshot(page, "saved-reply-validation.png");
   });
 
   test("should handle loading states properly", async ({ page }) => {
-    // Create base page instance for improved navigation
-    const basePage = new (class extends BasePage {})(page);
-
     // Navigate to page and check for loading states
-    await basePage.goto("/saved-replies");
+    await page.goto("/saved-replies");
 
     // Loading skeletons might be visible briefly
     // This test ensures the page loads correctly
     await page.waitForLoadState("networkidle");
-    await savedRepliesPage.expectPageVisible();
+    await expectPageVisible(page);
 
     // Ensure no loading skeletons remain visible
-    await expect(savedRepliesPage.loadingSkeletons.first()).not.toBeVisible();
+    await expect(page.locator(".animate-default-pulse").first()).not.toBeVisible();
 
     await takeDebugScreenshot(page, "saved-replies-loaded.png");
   });
 
   test("should maintain authentication state", async ({ page }) => {
-    // Create base page instance for improved navigation
-    const basePage = new (class extends BasePage {})(page);
-
     // First verify we're authenticated and on the correct page
-    await savedRepliesPage.expectPageVisible();
+    await expectPageVisible(page);
     const currentUrl = page.url();
     expect(currentUrl).toMatch(/.*saved-replies.*/);
 
     // Test navigation away and back to verify auth persists
-    await basePage.goto("/mine");
+    await page.goto("/mine");
     await page.waitForLoadState("networkidle");
 
     // Navigate back to saved replies to test auth persistence
-    await basePage.goto("/saved-replies");
+    await page.goto("/saved-replies");
     await page.waitForLoadState("networkidle");
 
     // Should remain authenticated and stay on the saved replies page
     await expect(page).toHaveURL(/.*saved-replies.*/);
-    await savedRepliesPage.expectPageVisible();
+    await expectPageVisible(page);
 
     await takeDebugScreenshot(page, "saved-replies-auth-persisted.png");
   });
 
   test("should navigate between conversations and saved replies", async ({ page }) => {
-    // Create base page instance for robust navigation
-    const basePage = new (class extends BasePage {})(page);
-
     // Test direct navigation to conversations page
-    await basePage.goto("/mine");
+    await page.goto("/mine");
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveURL(/.*mine.*/);
 
     // Navigate back to saved replies
-    await basePage.goto("/saved-replies");
+    await page.goto("/saved-replies");
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveURL(/.*saved-replies.*/);
-    await savedRepliesPage.expectPageVisible();
+    await expectPageVisible(page);
 
     await takeDebugScreenshot(page, "saved-replies-navigation.png");
   });
 
   test("should support keyboard navigation", async ({ page }) => {
-    const replyCount = await savedRepliesPage.getSavedReplyCount();
+    const replyCount = await getSavedReplyCount(page);
 
     // Focus on search input if it exists (when there are replies)
     if (replyCount > 0) {
-      await savedRepliesPage.searchInput.focus();
-      await expect(savedRepliesPage.searchInput).toBeFocused();
+      const searchInput = page.locator('input[placeholder="Search saved replies..."]').first();
+      await searchInput.focus();
+      await expect(searchInput).toBeFocused();
     }
 
     // Test keyboard navigation to the appropriate button
@@ -386,20 +620,20 @@ test.describe("Saved Replies Management", () => {
 
     if (replyCount === 0) {
       // When no replies exist, use the "Create one" button
-      await savedRepliesPage.clickCreateOneButton();
+      await clickCreateOneButton(page);
     } else {
       // When replies exist, use the floating action button
-      await savedRepliesPage.clickFloatingAddButton();
+      await clickFloatingAddButton(page);
     }
 
-    await savedRepliesPage.expectCreateDialogVisible();
+    await expectCreateDialogVisible(page);
 
     // Escape should close dialog
     await page.keyboard.press("Escape");
     await page.waitForTimeout(300);
 
     // Verify dialog is closed
-    await expect(savedRepliesPage.createDialog).not.toBeVisible();
+    await expect(page.locator('[role="dialog"]:has-text("New saved reply")')).not.toBeVisible();
 
     await takeDebugScreenshot(page, "saved-replies-keyboard-nav.png");
   });
@@ -410,10 +644,10 @@ test.describe("Saved Replies Management", () => {
     const testName = `Long Content Test ${generateRandomString()}`;
 
     try {
-      await savedRepliesPage.createSavedReply(testName, longContent);
+      await createSavedReply(page, testName, longContent);
 
       // Should either succeed or show appropriate validation
-      const replyCount = await savedRepliesPage.getSavedReplyCount();
+      const replyCount = await getSavedReplyCount(page);
       expect(replyCount).toBeGreaterThan(0);
     } catch (error) {
       // Error handling is acceptable for edge cases
@@ -429,8 +663,7 @@ test.describe("Saved Replies Stress Testing", () => {
     // This test creates multiple replies to test performance
     // Skipped by default to avoid cluttering test data
 
-    const savedRepliesPage = new SavedRepliesPage(page);
-    await savedRepliesPage.navigateToSavedReplies();
+    await navigateToSavedReplies(page);
 
     const testData = Array.from({ length: 10 }, (_, i) => ({
       name: `Bulk Test Reply ${i + 1} ${generateRandomString()}`,
@@ -438,16 +671,16 @@ test.describe("Saved Replies Stress Testing", () => {
     }));
 
     for (const data of testData) {
-      await savedRepliesPage.createSavedReply(data.name, data.content);
+      await createSavedReply(page, data.name, data.content);
       await debugWait(page, 200); // Small delay between creations
     }
 
-    const finalCount = await savedRepliesPage.getSavedReplyCount();
+    const finalCount = await getSavedReplyCount(page);
     expect(finalCount).toBeGreaterThanOrEqual(10);
 
     // Test search with many replies
-    await savedRepliesPage.searchSavedReplies("Bulk Test");
-    const searchResults = await savedRepliesPage.getSavedReplyCount();
+    await searchSavedReplies(page, "Bulk Test");
+    const searchResults = await getSavedReplyCount(page);
     expect(searchResults).toBeGreaterThanOrEqual(10);
 
     await takeDebugScreenshot(page, "saved-replies-bulk-test.png");
@@ -455,25 +688,22 @@ test.describe("Saved Replies Stress Testing", () => {
 });
 
 test.describe("Saved Replies Rich Text Editor", () => {
-  let savedRepliesPage: SavedRepliesPage;
-
   test.beforeEach(async ({ page }) => {
-    savedRepliesPage = new SavedRepliesPage(page);
     await page.waitForTimeout(1000);
 
     try {
-      await savedRepliesPage.navigateToSavedReplies();
+      await navigateToSavedReplies(page);
       await page.waitForLoadState("networkidle", { timeout: 10000 });
     } catch (error) {
       console.log("Initial navigation failed, retrying...", error);
-      await savedRepliesPage.navigateToSavedReplies();
+      await navigateToSavedReplies(page);
       await page.waitForLoadState("domcontentloaded", { timeout: 10000 });
     }
   });
 
   test("should display TipTap editor in create dialog", async ({ page }) => {
     // Open create dialog
-    await savedRepliesPage.openCreateDialog();
+    await openCreateDialog(page);
 
     // Check that the TipTap editor is present (look for editor elements)
     const editor = page.locator('[role="textbox"][contenteditable="true"]');
@@ -490,7 +720,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     const toolbar = page.locator('button[aria-label="Clear formatting"]');
     await expect(toolbar).toBeVisible();
 
-    await savedRepliesPage.clickCancelButton();
+    await clickCancelButton(page);
     await takeDebugScreenshot(page, "saved-reply-tiptap-editor.png");
   });
 
@@ -499,7 +729,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     const testContent = "This text should be bold";
 
     // Open create dialog
-    await savedRepliesPage.openCreateDialog();
+    await openCreateDialog(page);
 
     // Fill in title
     await page.fill('input[placeholder*="Welcome Message"]', testName);
@@ -518,11 +748,11 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await page.click('button[aria-label="Bold"]');
 
     // Save the reply
-    await savedRepliesPage.clickSaveButton();
+    await clickSaveButton(page);
     await page.waitForTimeout(1000);
 
     // Verify the reply was created
-    await savedRepliesPage.expectSavedRepliesVisible();
+    await expectSavedRepliesVisible(page);
     await takeDebugScreenshot(page, "saved-reply-bold-text.png");
   });
 
@@ -531,7 +761,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     const testContent = "This text should be italic";
 
     // Open create dialog
-    await savedRepliesPage.openCreateDialog();
+    await openCreateDialog(page);
 
     // Fill in title
     await page.fill('input[placeholder*="Welcome Message"]', testName);
@@ -550,7 +780,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await page.click('button[aria-label="Italic"]');
 
     // Save the reply
-    await savedRepliesPage.clickSaveButton();
+    await clickSaveButton(page);
     await page.waitForTimeout(1000);
 
     await takeDebugScreenshot(page, "saved-reply-italic-text.png");
@@ -560,7 +790,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     const testName = `List Test ${generateRandomString()}`;
 
     // Open create dialog
-    await savedRepliesPage.openCreateDialog();
+    await openCreateDialog(page);
 
     // Fill in title
     await page.fill('input[placeholder*="Welcome Message"]', testName);
@@ -586,7 +816,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await editor.type("Third step");
 
     // Save the reply
-    await savedRepliesPage.clickSaveButton();
+    await clickSaveButton(page);
     await page.waitForTimeout(1000);
 
     await takeDebugScreenshot(page, "saved-reply-bullet-list.png");
@@ -597,7 +827,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     const testContent = "Visit our website";
 
     // Open create dialog
-    await savedRepliesPage.openCreateDialog();
+    await openCreateDialog(page);
 
     // Fill in title
     await page.fill('input[placeholder*="Welcome Message"]', testName);
@@ -624,7 +854,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await page.keyboard.press("Enter");
 
     // Save the reply
-    await savedRepliesPage.clickSaveButton();
+    await clickSaveButton(page);
     await page.waitForTimeout(1000);
 
     await takeDebugScreenshot(page, "saved-reply-with-link.png");
@@ -636,7 +866,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     const updatedContent = "Updated italic text";
 
     // First create a saved reply with bold text
-    await savedRepliesPage.openCreateDialog();
+    await openCreateDialog(page);
 
     await page.fill('input[placeholder*="Welcome Message"]', testName);
 
@@ -652,12 +882,12 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await page.keyboard.press("Control+a");
     await page.click('button[aria-label="Bold"]');
 
-    await savedRepliesPage.clickSaveButton();
+    await clickSaveButton(page);
     await page.waitForTimeout(1000);
 
     // Now edit the saved reply
-    await savedRepliesPage.savedReplyCards.first().click();
-    await savedRepliesPage.expectEditDialogVisible();
+    await page.locator('[data-testid="saved-reply-card"]').first().click();
+    await expectEditDialogVisible(page);
 
     // Clear and add new content
     await editor.click();
@@ -671,7 +901,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await page.keyboard.press("Control+a");
     await page.click('button[aria-label="Italic"]');
 
-    await savedRepliesPage.clickSaveButton();
+    await clickSaveButton(page);
     await page.waitForTimeout(1000);
 
     await takeDebugScreenshot(page, "edited-formatted-reply.png");
@@ -682,7 +912,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     const testContent = "This should be bold in conversation too";
 
     // Create a saved reply with formatting
-    await savedRepliesPage.openCreateDialog();
+    await openCreateDialog(page);
 
     await page.fill('input[placeholder*="Welcome Message"]', testName);
 
@@ -698,35 +928,19 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await page.keyboard.press("Control+a");
     await page.click('button[aria-label="Bold"]');
 
-    await savedRepliesPage.clickSaveButton();
+    await clickSaveButton(page);
     await page.waitForTimeout(1000);
 
     // Verify the saved reply was created with formatted content
-    await savedRepliesPage.expectSavedRepliesVisible();
+    await expectSavedRepliesVisible(page);
 
-    // Find the specific saved reply by name instead of assuming its position
-    const replyCount = await savedRepliesPage.getSavedReplyCount();
-    let foundReply = false;
-    let replyIndex = -1;
+    // Verify the reply exists by finding it directly
+    const createdReply = await findSavedReplyByTitle(page, testName);
+    await expect(createdReply).toBeVisible({ timeout: 5000 });
 
-    for (let i = 0; i < replyCount; i++) {
-      try {
-        const title = await savedRepliesPage.getSavedReplyTitle(i);
-        if (title === testName) {
-          foundReply = true;
-          replyIndex = i;
-          break;
-        }
-      } catch (error) {
-        // Continue checking other replies
-      }
-    }
-
-    expect(foundReply).toBe(true);
-
-    // Test copying the formatted content
-    await savedRepliesPage.clickCopyButton(replyIndex);
-    await page.waitForTimeout(500);
+    // Test copying the formatted content using the title-based approach
+    await copySavedReplyByTitle(page, testName);
+    await expectClipboardContent(page);
 
     await takeDebugScreenshot(page, "formatted-reply-created.png");
   });
@@ -735,7 +949,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     const testName = `Mixed Format Test ${generateRandomString()}`;
 
     // Open create dialog
-    await savedRepliesPage.openCreateDialog();
+    await openCreateDialog(page);
 
     await page.fill('input[placeholder*="Welcome Message"]', testName);
 
@@ -770,14 +984,14 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await page.keyboard.up("Shift");
     await page.click('button[aria-label="Italic"]');
 
-    await savedRepliesPage.clickSaveButton();
+    await clickSaveButton(page);
     await page.waitForTimeout(1000);
 
     await takeDebugScreenshot(page, "mixed-formatting-reply.png");
   });
 
   test("should show toolbar controls in editor", async ({ page }) => {
-    await savedRepliesPage.openCreateDialog();
+    await openCreateDialog(page);
 
     const editor = page.locator('[role="textbox"][contenteditable="true"]');
     await editor.click();
@@ -795,7 +1009,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await expect(page.locator('button[aria-label="Link"]')).toBeVisible();
     await expect(page.locator('button[aria-label="Clear formatting"]')).toBeVisible();
 
-    await savedRepliesPage.clickCancelButton();
+    await clickCancelButton(page);
     await takeDebugScreenshot(page, "toolbar-controls.png");
   });
 });

@@ -11,7 +11,7 @@ export default function LoadingMessage({ color }: Props) {
     <div className={cx("flex flex-col gap-2 mr-9 items-start")}>
       <div className={cx("rounded-lg max-w-full border border-black bg-background text-foreground")}>
         <div className="relative p-4">
-          <div className="relative h-4 w-20 overflow-hidden rounded-lg">
+          <div className="relative h-4 w-20 overflow-hidden rounded-lg" data-testid="loading-spinner">
             <div className={`${loadingClasses} ball-1`}></div>
             <div className={`${loadingClasses} ball-2`}></div>
             <div className={`${loadingClasses} ball-3`}></div>

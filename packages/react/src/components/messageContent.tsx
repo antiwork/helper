@@ -15,7 +15,7 @@ const rehypeAddWbrAfterSlash = () => {
           for (let i = 0; i < parts.length; i++) {
             if (i > 0) {
               newChildren.push({ type: "text", value: "/" });
-              newChildren.push({ type: "element", tagName: "wbr", children: [] });
+              newChildren.push({ type: "element", tagName: "wbr", properties: {}, children: [] });
             }
             if (parts[i]) {
               newChildren.push({ type: "text", value: parts[i] });

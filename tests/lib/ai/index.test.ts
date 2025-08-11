@@ -21,7 +21,7 @@ const mockCompletionResponse = {
   response: {
     id: "123",
     timestamp: new Date(),
-    modelId: core.O4_MINI_MODEL,
+    modelId: core.MINI_MODEL,
     messages: [],
   },
   logprobs: [],
@@ -58,7 +58,7 @@ describe("runAIQuery", () => {
     expect(core.generateCompletion).toHaveBeenCalledWith({
       functionId: undefined,
       messages,
-      model: core.GPT_4_1_MODEL,
+      model: core.CHAT_MODEL,
       temperature: 0,
       maxTokens: 500,
       maxSteps: undefined,

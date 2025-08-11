@@ -1,10 +1,11 @@
 import { and, eq, inArray, isNull, not } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
+import { conversationEvents } from "@/db/schema";
 import { conversationMessages } from "@/db/schema/conversationMessages";
 import { conversations } from "@/db/schema/conversations";
 import { runAIObjectQuery } from "@/lib/ai";
-import { O4_MINI_MODEL } from "@/lib/ai/core";
+import { MINI_MODEL } from "@/lib/ai/core";
 import { getMailbox } from "@/lib/data/mailbox";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
@@ -24,6 +25,14 @@ export const mergeSimilarConversations = async ({ messageId }: { messageId: numb
             id: true,
             role: true,
             cleanedUpText: true,
+            createdAt: true,
+          },
+          orderBy: (messages, { asc }) => [asc(messages.createdAt)],
+        },
+        events: {
+          where: eq(conversationEvents.type, "request_human_support"),
+          columns: {
+            createdAt: true,
           },
         },
       },
@@ -34,8 +43,18 @@ export const mergeSimilarConversations = async ({ messageId }: { messageId: numb
   if (conversation.mergedIntoId) return { message: "Skipped: conversation is already merged" };
 
   const userMessageCount = conversation.messages.filter((m) => m.role === "user").length;
-  if ((conversation.isPrompt && userMessageCount !== 2) || (!conversation.isPrompt && userMessageCount !== 1)) {
-    return { message: "Skipped: not the first message" };
+  const lastMessage = conversation.messages[conversation.messages.length - 1];
+  const escalatedAfterLastMessage =
+    !!lastMessage && conversation.events.some((e) => e.createdAt > lastMessage.createdAt);
+
+  if (
+    !(
+      (conversation.isPrompt && userMessageCount === 2) ||
+      (!conversation.isPrompt && userMessageCount === 1) ||
+      escalatedAfterLastMessage
+    )
+  ) {
+    return { message: "Skipped: not the first message and not immediately after escalation" };
   }
 
   const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
@@ -125,7 +144,7 @@ Should the current conversation be merged into any of the others? If so, which o
       mergeIntoId: z.number().nullable(),
       reason: z.string(),
     }),
-    model: O4_MINI_MODEL,
+    model: MINI_MODEL,
     system: systemMessage,
     temperature: 0.0,
     maxTokens: 500,

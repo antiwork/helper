@@ -222,7 +222,7 @@ export default function Conversation({
                   type: "tool-invocation",
                   toolInvocation: {
                     toolName: "guide_user",
-                    toolCallId: `guide_session_${guideMessage.uuid}`,
+                    toolCallId: `g_${guideMessage.uuid}`,
                     state: "call",
                     args: {
                       pendingResume: true,

@@ -164,7 +164,7 @@ export const ConversationFilters = ({
         onChange={(issueGroupId) => onUpdateFilter({ issueGroupId })}
       />
       {activeFilterCount > 0 && (
-        <Button data-testid="clear-filters-button" variant="ghost" onClick={onClearFilters}>
+        <Button aria-label="Clear Filters" variant="ghost" onClick={onClearFilters}>
           Clear filters
         </Button>
       )}

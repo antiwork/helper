@@ -6,7 +6,7 @@ export async function waitForSettingsSaved(page: Page) {
   const error = page.getByText("Error", { exact: true });
 
   try {
-    await saving.waitFor({ state: "visible" });
+    await saving.waitFor({ state: "visible", timeout: 5000 });
     await saved.waitFor({ state: "visible" });
   } catch (e) {
     if (await error.isVisible().catch(() => false)) {
