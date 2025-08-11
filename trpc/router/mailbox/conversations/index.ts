@@ -358,5 +358,4 @@ export const conversationsRouter = {
 
     return { following: !!follower };
   }),
-
 } satisfies TRPCRouterRecord;
