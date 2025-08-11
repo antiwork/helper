@@ -9,6 +9,7 @@ import { conversationMessages, conversations, gmailSupportEmails, mailboxes, pla
 import { conversationEvents } from "@/db/schema/conversationEvents";
 import { triggerEvent } from "@/jobs/trigger";
 import { runAIQuery } from "@/lib/ai";
+import { MINI_MODEL } from "@/lib/ai/core";
 import { extractAddresses } from "@/lib/emails";
 import { conversationChannelId, conversationsListChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
@@ -384,12 +385,13 @@ export const generateConversationSubject = async (
       ? messages[0].content
       : (
           await runAIQuery({
+            model: MINI_MODEL,
             messages: messages.filter((m) => m.role === "user").map((m) => ({ role: "user", content: m.content })),
             mailbox,
             queryType: "response_generator",
             system:
               "Generate a brief, clear subject line (max 50 chars) that summarizes the main point of these messages. Respond with only the subject line, no other text.",
-            maxTokens: 50,
+            maxTokens: 500,
             temperature: 0,
             functionId: "generate-conversation-subject",
           })

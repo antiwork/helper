@@ -5,7 +5,7 @@ import { conversationMessages, conversations, gmailSupportEmails, toolApis, tool
 
 const BATCH_SIZE = 1000;
 
-const migrateEncryptedToPlaintext = async () => {
+export const migrateEncryptedToPlaintext = async () => {
   console.log("Starting migration of encrypted data to plaintext columns...");
 
   try {
@@ -24,7 +24,7 @@ const migrateEncryptedToPlaintext = async () => {
 
 const migrateConversationMessages = async () => {
   console.log("🔄 Migrating conversation messages...");
-  let lastId = 3085616;
+  let lastId = 0;
   let processed = 0;
   let errors = 0;
   let isFirst = true;
@@ -96,28 +96,28 @@ const migrateConversations = async () => {
         and(gt(conversations.id, lastId), isNotNull(conversations.subject), isNull(conversations.subjectPlaintext)),
       )
       .orderBy(conversations.id)
-      .limit(BATCH_SIZE);
+      .limit(100);
 
     if (batch.length === 0) break;
 
-    // Process batch
-    for (const conversation of batch) {
-      try {
-        await db
-          .update(conversations)
-          .set({
-            subjectPlaintext: conversation.subject,
-          })
-          .where(eq(conversations.id, conversation.id));
-      } catch (error) {
-        console.error(`Failed to migrate conversation ${conversation.id}:`, error);
-        errors++;
-      }
+    try {
+      const subjectConditions = batch.reduce((acc, c) => sql`${acc} WHEN id = ${c.id} THEN ${c.subject}`, sql.empty());
+
+      await db.execute(sql`
+        UPDATE conversations_conversation
+        SET
+          subject = CASE ${subjectConditions} END
+        WHERE id IN ${batch.map((c) => c.id)}
+      `);
+
+      processed += batch.length;
+    } catch (error) {
+      console.error(`Failed to migrate batch starting at ID ${batch[0]?.id}:`, error);
+      errors += batch.length;
     }
 
-    processed += batch.length;
     lastId = batch[batch.length - 1]?.id ?? lastId;
-    console.log(`  Migrated ${processed} conversations (${errors} errors)`);
+    console.log(`  Migrated ${processed} conversations up to ${lastId} (${errors} errors)`);
   }
 
   console.log(`✅ Conversations migration complete: ${processed} processed, ${errors} errors`);
