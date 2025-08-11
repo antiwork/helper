@@ -13,6 +13,7 @@ type Props = {
     newStatus?: string;
     oldAssignee?: string;
     newAssignee?: string;
+    note?: string;
   };
 };
 
@@ -72,6 +73,20 @@ const getEventContent = ({ eventType, triggeredByName, eventDetails }: Props) =>
         content: (
           <Text>
             <strong>{triggeredByName}</strong> added a note to this conversation.
+            {eventDetails.note && (
+              <div
+                style={{
+                  background: "#f5f5f5",
+                  padding: "10px",
+                  borderLeft: "3px solid #007bff",
+                  margin: "12px 0",
+                  fontSize: "0.875rem",
+                }}
+              >
+                {eventDetails.note.substring(0, 200)}
+                {eventDetails.note.length > 200 ? "..." : ""}
+              </div>
+            )}
           </Text>
         ),
       };
@@ -94,9 +109,7 @@ const FollowerNotificationEmail = (props: Props) => {
   return (
     <Html>
       <Head />
-      <Preview>
-        {title}
-      </Preview>
+      <Preview>{title}</Preview>
       <Body
         style={{
           fontFamily:

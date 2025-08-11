@@ -141,6 +141,7 @@ const events = {
         newStatus: z.string().optional(),
         oldAssignee: z.string().optional(),
         newAssignee: z.string().optional(),
+        note: z.string().optional(),
       }),
     }),
     jobs: ["sendFollowerNotification"],

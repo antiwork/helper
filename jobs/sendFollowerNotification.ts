@@ -17,6 +17,7 @@ type SendFollowerNotificationPayload = {
     newStatus?: string;
     oldAssignee?: string;
     newAssignee?: string;
+    note?: string;
   };
 };
 
@@ -94,7 +95,7 @@ export const sendFollowerNotification = async (payload: SendFollowerNotification
         return { success: false, reason: "No email address" };
       }
 
-      const eventDescription = 
+      const eventDescription =
         eventType === "new_message"
           ? "New message"
           : eventType === "status_change"
