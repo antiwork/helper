@@ -79,7 +79,6 @@ export const mailboxRouter = {
         .where(eq(mailboxes.id, ctx.mailbox.id));
     }),
 
-
   getSessionsPaginated: mailboxProcedure
     .input(
       z.object({
