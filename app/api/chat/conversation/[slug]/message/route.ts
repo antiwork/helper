@@ -78,14 +78,9 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
       { sleepSeconds: 5 * 60 },
     );
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error("Failed to enqueue auto-response", err);
   }
-
-  await triggerEvent(
-    "conversations/auto-response.create",
-    { messageId: userMessage.id, tools },
-    { sleepSeconds: 5 * 60 },
-  );
 
   return corsResponse({
     messageId: userMessage.id,

@@ -49,13 +49,25 @@ export const cacheClientTools = async (
   }
 
   await db.transaction(async (tx) => {
-    await clearCachedTools(platformCustomerId ?? customerEmail, tx);
+    await tx
+      .insert(cachedClientTools)
+      .values({
+        platformCustomerId,
+        customerEmail,
+        tools: serverTools,
+      })
+      .onConflictDoUpdate({
+        target: platformCustomerId
+          ? [cachedClientTools.platformCustomerId]
+          : customerEmail
+            ? [cachedClientTools.customerEmail]
+            : [], // fallback to empty array if neither
 
-    await tx.insert(cachedClientTools).values({
-      platformCustomerId,
-      customerEmail,
-      tools: serverTools,
-    });
+        set: {
+          tools: serverTools,
+          updatedAt: new Date(),
+        },
+      });
   });
 };
 
@@ -67,18 +79,20 @@ export const getCachedClientTools = async (
 ): Promise<Record<string, ToolRequestBody> | null> => {
   if (typeof customerEmailOrId === "number") {
     // Preferred: lookup by platformCustomerId
-    const record = await db.query.cachedClientTools.findFirst({
-      where: eq(cachedClientTools.platformCustomerId, customerEmailOrId),
+    const globalRecord = await db.query.cachedClientTools.findFirst({
+      where: and(isNull(cachedClientTools.customerEmail), isNull(cachedClientTools.platformCustomerId)),
     });
-    return record?.tools ?? null;
+
+    return globalRecord?.tools ?? null;
   }
 
   if (typeof customerEmailOrId === "string") {
     // Fallback: lookup by email
-    const record = await db.query.cachedClientTools.findFirst({
-      where: eq(cachedClientTools.customerEmail, customerEmailOrId),
+    const globalRecord = await db.query.cachedClientTools.findFirst({
+      where: and(isNull(cachedClientTools.customerEmail), isNull(cachedClientTools.platformCustomerId)),
     });
-    return record?.tools ?? null;
+
+    return globalRecord?.tools ?? null;
   }
 
   // Global fallback (anonymous)

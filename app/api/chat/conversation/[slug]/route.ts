@@ -7,6 +7,7 @@ import { conversationMessages, conversations, files } from "@/db/schema";
 import { updateConversation } from "@/lib/data/conversation";
 import { serializeMessageForWidget } from "@/lib/data/conversationMessage";
 
+
 export const OPTIONS = () => corsOptions("GET", "PATCH");
 
 export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }, request }, { session }) => {
