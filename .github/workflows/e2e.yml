@@ -17,6 +17,7 @@ jobs:
     env:
       CI: true
       OPENAI_API_KEY: test-openai-api-key
+      FIRECRAWL_API_KEY: test-firecrawl-api-key
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

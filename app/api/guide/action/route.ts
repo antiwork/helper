@@ -2,6 +2,7 @@ import { openai } from "@ai-sdk/openai";
 import { appendClientMessage, createDataStreamResponse, generateText, Message, streamText, tool } from "ai";
 import { z } from "zod";
 import { withWidgetAuth } from "@/app/api/widget/utils";
+import { CHAT_MODEL } from "@/lib/ai/core";
 import { getGuideSessionActions, getGuideSessionByUuid } from "@/lib/data/guide";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { assertDefined } from "../../../../components/utils/assert";
@@ -205,7 +206,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     }),
   };
 
-  const model = openai("gpt-4.1", { parallelToolCalls: false });
+  const model = openai(CHAT_MODEL, { reasoningEffort: "low", parallelToolCalls: false });
 
   return createDataStreamResponse({
     execute: (dataStream) => {

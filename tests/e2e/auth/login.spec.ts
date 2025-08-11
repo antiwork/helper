@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { debugWait, takeDebugScreenshot } from "../utils/test-helpers";
+import { takeDebugScreenshot } from "../utils/test-helpers";
 
 test.describe("Working Authentication", () => {
   test("should display login form", async ({ page }) => {
@@ -19,51 +19,14 @@ test.describe("Working Authentication", () => {
     await page.fill("#email", "support@gumroad.com");
     await page.click('button[type="submit"]');
 
-    const currentUrl = page.url();
+    await expect(page).toHaveURL(/.*mine.*/, { timeout: 40000 });
 
-    if (currentUrl.includes("/login")) {
-      const otpInputs = page.locator("[data-input-otp-slot]");
-      const otpCount = await otpInputs.count();
+    await page.waitForLoadState("networkidle");
 
-      if (otpCount > 0) {
-        try {
-          for (let i = 0; i < Math.min(6, otpCount); i++) {
-            await otpInputs.nth(i).fill("1");
-          }
-        } catch (error) {
-          // OTP filling failed, checking if we can proceed anyway
-        }
-      }
-    }
+    const searchInput = page.locator('input[placeholder="Search conversations"]');
+    await expect(searchInput).toBeVisible();
 
-    const finalUrl = page.url();
-
-    if (finalUrl.includes("mailboxes")) {
-      const searchInput = page.locator('input[placeholder="Search conversations"]');
-      await expect(searchInput).toBeVisible();
-
-      await takeDebugScreenshot(page, "successful-login.png");
-    } else {
-      // Still on login page - this is expected in a test environment without proper OTP setup
-      // Verify we at least got to the OTP step (shows the process is working)
-      const otpInputs = page.locator("[data-input-otp-slot]");
-      const hasOtpForm = (await otpInputs.count()) > 0;
-
-      if (hasOtpForm) {
-        await takeDebugScreenshot(page, "otp-form.png");
-      } else {
-        const errorMessage = page.locator(".text-destructive, .text-red-500");
-        const hasError = (await errorMessage.count()) > 0;
-
-        if (hasError) {
-          await errorMessage.first().textContent();
-        }
-
-        await takeDebugScreenshot(page, "login-status.png");
-      }
-
-      await expect(page.locator("#email")).toBeVisible();
-    }
+    await takeDebugScreenshot(page, "successful-login.png");
   });
 
   test("should handle different email addresses", async ({ page }) => {
@@ -73,8 +36,9 @@ test.describe("Working Authentication", () => {
     await page.fill("#email", "different@example.com");
     await page.click('button[type="submit"]');
 
-    const currentUrl = page.url();
+    await page.waitForLoadState("networkidle");
 
+    const currentUrl = page.url();
     expect(currentUrl).toContain(process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3020");
   });
 
@@ -102,9 +66,11 @@ test.describe("Working Authentication", () => {
     await page.fill("#email", "support@gumroad.com");
     await page.click('button[type="submit"]');
 
+    await page.waitForLoadState("networkidle");
+
     const mobileUrl = page.url();
 
-    if (mobileUrl.includes("mailboxes")) {
+    if (mobileUrl.includes("mine")) {
       const searchInput = page.locator('input[placeholder="Search conversations"]');
       await expect(searchInput).toBeVisible();
     } else {

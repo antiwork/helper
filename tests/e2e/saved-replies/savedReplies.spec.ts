@@ -249,7 +249,7 @@ async function openCreateDialog(page: Page) {
   await expectCreateDialogVisible(page);
 }
 
-async function createSavedReply(page: Page, name: string, content: string) {
+export async function createSavedReply(page: Page, name: string, content: string) {
   await openCreateDialog(page);
   await fillSavedReplyForm(page, name, content);
   await clickSaveButton(page);
