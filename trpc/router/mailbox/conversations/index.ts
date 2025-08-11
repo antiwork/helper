@@ -1,10 +1,10 @@
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { and, count, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, files, platformCustomers } from "@/db/schema";
+import { conversationMessages, conversations, files } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
 import { generateDraftResponse } from "@/lib/ai/chat";
@@ -283,39 +283,6 @@ export const conversationsRouter = {
         },
         {} as Record<string, number>,
       ),
-    };
-  }),
-  alertCounts: mailboxProcedure.query(async ({ ctx }) => {
-    const now = new Date();
-
-    const [conversation, assignedToMe, vipOverdue] = await Promise.all([
-      db.query.conversations.findFirst({
-        columns: { id: true },
-      }),
-      db.$count(conversations, and(eq(conversations.assignedToId, ctx.user.id), eq(conversations.status, "open"))),
-      ctx.mailbox.vipThreshold && ctx.mailbox.vipExpectedResponseHours
-        ? db
-            .select({ count: count() })
-            .from(conversations)
-            .leftJoin(platformCustomers, and(eq(conversations.emailFrom, platformCustomers.email)))
-            .where(
-              and(
-                eq(conversations.status, "open"),
-                lt(
-                  conversations.lastUserEmailCreatedAt,
-                  new Date(now.getTime() - ctx.mailbox.vipExpectedResponseHours * 60 * 60 * 1000),
-                ),
-                sql`${platformCustomers.value} >= ${ctx.mailbox.vipThreshold * 100}`,
-              ),
-            )
-        : [],
-    ]);
-
-    return {
-      hasConversations: !!conversation,
-      assignedToMe,
-      vipOverdue: vipOverdue[0]?.count ?? 0,
-      vipExpectedResponseHours: ctx.mailbox.vipExpectedResponseHours,
     };
   }),
 } satisfies TRPCRouterRecord;

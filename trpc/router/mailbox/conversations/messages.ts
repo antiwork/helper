@@ -1,14 +1,13 @@
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { and, eq, exists, gte, inArray, isNotNull, isNull, lte, not, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations } from "@/db/schema";
+import { conversationMessages } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { createConversationEmbedding } from "@/lib/ai/conversationEmbedding";
 import { createReply, sanitizeBody } from "@/lib/data/conversationMessage";
 import { findSimilarConversations } from "@/lib/data/retrieval";
-import { mailboxProcedure } from "../../mailbox/procedure";
 import { conversationProcedure } from "./procedure";
 
 export const messagesRouter = {
@@ -124,127 +123,5 @@ export const messagesRouter = {
         messageId: id,
         reason: reason || null,
       });
-    }),
-  reactionCount: mailboxProcedure
-    .input(
-      z.object({
-        startDate: z.date(),
-        endDate: z.date().optional(),
-        period: z.enum(["hourly", "daily", "monthly"]),
-      }),
-    )
-    .query(async ({ input }) => {
-      const groupByFormat = (() => {
-        switch (input.period) {
-          case "hourly":
-            return "YYYY-MM-DD HH24:00:00";
-          case "daily":
-            return "YYYY-MM-DD";
-          case "monthly":
-            return "YYYY-MM";
-        }
-      })();
-
-      const dateFilter = input.endDate
-        ? and(
-            gte(conversationMessages.reactionCreatedAt, input.startDate),
-            lte(conversationMessages.reactionCreatedAt, input.endDate),
-          )
-        : gte(conversationMessages.reactionCreatedAt, input.startDate);
-
-      const data = await db
-        .select({
-          timePeriod: sql<string>`to_char(${conversationMessages.reactionCreatedAt}, ${groupByFormat}) AS period`,
-          reactionType: conversationMessages.reactionType,
-          count: sql<number | string>`count(*)`,
-        })
-        .from(conversationMessages)
-        .innerJoin(conversations, eq(conversations.id, conversationMessages.conversationId))
-        .where(and(dateFilter, isNotNull(conversationMessages.reactionType), isNull(conversationMessages.deletedAt)))
-        .groupBy(sql`period`, conversationMessages.reactionType);
-
-      return data.map(({ count, ...rest }) => ({
-        ...rest,
-        count: Number(count),
-      }));
-    }),
-  statusByTypeCount: mailboxProcedure
-    .input(
-      z.object({
-        startDate: z.date(),
-        endDate: z.date().optional(),
-      }),
-    )
-    .query(async ({ input }) => {
-      const createdAtFilter = input.endDate
-        ? and(gte(conversations.createdAt, input.startDate), lte(conversations.createdAt, input.endDate))
-        : gte(conversations.createdAt, input.startDate);
-
-      const results = await Promise.all([
-        db
-          .$count(conversations, and(eq(conversations.status, "open"), createdAtFilter))
-          .then((count) => ({ type: "open", count })),
-
-        db
-          .$count(
-            conversations,
-            and(
-              eq(conversations.status, "closed"),
-              createdAtFilter,
-              exists(
-                db
-                  .select()
-                  .from(conversationMessages)
-                  .where(
-                    and(
-                      eq(conversationMessages.conversationId, conversations.id),
-                      eq(conversationMessages.role, "ai_assistant"),
-                      eq(conversationMessages.status, "sent"),
-                      isNull(conversationMessages.deletedAt),
-                    ),
-                  ),
-              ),
-              not(
-                exists(
-                  db
-                    .select()
-                    .from(conversationMessages)
-                    .where(
-                      and(
-                        eq(conversationMessages.conversationId, conversations.id),
-                        eq(conversationMessages.role, "staff"),
-                        isNull(conversationMessages.deletedAt),
-                      ),
-                    ),
-                ),
-              ),
-            ),
-          )
-          .then((count) => ({ type: "ai", count })),
-
-        db
-          .$count(
-            conversations,
-            and(
-              eq(conversations.status, "closed"),
-              createdAtFilter,
-              exists(
-                db
-                  .select()
-                  .from(conversationMessages)
-                  .where(
-                    and(
-                      eq(conversationMessages.conversationId, conversations.id),
-                      eq(conversationMessages.role, "staff"),
-                      isNull(conversationMessages.deletedAt),
-                    ),
-                  ),
-              ),
-            ),
-          )
-          .then((count) => ({ type: "human", count })),
-      ]);
-
-      return results;
     }),
 } satisfies TRPCRouterRecord;
