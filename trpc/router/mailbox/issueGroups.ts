@@ -301,9 +301,9 @@ export const issueGroupsRouter = {
 
   generateSuggestions: mailboxProcedure.mutation(async ({ ctx }) => {
     const { generateCommonIssuesSuggestions } = await import("@/lib/ai/generateCommonIssues");
-    
+
     const result = await generateCommonIssuesSuggestions(ctx.mailbox);
-    
+
     if (result.issues.length === 0) {
       throw new TRPCError({
         code: "BAD_REQUEST",
@@ -315,16 +315,21 @@ export const issueGroupsRouter = {
   }),
 
   createFromSuggestions: mailboxProcedure
-    .input(z.object({
-      suggestions: z.array(z.object({
-        title: z.string(),
-        description: z.string().optional(),
-      })),
-    }))
+    .input(
+      z.object({
+        suggestions: z.array(
+          z.object({
+            title: z.string(),
+            description: z.string().optional(),
+          }),
+        ),
+      }),
+    )
     .mutation(async ({ input }) => {
       const createdIssues = await Promise.all(
-        input.suggestions.map(suggestion => 
-          db.insert(issueGroups)
+        input.suggestions.map((suggestion) =>
+          db
+            .insert(issueGroups)
             .values({
               title: suggestion.title,
               description: suggestion.description,
@@ -332,17 +337,17 @@ export const issueGroupsRouter = {
               updatedAt: new Date(),
             })
             .returning()
-            .then(takeUniqueOrThrow)
-        )
+            .then(takeUniqueOrThrow),
+        ),
       );
 
-      return { 
+      return {
         createdIssues: createdIssues.length,
-        issues: createdIssues.map(issue => ({
+        issues: createdIssues.map((issue) => ({
           id: issue.id,
           title: issue.title,
           description: issue.description,
-        }))
+        })),
       };
     }),
 } satisfies TRPCRouterRecord;

@@ -127,7 +127,9 @@ const CommonIssuesSetting = () => {
   });
 
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
-  const [generatedSuggestions, setGeneratedSuggestions] = useState<{ title: string; description?: string; reasoning: string }[]>([]);
+  const [generatedSuggestions, setGeneratedSuggestions] = useState<
+    { title: string; description?: string; reasoning: string }[]
+  >([]);
 
   const generateSuggestionsMutation = api.mailbox.issueGroups.generateSuggestions.useMutation({
     onSuccess: (data) => {

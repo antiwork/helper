@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { Edit2, Trash } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -36,18 +36,14 @@ export function GenerateIssuesDialog({
   };
 
   const handleSave = (index: number, title: string, description: string) => {
-    setEditableSuggestions(prev => 
-      prev.map((suggestion, i) => 
-        i === index 
-          ? { ...suggestion, title, description }
-          : suggestion
-      )
+    setEditableSuggestions((prev) =>
+      prev.map((suggestion, i) => (i === index ? { ...suggestion, title, description } : suggestion)),
     );
     setEditingIndex(null);
   };
 
   const handleDelete = (index: number) => {
-    setEditableSuggestions(prev => prev.filter((_, i) => i !== index));
+    setEditableSuggestions((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleApprove = () => {
@@ -64,7 +60,8 @@ export function GenerateIssuesDialog({
         <DialogHeader>
           <DialogTitle>Review generated common issues</DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Review and edit the AI-generated common issues before creating them. You can modify titles, descriptions, or remove issues you don't want.
+            Review and edit the AI-generated common issues before creating them. You can modify titles, descriptions, or
+            remove issues you don't want.
           </p>
         </DialogHeader>
 
@@ -98,11 +95,10 @@ export function GenerateIssuesDialog({
           <Button variant="outlined" onClick={onClose} disabled={isCreating}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleApprove} 
-            disabled={editableSuggestions.length === 0 || isCreating}
-          >
-            {isCreating ? "Creating..." : `Create ${editableSuggestions.length} issue${editableSuggestions.length !== 1 ? 's' : ''}`}
+          <Button onClick={handleApprove} disabled={editableSuggestions.length === 0 || isCreating}>
+            {isCreating
+              ? "Creating..."
+              : `Create ${editableSuggestions.length} issue${editableSuggestions.length !== 1 ? "s" : ""}`}
           </Button>
         </div>
       </DialogContent>
@@ -130,11 +126,7 @@ function EditIssueForm({ suggestion, onSave, onCancel }: EditIssueFormProps) {
     <div className="space-y-3">
       <div>
         <label className="text-sm font-medium">Title</label>
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Issue title"
-        />
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Issue title" />
       </div>
       <div>
         <label className="text-sm font-medium">Description</label>
@@ -169,9 +161,7 @@ function ViewIssue({ suggestion, onEdit, onDelete }: ViewIssueProps) {
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <h4 className="font-medium">{suggestion.title}</h4>
-          {suggestion.description && (
-            <p className="text-sm text-muted-foreground mt-1">{suggestion.description}</p>
-          )}
+          {suggestion.description && <p className="text-sm text-muted-foreground mt-1">{suggestion.description}</p>}
         </div>
         <div className="flex gap-1 ml-2">
           <Button variant="ghost" size="sm" onClick={onEdit}>
