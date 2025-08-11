@@ -1,4 +1,4 @@
-import { bigint, index, jsonb, pgTable, sql, text, uniqueIndex } from "drizzle-orm/pg-core";
+import { bigint, jsonb, pgTable, sql, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { ToolRequestBody } from "@helperai/client";
 import { withTimestamps } from "../lib/with-timestamps";
 

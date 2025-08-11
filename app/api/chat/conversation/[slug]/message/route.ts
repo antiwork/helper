@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { createMessageBodySchema, type ToolRequestBody } from "@helperai/client";
+import { createMessageBodySchema } from "@helperai/client";
 import { getCustomerFilter } from "@/app/api/chat/customerFilter";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";

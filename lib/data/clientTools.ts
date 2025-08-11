@@ -49,25 +49,31 @@ export const cacheClientTools = async (
   }
 
   await db.transaction(async (tx) => {
-    await tx
-      .insert(cachedClientTools)
-      .values({
-        platformCustomerId,
-        customerEmail,
+    if (platformCustomerId) {
+      await tx
+        .insert(cachedClientTools)
+        .values({ platformCustomerId, customerEmail: null, tools: serverTools })
+        .onConflictDoUpdate({
+          target: [cachedClientTools.platformCustomerId],
+          set: { tools: serverTools, updatedAt: new Date() },
+        });
+    } else if (customerEmail) {
+      await tx
+        .insert(cachedClientTools)
+        .values({ platformCustomerId: null, customerEmail, tools: serverTools })
+        .onConflictDoUpdate({
+          target: [cachedClientTools.customerEmail],
+          set: { tools: serverTools, updatedAt: new Date() },
+        });
+    } else {
+      // Global fallback: clear existing then insert new
+      await clearCachedTools(null, tx);
+      await tx.insert(cachedClientTools).values({
+        platformCustomerId: null,
+        customerEmail: null,
         tools: serverTools,
-      })
-      .onConflictDoUpdate({
-        target: platformCustomerId
-          ? [cachedClientTools.platformCustomerId]
-          : customerEmail
-            ? [cachedClientTools.customerEmail]
-            : [], // fallback to empty array if neither
-
-        set: {
-          tools: serverTools,
-          updatedAt: new Date(),
-        },
       });
+    }
   });
 };
 
@@ -78,27 +84,19 @@ export const getCachedClientTools = async (
   customerEmailOrId?: string | number | null,
 ): Promise<Record<string, ToolRequestBody> | null> => {
   if (typeof customerEmailOrId === "number") {
-    // Preferred: lookup by platformCustomerId
-    const globalRecord = await db.query.cachedClientTools.findFirst({
-      where: and(isNull(cachedClientTools.customerEmail), isNull(cachedClientTools.platformCustomerId)),
+    const byPlatform = await db.query.cachedClientTools.findFirst({
+      where: eq(cachedClientTools.platformCustomerId, customerEmailOrId),
     });
-
-    return globalRecord?.tools ?? null;
-  }
-
-  if (typeof customerEmailOrId === "string") {
-    // Fallback: lookup by email
-    const globalRecord = await db.query.cachedClientTools.findFirst({
-      where: and(isNull(cachedClientTools.customerEmail), isNull(cachedClientTools.platformCustomerId)),
+    if (byPlatform?.tools) return byPlatform.tools;
+  } else if (typeof customerEmailOrId === "string") {
+    const byEmail = await db.query.cachedClientTools.findFirst({
+      where: eq(cachedClientTools.customerEmail, customerEmailOrId),
     });
-
-    return globalRecord?.tools ?? null;
+    if (byEmail?.tools) return byEmail.tools;
   }
-
-  // Global fallback (anonymous)
+  // Global fallback
   const globalRecord = await db.query.cachedClientTools.findFirst({
     where: and(isNull(cachedClientTools.customerEmail), isNull(cachedClientTools.platformCustomerId)),
   });
-
   return globalRecord?.tools ?? null;
 };
