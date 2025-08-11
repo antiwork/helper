@@ -109,6 +109,7 @@ When contributing to specific packages, also refer to their individual CONTRIBUT
 ## Development Guidelines
 
 ### Code Standards
+
 - Refer to app as Helper not Helper AI
 - No explanatory comments please
 - Name component files in lowerCamelCase, e.g. conversationList.tsx
@@ -116,6 +117,7 @@ When contributing to specific packages, also refer to their individual CONTRIBUT
 - Always consider mobile and desktop devices (medium and large and extra large)
 
 ### Development Practices
+
 - We have existing TypeScript tests using vitest. Fix the existing tests if required, but don't add any new tests unless explicitly told to do so
 - Don't modify config files or package.json unless explicitly told to do so
 
