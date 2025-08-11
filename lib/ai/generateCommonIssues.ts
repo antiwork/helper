@@ -13,7 +13,7 @@ const commonIssuesGenerationSchema = z.object({
 
 type CommonIssuesGeneration = z.infer<typeof commonIssuesGenerationSchema>;
 
-export const generateCommonIssuesFromConversations = async (
+export const generateCommonIssuesSuggestions = async (
   mailbox: typeof mailboxes.$inferSelect,
 ): Promise<CommonIssuesGeneration> => {
   const { list } = await searchConversations(mailbox, {

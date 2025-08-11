@@ -299,10 +299,10 @@ export const issueGroupsRouter = {
     return { success: true };
   }),
 
-  generateFromConversations: mailboxProcedure.mutation(async ({ ctx }) => {
-    const { generateCommonIssuesFromConversations } = await import("@/lib/ai/generateCommonIssues");
+  generateSuggestions: mailboxProcedure.mutation(async ({ ctx }) => {
+    const { generateCommonIssuesSuggestions } = await import("@/lib/ai/generateCommonIssues");
     
-    const result = await generateCommonIssuesFromConversations(ctx.mailbox);
+    const result = await generateCommonIssuesSuggestions(ctx.mailbox);
     
     if (result.issues.length === 0) {
       throw new TRPCError({ 
@@ -311,27 +311,38 @@ export const issueGroupsRouter = {
       });
     }
 
-    const createdIssues = await Promise.all(
-      result.issues.map(issue => 
-        db.insert(issueGroups)
-          .values({
-            title: issue.title,
-            description: issue.description,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .returning()
-          .then(takeUniqueOrThrow)
-      )
-    );
-
-    return { 
-      createdIssues: createdIssues.length,
-      issues: createdIssues.map(issue => ({
-        id: issue.id,
-        title: issue.title,
-        description: issue.description,
-      }))
-    };
+    return result;
   }),
+
+  createFromSuggestions: mailboxProcedure
+    .input(z.object({
+      suggestions: z.array(z.object({
+        title: z.string(),
+        description: z.string().optional(),
+      })),
+    }))
+    .mutation(async ({ input }) => {
+      const createdIssues = await Promise.all(
+        input.suggestions.map(suggestion => 
+          db.insert(issueGroups)
+            .values({
+              title: suggestion.title,
+              description: suggestion.description,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            })
+            .returning()
+            .then(takeUniqueOrThrow)
+        )
+      );
+
+      return { 
+        createdIssues: createdIssues.length,
+        issues: createdIssues.map(issue => ({
+          id: issue.id,
+          title: issue.title,
+          description: issue.description,
+        }))
+      };
+    }),
 } satisfies TRPCRouterRecord;
