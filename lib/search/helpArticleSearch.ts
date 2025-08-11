@@ -1,3 +1,5 @@
+import Fuse from 'fuse.js';
+
 export type HelpArticle = {
   title: string;
   url: string;
@@ -8,8 +10,8 @@ export type SearchResult = HelpArticle & {
 };
 
 /**
- * Search help articles with relevance scoring
- * Supports exact matches, partial matches, multi-word queries, and basic fuzzy matching
+ * Search help articles using Fuse.js for fuzzy searching
+ * Provides better fuzzy matching, typo tolerance, and relevance scoring
  */
 export function searchHelpArticles(articles: HelpArticle[], query: string, limit = 10): SearchResult[] {
   if (!query.trim()) {
@@ -19,90 +21,30 @@ export function searchHelpArticles(articles: HelpArticle[], query: string, limit
       .sort((a, b) => a.title.localeCompare(b.title))
       .slice(0, limit);
   }
-  
-  const searchQuery = query.toLowerCase().trim();
-  const searchTerms = searchQuery.split(/\s+/).filter(Boolean);
-  
-  return articles
-    .map((article) => {
-      const titleLower = article.title.toLowerCase();
-      const urlLower = article.url.toLowerCase();
-      let score = 0;
-      
-      // Exact matches get highest priority
-      if (titleLower.includes(searchQuery)) {
-        score += 100;
-      }
-      
-      // URL matches get medium priority
-      if (urlLower.includes(searchQuery)) {
-        score += 50;
-      }
-      
-      // Title starts with query gets bonus points
-      if (titleLower.startsWith(searchQuery)) {
-        score += 30;
-      }
-      
-      // Individual word matches
-      searchTerms.forEach((term) => {
-        if (titleLower.includes(term)) {
-          score += 20;
-        }
-        if (urlLower.includes(term)) {
-          score += 10;
-        }
-        
-        // Simple fuzzy matching for common typos
-        const titleWords = titleLower.split(/\s+/);
-        titleWords.forEach(titleWord => {
-          if (isFuzzyMatch(term, titleWord)) {
-            score += 15;
-          }
-        });
-      });
-      
-      return { ...article, score: score / 100 }; // Normalize to 0-1+ range
-    })
-    .filter((article) => article.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit);
-}
 
-/**
- * Simple fuzzy matching for common typos and variations
- */
-function isFuzzyMatch(query: string, target: string): boolean {
-  if (query.length < 3 || target.length < 3) return false;
+  const fuse = new Fuse(articles, {
+    keys: [
+      {
+        name: 'title',
+        weight: 0.8, // Title matches are more important
+      },
+      {
+        name: 'url',
+        weight: 0.2, // URL matches are less important
+      },
+    ],
+    threshold: 0.6, // Lower = more strict, higher = more fuzzy
+    distance: 100, // Maximum distance for character matching
+    minMatchCharLength: 1, // Minimum character length to be considered a match
+    includeScore: true, // Include the search score in results
+    ignoreLocation: true, // Don't consider where in the string the match occurs
+    shouldSort: true, // Sort results by score
+  });
+
+  const fuseResults = fuse.search(query, { limit });
   
-  // Check for common patterns:
-  // - Missing/extra characters: "accont" -> "account"
-  // - Swapped characters: "payment" -> "payemnt"
-  // - Similar length with high character overlap
-  
-  const minLength = Math.min(query.length, target.length);
-  const maxLength = Math.max(query.length, target.length);
-  
-  // If length difference is too large, not a fuzzy match
-  if (maxLength - minLength > 2) return false;
-  
-  let matches = 0;
-  const queryChars = query.split('');
-  const targetChars = target.split('');
-  
-  // Count character overlaps (prevent double-counting by removing matched chars)
-  const targetCharsCopy = [...targetChars];
-  for (let i = 0; i < queryChars.length; i++) {
-    const char = queryChars[i];
-    if (char) {
-      const targetIndex = targetCharsCopy.indexOf(char);
-      if (targetIndex !== -1) {
-        matches++;
-        targetCharsCopy.splice(targetIndex, 1);
-      }
-    }
-  }
-  
-  // If 80%+ characters match, consider it a fuzzy match
-  return matches / query.length >= 0.8;
+  return fuseResults.map((result) => ({
+    ...result.item,
+    score: 1 - (result.score || 0), // Fuse.js uses lower scores for better matches, so invert
+  }));
 }
