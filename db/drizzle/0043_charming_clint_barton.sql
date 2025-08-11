@@ -1,1 +1,0 @@
-ALTER TABLE "messages" DROP COLUMN "highlighted_text";

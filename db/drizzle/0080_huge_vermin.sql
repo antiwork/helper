@@ -1,1 +1,0 @@
-ALTER TYPE "public"."guide_session_event_type" ADD VALUE 'resumed';

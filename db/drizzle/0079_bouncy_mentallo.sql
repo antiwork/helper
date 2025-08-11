@@ -1,1 +1,0 @@
-ALTER TABLE "mailboxes_mailbox" ADD COLUMN "is_whitelabel" boolean DEFAULT false NOT NULL;

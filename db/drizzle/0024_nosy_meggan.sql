@@ -1,1 +1,0 @@
-ALTER TABLE "workflows_workflow" DROP CONSTRAINT "workflows_workflow_mailbox_id_ef751436_fk_mailboxes_mailbox_id";

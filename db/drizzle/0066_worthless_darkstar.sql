@@ -1,1 +1,0 @@
-DROP TABLE "mailboxes_transactionalemailaddressregex" CASCADE;

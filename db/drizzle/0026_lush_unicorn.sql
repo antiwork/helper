@@ -1,1 +1,0 @@
-ALTER TABLE "mailboxes_aiusageevent" DROP CONSTRAINT "mailboxes_aiusageeve_mailbox_id_a4908f79_fk_mailboxes";

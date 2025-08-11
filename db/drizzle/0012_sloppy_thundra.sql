@@ -1,1 +1,0 @@
-ALTER TABLE "conversations_note" DROP CONSTRAINT "conversations_note_conversation_id_a486ed4c_fk_conversat";

@@ -1,2 +1,0 @@
-ALTER TABLE "mailboxes_mailbox" ADD COLUMN "auto_close_enabled" boolean DEFAULT false NOT NULL;--> statement-breakpoint
-ALTER TABLE "mailboxes_mailbox" ADD COLUMN "auto_close_days_of_inactivity" integer DEFAULT 14 NOT NULL;

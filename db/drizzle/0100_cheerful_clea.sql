@@ -1,1 +1,0 @@
-CREATE INDEX "conversations_conversation_status_last_user_email_created_at_idx" ON "conversations_conversation" USING btree ("status","last_user_email_created_at" DESC NULLS LAST) WHERE "conversations_conversation"."merged_into_id" is null; 

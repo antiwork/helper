@@ -1,1 +1,0 @@
-ALTER TABLE "mailboxes_mailbox" ALTER COLUMN "widget_display_mode" SET DEFAULT 'always';

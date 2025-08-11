@@ -1,1 +1,0 @@
-ALTER TABLE "tools" ADD COLUMN "available_in_chat" boolean DEFAULT false NOT NULL;

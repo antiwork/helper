@@ -1,1 +1,0 @@
-ALTER TABLE "tools" ADD COLUMN "enabled" boolean DEFAULT true NOT NULL;
