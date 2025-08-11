@@ -58,7 +58,7 @@ const isThankYouOrAutoResponse = async (
         queryType: "email_auto_ignore",
         model: MINI_MODEL,
         functionId: "email-auto-ignore-detector",
-        maxTokens: 10,
+        maxTokens: 500,
       })
     ).text;
 

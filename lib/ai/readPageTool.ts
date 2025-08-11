@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
+import { MINI_MODEL } from "@/lib/ai/core";
 import { cacheFor } from "@/lib/cache";
 import { getMailbox } from "@/lib/data/mailbox";
 import { env } from "@/lib/env";
@@ -65,6 +66,7 @@ export const generateReadPageTool = async (
   }
 
   const toolConfig = await runAIObjectQuery({
+    model: MINI_MODEL,
     system:
       "Based on this markdown content, generate a tool name and description that best represents what this content is about. The tool name should be concise (2-3 words) and the description should explain what kind of information can be found in this content. The tool name must be lowercase with underscores instead of spaces (snake_case).",
     messages: [
@@ -78,7 +80,7 @@ export const generateReadPageTool = async (
     mailbox,
     queryType: "read_page_tool",
     temperature: 0.2,
-    maxTokens: 200,
+    maxTokens: 1000,
   });
 
   const result = {
