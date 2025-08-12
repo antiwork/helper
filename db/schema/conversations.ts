@@ -5,6 +5,7 @@ import { encryptedField } from "../lib/encryptedField";
 import { randomSlugField } from "../lib/random-slug-field";
 import { withTimestamps } from "../lib/with-timestamps";
 import { conversationEvents } from "./conversationEvents";
+import { conversationFollowers } from "./conversationFollowers";
 import { conversationMessages } from "./conversationMessages";
 import { issueGroups } from "./issueGroups";
 import { platformCustomers } from "./platformCustomers";
@@ -15,8 +16,8 @@ export const conversations = pgTable(
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     emailFrom: text(),
-    subject: encryptedField("encrypted_subject"),
-    subjectPlaintext: text("subject"),
+    unused_subject: encryptedField("encrypted_subject"),
+    subject: text("subject"),
     status: text().$type<"open" | "closed" | "spam">(),
     unused_mailboxId: bigint("mailbox_id", { mode: "number" })
       .notNull()
@@ -87,6 +88,7 @@ export const conversationsRelations = relations(conversations, ({ one, many }) =
     references: [platformCustomers.email],
   }),
   events: many(conversationEvents),
+  followers: many(conversationFollowers),
   issueGroup: one(issueGroups, {
     fields: [conversations.issueGroupId],
     references: [issueGroups.id],
