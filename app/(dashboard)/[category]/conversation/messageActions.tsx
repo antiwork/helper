@@ -3,6 +3,7 @@ import { CornerUpLeft } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
+import { FollowButton } from "@/app/(dashboard)/[category]/conversation/followButton";
 import { EmailSignature } from "@/app/(dashboard)/[category]/emailSignature";
 import { DraftedEmail } from "@/app/types/global";
 import { triggerConfetti } from "@/components/confetti";
@@ -397,6 +398,10 @@ export const MessageActions = () => {
     </>
   );
 
+  const followButton = conversation?.slug ? (
+    <FollowButton conversationSlug={conversation.slug} size={isAboveMd ? "default" : "sm"} />
+  ) : null;
+
   const updateDraftedEmail = (changes: Partial<DraftedEmail>) => {
     setDraftedEmail((email) => ({ ...email, ...changes, modified: true }));
     setStoredMessage(changes.message);
@@ -459,6 +464,7 @@ export const MessageActions = () => {
         enableImageUpload
         enableFileUpload
         actionButtons={actionButtons}
+        followButton={followButton}
         signature={<EmailSignature />}
         isRecordingSupported={isRecordingSupported}
         isRecording={isRecording}

@@ -18,7 +18,6 @@ export const toolsFactory = {
       parameters: null,
       authenticationMethod: "bearer_token",
       authenticationToken,
-      authenticationTokenPlaintext: authenticationToken,
       enabled: true,
       availableInChat: false,
       availableInAnonymousChat: false,

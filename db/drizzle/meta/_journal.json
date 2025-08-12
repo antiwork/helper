@@ -785,6 +785,13 @@
       "when": 1754335661899,
       "tag": "0111_parallel_rumiko_fujikawa",
       "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1754864581551,
+      "tag": "0112_cool_outlaw_kid",
+      "breakpoints": true
     }
   ]
 }
