@@ -2,6 +2,7 @@ import { isMacOS } from "@tiptap/core";
 import { CornerUpLeft } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { create } from "zustand";
 import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
 import { FollowButton } from "@/app/(dashboard)/[category]/conversation/followButton";
 import { EmailSignature } from "@/app/(dashboard)/[category]/emailSignature";
@@ -51,6 +52,17 @@ export const useSendDisabled = (message: string | undefined, conversationStatus?
     conversationStatus === "spam";
   return { sendDisabled, sending, setSending };
 };
+
+const useKnowledgeBankDialogState = create<
+  ({ isVisible: false } | { isVisible: true; messageId: number }) & {
+    show: (messageId: number) => void;
+    hide: () => void;
+  }
+>((set) => ({
+  isVisible: false,
+  show: (messageId) => set({ isVisible: true, messageId }),
+  hide: () => set({ isVisible: false }),
+}));
 
 export const MessageActions = () => {
   const { navigateToConversation, removeConversation } = useConversationListContext();
@@ -220,8 +232,7 @@ export const MessageActions = () => {
     setUndoneEmail(undefined);
   }, [undoneEmail, conversation]);
 
-  const [lastSentMessageId, setLastSentMessageId] = useState<number | null>(null);
-  const [showKnowledgeBankDialog, setShowKnowledgeBankDialog] = useState(false);
+  const knowledgeBankDialogState = useKnowledgeBankDialogState();
 
   const handleSend = async ({ assign, close = true }: { assign: boolean; close?: boolean }) => {
     if (sendDisabled || !conversation?.slug) return;
@@ -297,10 +308,10 @@ export const MessageActions = () => {
       toast.success(close ? "Replied and closed" : "Message sent!", {
         duration: 10000,
         description: (
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-4 items-center">
             {close && (
               <button
-                className="text-xs px-2 py-1 text-foreground underline hover:no-underline"
+                className="text-xs py-1 text-foreground underline"
                 onClick={() => {
                   navigateToConversation(conversation.slug);
                 }}
@@ -309,16 +320,13 @@ export const MessageActions = () => {
               </button>
             )}
             <button
-              className="text-xs px-2 py-1 text-foreground underline hover:no-underline"
-              onClick={() => {
-                setLastSentMessageId(emailId);
-                setShowKnowledgeBankDialog(true);
-              }}
+              className="text-xs py-1 text-foreground underline"
+              onClick={() => knowledgeBankDialogState.show(emailId)}
             >
               Generate knowledge
             </button>
             <button
-              className="text-xs px-2 py-1 text-foreground underline hover:no-underline"
+              className="text-xs py-1 text-foreground underline"
               onClick={async () => {
                 try {
                   await utils.client.mailbox.conversations.undo.mutate({
@@ -468,13 +476,11 @@ export const MessageActions = () => {
         startRecording={startRecording}
         stopRecording={stopRecording}
       />
-
-      {/* Knowledge Bank Generation Dialog */}
-      {lastSentMessageId && (
+      {knowledgeBankDialogState.isVisible && (
         <GenerateKnowledgeBankDialog
-          open={showKnowledgeBankDialog}
-          onOpenChange={setShowKnowledgeBankDialog}
-          messageId={lastSentMessageId}
+          open={knowledgeBankDialogState.isVisible}
+          onOpenChange={(open) => !open && knowledgeBankDialogState.hide()}
+          messageId={knowledgeBankDialogState.messageId}
         />
       )}
     </div>
