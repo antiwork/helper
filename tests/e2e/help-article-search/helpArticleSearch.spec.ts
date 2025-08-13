@@ -4,7 +4,7 @@ import { conversations } from "../../../db/schema";
 import { authUsers } from "../../../db/supabaseSchema/auth";
 import { userProfiles } from "../../../db/schema";
 import { eq } from "drizzle-orm";
-
+import { conversationFactory } from "../../../tests/support/factories/conversations";
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 test.describe("Help Article Search", () => {
@@ -28,9 +28,7 @@ test.describe("Help Article Search", () => {
       testUserId = user[0].id;
       
       // Create a test conversation for this user
-      const [conversation] = await db
-        .insert(conversations)
-        .values({
+      const { conversation } = await conversationFactory.create({
           emailFrom: "test@example.com",
           emailFromName: "Test User",
           subject: "Test conversation for help article search",
@@ -38,8 +36,7 @@ test.describe("Help Article Search", () => {
           status: "open",
           conversationProvider: "gmail",
           assignedToId: testUserId,
-        })
-        .returning();
+        });
       
       testConversationId = conversation.id;
     }
