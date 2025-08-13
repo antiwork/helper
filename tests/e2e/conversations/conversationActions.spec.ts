@@ -3,7 +3,7 @@ import { eq, desc } from "drizzle-orm";
 import { db } from "../../../db/client";
 import { conversations, conversationEvents } from "../../../db/schema";
 
-export async function getConversationStatusFromDb(conversationId: number): Promise<string> {
+async function getConversationStatusFromDb(conversationId: number): Promise<string> {
   const [event] = await db
     .select({ changes: conversationEvents.changes })
     .from(conversationEvents)
@@ -412,8 +412,6 @@ test.describe("Conversation Actions", () => {
       const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
       await composer.click({ force: true });
       await page.keyboard.press("/");
-
-      const commands = await page.locator('[role="option"]').allTextContents();
 
       try {
         const assignIssueCommand = page.locator('[role="option"]').filter({ hasText: "Assign ticket" });
