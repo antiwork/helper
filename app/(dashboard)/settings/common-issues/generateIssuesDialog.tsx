@@ -2,10 +2,12 @@
 
 import { Edit2, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { api } from "@/trpc/react";
 
 interface GeneratedIssue {
   title: string;
@@ -16,23 +18,40 @@ interface GeneratedIssue {
 interface GenerateIssuesDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  suggestions: GeneratedIssue[];
   onApprove: (approvedSuggestions: { title: string; description?: string }[]) => void;
   isCreating: boolean;
 }
 
-export function GenerateIssuesDialog({
-  isOpen,
-  onClose,
-  suggestions,
-  onApprove,
-  isCreating,
-}: GenerateIssuesDialogProps) {
-  const [editableSuggestions, setEditableSuggestions] = useState<GeneratedIssue[]>(suggestions);
+export function GenerateIssuesDialog({ isOpen, onClose, onApprove, isCreating }: GenerateIssuesDialogProps) {
+  const [suggestions, setSuggestions] = useState<GeneratedIssue[]>([]);
+  const [editableSuggestions, setEditableSuggestions] = useState<GeneratedIssue[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+  const generateSuggestionsMutation = api.mailbox.issueGroups.generateSuggestions.useMutation({
+    onSuccess: (data) => {
+      setSuggestions(data.issues);
+      setEditableSuggestions(data.issues);
+    },
+    onError: (error) => {
+      toast.error("Error generating common issues", { description: error.message });
+      onClose();
+    },
+  });
+
   useEffect(() => {
-    if (suggestions.length !== editableSuggestions.length) {
+    if (isOpen && suggestions.length === 0 && !generateSuggestionsMutation.isPending) {
+      generateSuggestionsMutation.mutate();
+    }
+    if (!isOpen) {
+      // Reset state when dialog closes
+      setSuggestions([]);
+      setEditableSuggestions([]);
+      setEditingIndex(null);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (suggestions.length !== editableSuggestions.length && suggestions.length > 0) {
       setEditableSuggestions(suggestions);
     }
   }, [suggestions.length]);
@@ -72,39 +91,53 @@ export function GenerateIssuesDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {editableSuggestions.map((suggestion, index) => (
-            <div key={index} className="border rounded-lg p-4 space-y-3">
-              {editingIndex === index ? (
-                <EditIssueForm
-                  suggestion={suggestion}
-                  onSave={(title, description) => handleSave(index, title, description)}
-                  onCancel={() => setEditingIndex(null)}
-                />
-              ) : (
-                <ViewIssue
-                  suggestion={suggestion}
-                  onEdit={() => handleEdit(index)}
-                  onDelete={() => handleDelete(index)}
-                />
-              )}
+          {generateSuggestionsMutation.isPending && editableSuggestions.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground space-y-4">
+              <div className="animate-spin mx-auto h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
+              <div>Analyzing conversations to generate common issues...</div>
             </div>
-          ))}
+          ) : (
+            <>
+              {editableSuggestions.map((suggestion, index) => (
+                <div key={index} className="border rounded-lg p-4 space-y-3">
+                  {editingIndex === index ? (
+                    <EditIssueForm
+                      suggestion={suggestion}
+                      onSave={(title, description) => handleSave(index, title, description)}
+                      onCancel={() => setEditingIndex(null)}
+                    />
+                  ) : (
+                    <ViewIssue
+                      suggestion={suggestion}
+                      onEdit={() => handleEdit(index)}
+                      onDelete={() => handleDelete(index)}
+                    />
+                  )}
+                </div>
+              ))}
 
-          {editableSuggestions.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No issues to create. All suggestions have been removed.
-            </div>
+              {editableSuggestions.length === 0 && !generateSuggestionsMutation.isPending && (
+                <div className="text-center py-8 text-muted-foreground">
+                  No issues to create. All suggestions have been removed.
+                </div>
+              )}
+            </>
           )}
         </div>
 
         <div className="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outlined" onClick={onClose} disabled={isCreating}>
+          <Button variant="outlined" onClick={onClose} disabled={isCreating || generateSuggestionsMutation.isPending}>
             Cancel
           </Button>
-          <Button onClick={handleApprove} disabled={editableSuggestions.length === 0 || isCreating}>
+          <Button
+            onClick={handleApprove}
+            disabled={editableSuggestions.length === 0 || isCreating || generateSuggestionsMutation.isPending}
+          >
             {isCreating
               ? "Creating..."
-              : `Create ${editableSuggestions.length} issue${editableSuggestions.length !== 1 ? "s" : ""}`}
+              : generateSuggestionsMutation.isPending
+                ? "Generating..."
+                : `Create ${editableSuggestions.length} issue${editableSuggestions.length !== 1 ? "s" : ""}`}
           </Button>
         </div>
       </DialogContent>

@@ -127,34 +127,20 @@ const CommonIssuesSetting = () => {
   });
 
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
-  const [generatedSuggestions, setGeneratedSuggestions] = useState<
-    { title: string; description?: string; reasoning: string }[]
-  >([]);
-
-  const generateSuggestionsMutation = api.mailbox.issueGroups.generateSuggestions.useMutation({
-    onSuccess: (data) => {
-      setGeneratedSuggestions(data.issues);
-      setShowGenerateDialog(true);
-    },
-    onError: (error) => {
-      toast.error("Error generating common issues", { description: error.message });
-    },
-  });
 
   const createFromSuggestionsMutation = api.mailbox.issueGroups.createFromSuggestions.useMutation({
     onSuccess: (data) => {
       utils.mailbox.issueGroups.listAll.invalidate();
       toast.success(`Created ${data.createdIssues} common issues from your conversations`);
       setShowGenerateDialog(false);
-      setGeneratedSuggestions([]);
     },
     onError: (error) => {
       toast.error("Error creating common issues", { description: error.message });
     },
   });
 
-  const handleGenerateIssues = async () => {
-    await generateSuggestionsMutation.mutateAsync();
+  const handleGenerateIssues = () => {
+    setShowGenerateDialog(true);
   };
 
   const handleApproveSuggestions = async (approvedSuggestions: { title: string; description?: string }[]) => {
@@ -217,11 +203,10 @@ const CommonIssuesSetting = () => {
               <Button
                 variant="outlined"
                 onClick={handleGenerateIssues}
-                disabled={generateSuggestionsMutation.isPending}
                 className="mx-auto"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
-                {generateSuggestionsMutation.isPending ? "Generating..." : "Generate common issues"}
+                Generate common issues
               </Button>
             )}
           </div>
@@ -317,10 +302,8 @@ const CommonIssuesSetting = () => {
       )}
 
       <GenerateIssuesDialog
-        key={generatedSuggestions.length}
         isOpen={showGenerateDialog}
         onClose={() => setShowGenerateDialog(false)}
-        suggestions={generatedSuggestions}
         onApprove={handleApproveSuggestions}
         isCreating={createFromSuggestionsMutation.isPending}
       />
