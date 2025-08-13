@@ -9,7 +9,7 @@ export type SearchResult = HelpArticle;
 
 export function searchHelpArticles(articles: HelpArticle[], query: string, limit = 10): SearchResult[] {
   const trimmedQuery = query.trim();
-  
+
   if (!trimmedQuery) {
     return [...articles]
       .sort((a, b) => a.title.localeCompare(b.title))
@@ -36,6 +36,6 @@ export function searchHelpArticles(articles: HelpArticle[], query: string, limit
   });
 
   const fuseResults = fuse.search(trimmedQuery, { limit });
-  
+
   return fuseResults.map((result) => result.item);
 }
