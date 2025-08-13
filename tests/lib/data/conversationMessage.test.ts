@@ -707,6 +707,24 @@ describe("createConversationMessage", () => {
       { sleepSeconds: EMAIL_UNDO_COUNTDOWN_SECONDS },
     );
   });
+
+  it("updates conversation's last_message_at", async () => {
+    const { user } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create();
+
+    await createConversationMessage({
+      conversationId: conversation.id,
+      body: "Test message",
+      userId: user.id,
+      role: "staff",
+      isPerfect: false,
+      isFlaggedAsBad: false,
+      status: "queueing",
+    });
+
+    const updatedConversation = await getConversationById(conversation.id);
+    expect(updatedConversation?.lastMessageAt).not.toBeNull();
+  });
 });
 
 describe("getConversationMessageById", () => {

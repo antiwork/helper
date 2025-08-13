@@ -393,13 +393,20 @@ export const createConversationMessage = async (
 
   const message = await tx.insert(conversationMessages).values(messageValues).returning().then(takeUniqueOrThrow);
 
-  if (message.role === "user") {
-    await updateConversation(
-      message.conversationId,
-      { set: { lastUserEmailCreatedAt: new Date(), lastReadAt: new Date() }, skipRealtimeEvents: true },
-      tx,
-    );
-  }
+  await updateConversation(
+    message.conversationId,
+    {
+      set: {
+        lastMessageAt: new Date(),
+        ...(message.role === "user" && {
+          lastUserEmailCreatedAt: new Date(),
+          lastReadAt: new Date(),
+        }),
+      },
+      skipRealtimeEvents: true,
+    },
+    tx,
+  );
 
   const eventsToSend = [];
 

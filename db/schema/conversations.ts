@@ -26,6 +26,7 @@ export const conversations = pgTable(
     slug: randomSlugField("slug"),
     lastUserEmailCreatedAt: timestamp({ withTimezone: true, mode: "date" }),
     lastReadAt: timestamp({ withTimezone: true, mode: "date" }),
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true, mode: "date" }),
     conversationProvider: text().$type<"gmail" | "helpscout" | "chat">(),
     closedAt: timestamp({ withTimezone: true, mode: "date" }),
     assignedToId: text("assigned_to_clerk_id"),
@@ -71,6 +72,7 @@ export const conversations = pgTable(
     index("conversations_anonymous_session_id_idx").on(table.anonymousSessionId),
     index("conversations_merged_into_id_idx").on(table.mergedIntoId),
     index("conversations_issue_group_id_idx").on(table.issueGroupId),
+    index("conversations_last_message_at_idx").on(table.lastMessageAt),
     index("conversations_conversation_status_last_user_email_created_at_idx")
       .on(table.status, table.lastUserEmailCreatedAt.desc().nullsLast())
       .where(isNull(table.mergedIntoId)),
