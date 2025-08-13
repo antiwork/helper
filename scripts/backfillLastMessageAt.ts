@@ -19,6 +19,7 @@ const backfillConversationsLastMessageAt = async () => {
 
   let totalProcessed = 0;
   let batchNumber = 0;
+  let lastId = 0;
 
   while (true) {
     batchNumber++;
@@ -29,6 +30,7 @@ const backfillConversationsLastMessageAt = async () => {
         FROM "conversations_conversation" c
         JOIN "messages" m ON m."conversation_id" = c."id"
         WHERE c."last_message_at" IS NULL
+          AND c."id" > ${lastId}
           AND m."status" != 'draft'
         GROUP BY c."id"
         ORDER BY c."id"
@@ -37,7 +39,8 @@ const backfillConversationsLastMessageAt = async () => {
       UPDATE "conversations_conversation" AS c
       SET "last_message_at" = candidates.last_message_at
       FROM candidates
-      WHERE c."id" = candidates."id";
+      WHERE c."id" = candidates."id"
+      RETURNING c."id";
     `);
 
     const batchProcessed = result.rowCount || 0;
@@ -46,6 +49,12 @@ const backfillConversationsLastMessageAt = async () => {
     console.log(`Batch ${batchNumber}: Updated ${batchProcessed} conversations (Total: ${totalProcessed})`);
 
     if (batchProcessed === 0) break;
+
+    // Get the highest ID from this batch for the next iteration
+    const lastRow = result.rows[result.rows.length - 1];
+    lastId = lastRow?.id as number;
+
+    console.log(`Next batch will start after ID: ${lastId}`);
   }
 
   console.log(`✅ Backfill complete: ${totalProcessed} conversations updated`);
