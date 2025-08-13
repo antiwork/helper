@@ -148,7 +148,7 @@ test.describe("Conversation Actions", () => {
       await composer.click({ force: true });
       await page.keyboard.press("/");
 
-      const commandBar = page.locator('[aria-label="Command Bar"]');
+      const commandBar = page.locator('[data-testid="command-bar"]');
       const isVisible = await commandBar.isVisible();
       expect(isVisible).toBe(true);
 
@@ -182,7 +182,7 @@ test.describe("Conversation Actions", () => {
 
       await page.keyboard.press("/");
 
-      const commandBar = page.locator('[aria-label="Command Bar"]');
+      const commandBar = page.locator('[data-testid="command-bar"]');
       const isCommandBarVisible = await commandBar.isVisible();
       expect(isCommandBarVisible).toBe(true);
 
