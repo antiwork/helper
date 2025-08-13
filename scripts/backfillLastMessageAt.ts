@@ -24,26 +24,20 @@ const backfillConversationsLastMessageAt = async () => {
     batchNumber++;
 
     const result = await db.execute(sql`
-      UPDATE "conversations_conversation" 
-      SET "last_message_at" = (
-        SELECT MAX("created_at") 
-        FROM "messages" 
-        WHERE "messages"."conversation_id" = "conversations_conversation"."id"
-        AND "messages"."status" != 'draft'
-      )
-      WHERE EXISTS (
-        SELECT 1 
-        FROM "messages" 
-        WHERE "messages"."conversation_id" = "conversations_conversation"."id"
-        AND "messages"."status" != 'draft'
-      )
-      AND "id" IN (
-        SELECT "id" 
-        FROM "conversations_conversation" 
-        WHERE "last_message_at" IS NULL 
-        ORDER BY "id" 
+      WITH candidates AS (
+        SELECT c."id", MAX(m."created_at") AS last_message_at
+        FROM "conversations_conversation" c
+        JOIN "messages" m ON m."conversation_id" = c."id"
+        WHERE c."last_message_at" IS NULL
+          AND m."status" != 'draft'
+        GROUP BY c."id"
+        ORDER BY c."id"
         LIMIT ${BATCH_SIZE}
       )
+      UPDATE "conversations_conversation" AS c
+      SET "last_message_at" = candidates.last_message_at
+      FROM candidates
+      WHERE c."id" = candidates."id";
     `);
 
     const batchProcessed = result.rowCount || 0;
