@@ -9,15 +9,10 @@ export type SearchResult = HelpArticle & {
   score: number;
 };
 
-/**
- * Search help articles using Fuse.js for fuzzy searching
- * Provides better fuzzy matching, typo tolerance, and relevance scoring
- */
 export function searchHelpArticles(articles: HelpArticle[], query: string, limit = 10): SearchResult[] {
   const trimmedQuery = query.trim();
   
   if (!trimmedQuery) {
-    // Return all articles when query is empty, sorted by title
     return articles
       .map(article => ({ ...article, score: 1 }))
       .sort((a, b) => a.title.localeCompare(b.title))
@@ -28,25 +23,25 @@ export function searchHelpArticles(articles: HelpArticle[], query: string, limit
     keys: [
       {
         name: 'title',
-        weight: 0.8, // Title matches are more important
+        weight: 0.8,
       },
       {
         name: 'url',
-        weight: 0.2, // URL matches are less important
+        weight: 0.2,
       },
     ],
-    threshold: 0.6, // Lower = more strict, higher = more fuzzy
-    distance: 100, // Maximum distance for character matching
-    minMatchCharLength: 1, // Minimum character length to be considered a match
-    includeScore: true, // Include the search score in results
-    ignoreLocation: true, // Don't consider where in the string the match occurs
-    shouldSort: true, // Sort results by score
+    threshold: 0.6,
+    distance: 100,
+    minMatchCharLength: 1,
+    ignoreLocation: true,
+    includeScore: true,
+    shouldSort: true,
   });
 
   const fuseResults = fuse.search(trimmedQuery, { limit });
   
   return fuseResults.map((result) => ({
     ...result.item,
-    score: 1 - (result.score || 0), // Fuse.js uses lower scores for better matches, so invert
+    score: 1 - (result.score || 0),
   }));
 }
