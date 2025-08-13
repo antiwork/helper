@@ -1,6 +1,6 @@
 {
-  "id": "dcdadd7a-12fe-46bd-9c68-b6a3aaf7d8a8",
-  "prevId": "629f2949-17a1-4fdb-965b-935c6fa810bc",
+  "id": "0a8cdc3c-ae0e-43a5-94ed-5997020ab44d",
+  "prevId": "dcdadd7a-12fe-46bd-9c68-b6a3aaf7d8a8",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -746,21 +746,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "encrypted_body": {
-          "name": "encrypted_body",
-          "type": "bytea",
-          "primaryKey": false,
-          "notNull": false
-        },
         "body": {
           "name": "body",
           "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "encrypted_cleaned_up_text": {
-          "name": "encrypted_cleaned_up_text",
-          "type": "bytea",
           "primaryKey": false,
           "notNull": false
         },
@@ -1150,12 +1138,6 @@
         "email_from": {
           "name": "email_from",
           "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "encrypted_subject": {
-          "name": "encrypted_subject",
-          "type": "bytea",
           "primaryKey": false,
           "notNull": false
         },
@@ -1914,21 +1896,9 @@
           "primaryKey": false,
           "notNull": false
         },
-        "encrypted_access_token": {
-          "name": "encrypted_access_token",
-          "type": "bytea",
-          "primaryKey": false,
-          "notNull": false
-        },
         "access_token": {
           "name": "access_token",
           "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "encrypted_refresh_token": {
-          "name": "encrypted_refresh_token",
-          "type": "bytea",
           "primaryKey": false,
           "notNull": false
         },
@@ -3590,12 +3560,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "encrypted_authentication_token": {
-          "name": "encrypted_authentication_token",
-          "type": "bytea",
-          "primaryKey": false,
-          "notNull": false
-        },
         "authentication_token": {
           "name": "authentication_token",
           "type": "text",
@@ -3716,12 +3680,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'none'"
-        },
-        "encrypted_authentication_token": {
-          "name": "encrypted_authentication_token",
-          "type": "bytea",
-          "primaryKey": false,
-          "notNull": false
         },
         "authentication_token": {
           "name": "authentication_token",
