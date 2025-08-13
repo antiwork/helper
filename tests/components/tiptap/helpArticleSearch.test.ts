@@ -47,17 +47,15 @@ describe("Help Article Search", () => {
     it("returns all articles when query is empty", () => {
       const results = searchArticles(mockArticles, "");
       expect(results).toHaveLength(mockArticles.length);
-      // Results should be sorted alphabetically by title and include scores
+      // Results should be sorted alphabetically by title
       expect(results[0]?.title).toBe("Accessibility statement for Gumroad");
-      expect(results[0]?.score).toBe(1);
     });
 
     it("returns all articles when query is only whitespace", () => {
       const results = searchArticles(mockArticles, "   ");
       expect(results).toHaveLength(mockArticles.length);
-      // Results should be sorted alphabetically by title and include scores
+      // Results should be sorted alphabetically by title
       expect(results[0]?.title).toBe("Accessibility statement for Gumroad");
-      expect(results[0]?.score).toBe(1);
     });
 
     it("returns empty array when no articles match", () => {
@@ -104,7 +102,7 @@ describe("Help Article Search", () => {
       expect(titles).toContain("Account settings");
     });
 
-    it("scores exact phrase matches higher than individual word matches", () => {
+    it("ranks exact phrase matches higher than individual word matches", () => {
       const results = searchArticles(mockArticles, "account login");
       expect(results[0]?.title).toBe("Account login security");
     });
@@ -196,23 +194,13 @@ describe("Help Article Search", () => {
       // Query with repeated characters that exist in target
       const results = searchArticles(testArticles, "accnt");
       
-      // Both should match with fuzzy matching, but scores should be realistic
+      // Both should match with fuzzy matching
       expect(results.length).toBeGreaterThan(0);
       
-      // The article with more matching characters should score higher
-      const accountResult = results.find(r => r.title === "account");
-      const acccountResult = results.find(r => r.title === "acccount");
-      
-      // Both should have reasonable scores (not inflated by double-counting)
-      if (accountResult) {
-        expect(accountResult.score).toBeGreaterThan(0);
-        expect(accountResult.score).toBeLessThan(2); // Shouldn't be inflated
-      }
-      
-      if (acccountResult) {
-        expect(acccountResult.score).toBeGreaterThan(0);
-        expect(acccountResult.score).toBeLessThan(2); // Shouldn't be inflated
-      }
+      // Both articles should be found
+      const titles = results.map(r => r.title);
+      expect(titles).toContain("account");
+      expect(titles).toContain("acccount");
     });
   });
 });

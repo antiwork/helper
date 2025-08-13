@@ -5,16 +5,13 @@ export type HelpArticle = {
   url: string;
 };
 
-export type SearchResult = HelpArticle & {
-  score: number;
-};
+export type SearchResult = HelpArticle;
 
 export function searchHelpArticles(articles: HelpArticle[], query: string, limit = 10): SearchResult[] {
   const trimmedQuery = query.trim();
   
   if (!trimmedQuery) {
     return articles
-      .map(article => ({ ...article, score: 1 }))
       .sort((a, b) => a.title.localeCompare(b.title))
       .slice(0, limit);
   }
@@ -40,8 +37,5 @@ export function searchHelpArticles(articles: HelpArticle[], query: string, limit
 
   const fuseResults = fuse.search(trimmedQuery, { limit });
   
-  return fuseResults.map((result) => ({
-    ...result.item,
-    score: 1 - (result.score || 0),
-  }));
+  return fuseResults.map((result) => result.item);
 }

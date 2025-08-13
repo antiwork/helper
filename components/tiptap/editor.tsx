@@ -361,9 +361,10 @@ const TipTapEditor = ({
     return editor.view.state.doc.textBetween(mentionState.range.from + 1, cursorPos, "", "");
   };
 
+  const mentionQuery = getMentionQuery();
   const filteredArticles = useMemo(() => {
-    return searchHelpArticles(helpArticles, getMentionQuery(), 10);
-  }, [helpArticles, getMentionQuery()]);
+    return searchHelpArticles(helpArticles, mentionQuery, 10);
+  }, [helpArticles, mentionQuery]);
 
   const handleSelectArticle = (article: { title: string; url: string }) => {
     if (!editor || !mentionState.range) return;
