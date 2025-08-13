@@ -1,5 +1,5 @@
 {
-  "id": "bf8e2da6-86b0-445f-bc9d-68e769c9f076",
+  "id": "dcdadd7a-12fe-46bd-9c68-b6a3aaf7d8a8",
   "prevId": "629f2949-17a1-4fdb-965b-935c6fa810bc",
   "version": "7",
   "dialect": "postgresql",
@@ -1491,6 +1491,21 @@
           "columns": [
             {
               "expression": "issue_group_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "conversations_last_message_at_idx": {
+          "name": "conversations_last_message_at_idx",
+          "columns": [
+            {
+              "expression": "last_message_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
