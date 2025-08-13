@@ -1,4 +1,4 @@
-import Fuse from 'fuse.js';
+import Fuse from "fuse.js";
 
 export type HelpArticle = {
   title: string;
@@ -19,11 +19,11 @@ export function searchHelpArticles(articles: HelpArticle[], query: string, limit
   const fuse = new Fuse(articles, {
     keys: [
       {
-        name: 'title',
+        name: "title",
         weight: 0.8,
       },
       {
-        name: 'url',
+        name: "url",
         weight: 0.2,
       },
     ],
