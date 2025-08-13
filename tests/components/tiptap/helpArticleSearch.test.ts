@@ -193,10 +193,10 @@ describe("Help Article Search", () => {
 
       // Query with repeated characters that exist in target
       const results = searchArticles(testArticles, "accnt");
-      
+
       // Both should match with fuzzy matching
       expect(results.length).toBeGreaterThan(0);
-      
+
       // Both articles should be found
       const titles = results.map(r => r.title);
       expect(titles).toContain("account");
