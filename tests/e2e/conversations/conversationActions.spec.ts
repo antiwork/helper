@@ -1,7 +1,20 @@
 import { expect, test } from "@playwright/test";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { db } from "../../../db/client";
-import { conversations } from "../../../db/schema";
+import { conversations, conversationEvents } from "../../../db/schema";
+
+export async function getConversationStatusFromDb(conversationId: number): Promise<string> {
+  const [event] = await db
+    .select({ changes: conversationEvents.changes })
+    .from(conversationEvents)
+    .where(eq(conversationEvents.conversationId, conversationId))
+    .orderBy(desc(conversationEvents.createdAt))
+    .limit(1);
+  if (event && event.changes && event.changes.status) {
+    return event.changes.status;
+  }
+  return "unknown";
+}
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
@@ -247,30 +260,9 @@ test.describe("Conversation Actions", () => {
         el.textContent = "";
       });
 
-      const getConversationStatus = async (): Promise<string> => {
-        try {
-          const statusElement = page.locator("text=OPEN").or(page.locator("text=CLOSED")).first();
-          const statusText = await statusElement.textContent();
 
-          if (statusText?.includes("OPEN")) {
-            return "open";
-          } else if (statusText?.includes("CLOSED")) {
-            return "closed";
-          }
-        } catch (e) {
-          const closeButton = page.locator('button:has-text("Close"):not(:has-text("Reply"))');
-          const reopenButton = page.locator('button:has-text("Reopen")');
-
-          if (await closeButton.isVisible()) {
-            return "open";
-          } else if (await reopenButton.isVisible()) {
-            return "closed";
-          }
-        }
-        return "unknown";
-      };
-
-      const initialStatus = await getConversationStatus();
+  const openConversation = await getOpenConversation();
+  const initialStatus = await getConversationStatusFromDb(openConversation.id);
 
       if (initialStatus === "open") {
         const closeButton = page.locator('button:has-text("Close"):not(:has-text("Reply"))');
@@ -279,7 +271,7 @@ test.describe("Conversation Actions", () => {
         await closeButton.click();
         await page.waitForLoadState("networkidle");
 
-        const statusAfterClose = await getConversationStatus();
+  const statusAfterClose = await getConversationStatusFromDb(openConversation.id);
 
         if (statusAfterClose === "closed") {
           await expect(page.locator("text=closed")).toBeVisible();
@@ -310,30 +302,8 @@ test.describe("Conversation Actions", () => {
     test("should send reply and close conversation", async ({ page }) => {
       const testMessage = "Reply and close test message";
 
-      const getConversationStatus = async (): Promise<string> => {
-        try {
-          const statusElement = page.locator("text=OPEN").or(page.locator("text=CLOSED")).first();
-          const statusText = await statusElement.textContent();
-
-          if (statusText?.includes("OPEN")) {
-            return "open";
-          } else if (statusText?.includes("CLOSED")) {
-            return "closed";
-          }
-        } catch (e) {
-          const closeButton = page.locator('button:has-text("Close"):not(:has-text("Reply"))');
-          const reopenButton = page.locator('button:has-text("Reopen")');
-
-          if (await closeButton.isVisible()) {
-            return "open";
-          } else if (await reopenButton.isVisible()) {
-            return "closed";
-          }
-        }
-        return "unknown";
-      };
-
-      const status = await getConversationStatus();
+      const openConversation = await getOpenConversation();
+      const status = await getConversationStatusFromDb(openConversation.id);
       if (status === "closed") {
         const reopenButton = page.locator('button:has-text("Reopen")');
         await reopenButton.click();
