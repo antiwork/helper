@@ -28,6 +28,7 @@ import { api } from "@/trpc/react";
 import { useConversationListContext } from "../list/conversationListContext";
 import { useConversationsListInput } from "../shared/queries";
 import { TicketCommandBar } from "../ticketCommandBar";
+import { NextTicketPreview } from "./nextTicketPreview";
 import { useUndoneEmailStore } from "./useUndoneEmailStore";
 
 export const FAILED_ATTACHMENTS_TOOLTIP_MESSAGE = "Remove the failed file attachments first";
@@ -65,7 +66,7 @@ const useKnowledgeBankDialogState = create<
 }));
 
 export const MessageActions = () => {
-  const { navigateToConversation, removeConversation } = useConversationListContext();
+  const { navigateToConversation, removeConversation, getNextTicket } = useConversationListContext();
   const { data: conversation, updateStatus } = useConversationContext();
   const { searchParams } = useConversationsListInput();
   const utils = api.useUtils();
@@ -429,8 +430,11 @@ export const MessageActions = () => {
     setStoredMessage(content);
   };
 
+  const nextTicket = getNextTicket();
+
   return (
     <div className="flex flex-col h-full pt-4">
+      {nextTicket && !showCommandBar && <NextTicketPreview nextTicket={nextTicket} className="mb-3 flex-shrink-0" />}
       <TicketCommandBar
         open={showCommandBar}
         onOpenChange={setShowCommandBar}
