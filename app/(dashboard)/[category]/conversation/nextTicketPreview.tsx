@@ -1,10 +1,12 @@
 "use client";
 
-import { ChevronDown, ChevronRight, Clock } from "lucide-react";
+import { ChevronDown, ChevronRight, Clock, DollarSign } from "lucide-react";
 import { useEffect, useState } from "react";
 import HumanizedTime from "@/components/humanizedTime";
 import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { formatCurrency } from "@/components/utils/currency";
 import { cn } from "@/lib/utils";
 import { RouterOutputs } from "@/trpc";
 import { useConversationListContext } from "../list/conversationListContext";
@@ -35,8 +37,7 @@ export const NextTicketPreview = ({ nextTicket, className }: NextTicketPreviewPr
     return nextTicket.emailFrom ?? "?";
   };
 
-  const handleToggleExpanded = (e: React.MouseEvent) => {
-    // Don't toggle if clicking on the Switch to button
+  const handleToggleExpanded = (e: React.SyntheticEvent) => {
     if ((e.target as HTMLElement).closest("button[data-switch-to]")) {
       return;
     }
@@ -47,7 +48,16 @@ export const NextTicketPreview = ({ nextTicket, className }: NextTicketPreviewPr
     <div className={cn("border border-border rounded-lg bg-muted/30", className)}>
       <div
         className="p-3 flex items-center justify-between cursor-pointer hover:bg-muted/50 transition-colors"
+        role="button"
+        tabIndex={0}
+        aria-expanded={isExpanded}
         onClick={handleToggleExpanded}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleToggleExpanded(e);
+          }
+        }}
       >
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", !isExpanded && "rotate-[-90deg]")} />
@@ -87,6 +97,12 @@ export const NextTicketPreview = ({ nextTicket, className }: NextTicketPreviewPr
                   {getCustomerName()}
                 </span>
                 <div className="text-xs text-muted-foreground">{nextTicket.emailFrom || "no-email@example.com"}</div>
+                {nextTicket.platformCustomer?.isVip && <Badge variant="bright">VIP</Badge>}
+                {nextTicket.platformCustomer?.value && nextTicket.platformCustomer.value > 0 && (
+                  <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+                    {formatCurrency(Number(nextTicket.platformCustomer.value))}
+                  </div>
+                )}
                 {nextTicket.status && nextTicket.status !== "open" && (
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300">
                     {nextTicket.status}

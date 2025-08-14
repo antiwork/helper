@@ -88,7 +88,7 @@ export const ConversationListContextProvider = ({
     const nextIndex = currentIndex + 1;
     if (nextIndex >= conversations.length) return null;
 
-    return conversations[nextIndex];
+    return conversations[nextIndex] ?? null;
   };
 
   const router = useRouter();
@@ -190,7 +190,16 @@ export const ConversationListContextProvider = ({
       navigateToConversation: setId,
       getNextTicket,
     }),
-    [currentConversationSlug, conversations, lastPage, isPending, isFetching, isFetchingNextPage, hasNextPage],
+    [
+      currentConversationSlug,
+      conversations,
+      lastPage,
+      isPending,
+      isFetching,
+      isFetchingNextPage,
+      hasNextPage,
+      getNextTicket,
+    ],
   );
 
   return <ConversationListContext.Provider value={value}>{children}</ConversationListContext.Provider>;
