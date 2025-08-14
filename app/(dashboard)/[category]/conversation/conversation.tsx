@@ -432,7 +432,7 @@ const ConversationContent = () => {
   const { isAboveSm } = useBreakpoint("sm");
 
   const defaultSize =
-    typeof window !== "undefined" ? Number(localStorage.getItem("conversationHeightRange") ?? 65) : 65;
+    typeof window !== "undefined" ? Number(localStorage.getItem("conversationHeightRange") ?? 55) : 55;
 
   const [sidebarVisible, setSidebarVisible] = useState(isAboveSm);
 

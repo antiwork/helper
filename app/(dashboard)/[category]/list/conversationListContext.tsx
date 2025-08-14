@@ -26,6 +26,7 @@ type ConversationListContextType = {
   removeConversation: () => void;
   removeConversationKeepActive: () => void;
   navigateToConversation: (conversationSlug: string) => void;
+  getNextTicket: () => RouterOutputs["mailbox"]["conversations"]["list"]["conversations"][0] | null;
 };
 
 const ConversationListContext = createContext<ConversationListContextType | null>(null);
@@ -79,6 +80,15 @@ export const ConversationListContextProvider = ({
         currentIndex === 0 ? conversations[conversations.length - 1] : conversations[currentIndex - 1];
     }
     setId(previousConversation?.slug ?? null);
+  };
+
+  const getNextTicket = () => {
+    if (!conversations.length || currentIndex === -1) return null;
+
+    const nextIndex = currentIndex + 1;
+    if (nextIndex >= conversations.length) return null;
+
+    return conversations[nextIndex];
   };
 
   const router = useRouter();
@@ -178,6 +188,7 @@ export const ConversationListContextProvider = ({
       removeConversation,
       removeConversationKeepActive,
       navigateToConversation: setId,
+      getNextTicket,
     }),
     [currentConversationSlug, conversations, lastPage, isPending, isFetching, isFetchingNextPage, hasNextPage],
   );
