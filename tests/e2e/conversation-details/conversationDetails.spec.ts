@@ -270,6 +270,7 @@ test.describe("Conversation Details", () => {
     await expect(replyEditor).toBeFocused();
 
     await goToNextConversation(page);
+    await setupConversation(page);
 
     const nextReplyEditor = page.locator(".ProseMirror").first();
     await expect(nextReplyEditor).toBeVisible();
