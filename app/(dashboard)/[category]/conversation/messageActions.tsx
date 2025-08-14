@@ -1,5 +1,5 @@
 import { isMacOS } from "@tiptap/core";
-import { CornerUpLeft } from "lucide-react";
+import { CornerUpLeft, Eye, Lightbulb, Undo2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { create } from "zustand";
@@ -312,25 +312,27 @@ export const MessageActions = () => {
       toast.success(close ? "Replied and closed" : "Message sent!", {
         duration: 10000,
         description: (
-          <div className="flex gap-4 items-center">
+          <div className="flex flex-wrap gap-2 items-center mt-2">
             {close && (
               <button
-                className="text-xs py-1 text-foreground underline"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors"
                 onClick={() => {
                   navigateToConversation(conversation.slug);
                 }}
               >
+                <Eye className="h-3 w-3" />
                 Visit
               </button>
             )}
             <button
-              className="text-xs py-1 text-foreground underline"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
               onClick={() => knowledgeBankDialogState.show(emailId)}
             >
+              <Lightbulb className="h-3 w-3" />
               Generate knowledge
             </button>
             <button
-              className="text-xs py-1 text-foreground underline"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
               onClick={async () => {
                 try {
                   await utils.client.mailbox.conversations.undo.mutate({
@@ -350,6 +352,7 @@ export const MessageActions = () => {
                 }
               }}
             >
+              <Undo2 className="h-3 w-3" />
               Undo
             </button>
           </div>
