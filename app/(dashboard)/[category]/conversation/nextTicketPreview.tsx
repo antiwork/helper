@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronRight, Clock, DollarSign } from "lucide-react";
+import { ChevronDown, ChevronRight, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import HumanizedTime from "@/components/humanizedTime";
 import { Avatar } from "@/components/ui/avatar";
@@ -51,6 +51,8 @@ export const NextTicketPreview = ({ nextTicket, className }: NextTicketPreviewPr
         role="button"
         tabIndex={0}
         aria-expanded={isExpanded}
+        aria-controls={`next-ticket-preview-panel-${nextTicket.id}`}
+        id={`next-ticket-preview-header-${nextTicket.id}`}
         onClick={handleToggleExpanded}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -80,6 +82,9 @@ export const NextTicketPreview = ({ nextTicket, className }: NextTicketPreviewPr
           "overflow-hidden transition-all duration-300 ease-in-out",
           isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0",
         )}
+        aria-labelledby={`next-ticket-preview-header-${nextTicket.id}`}
+        aria-hidden={!isExpanded}
+        role="region"
       >
         <div className="p-3 border-t border-border">
           <div className="flex items-start gap-3">
@@ -98,7 +103,7 @@ export const NextTicketPreview = ({ nextTicket, className }: NextTicketPreviewPr
                 </span>
                 <div className="text-xs text-muted-foreground">{nextTicket.emailFrom || "no-email@example.com"}</div>
                 {nextTicket.platformCustomer?.isVip && <Badge variant="bright">VIP</Badge>}
-                {nextTicket.platformCustomer?.value && nextTicket.platformCustomer.value > 0 && (
+                {nextTicket.platformCustomer?.value && (
                   <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
                     {formatCurrency(Number(nextTicket.platformCustomer.value))}
                   </div>
