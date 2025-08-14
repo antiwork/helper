@@ -261,4 +261,18 @@ test.describe("Conversation Details", () => {
     await setupConversation(page);
     await attemptInternalNoteCreation(page);
   });
+
+  test("should focus reply editor when opening conversation", async ({ page }) => {
+    await setupConversation(page);
+
+    const replyEditor = page.locator(".ProseMirror").first();
+    await expect(replyEditor).toBeVisible();
+    await expect(replyEditor).toBeFocused();
+
+    await goToNextConversation(page);
+
+    const nextReplyEditor = page.locator(".ProseMirror").first();
+    await expect(nextReplyEditor).toBeVisible();
+    await expect(nextReplyEditor).toBeFocused();
+  });
 });
