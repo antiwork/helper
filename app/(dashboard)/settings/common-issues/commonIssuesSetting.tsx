@@ -1,6 +1,6 @@
 "use client";
 
-import { Edit2, PlusCircle, Trash } from "lucide-react";
+import { Edit2, PlusCircle, Sparkles, Trash } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
+import { GenerateIssuesDialog } from "./generateIssuesDialog";
 
 type CommonIssueEditFormProps = {
   title: string;
@@ -125,6 +126,41 @@ const CommonIssuesSetting = () => {
     },
   });
 
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
+  const [generatedSuggestions, setGeneratedSuggestions] = useState<
+    { title: string; description?: string; reasoning: string }[]
+  >([]);
+
+  const generateSuggestionsMutation = api.mailbox.issueGroups.generateSuggestions.useMutation({
+    onSuccess: (data) => {
+      setGeneratedSuggestions(data.issues);
+      setShowGenerateDialog(true);
+    },
+    onError: (error) => {
+      toast.error("Error generating common issues", { description: error.message });
+    },
+  });
+
+  const createFromSuggestionsMutation = api.mailbox.issueGroups.createFromSuggestions.useMutation({
+    onSuccess: (data) => {
+      utils.mailbox.issueGroups.listAll.invalidate();
+      toast.success(`Created ${data.createdIssues} common issues from your conversations`);
+      setShowGenerateDialog(false);
+      setGeneratedSuggestions([]);
+    },
+    onError: (error) => {
+      toast.error("Error creating common issues", { description: error.message });
+    },
+  });
+
+  const handleGenerateIssues = async () => {
+    await generateSuggestionsMutation.mutateAsync();
+  };
+
+  const handleApproveSuggestions = async (approvedSuggestions: { title: string; description?: string }[]) => {
+    await createFromSuggestionsMutation.mutateAsync({ suggestions: approvedSuggestions });
+  };
+
   const handleCreateIssue = async () => {
     if (!newIssueTitle.trim()) return;
     await createMutation.mutateAsync({
@@ -175,8 +211,19 @@ const CommonIssuesSetting = () => {
             ))}
           </>
         ) : filteredIssueGroups.length === 0 ? (
-          <div className="py-8 text-center text-muted-foreground">
-            {searchQuery ? "No common issues found matching your search." : "No common issues created yet."}
+          <div className="py-8 text-center text-muted-foreground space-y-4">
+            <div>{searchQuery ? "No common issues found matching your search." : "No common issues created yet."}</div>
+            {!searchQuery && (
+              <Button
+                variant="outlined"
+                onClick={handleGenerateIssues}
+                disabled={generateSuggestionsMutation.isPending}
+                className="mx-auto"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                {generateSuggestionsMutation.isPending ? "Generating..." : "Generate common issues"}
+              </Button>
+            )}
           </div>
         ) : (
           <>
@@ -268,6 +315,14 @@ const CommonIssuesSetting = () => {
           Add Common Issue
         </Button>
       )}
+
+      <GenerateIssuesDialog
+        isOpen={showGenerateDialog}
+        onClose={() => setShowGenerateDialog(false)}
+        suggestions={generatedSuggestions}
+        onApprove={handleApproveSuggestions}
+        isCreating={createFromSuggestionsMutation.isPending}
+      />
     </SectionWrapper>
   );
 };
