@@ -1,4 +1,7 @@
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
+import { db } from "@/db/client";
+import { conversationMessages } from "@/db/schema";
 import type { mailboxes } from "@/db/schema/mailboxes";
 import { runAIObjectQuery } from "@/lib/ai";
 import { searchConversations } from "@/lib/data/conversation/search";
@@ -19,7 +22,7 @@ export const generateCommonIssuesSuggestions = async (
   mailbox: typeof mailboxes.$inferSelect,
 ): Promise<CommonIssuesGeneration> => {
   const { list } = await searchConversations(mailbox, {
-    limit: 100,
+    limit: 50,
     status: ["open", "closed"],
     sort: "newest",
   });
@@ -30,14 +33,32 @@ export const generateCommonIssuesSuggestions = async (
     return { issues: [] };
   }
 
+  const conversationIds = conversations.map((conv) => conv.id);
+
+  const firstMessages = await db
+    .selectDistinctOn([conversationMessages.conversationId], {
+      conversationId: conversationMessages.conversationId,
+      cleanedUpText: conversationMessages.cleanedUpText,
+      cleanedUpTextPlaintext: conversationMessages.cleanedUpTextPlaintext,
+    })
+    .from(conversationMessages)
+    .where(and(inArray(conversationMessages.conversationId, conversationIds), eq(conversationMessages.role, "user")))
+    .orderBy(conversationMessages.conversationId, asc(conversationMessages.createdAt));
+
+  const firstMessageMap = new Map(
+    firstMessages
+      .map((msg) => [msg.conversationId, msg.cleanedUpText || msg.cleanedUpTextPlaintext] as const)
+      .filter(([_, text]) => text),
+  );
+
   const conversationSummaries = conversations
-    .slice(0, 50)
     .map((conv) => ({
       subject: conv.subject,
-      recentMessage: conv.recentMessageText,
+      firstMessage: firstMessageMap.get(conv.id) || "",
+      recentMessage: conv.recentMessageText || conv.recentMessageTextPlaintext || "",
       status: conv.status,
     }))
-    .filter((conv) => conv.subject || conv.recentMessage);
+    .filter((conv) => conv.subject || conv.firstMessage || conv.recentMessage);
 
   const systemPrompt = `
 You are analyzing customer support conversations to identify common issue patterns that should be grouped together.
@@ -72,6 +93,7 @@ ${conversationSummaries
     (conv, i) =>
       `Conversation ${i + 1}:
 Subject: ${conv.subject || "No subject"}
+First message: ${conv.firstMessage || "No first message"}
 Recent message: ${conv.recentMessage || "No recent message"}
 Status: ${conv.status}
 `,
