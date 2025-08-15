@@ -1,4 +1,5 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { assertDefined } from "@/components/utils/assert";
 import { getProfile } from "@/lib/data/user";
 import { createClient } from "@/lib/supabase/server";
 import { appRouter, createTRPCContext } from "@/trpc";
@@ -19,23 +20,12 @@ const handler = async (req: any) => {
   let enrichedUser = null;
 
   if (authUser) {
-    const profile = await getProfile(authUser.id);
-    
-    if (profile) {
-      enrichedUser = {
-        email: authUser.email ?? null,
-        ...profile,
-      };
-    } else {
-      // For test environments or missing profiles, create a minimal user object
-      enrichedUser = {
-        id: authUser.id,
-        email: authUser.email ?? null,
-        permissions: "admin",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-    }
+    const profile = assertDefined(await getProfile(authUser.id));
+
+    enrichedUser = {
+      email: authUser.email ?? null,
+      ...profile,
+    };
   }
 
   const response = await fetchRequestHandler({
