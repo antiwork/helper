@@ -13,6 +13,7 @@ import { createSearchSnippet } from "@/lib/search/searchSnippet";
 import { cn } from "@/lib/utils";
 import { useConversationsListInput } from "../shared/queries";
 import { highlightKeywords } from "./filters/highlightKeywords";
+import { UnreadMessagesBadge } from "./unreadMessagesBadge";
 
 type ListItem = ConversationListItemType & { isNew?: boolean };
 
@@ -118,9 +119,7 @@ export const ConversationListItem = ({
                       </Badge>
                     ))}
                   {conversation.unreadMessageCount && conversation.unreadMessageCount > 0 && (
-                    <Badge variant="bright" className="text-xs">
-                      {conversation.unreadMessageCount > 10 ? "10+ unread messages" : `${conversation.unreadMessageCount} unread message${conversation.unreadMessageCount === 1 ? "" : "s"}`}
-                    </Badge>
+                    <UnreadMessagesBadge count={conversation.unreadMessageCount} className="text-xs" />
                   )}
                 </div>
                 <div className="flex items-center gap-3 shrink-0">

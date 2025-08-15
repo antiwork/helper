@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface UnreadMessagesBadgeProps {
   count: number;
@@ -13,7 +14,7 @@ export const UnreadMessagesBadge = ({ count, className }: UnreadMessagesBadgePro
   return (
     <Badge 
       variant="bright" 
-      className={`text-xs px-3 py-1 rounded-full whitespace-nowrap ${className}`}
+      className={cn("text-xs px-3 py-1 rounded-full whitespace-nowrap", className)}
     >
       {displayText}
     </Badge>

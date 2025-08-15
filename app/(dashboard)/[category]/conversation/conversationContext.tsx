@@ -21,10 +21,13 @@ const ConversationContext = createContext<ConversationContextType | null>(null);
 
 export function useConversationQuery(conversationSlug: string | null) {
   const utils = api.useUtils();
-  const { mutate: markAsRead } = api.mailbox.conversations.markAsRead.useMutation({
-    onSuccess: () => {
-      // Invalidate conversation list immediately to update unread badges
-      utils.mailbox.conversations.list.invalidate();
+  const { mutate: markAsRead, isPending: isMarkingAsRead } = api.mailbox.conversations.markAsRead.useMutation({
+    onSuccess: async () => {
+      await Promise.all([
+        utils.mailbox.conversations.list.invalidate(),
+        utils.mailbox.conversations.listWithPreview.invalidate(),
+        utils.mailbox.conversations.count.invalidate(),
+      ]);
     },
   });
   
@@ -41,11 +44,11 @@ export function useConversationQuery(conversationSlug: string | null) {
   useEffect(() => {
     return () => {
       // Only mark as read if data was successfully loaded
-      if (result?.data && conversationSlug && !result.isPending) {
+      if (result?.data && conversationSlug && !result.isPending && !isMarkingAsRead) {
         markAsRead({ conversationSlug });
       }
     };
-  }, [result?.data, conversationSlug, result?.isPending, markAsRead]);
+  }, [result?.data, conversationSlug, result?.isPending, markAsRead, isMarkingAsRead]);
 
   return conversationSlug ? result : null;
 }
