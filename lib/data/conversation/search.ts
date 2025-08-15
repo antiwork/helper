@@ -121,21 +121,24 @@ export const searchConversations = async (
       : {}),
     ...(filters.hasUnreadMessages
       ? {
-          hasUnreadMessages: exists(
-            db
-              .select()
-              .from(conversationMessages)
-              .where(
-                and(
-                  eq(conversationMessages.conversationId, conversations.id),
-                  eq(conversationMessages.role, "user"),
-                  isNull(conversationMessages.deletedAt),
-                  gt(
-                    conversationMessages.createdAt,
-                    sql`COALESCE(${conversations.lastReadAt}, ${conversations.createdAt})`
+          hasUnreadMessages: and(
+            isNotNull(conversations.assignedToId),
+            exists(
+              db
+                .select()
+                .from(conversationMessages)
+                .where(
+                  and(
+                    eq(conversationMessages.conversationId, conversations.id),
+                    eq(conversationMessages.role, "user"),
+                    isNull(conversationMessages.deletedAt),
+                    gt(
+                      conversationMessages.createdAt,
+                      sql`COALESCE(${conversations.lastReadAt}, ${conversations.createdAt})`
+                    )
                   )
                 )
-              )
+            )
           ),
         }
       : {}),
