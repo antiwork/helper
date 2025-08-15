@@ -17,10 +17,10 @@ import FileAttachment from "@/components/tiptap/fileAttachment";
 import { Image, imageFileTypes } from "@/components/tiptap/image";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useRefToLatest } from "@/components/useRefToLatest";
+import { searchHelpArticles } from "@/lib/search/helpArticleSearch";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import HelpArticlePopover from "./helpArticlePopover";
-import { searchHelpArticles } from "@/lib/search/helpArticleSearch";
 import Toolbar from "./toolbar";
 
 type TipTapEditorProps = {

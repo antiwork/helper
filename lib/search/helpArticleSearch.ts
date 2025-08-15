@@ -11,9 +11,7 @@ export function searchHelpArticles(articles: HelpArticle[], query: string, limit
   const trimmedQuery = query.trim();
 
   if (!trimmedQuery) {
-    return [...articles]
-      .sort((a, b) => a.title.localeCompare(b.title))
-      .slice(0, limit);
+    return [...articles].sort((a, b) => a.title.localeCompare(b.title)).slice(0, limit);
   }
 
   const fuse = new Fuse(articles, {
