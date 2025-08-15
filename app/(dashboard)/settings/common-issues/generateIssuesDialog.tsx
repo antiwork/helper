@@ -23,13 +23,11 @@ interface GenerateIssuesDialogProps {
 }
 
 export function GenerateIssuesDialog({ isOpen, onClose, onApprove, isCreating }: GenerateIssuesDialogProps) {
-  const [suggestions, setSuggestions] = useState<GeneratedIssue[]>([]);
   const [editableSuggestions, setEditableSuggestions] = useState<GeneratedIssue[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   const generateSuggestionsMutation = api.mailbox.issueGroups.generateSuggestions.useMutation({
     onSuccess: (data) => {
-      setSuggestions(data.issues);
       setEditableSuggestions(data.issues);
     },
     onError: (error) => {
@@ -39,22 +37,15 @@ export function GenerateIssuesDialog({ isOpen, onClose, onApprove, isCreating }:
   });
 
   useEffect(() => {
-    if (isOpen && suggestions.length === 0 && !generateSuggestionsMutation.isPending) {
+    if (isOpen && editableSuggestions.length === 0 && !generateSuggestionsMutation.isPending) {
       generateSuggestionsMutation.mutate();
     }
     if (!isOpen) {
       // Reset state when dialog closes
-      setSuggestions([]);
       setEditableSuggestions([]);
       setEditingIndex(null);
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    if (suggestions.length !== editableSuggestions.length && suggestions.length > 0) {
-      setEditableSuggestions(suggestions);
-    }
-  }, [suggestions.length]);
 
   const handleEdit = (index: number) => {
     setEditingIndex(index);

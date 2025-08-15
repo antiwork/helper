@@ -1,8 +1,7 @@
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { decryptFieldValue } from "@/db/lib/encryptedField";
-import { conversationMessages, conversations as conversationsTable } from "@/db/schema";
+import { conversationMessages } from "@/db/schema";
 import type { mailboxes } from "@/db/schema/mailboxes";
 import { runAIObjectQuery } from "@/lib/ai";
 import { searchConversations } from "@/lib/data/conversation/search";
@@ -23,7 +22,7 @@ export const generateCommonIssuesSuggestions = async (
   mailbox: typeof mailboxes.$inferSelect,
 ): Promise<CommonIssuesGeneration> => {
   const { list } = await searchConversations(mailbox, {
-    limit: 100,
+    limit: 50,
     status: ["open", "closed"],
     sort: "newest",
   });
@@ -34,83 +33,31 @@ export const generateCommonIssuesSuggestions = async (
     return { issues: [] };
   }
 
-  const conversationIds = conversations
-    .filter((conv) => conv !== undefined)
-    .slice(0, 50)
-    .map((conv) => conv.id);
+  const conversationIds = conversations.map((conv) => conv.id);
 
-  // Get conversations with both first and recent messages
-  const conversationsWithMessages = await db
-    .select({
-      conversation_id: conversationsTable.id,
-      conversation_subject: conversationsTable.subject,
-      conversation_status: conversationsTable.status,
-      first_message_cleanedUpText: sql<string | null>`first_message.cleaned_up_text`,
-      recent_message_cleanedUpText: sql<string | null>`recent_message.cleaned_up_text`,
+  const firstMessages = await db
+    .selectDistinctOn([conversationMessages.conversationId], {
+      conversationId: conversationMessages.conversationId,
+      cleanedUpText: conversationMessages.cleanedUpText,
+      cleanedUpTextPlaintext: conversationMessages.cleanedUpTextPlaintext,
     })
-    .from(conversationsTable)
-    .leftJoin(
-      sql`LATERAL (
-        SELECT
-          ${conversationMessages.cleanedUpText} as cleaned_up_text
-        FROM ${conversationMessages}
-        WHERE ${and(eq(conversationMessages.conversationId, conversationsTable.id), eq(conversationMessages.role, "user"))}
-        ORDER BY ${asc(conversationMessages.createdAt)}
-        LIMIT 1
-      ) as first_message`,
-      sql`true`,
-    )
-    .leftJoin(
-      sql`LATERAL (
-        SELECT
-          ${conversationMessages.cleanedUpText} as cleaned_up_text
-        FROM ${conversationMessages}
-        WHERE ${and(eq(conversationMessages.conversationId, conversationsTable.id), inArray(conversationMessages.role, ["user", "staff"]))}
-        ORDER BY ${desc(conversationMessages.createdAt)}
-        LIMIT 1
-      ) as recent_message`,
-      sql`true`,
-    )
-    .where(inArray(conversationsTable.id, conversationIds));
+    .from(conversationMessages)
+    .where(and(inArray(conversationMessages.conversationId, conversationIds), eq(conversationMessages.role, "user")))
+    .orderBy(conversationMessages.conversationId, asc(conversationMessages.createdAt));
 
-  const conversationSummaries = conversationsWithMessages
-    .map(
-      ({
-        conversation_id,
-        conversation_subject,
-        conversation_status,
-        first_message_cleanedUpText,
-        recent_message_cleanedUpText,
-      }) => {
-        let firstMessage = "";
-        let recentMessage = "";
+  const firstMessageMap = new Map(
+    firstMessages
+      .map((msg) => [msg.conversationId, msg.cleanedUpText || msg.cleanedUpTextPlaintext] as const)
+      .filter(([_, text]) => text),
+  );
 
-        // Decrypt first message with error handling
-        if (first_message_cleanedUpText) {
-          try {
-            firstMessage = decryptFieldValue(first_message_cleanedUpText);
-          } catch {
-            firstMessage = "";
-          }
-        }
-
-        // Decrypt recent message with error handling
-        if (recent_message_cleanedUpText) {
-          try {
-            recentMessage = decryptFieldValue(recent_message_cleanedUpText);
-          } catch {
-            recentMessage = "";
-          }
-        }
-
-        return {
-          subject: conversation_subject,
-          firstMessage,
-          recentMessage,
-          status: conversation_status,
-        };
-      },
-    )
+  const conversationSummaries = conversations
+    .map((conv) => ({
+      subject: conv.subject,
+      firstMessage: firstMessageMap.get(conv.id) || "",
+      recentMessage: conv.recentMessageText || conv.recentMessageTextPlaintext || "",
+      status: conv.status,
+    }))
     .filter((conv) => conv.subject || conv.firstMessage || conv.recentMessage);
 
   const systemPrompt = `
