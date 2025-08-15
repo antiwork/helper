@@ -13,6 +13,7 @@ import { createSearchSnippet } from "@/lib/search/searchSnippet";
 import { cn } from "@/lib/utils";
 import { useConversationsListInput } from "../shared/queries";
 import { highlightKeywords } from "./filters/highlightKeywords";
+import { MessagesBadge } from "./unreadMessagesBadge";
 
 type ListItem = ConversationListItemType & { isNew?: boolean };
 
@@ -117,6 +118,9 @@ export const ConversationListItem = ({
                         {formatCurrency(parseFloat(conversation.platformCustomer.value))}
                       </Badge>
                     ))}
+                  {conversation.unreadMessageCount && conversation.unreadMessageCount > 0 && (
+                    <MessagesBadge className="text-xs" count={conversation.unreadMessageCount} />
+                  )}
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   {(conversation.assignedToId || conversation.assignedToAI) && (

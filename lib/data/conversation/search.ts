@@ -119,6 +119,29 @@ export const searchConversations = async (
           issueGroup: eq(conversations.issueGroupId, filters.issueGroupId),
         }
       : {}),
+    ...(filters.hasUnreadMessages
+      ? {
+          hasUnreadMessages: and(
+            isNotNull(conversations.assignedToId),
+            exists(
+              db
+                .select()
+                .from(conversationMessages)
+                .where(
+                  and(
+                    eq(conversationMessages.conversationId, conversations.id),
+                    eq(conversationMessages.role, "user"),
+                    isNull(conversationMessages.deletedAt),
+                    gt(
+                      conversationMessages.createdAt,
+                      sql`COALESCE(${conversations.lastReadAt}, ${conversations.createdAt})`
+                    )
+                  )
+                )
+            )
+          ),
+        }
+      : {}),
   };
 
   const matches = filters.search ? await searchEmailsByKeywords(filters.search, Object.values(where)) : [];
@@ -168,6 +191,7 @@ export const searchConversations = async (
         mailboxes_platformcustomer: platformCustomers,
         recent_message_cleanedUpText: sql<string | null>`recent_message.cleaned_up_text`,
         recent_message_createdAt: sql<string | null>`recent_message.created_at`,
+        unread_message_count: sql<number>`unread_messages.count`,
       })
       .from(conversations)
       .leftJoin(platformCustomers, eq(conversations.emailFrom, platformCustomers.email))
@@ -186,6 +210,23 @@ export const searchConversations = async (
         ) as recent_message`,
         sql`true`,
       )
+      .leftJoin(
+        sql`LATERAL (
+          SELECT COUNT(*) as count
+          FROM ${conversationMessages}
+          WHERE ${and(
+            eq(conversationMessages.conversationId, conversations.id),
+            eq(conversationMessages.role, "user"),
+            isNull(conversationMessages.deletedAt),
+            gt(
+              conversationMessages.createdAt,
+              sql`COALESCE(${conversations.lastReadAt}, ${conversations.createdAt})`
+            ),
+            isNotNull(conversations.assignedToId)
+          )}
+        ) as unread_messages`,
+        sql`true`,
+      )
       .where(and(...Object.values(where)))
       .orderBy(...orderBy)
       .limit(filters.limit + 1) // Get one extra to determine if there's a next page
@@ -199,12 +240,14 @@ export const searchConversations = async (
               mailboxes_platformcustomer,
               recent_message_cleanedUpText,
               recent_message_createdAt,
+              unread_message_count,
             }) => ({
               ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
               matchedMessageText:
                 matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
               recentMessageText: recent_message_cleanedUpText || null,
               recentMessageAt: recent_message_createdAt ? new Date(recent_message_createdAt) : null,
+              unreadMessageCount: Number(unread_message_count) > 0 ? Number(unread_message_count) : undefined,
             }),
           ),
         nextCursor:
