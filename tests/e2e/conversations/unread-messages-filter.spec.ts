@@ -5,6 +5,14 @@ test.use({ storageState: "tests/e2e/.auth/user.json" });
 test.describe("Unread Messages Filter", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/mine");
+    await page.waitForLoadState("domcontentloaded");
+
+    const filterToggleButton = page.locator('button[aria-label="Filter Toggle"]');
+    await expect(filterToggleButton).toBeVisible();
+    await filterToggleButton.click();
+    
+    // Wait for filter panel to be fully visible and interactive
+    await page.waitForSelector('button:has-text("Unread")', { state: 'visible' });
   });
 
   test("should show unread messages filter button", async ({ page }) => {
@@ -65,11 +73,18 @@ test.describe("Unread Messages Filter", () => {
     // Apply date filter first
     const dateFilter = page.locator('button:has-text("Created")');
     await dateFilter.click();
-    const todayOption = page.locator('text="Today"');
+
+    // Wait for dropdown menu to be visible
+    await page.waitForSelector('[role="menuitemradio"]', { state: 'visible' });
+
+    const todayOption = page.locator('[role="menuitemradio"]:has-text("Today")');
+    await expect(todayOption).toBeVisible();
     await todayOption.click();
-    
-    // Then apply unread messages filter
-    const unreadFilter = page.locator('button:has-text("Unread messages")');
+
+    // Wait for filter to be applied
+    await expect(dateFilter).toHaveClass(/bright/);
+
+    const unreadFilter = page.locator('button:has-text("Unread")');
     await unreadFilter.click();
     
     // Check both filters are active
@@ -153,11 +168,13 @@ test.describe("Unread Messages Filter", () => {
     await vipFilter.click();
     const vipOnlyOption = page.locator('text="VIP only"');
     await vipOnlyOption.click();
-    
-    // Clear all filters
+
+    // Wait for VIP filter to be applied
+    await page.waitForLoadState('networkidle');
+
     await clearButton.click();
-    
-    // Check filters are cleared
+
+    // Wait for filter to be cleared
     await expect(unreadFilter).not.toHaveClass(/bright/);
     await expect(vipFilter).not.toHaveClass(/bright/);
     await expect(clearButton).not.toBeVisible();
