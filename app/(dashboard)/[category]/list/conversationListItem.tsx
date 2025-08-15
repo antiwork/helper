@@ -117,6 +117,11 @@ export const ConversationListItem = ({
                         {formatCurrency(parseFloat(conversation.platformCustomer.value))}
                       </Badge>
                     ))}
+                  {conversation.unreadMessageCount && conversation.unreadMessageCount > 0 && (
+                    <Badge variant="bright" className="text-xs">
+                      {conversation.unreadMessageCount > 10 ? "10+ unread messages" : `${conversation.unreadMessageCount} unread message${conversation.unreadMessageCount === 1 ? "" : "s"}`}
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   {(conversation.assignedToId || conversation.assignedToAI) && (

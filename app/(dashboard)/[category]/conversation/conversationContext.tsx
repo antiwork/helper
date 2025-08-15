@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext } from "react";
+import { createContext, useCallback, useContext, useEffect } from "react";
 import { toast } from "sonner";
 import { useConversationListContext } from "@/app/(dashboard)/[category]/list/conversationListContext";
 import { assertDefined } from "@/components/utils/assert";
@@ -20,6 +20,14 @@ type ConversationContextType = {
 const ConversationContext = createContext<ConversationContextType | null>(null);
 
 export function useConversationQuery(conversationSlug: string | null) {
+  const utils = api.useUtils();
+  const { mutate: markAsRead } = api.mailbox.conversations.markAsRead.useMutation({
+    onSuccess: () => {
+      // Invalidate conversation list immediately to update unread badges
+      utils.mailbox.conversations.list.invalidate();
+    },
+  });
+  
   const result = api.mailbox.conversations.get.useQuery(
     {
       conversationSlug: conversationSlug ?? "",
@@ -28,6 +36,16 @@ export function useConversationQuery(conversationSlug: string | null) {
       enabled: !!conversationSlug,
     },
   );
+
+  // Mark conversation as read when component unmounts (user navigates away)
+  useEffect(() => {
+    return () => {
+      // Only mark as read if data was successfully loaded
+      if (result?.data && conversationSlug && !result.isPending) {
+        markAsRead({ conversationSlug });
+      }
+    };
+  }, [result?.data, conversationSlug, result?.isPending, markAsRead]);
 
   return conversationSlug ? result : null;
 }

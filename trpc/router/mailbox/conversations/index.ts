@@ -325,4 +325,15 @@ export const conversationsRouter = {
 
     return { following: !!follower };
   }),
+
+  markAsRead: conversationProcedure.mutation(async ({ ctx }) => {
+    await db
+      .update(conversations)
+      .set({
+        lastReadAt: new Date(),
+      })
+      .where(eq(conversations.id, ctx.conversation.id));
+
+    return { success: true };
+  }),
 } satisfies TRPCRouterRecord;
