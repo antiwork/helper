@@ -111,6 +111,7 @@
     "drizzle-orm": "^0.38.3",
     "email-addresses": "^5.0.0",
     "file-saver": "^2.0.5",
+    "fuse.js": "^7.1.0",
     "gaxios": "^6.7.1",
     "google-auth-library": "^9.15.1",
     "googleapis": "^140.0.0",

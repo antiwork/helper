@@ -7,7 +7,7 @@ import { TextSelection } from "@tiptap/pm/state";
 import { BubbleMenu, EditorContent, useEditor, type FocusPosition } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import partition from "lodash/partition";
-import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode, type Ref } from "react";
 import { toast } from "sonner";
 import UAParser from "ua-parser-js";
 import { isEmptyContent } from "@/app/(dashboard)/[category]/conversation/messageActions";
@@ -17,6 +17,7 @@ import FileAttachment from "@/components/tiptap/fileAttachment";
 import { Image, imageFileTypes } from "@/components/tiptap/image";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useRefToLatest } from "@/components/useRefToLatest";
+import { searchHelpArticles } from "@/lib/search/helpArticleSearch";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import HelpArticlePopover from "./helpArticlePopover";
@@ -368,7 +369,10 @@ const TipTapEditor = ({
     return editor.view.state.doc.textBetween(mentionState.range.from + 1, cursorPos, "", "");
   };
 
-  const filteredArticles = helpArticles.filter((a) => a.title.toLowerCase().includes(getMentionQuery().toLowerCase()));
+  const mentionQuery = getMentionQuery();
+  const filteredArticles = useMemo(() => {
+    return searchHelpArticles(helpArticles, mentionQuery, 10);
+  }, [helpArticles, mentionQuery]);
 
   const handleSelectArticle = (article: { title: string; url: string }) => {
     if (!editor || !mentionState.range) return;
@@ -384,7 +388,7 @@ const TipTapEditor = ({
 
   useEffect(() => {
     setMentionState((state) => ({ ...state, selectedIndex: 0 }));
-  }, [mentionState.isOpen, getMentionQuery(), filteredArticles.map((a) => a.url).join(",")]);
+  }, [mentionState.isOpen, mentionQuery, filteredArticles.map((a) => a.url).join(",")]);
 
   const showActionButtons = !!actionButtons && (!toolbarOpen || isAboveMd);
   const showFollowButton = !!followButton && (!toolbarOpen || isAboveMd);
@@ -420,7 +424,7 @@ const TipTapEditor = ({
           <HelpArticlePopover
             isOpen={mentionState.isOpen}
             position={mentionState.position}
-            query={getMentionQuery()}
+            query={mentionQuery}
             articles={filteredArticles}
             selectedIndex={mentionState.selectedIndex}
             setSelectedIndex={(index) =>
