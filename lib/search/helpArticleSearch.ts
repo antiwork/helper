@@ -14,7 +14,7 @@ export function searchHelpArticles(articles: HelpArticle[], query: string, limit
     return [...articles].sort((a, b) => a.title.localeCompare(b.title)).slice(0, limit);
   }
 
-  const fuse = new Fuse(articles, {
+  const fuse = new Fuse<HelpArticle>(articles, {
     keys: [
       {
         name: "title",
