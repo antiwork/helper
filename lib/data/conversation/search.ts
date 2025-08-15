@@ -138,7 +138,7 @@ export const searchConversations = async (
                     )
                   )
                 )
-              )
+            )
           ),
         }
       : {}),
