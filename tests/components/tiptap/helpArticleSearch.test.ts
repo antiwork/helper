@@ -6,7 +6,6 @@ const searchArticles = (articles: HelpArticle[], query: string) => {
   return searchHelpArticles(articles, query, 10);
 };
 
-
 describe("Help Article Search", () => {
   const mockArticles: HelpArticle[] = [
     {
@@ -188,7 +187,7 @@ describe("Help Article Search", () => {
         {
           title: "acccount", // multiple 'c's
           url: "https://example.com/acccount",
-        }
+        },
       ];
 
       // Query with repeated characters that exist in target
@@ -198,7 +197,7 @@ describe("Help Article Search", () => {
       expect(results.length).toBeGreaterThan(0);
 
       // Both articles should be found
-      const titles = results.map(r => r.title);
+      const titles = results.map((r) => r.title);
       expect(titles).toContain("account");
       expect(titles).toContain("acccount");
     });

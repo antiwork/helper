@@ -31,7 +31,7 @@ export function searchHelpArticles(articles: HelpArticle[], query: string, limit
     distance: 100,
     minMatchCharLength: 1,
     ignoreLocation: true,
-    includeScore: true,
+    includeScore: false,
     shouldSort: true,
   });
 

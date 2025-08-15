@@ -388,7 +388,7 @@ const TipTapEditor = ({
 
   useEffect(() => {
     setMentionState((state) => ({ ...state, selectedIndex: 0 }));
-  }, [mentionState.isOpen, getMentionQuery(), filteredArticles.map((a) => a.url).join(",")]);
+  }, [mentionState.isOpen, mentionQuery, filteredArticles.map((a) => a.url).join(",")]);
 
   const showActionButtons = !!actionButtons && (!toolbarOpen || isAboveMd);
   const showFollowButton = !!followButton && (!toolbarOpen || isAboveMd);
@@ -424,7 +424,7 @@ const TipTapEditor = ({
           <HelpArticlePopover
             isOpen={mentionState.isOpen}
             position={mentionState.position}
-            query={getMentionQuery()}
+            query={mentionQuery}
             articles={filteredArticles}
             selectedIndex={mentionState.selectedIndex}
             setSelectedIndex={(index) =>
