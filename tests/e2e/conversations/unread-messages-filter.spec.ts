@@ -11,8 +11,9 @@ test.describe("Unread Messages Filter", () => {
     const filterToggleButton = page.locator('button[aria-label="Filter Toggle"]');
     await expect(filterToggleButton).toBeVisible();
     await filterToggleButton.click();
-
-    await page.waitForTimeout(1000);
+    
+    // Wait for filter panel to be fully visible and interactive
+    await page.waitForSelector('button:has-text("Unread")', { state: 'visible' });
   });
 
   test("should show unread messages filter button", async ({ page }) => {
@@ -32,7 +33,8 @@ test.describe("Unread Messages Filter", () => {
 
     await expect(page).toHaveURL(/hasUnreadMessages=true/);
 
-    await page.waitForTimeout(1000);
+    // Wait for the filtered results to load
+    await page.waitForLoadState('networkidle');
 
     const unreadBadge = page.locator('[data-testid="unread-messages-badge"]');
     const badgeCount = await unreadBadge.count();
@@ -61,14 +63,14 @@ test.describe("Unread Messages Filter", () => {
     await expect(dateFilter).toBeVisible();
     await dateFilter.click();
 
-    await page.waitForTimeout(500);
+    // Wait for dropdown menu to be visible
+    await page.waitForSelector('[role="menuitemradio"]', { state: 'visible' });
 
     const todayOption = page.locator('[role="menuitemradio"]:has-text("Today")');
     await expect(todayOption).toBeVisible();
     await todayOption.click();
 
-    await page.waitForTimeout(1000);
-
+    // Wait for filter to be applied
     await expect(dateFilter).toHaveClass(/bright/);
 
     const unreadFilter = page.locator('button:has-text("Unread")');
@@ -118,12 +120,12 @@ test.describe("Unread Messages Filter", () => {
     await expect(vipOnlyOption).toBeVisible();
     await vipOnlyOption.click();
 
-    await page.waitForTimeout(1000);
+    // Wait for VIP filter to be applied
+    await page.waitForLoadState('networkidle');
 
     await clearButton.click();
 
-    await page.waitForTimeout(1000);
-
+    // Wait for filter to be cleared
     await expect(unreadFilter).not.toHaveClass(/bright/);
 
     await expect(clearButton).not.toBeVisible();
