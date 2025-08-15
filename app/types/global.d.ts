@@ -25,5 +25,4 @@ export type AttachedFile = Message["files"][number];
 
 export type ConversationListItem = RouterOutputs["mailbox"]["conversations"]["list"]["conversations"][number] & {
   assignedToAI?: boolean;
-  unreadMessageCount?: number;
 };

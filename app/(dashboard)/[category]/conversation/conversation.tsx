@@ -211,7 +211,6 @@ const ConversationHeader = ({
   const { data: conversationInfo } = useConversationContext();
   const { minimize, moveToNextConversation, moveToPreviousConversation, currentIndex, currentTotal, hasNextPage } =
     useConversationListContext();
-  
 
   return (
     <div
