@@ -220,7 +220,7 @@ export const searchConversations = async (
                 matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
               recentMessageText: recent_message_cleanedUpText || null,
               recentMessageAt: recent_message_createdAt ? new Date(recent_message_createdAt) : null,
-              unreadMessageCount: Number(unread_message_count) || 0,
+              unreadMessageCount: Number(unread_message_count) > 0 ? Number(unread_message_count) : undefined,
             }),
           ),
         nextCursor:
