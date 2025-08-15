@@ -59,4 +59,68 @@ test.describe("Settings - Preferences", () => {
       await expect(testConfettiButton).not.toBeVisible();
     }
   });
+
+  test("should toggle Next Ticket Preview setting", async ({ page }) => {
+    const nextTicketPreviewSetting = page.locator('section:has(h2:text("Show Next Ticket Preview"))');
+    const nextTicketPreviewSwitch = nextTicketPreviewSetting.locator('input[type="checkbox"]');
+
+    await expect(nextTicketPreviewSetting).toBeVisible();
+
+    // Store initial state
+    const isInitiallyEnabled = await nextTicketPreviewSwitch.isChecked();
+
+    // Toggle the setting off
+    if (isInitiallyEnabled) {
+      await nextTicketPreviewSwitch.click();
+      await waitForSettingsSaved(page);
+      await expect(nextTicketPreviewSwitch).not.toBeChecked();
+    }
+
+    // Navigate to a conversation to verify the preview is hidden
+    await page.goto("/mine");
+    await page.waitForLoadState("networkidle");
+
+    // Click on the first conversation
+    const firstConversation = page.locator('a[href*="/conversation/"]').first();
+    if (await firstConversation.isVisible()) {
+      await firstConversation.click();
+      await page.waitForLoadState("networkidle");
+
+      // Verify Next Ticket Preview is not visible
+      const nextTicketPreview = page.locator('text="Next Ticket:"');
+      await expect(nextTicketPreview).not.toBeVisible();
+    }
+
+    // Go back to settings and toggle it on
+    await page.goto("/settings/preferences");
+    await nextTicketPreviewSwitch.click();
+    await waitForSettingsSaved(page);
+    await expect(nextTicketPreviewSwitch).toBeChecked();
+
+    // Navigate back to conversation to verify the preview is shown
+    await page.goto("/mine");
+    await page.waitForLoadState("networkidle");
+
+    const conversationAgain = page.locator('a[href*="/conversation/"]').first();
+    if (await conversationAgain.isVisible()) {
+      await conversationAgain.click();
+      await page.waitForLoadState("networkidle");
+
+      // Verify Next Ticket Preview is visible (if there are multiple conversations)
+      const nextTicketPreviewVisible = page.locator('text="Next Ticket:"');
+      // Note: Preview only shows if there are multiple conversations
+      // So we check for either visibility or verify the setting is respected
+      const conversationCount = await page.locator('a[href*="/conversation/"]').count();
+      if (conversationCount > 1) {
+        await expect(nextTicketPreviewVisible).toBeVisible();
+      }
+    }
+
+    // Restore original state
+    if (isInitiallyEnabled !== (await nextTicketPreviewSwitch.isChecked())) {
+      await page.goto("/settings/preferences");
+      await nextTicketPreviewSwitch.click();
+      await waitForSettingsSaved(page);
+    }
+  });
 });
