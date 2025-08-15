@@ -50,6 +50,10 @@ const SwitchSectionWrapper = ({
 }: SwitchSectionWrapperProps) => {
   const [isSwitchChecked, setIsSwitchChecked] = useState(initialSwitchChecked);
 
+  React.useEffect(() => {
+    setIsSwitchChecked(initialSwitchChecked);
+  }, [initialSwitchChecked]);
+
   const handleSwitchChange = (checked: boolean) => {
     setIsSwitchChecked(checked);
     if (onSwitchChange) {
