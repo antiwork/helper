@@ -26,6 +26,7 @@ import { publishNewMessageEvent } from "./publishNewMessageEvent";
 import { publishRequestHumanSupport } from "./publishRequestHumanSupport";
 import { renewMailboxWatches } from "./renewMailboxWatches";
 import { scheduledWebsiteCrawl } from "./scheduledWebsiteCrawl";
+import { sendFollowerNotification } from "./sendFollowerNotification";
 import { suggestKnowledgeBankChanges } from "./suggestKnowledgeBankChanges";
 import { updateSuggestedActions } from "./updateSuggestedActions";
 
@@ -56,6 +57,7 @@ export const eventJobs = {
   categorizeConversationToIssueGroup,
   publishRequestHumanSupport,
   handleSlackAgentMessage,
+  sendFollowerNotification,
 };
 
 export const cronJobs = {

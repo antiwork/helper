@@ -20,7 +20,7 @@
     "db:clear": "pnpm services:start && pnpm supabase db reset && pnpm db:migrate",
     "db:reset": "pnpm ensure-ssl-certificates && pnpm db:clear && pnpm db:seed",
     "db:delete-saved-replies": "pnpm run with-dev-env pnpm tsx --conditions=react-server ./scripts/delete-saved-replies.ts",
-    "db:migrate-encrypted-to-plaintext": "pnpm run with-dev-env pnpm tsx --conditions=react-server ./scripts/migrateEncryptedToPlaintext.ts",
+    "db:backfill-last-message-at": "pnpm run with-dev-env pnpm tsx --conditions=react-server ./scripts/backfillLastMessageAt.ts",
     "dev": "bash scripts/dev.sh",
     "dev:email": "pnpm run with-dev-env email dev --dir lib/emails --port 3060",
     "dev:next": "lsof -ti:3010 | xargs kill -9 || true && pnpm next dev --turbopack -H 0.0.0.0",

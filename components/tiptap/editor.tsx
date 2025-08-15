@@ -37,6 +37,7 @@ type TipTapEditorProps = {
   ariaLabel?: string;
   className?: string;
   actionButtons?: ReactNode;
+  followButton?: ReactNode;
   isRecordingSupported: boolean;
   isRecording: boolean;
   startRecording: () => void;
@@ -92,6 +93,7 @@ const TipTapEditor = ({
   ariaLabel,
   className,
   actionButtons,
+  followButton,
   isRecordingSupported,
   isRecording,
   startRecording,
@@ -243,6 +245,10 @@ const TipTapEditor = ({
   const editorRef = useRef(editor);
   useEffect(() => {
     editorRef.current = editor;
+    if (editor && focusOnCreateRef.current) {
+      editor.commands.focus();
+      focusOnCreateRef.current = false;
+    }
     return () => {
       if (editor) {
         editor.destroy();
@@ -251,9 +257,13 @@ const TipTapEditor = ({
   }, [editor]);
 
   const editorContentContainerRef = useRef<HTMLDivElement | null>(null);
+  const focusOnCreateRef = useRef(false);
 
   useImperativeHandle(ref, () => ({
-    focus: () => editorRef.current?.commands.focus(),
+    focus: () => {
+      if (editorRef.current) editorRef.current.commands.focus();
+      else focusOnCreateRef.current = true;
+    },
     scrollTo: (top: number) =>
       editorContentContainerRef.current?.scrollTo({
         top,
@@ -377,6 +387,7 @@ const TipTapEditor = ({
   }, [mentionState.isOpen, getMentionQuery(), filteredArticles.map((a) => a.url).join(",")]);
 
   const showActionButtons = !!actionButtons && (!toolbarOpen || isAboveMd);
+  const showFollowButton = !!followButton && (!toolbarOpen || isAboveMd);
 
   if (!editor) {
     return null;
@@ -468,6 +479,7 @@ const TipTapEditor = ({
           />
         </div>
         {showActionButtons ? <div className="flex-shrink-0 whitespace-nowrap">{actionButtons}</div> : null}
+        {showFollowButton && <div className="flex-shrink-0 ml-4 md:absolute md:right-0 md:ml-0">{followButton}</div>}
       </div>
     </div>
   );

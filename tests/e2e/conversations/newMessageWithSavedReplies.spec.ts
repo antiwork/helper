@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { eq, or } from "drizzle-orm";
 import { db } from "../../../db/client";
 import { savedReplies } from "../../../db/schema";
-import { createSavedReply } from "../saved-replies/savedReplies.spec";
+import { createSavedReply } from "../utils/replyHelpers";
 import { generateRandomString, takeDebugScreenshot } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });

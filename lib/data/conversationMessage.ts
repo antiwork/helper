@@ -387,19 +387,26 @@ export const createConversationMessage = async (
   const messageValues = {
     isPinned: false,
     ...conversationMessage,
-    bodyPlaintext: conversationMessage.body,
-    cleanedUpTextPlaintext: conversationMessage.cleanedUpText,
+    body: conversationMessage.body,
+    cleanedUpText: conversationMessage.cleanedUpText,
   };
 
   const message = await tx.insert(conversationMessages).values(messageValues).returning().then(takeUniqueOrThrow);
 
-  if (message.role === "user") {
-    await updateConversation(
-      message.conversationId,
-      { set: { lastUserEmailCreatedAt: new Date(), lastReadAt: new Date() }, skipRealtimeEvents: true },
-      tx,
-    );
-  }
+  await updateConversation(
+    message.conversationId,
+    {
+      set: {
+        lastMessageAt: new Date(),
+        ...(message.role === "user" && {
+          lastUserEmailCreatedAt: new Date(),
+          lastReadAt: new Date(),
+        }),
+      },
+      skipRealtimeEvents: true,
+    },
+    tx,
+  );
 
   const eventsToSend = [];
 
@@ -411,6 +418,19 @@ export const createConversationMessage = async (
         conversationId: message.conversationId,
       },
     });
+    if (message.userId && (message.role === "user" || message.role === "staff")) {
+      eventsToSend.push({
+        name: "conversations/send-follower-notification" as const,
+        data: {
+          conversationId: message.conversationId,
+          eventType: "new_message" as const,
+          triggeredByUserId: message.userId,
+          eventDetails: {
+            message: message.cleanedUpText || undefined,
+          },
+        },
+      });
+    }
   }
 
   if (message.status === "queueing") {
@@ -449,13 +469,11 @@ export const createAiDraft = async (
     {
       conversationId,
       body: sanitizedBody,
-      bodyPlaintext: sanitizedBody,
       role: "ai_assistant",
       status: "draft",
       responseToId,
       promptInfo: promptInfo ? { details: promptInfo } : null,
       cleanedUpText: body,
-      cleanedUpTextPlaintext: body,
       isPerfect: false,
       isFlaggedAsBad: false,
     },
@@ -469,10 +487,7 @@ export const ensureCleanedUpText = async (
 ) => {
   if (message.cleanedUpText !== null) return message.cleanedUpText;
   const cleanedUpText = generateCleanedUpText(message.body ?? "");
-  await tx
-    .update(conversationMessages)
-    .set({ cleanedUpText, cleanedUpTextPlaintext: cleanedUpText })
-    .where(eq(conversationMessages.id, message.id));
+  await tx.update(conversationMessages).set({ cleanedUpText }).where(eq(conversationMessages.id, message.id));
   return cleanedUpText;
 };
 
@@ -530,9 +545,7 @@ export const createToolEvent = async ({
     conversationId,
     role: "tool",
     body: userMessage,
-    bodyPlaintext: userMessage,
     cleanedUpText: userMessage,
-    cleanedUpTextPlaintext: userMessage,
     metadata: {
       tool:
         "id" in tool

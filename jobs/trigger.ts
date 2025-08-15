@@ -130,6 +130,22 @@ const events = {
     }),
     jobs: ["handleSlackAgentMessage"],
   },
+  "conversations/send-follower-notification": {
+    data: z.object({
+      conversationId: z.number(),
+      eventType: z.enum(["new_message", "status_change", "assignment_change", "note_added"]),
+      triggeredByUserId: z.string(),
+      eventDetails: z.object({
+        message: z.string().optional(),
+        oldStatus: z.string().optional(),
+        newStatus: z.string().optional(),
+        oldAssignee: z.string().optional(),
+        newAssignee: z.string().optional(),
+        note: z.string().optional(),
+      }),
+    }),
+    jobs: ["sendFollowerNotification"],
+  },
 };
 
 export type EventName = keyof typeof events;

@@ -1,4 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
+import {
+  clickCreateOneButton,
+  clickFloatingAddButton,
+  clickSaveButton,
+  createSavedReply,
+  fillSavedReplyForm,
+  openCreateDialog,
+} from "../utils/replyHelpers";
 import { debugWait, generateRandomString, takeDebugScreenshot } from "../utils/test-helpers";
 import { waitForToast } from "../utils/toastHelpers";
 
@@ -62,14 +70,6 @@ async function expectDeleteDialogVisible(page: Page) {
   await expect(deleteDialog).toContainText("Are you sure you want to delete");
 }
 
-async function clickCreateOneButton(page: Page) {
-  await page.locator('button:has-text("Create one")').click();
-}
-
-async function clickFloatingAddButton(page: Page) {
-  await page.locator("button.fixed").click();
-}
-
 async function searchSavedReplies(page: Page, searchTerm: string) {
   const searchInput = page.locator('input[placeholder="Search saved replies..."]').first();
   await searchInput.fill(searchTerm);
@@ -96,55 +96,6 @@ async function clearSearch(page: Page) {
   await page.waitForTimeout(200);
 }
 
-async function fillSavedReplyForm(page: Page, name: string, content: string) {
-  const nameInput = page.locator('input[placeholder*="Welcome Message"]');
-  const contentEditor = page.locator('[role="textbox"][contenteditable="true"]');
-  await nameInput.fill(name);
-  await contentEditor.click();
-  await contentEditor.fill(content);
-}
-
-async function clickSaveButton(page: Page) {
-  const addBtn = page.locator('button:has-text("Add")');
-  const updateBtn = page.locator('button:has-text("Update")');
-  const saveBtn = page.locator('button:has-text("Save")');
-  const createDialog = page.locator('[role="dialog"]:has-text("New saved reply")');
-  const editDialog = page.locator('[role="dialog"]:has-text("Edit saved reply")');
-
-  // Map each button to its waitFor promise, returning the button when visible
-  const buttonPromises = [
-    updateBtn
-      .waitFor({ state: "visible", timeout: 5000 })
-      .then(() => updateBtn)
-      .catch(() => null),
-    addBtn
-      .waitFor({ state: "visible", timeout: 5000 })
-      .then(() => addBtn)
-      .catch(() => null),
-    saveBtn
-      .waitFor({ state: "visible", timeout: 5000 })
-      .then(() => saveBtn)
-      .catch(() => null),
-  ];
-
-  // Wait for the first button to become visible and capture it
-  const winningButton = await Promise.race(buttonPromises);
-
-  if (!winningButton) {
-    throw new Error("No save button (Add/Update/Save) found");
-  }
-
-  // Click the winning button directly
-  await winningButton.scrollIntoViewIfNeeded();
-  await winningButton.click();
-
-  // Wait for either dialog to close
-  await Promise.race([
-    createDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => null),
-    editDialog.waitFor({ state: "hidden", timeout: 5000 }).catch(() => null),
-  ]);
-}
-
 async function clickCancelButton(page: Page) {
   await page.locator('button:has-text("Cancel")').click();
 }
@@ -167,10 +118,6 @@ async function getSavedReplyCount(page: Page): Promise<number> {
 
 async function getSavedReplyTitle(page: Page, index = 0): Promise<string> {
   return (await page.locator('[data-testid="saved-reply-card"] .text-lg').nth(index).textContent()) || "";
-}
-
-async function getSavedReplyContent(page: Page, index = 0): Promise<string> {
-  return (await page.locator('[data-testid="saved-reply-card"] .text-muted-foreground').nth(index).textContent()) || "";
 }
 
 async function findSavedReplyByTitle(page: Page, title: string) {
@@ -211,49 +158,6 @@ async function copySavedReplyByTitle(page: Page, title: string) {
     .first();
   await expect(copyButton).toBeVisible({ timeout: 5000 });
   await copyButton.click();
-}
-
-async function openCreateDialog(page: Page) {
-  await page.waitForTimeout(500);
-
-  const emptyState = page.locator('text="No saved replies yet"');
-  const floatingAddButton = page.locator("button.fixed");
-  const createOneButton = page.locator('button:has-text("Create one")');
-  const emptyStateVisible = await emptyState.isVisible().catch(() => false);
-
-  if (emptyStateVisible) {
-    await clickCreateOneButton(page);
-  } else {
-    const fabVisible = await floatingAddButton.isVisible().catch(() => false);
-
-    if (fabVisible) {
-      await clickFloatingAddButton(page);
-    } else {
-      try {
-        await Promise.race([
-          createOneButton.waitFor({ state: "visible", timeout: 5000 }).then(() => "createOne"),
-          floatingAddButton.waitFor({ state: "visible", timeout: 5000 }).then(() => "floating"),
-        ]).then(async (buttonType) => {
-          if (buttonType === "createOne") {
-            await clickCreateOneButton(page);
-          } else {
-            await clickFloatingAddButton(page);
-          }
-        });
-      } catch {
-        throw new Error("Neither 'Create one' nor floating add button found");
-      }
-    }
-  }
-
-  await expectCreateDialogVisible(page);
-}
-
-export async function createSavedReply(page: Page, name: string, content: string) {
-  await openCreateDialog(page);
-  await fillSavedReplyForm(page, name, content);
-  await clickSaveButton(page);
-  await waitForToast(page, "Saved reply created successfully");
 }
 
 async function deleteSavedReply(page: Page, index: number) {

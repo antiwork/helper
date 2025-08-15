@@ -5,6 +5,7 @@ import { encryptedField } from "../lib/encryptedField";
 import { randomSlugField } from "../lib/random-slug-field";
 import { withTimestamps } from "../lib/with-timestamps";
 import { conversationEvents } from "./conversationEvents";
+import { conversationFollowers } from "./conversationFollowers";
 import { conversationMessages } from "./conversationMessages";
 import { issueGroups } from "./issueGroups";
 import { platformCustomers } from "./platformCustomers";
@@ -15,8 +16,8 @@ export const conversations = pgTable(
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
     emailFrom: text(),
-    subject: encryptedField("encrypted_subject"),
-    subjectPlaintext: text("subject"),
+    unused_subject: encryptedField("encrypted_subject"),
+    subject: text("subject"),
     status: text().$type<"open" | "closed" | "spam">(),
     unused_mailboxId: bigint("mailbox_id", { mode: "number" })
       .notNull()
@@ -25,6 +26,7 @@ export const conversations = pgTable(
     slug: randomSlugField("slug"),
     lastUserEmailCreatedAt: timestamp({ withTimezone: true, mode: "date" }),
     lastReadAt: timestamp({ withTimezone: true, mode: "date" }),
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true, mode: "date" }),
     conversationProvider: text().$type<"gmail" | "helpscout" | "chat">(),
     closedAt: timestamp({ withTimezone: true, mode: "date" }),
     assignedToId: text("assigned_to_clerk_id"),
@@ -70,6 +72,7 @@ export const conversations = pgTable(
     index("conversations_anonymous_session_id_idx").on(table.anonymousSessionId),
     index("conversations_merged_into_id_idx").on(table.mergedIntoId),
     index("conversations_issue_group_id_idx").on(table.issueGroupId),
+    index("conversations_last_message_at_idx").on(table.lastMessageAt),
     index("conversations_conversation_status_last_user_email_created_at_idx")
       .on(table.status, table.lastUserEmailCreatedAt.desc().nullsLast())
       .where(isNull(table.mergedIntoId)),
@@ -87,6 +90,7 @@ export const conversationsRelations = relations(conversations, ({ one, many }) =
     references: [platformCustomers.email],
   }),
   events: many(conversationEvents),
+  followers: many(conversationFollowers),
   issueGroup: one(issueGroups, {
     fields: [conversations.issueGroupId],
     references: [issueGroups.id],
