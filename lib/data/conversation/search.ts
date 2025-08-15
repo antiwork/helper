@@ -119,6 +119,26 @@ export const searchConversations = async (
           issueGroup: eq(conversations.issueGroupId, filters.issueGroupId),
         }
       : {}),
+    ...(filters.hasUnreadMessages
+      ? {
+          hasUnreadMessages: exists(
+            db
+              .select()
+              .from(conversationMessages)
+              .where(
+                and(
+                  eq(conversationMessages.conversationId, conversations.id),
+                  eq(conversationMessages.role, "user"),
+                  isNull(conversationMessages.deletedAt),
+                  gt(
+                    conversationMessages.createdAt,
+                    sql`COALESCE(${conversations.lastReadAt}, ${conversations.createdAt})`
+                  )
+                )
+              )
+          ),
+        }
+      : {}),
   };
 
   const matches = filters.search ? await searchEmailsByKeywords(filters.search, Object.values(where)) : [];

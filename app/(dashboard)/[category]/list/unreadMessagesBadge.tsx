@@ -6,7 +6,7 @@ interface UnreadMessagesBadgeProps {
   className?: string;
 }
 
-export const UnreadMessagesBadge = ({ count, className }: UnreadMessagesBadgeProps) => {
+export const MessagesBadge = ({ count, className }: UnreadMessagesBadgeProps) => {
   if (count <= 0) return null;
 
   const displayText = count > 10 ? "10+ unread messages" : `${count} unread message${count === 1 ? "" : "s"}`;

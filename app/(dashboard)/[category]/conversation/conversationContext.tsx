@@ -40,14 +40,11 @@ export function useConversationQuery(conversationSlug: string | null) {
     },
   );
 
-  // Mark conversation as read when component unmounts (user navigates away)
+  // Mark conversation as read as soon as it loads (user opened it)
   useEffect(() => {
-    return () => {
-      // Only mark as read if data was successfully loaded
-      if (result?.data && conversationSlug && !result.isPending && !isMarkingAsRead) {
-        markAsRead({ conversationSlug });
-      }
-    };
+    if (result?.data && conversationSlug && !result.isPending && !isMarkingAsRead) {
+      markAsRead({ conversationSlug });
+    }
   }, [result?.data, conversationSlug, result?.isPending, markAsRead, isMarkingAsRead]);
 
   return conversationSlug ? result : null;
