@@ -62,6 +62,7 @@ When making changes, you need to include a changeset file describing your change
    ```
 
 2. Select the type of change:
+
    - `major`: Breaking changes
    - `minor`: New features
    - `patch`: Bug fixes
@@ -91,6 +92,7 @@ When making changes, you need to include a changeset file describing your change
    ```
 
    This will:
+
    - Update package versions based on changesets
    - Generate/update changelog
    - Remove changeset files
@@ -104,6 +106,7 @@ When making changes, you need to include a changeset file describing your change
    ```
 
    This will:
+
    - Publish packages to npm
    - Create git tags
    - Push changes

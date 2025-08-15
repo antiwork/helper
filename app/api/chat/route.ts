@@ -17,6 +17,7 @@ import {
 import { publicConversationChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createClient } from "@/lib/supabase/server";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
 
@@ -68,7 +69,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
   waitUntil(
     cacheClientTools(tools, customerSpecificTools ? (conversation.emailFrom ?? userEmail ?? null) : null).catch(
       (err) => {
-        Sentry.captureException(err);
+        captureExceptionAndLog(err);
       },
     ),
   );

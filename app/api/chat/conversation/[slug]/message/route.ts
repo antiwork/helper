@@ -74,7 +74,7 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
   try {
     await triggerEvent(
       "conversations/auto-response.create",
-      { messageId: userMessage.id, tools },
+      { messageId: userMessage.id, tools, customerSpecificTools },
       { sleepSeconds: 5 * 60 },
     );
   } catch (err) {
