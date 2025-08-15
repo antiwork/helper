@@ -218,7 +218,8 @@ export const searchConversations = async (
             gt(
               conversationMessages.createdAt,
               sql`COALESCE(${conversations.lastReadAt}, ${conversations.createdAt})`
-            )
+            ),
+            isNotNull(conversations.assignedToId)
           )}
         ) as unread_messages`,
         sql`true`,
