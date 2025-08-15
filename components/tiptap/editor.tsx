@@ -246,6 +246,10 @@ const TipTapEditor = ({
   const editorRef = useRef(editor);
   useEffect(() => {
     editorRef.current = editor;
+    if (editor && focusOnCreateRef.current) {
+      editor.commands.focus();
+      focusOnCreateRef.current = false;
+    }
     return () => {
       if (editor) {
         editor.destroy();
@@ -254,9 +258,13 @@ const TipTapEditor = ({
   }, [editor]);
 
   const editorContentContainerRef = useRef<HTMLDivElement | null>(null);
+  const focusOnCreateRef = useRef(false);
 
   useImperativeHandle(ref, () => ({
-    focus: () => editorRef.current?.commands.focus(),
+    focus: () => {
+      if (editorRef.current) editorRef.current.commands.focus();
+      else focusOnCreateRef.current = true;
+    },
     scrollTo: (top: number) =>
       editorContentContainerRef.current?.scrollTo({
         top,
