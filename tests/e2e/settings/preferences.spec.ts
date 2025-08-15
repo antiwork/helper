@@ -41,12 +41,12 @@ test.describe("Settings - Preferences", () => {
 
     await expect(confettiSetting).toBeVisible();
 
-    const isInitiallyEnabled = await confettiSwitch.isChecked();
+    const isInitiallyEnabled = (await confettiSwitch.getAttribute("aria-checked")) === "true";
 
     if (!isInitiallyEnabled) {
       await confettiSwitch.click();
       await waitForSettingsSaved(page);
-      await expect(confettiSwitch).toBeChecked();
+      await expect(confettiSwitch).toHaveAttribute("aria-checked", "true");
     }
 
     await expect(testConfettiButton).toBeVisible();
@@ -55,25 +55,27 @@ test.describe("Settings - Preferences", () => {
     if (!isInitiallyEnabled) {
       await confettiSwitch.click();
       await waitForSettingsSaved(page);
-      await expect(confettiSwitch).not.toBeChecked();
+      await expect(confettiSwitch).toHaveAttribute("aria-checked", "false");
       await expect(testConfettiButton).not.toBeVisible();
     }
   });
 
   test("should toggle Next Ticket Preview setting", async ({ page }) => {
-    const nextTicketPreviewSetting = page.locator('section:has(h2:text("Show Next Ticket Preview"))');
-    const nextTicketPreviewSwitch = nextTicketPreviewSetting.locator('input[type="checkbox"]');
+    const nextTicketPreviewSetting = page.locator('section:has(h2:has-text("Show Next Ticket Preview"))');
+    const nextTicketPreviewSwitch = page
+      .locator('button[role="switch"][aria-label="Show Next Ticket Preview Switch"]')
+      .first();
 
     await expect(nextTicketPreviewSetting).toBeVisible();
 
     // Store initial state
-    const isInitiallyEnabled = await nextTicketPreviewSwitch.isChecked();
+    const isInitiallyEnabled = (await nextTicketPreviewSwitch.getAttribute("aria-checked")) === "true";
 
     // Toggle the setting off
     if (isInitiallyEnabled) {
       await nextTicketPreviewSwitch.click();
       await waitForSettingsSaved(page);
-      await expect(nextTicketPreviewSwitch).not.toBeChecked();
+      await expect(nextTicketPreviewSwitch).toHaveAttribute("aria-checked", "false");
     }
 
     // Navigate to a conversation to verify the preview is hidden
@@ -95,7 +97,7 @@ test.describe("Settings - Preferences", () => {
     await page.goto("/settings/preferences");
     await nextTicketPreviewSwitch.click();
     await waitForSettingsSaved(page);
-    await expect(nextTicketPreviewSwitch).toBeChecked();
+    await expect(nextTicketPreviewSwitch).toHaveAttribute("aria-checked", "true");
 
     // Navigate back to conversation to verify the preview is shown
     await page.goto("/mine");
@@ -117,7 +119,8 @@ test.describe("Settings - Preferences", () => {
     }
 
     // Restore original state
-    if (isInitiallyEnabled !== (await nextTicketPreviewSwitch.isChecked())) {
+    const currentState = (await nextTicketPreviewSwitch.getAttribute("aria-checked")) === "true";
+    if (isInitiallyEnabled !== currentState) {
       await page.goto("/settings/preferences");
       await nextTicketPreviewSwitch.click();
       await waitForSettingsSaved(page);
