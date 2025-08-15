@@ -19,7 +19,14 @@ import {
 } from "drizzle-orm";
 import { memoize } from "lodash-es";
 import { db } from "@/db/client";
-import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
+import {
+  conversationAgentReadStatus,
+  conversationEvents,
+  conversationMessages,
+  conversations,
+  mailboxes,
+  platformCustomers,
+} from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
@@ -119,6 +126,19 @@ export const searchConversations = async (
           issueGroup: eq(conversations.issueGroupId, filters.issueGroupId),
         }
       : {}),
+    ...(filters.hasUnreadReplies && currentUserId
+      ? {
+          hasUnreadReplies: sql`
+            ${conversations.assignedToId} = ${currentUserId}
+            AND ${conversations.lastUserEmailCreatedAt} > COALESCE(
+              (SELECT last_read_at FROM ${conversationAgentReadStatus} 
+               WHERE conversation_id = ${conversations.id} 
+               AND agent_clerk_id = ${currentUserId}),
+              ${conversations.createdAt}
+            )
+          `,
+        }
+      : {}),
   };
 
   const matches = filters.search ? await searchEmailsByKeywords(filters.search, Object.values(where)) : [];
@@ -168,6 +188,41 @@ export const searchConversations = async (
         mailboxes_platformcustomer: platformCustomers,
         recent_message_cleanedUpText: sql<string | null>`recent_message.cleaned_up_text`,
         recent_message_createdAt: sql<string | null>`recent_message.created_at`,
+        hasUnreadReplies: currentUserId
+          ? sql<boolean>`
+          CASE 
+            WHEN ${conversations.assignedToId} = ${currentUserId}
+            AND ${conversations.lastUserEmailCreatedAt} > COALESCE(
+              (SELECT last_read_at FROM ${conversationAgentReadStatus} 
+               WHERE conversation_id = ${conversations.id} 
+               AND agent_clerk_id = ${currentUserId}),
+              ${conversations.createdAt}
+            )
+            THEN true 
+            ELSE false 
+          END
+        `.as("has_unread_replies")
+          : sql<boolean>`false`.as("has_unread_replies"),
+        unreadCount: currentUserId
+          ? sql<number>`
+          CASE 
+            WHEN ${conversations.assignedToId} = ${currentUserId}
+            THEN (
+              SELECT COUNT(*) 
+              FROM ${conversationMessages} 
+              WHERE conversation_id = ${conversations.id}
+              AND created_at > COALESCE(
+                (SELECT last_read_at FROM ${conversationAgentReadStatus} 
+                 WHERE conversation_id = ${conversations.id} 
+                 AND agent_clerk_id = ${currentUserId}),
+                ${conversations.createdAt}
+              )
+              AND role = 'user'
+            )
+            ELSE 0
+          END
+        `.as("unread_count")
+          : sql<number>`0`.as("unread_count"),
       })
       .from(conversations)
       .leftJoin(platformCustomers, eq(conversations.emailFrom, platformCustomers.email))
@@ -199,12 +254,16 @@ export const searchConversations = async (
               mailboxes_platformcustomer,
               recent_message_cleanedUpText,
               recent_message_createdAt,
+              hasUnreadReplies,
+              unreadCount,
             }) => ({
               ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
               matchedMessageText:
                 matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
               recentMessageText: recent_message_cleanedUpText || null,
               recentMessageAt: recent_message_createdAt ? new Date(recent_message_createdAt) : null,
+              hasUnreadReplies,
+              unreadCount,
             }),
           ),
         nextCursor:

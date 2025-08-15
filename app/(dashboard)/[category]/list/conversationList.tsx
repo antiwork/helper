@@ -209,6 +209,11 @@ export const List = () => {
     });
   });
 
+  useRealtimeEvent(conversationsListChannelId(), "conversation.read", () => {
+    void utils.mailbox.conversations.list.invalidate(input);
+    void utils.mailbox.unreadCount.invalidate();
+  });
+
   const conversationsText = allConversationsSelected
     ? "all matching conversations"
     : `${selectedConversations.length} conversation${selectedConversations.length === 1 ? "" : "s"}`;

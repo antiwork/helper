@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useStickToBottom } from "use-stick-to-bottom";
 import {
@@ -38,6 +38,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBreakpoint } from "@/components/useBreakpoint";
+import { useSession } from "@/components/useSession";
 import type { serializeMessage } from "@/lib/data/conversationMessage";
 import { conversationChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
@@ -393,6 +394,30 @@ const ConversationContent = () => {
   const { conversationSlug, data: conversationInfo, isPending, error } = useConversationContext();
   const utils = api.useUtils();
   const { input } = useConversationsListInput();
+  const { user } = useSession() ?? {};
+  const markAsRead = api.mailbox.conversations.markAsRead.useMutation();
+
+  // Keep track of last-marked conversation to avoid duplicate mutations
+  const lastMarkedSlugRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!conversationSlug) return;
+    if (!conversationInfo?.id || conversationInfo.assignedToId !== user?.id) return;
+
+    // Avoid duplicate calls (e.g., StrictMode double invoke)
+    if (lastMarkedSlugRef.current === conversationSlug) return;
+
+    markAsRead.mutate(
+      { conversationSlug },
+      {
+        onSuccess: () => {
+          lastMarkedSlugRef.current = conversationSlug;
+          void utils.mailbox.conversations.list.invalidate(input);
+          void utils.mailbox.unreadCount.invalidate();
+        },
+      },
+    );
+  }, [conversationInfo?.id, conversationInfo?.assignedToId, user?.id, conversationSlug, markAsRead, utils, input]);
 
   useRealtimeEvent(conversationChannelId(conversationSlug), "conversation.updated", (event) => {
     utils.mailbox.conversations.get.setData({ conversationSlug }, (data) => (data ? { ...data, ...event.data } : null));

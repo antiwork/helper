@@ -20,6 +20,7 @@ export const useConversationsListInput = () => {
     events: parseAsArrayOf(parseAsStringEnum(["request_human_support"] as const)),
     issueGroupId: parseAsInteger,
     isAssigned: parseAsBoolean,
+    hasUnreadReplies: parseAsBoolean,
   });
 
   const input = {
@@ -38,6 +39,7 @@ export const useConversationsListInput = () => {
     events: searchParams.events ?? undefined,
     issueGroupId: searchParams.issueGroupId ?? undefined,
     isAssigned: searchParams.isAssigned ?? undefined,
+    hasUnreadReplies: searchParams.hasUnreadReplies ?? undefined,
   };
 
   return { input, searchParams, setSearchParams };

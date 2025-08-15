@@ -4,7 +4,13 @@ import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationFollowers, conversationMessages, conversations, files } from "@/db/schema";
+import {
+  conversationAgentReadStatus,
+  conversationFollowers,
+  conversationMessages,
+  conversations,
+  files,
+} from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
 import { generateDraftResponse } from "@/lib/ai/chat";
@@ -16,6 +22,8 @@ import { createReply, getLastAiGeneratedDraft, serializeResponseAiDraft } from "
 import { getGmailSupportEmail } from "@/lib/data/gmailSupportEmail";
 import { findSimilarConversations } from "@/lib/data/retrieval";
 import { env } from "@/lib/env";
+import { conversationsListChannelId } from "@/lib/realtime/channels";
+import { publishToRealtime } from "@/lib/realtime/publish";
 import { mailboxProcedure } from "../procedure";
 import { filesRouter } from "./files";
 import { githubRouter } from "./github";
@@ -324,5 +332,31 @@ export const conversationsRouter = {
     });
 
     return { following: !!follower };
+  }),
+
+  markAsRead: conversationProcedure.mutation(async ({ ctx }) => {
+    await db
+      .insert(conversationAgentReadStatus)
+      .values({
+        conversationId: ctx.conversation.id,
+        agentClerkId: ctx.user.id,
+        lastReadAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [conversationAgentReadStatus.conversationId, conversationAgentReadStatus.agentClerkId],
+        set: { lastReadAt: new Date(), updatedAt: new Date() },
+      });
+
+    await publishToRealtime({
+      channel: conversationsListChannelId(),
+      event: "conversation.read",
+      data: {
+        conversationId: ctx.conversation.id,
+        agentId: ctx.user.id,
+        markedReadAt: new Date(),
+      },
+    });
+
+    return { success: true };
   }),
 } satisfies TRPCRouterRecord;

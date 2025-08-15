@@ -1,8 +1,8 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
-import { and, count, eq, isNotNull, isNull, SQL } from "drizzle-orm";
+import { and, count, eq, isNotNull, isNull, SQL, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { conversations, mailboxes } from "@/db/schema";
+import { conversationAgentReadStatus, conversations, mailboxes } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { getGuideSessionsForMailbox } from "@/lib/data/guide";
 import { getMailboxInfo } from "@/lib/data/mailbox";
@@ -42,6 +42,43 @@ export const mailboxRouter = {
       mine,
       assigned,
       unassigned: all - assigned,
+    };
+  }),
+  unreadCount: mailboxProcedure.query(async ({ ctx }) => {
+    const countUnreadStatus = async (where?: SQL) => {
+      const result = await db
+        .select({ count: count() })
+        .from(conversations)
+        .where(
+          and(
+            eq(conversations.status, "open"),
+            isNull(conversations.mergedIntoId),
+            sql`
+              ${conversations.lastUserEmailCreatedAt} > COALESCE(
+                (SELECT last_read_at FROM ${conversationAgentReadStatus} 
+                 WHERE conversation_id = ${conversations.id} 
+                 AND agent_clerk_id = ${ctx.user.id}),
+                ${conversations.createdAt}
+              )
+            `,
+            where,
+          ),
+        );
+      return result[0]?.count ?? 0;
+    };
+
+    const userAssignedFilter = eq(conversations.assignedToId, ctx.user.id);
+    const [all, mine, assigned] = await Promise.all([
+      countUnreadStatus(userAssignedFilter), // User's unread
+      countUnreadStatus(userAssignedFilter), // Same as 'all' for consistency  
+      countUnreadStatus(userAssignedFilter), // User's assigned unread (same as 'all')
+    ]);
+
+    return {
+      all,
+      mine,
+      assigned,
+      unassigned: 0, // Unread messages are only for assigned conversations
     };
   }),
   get: mailboxProcedure.query(async ({ ctx }) => {

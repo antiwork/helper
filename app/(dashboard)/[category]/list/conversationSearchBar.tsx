@@ -39,6 +39,7 @@ export const ConversationSearchBar = ({
   const [search, setSearch] = useState(searchParams.search || "");
 
   const { data: openCount } = api.mailbox.openCount.useQuery();
+  const { data: unreadCount } = api.mailbox.unreadCount.useQuery();
 
   const status = openCount
     ? [
@@ -67,13 +68,21 @@ export const ConversationSearchBar = ({
       setId(null);
 
       if (status === "open") {
-        setSearchParams({ status: null });
+        setSearchParams({ status: null, hasUnreadReplies: null });
       } else {
-        setSearchParams({ status });
+        setSearchParams({ status, hasUnreadReplies: null });
       }
     },
     [setId, setSearchParams],
   );
+
+  const handleUnreadFilterToggle = useCallback(() => {
+    setId(null);
+    setSearchParams({
+      hasUnreadReplies: searchParams.hasUnreadReplies ? null : true,
+      status: null, // Reset status filter when filtering by unread
+    });
+  }, [setId, setSearchParams, searchParams.hasUnreadReplies]);
 
   const handleSortChange = useCallback(
     (sort: SortOption) => {
@@ -166,6 +175,17 @@ export const ConversationSearchBar = ({
         ) : statusOptions[0] ? (
           <div className="text-sm text-foreground">{statusOptions[0].label}</div>
         ) : null}
+        {unreadCount && unreadCount[input.category] > 0 && (
+          <button
+            onClick={handleUnreadFilterToggle}
+            className={cn(
+              "text-sm cursor-pointer hover:text-foreground transition-colors",
+              searchParams.hasUnreadReplies ? "text-blue-600 font-medium" : "text-muted-foreground",
+            )}
+          >
+            {unreadCount[input.category]} unread
+          </button>
+        )}
         {conversationCount > 0 && (
           <button
             onClick={() => toggleAllConversations()}

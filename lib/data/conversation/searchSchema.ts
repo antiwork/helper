@@ -83,4 +83,5 @@ export const searchSchema = z.object({
     .describe("Filter tickets marked as spam by the Helper Slack agent or by human agents"),
 
   issueGroupId: z.number().optional().describe("Filter tickets by issue group ID"),
+  hasUnreadReplies: z.boolean().optional().describe("Filter by conversations with unread replies for the current user"),
 });
