@@ -233,9 +233,11 @@ export class HelperClient {
     handler: ({
       conversation,
       tools = {},
+      customerSpecificTools,
     }: {
       conversation: ConversationDetails;
       tools?: Record<string, HelperTool>;
+      customerSpecificTools?: boolean;
     }) => {
       const formattedMessages = conversation.messages.map(formatAIMessage);
 
@@ -293,6 +295,7 @@ export class HelperClient {
           conversationSlug: conversation.slug,
           tools: serializeTools(tools),
           requestBody,
+          customerSpecificTools,
         }),
         onToolCall: ({ toolCall }: { toolCall: { toolName: string; args: unknown } }) => {
           const tool = tools[toolCall.toolName];

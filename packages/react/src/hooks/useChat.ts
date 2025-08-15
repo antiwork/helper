@@ -10,6 +10,7 @@ export interface UseChatProps {
   conversation: ConversationDetails;
   tools?: Record<string, HelperTool>;
   enableRealtime?: boolean;
+  customerSpecificTools?: boolean;
   ai?: Parameters<typeof useAIChat>[0];
 }
 
@@ -23,12 +24,16 @@ export const useChat = ({
   conversation,
   tools = {},
   enableRealtime = true,
+  customerSpecificTools,
   ai: aiOptions,
 }: UseChatProps): UseChatResult => {
   const { client } = useHelperClient();
   const [agentTyping, setAgentTyping] = useState(false);
 
-  const chatHandler = useMemo(() => client.chat.handler({ conversation, tools }), [client, conversation, tools]);
+  const chatHandler = useMemo(
+    () => client.chat.handler({ conversation, tools, customerSpecificTools }),
+    [client, conversation, tools, customerSpecificTools],
+  );
 
   const { messages, setMessages, ...rest } = useAIChat({
     ...chatHandler,

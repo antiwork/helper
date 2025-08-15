@@ -1,8 +1,10 @@
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
+import { startCase } from "lodash";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { tools } from "@/db/schema/tools";
+import { getCachedClientTools } from "@/lib/data/clientTools";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { callToolApi, ToolApiError } from "@/lib/tools/apiTool";
 import { conversationProcedure } from "./procedure";
@@ -41,15 +43,35 @@ export const toolsRouter = {
       }
     });
 
+    const cachedTools = await getCachedClientTools(conversation.emailFrom);
+    const cachedToolList = cachedTools
+      ? Object.entries(cachedTools).map(([name, tool]) => ({
+          name: startCase(name),
+          slug: name,
+          description: tool.description ?? "",
+          parameterTypes: Object.entries(tool.parameters).map(([paramName, param]) => ({
+            name: paramName,
+            description: param.description,
+            type: param.type,
+            in: "body" as const,
+            required: !param.optional,
+          })),
+          customerEmailParameter: null,
+        }))
+      : [];
+
     return {
       suggested,
-      all: mailboxTools.map((tool) => ({
-        name: tool.name,
-        slug: tool.slug,
-        description: tool.description,
-        parameterTypes: tool.parameters ?? [],
-        customerEmailParameter: tool.customerEmailParameter,
-      })),
+      all: [
+        ...mailboxTools.map((tool) => ({
+          name: tool.name,
+          slug: tool.slug,
+          description: tool.description,
+          parameterTypes: tool.parameters ?? [],
+          customerEmailParameter: tool.customerEmailParameter,
+        })),
+        ...cachedToolList,
+      ],
     };
   }),
 

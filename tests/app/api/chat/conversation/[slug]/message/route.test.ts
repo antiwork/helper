@@ -126,6 +126,42 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     ]);
   });
 
+  it("should pass tools and customerSpecificTools to the trigger event", async () => {
+    const { mailbox } = await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create({
+      emailFrom: "test@example.com",
+    });
+
+    mockSession = { isAnonymous: false, email: "test@example.com" };
+    mockMailbox = mailbox;
+
+    const tools = {
+      testTool: { parameters: {}, serverRequestUrl: "https://example.com/tool" },
+    } as any;
+
+    const request = new Request("https://example.com/api", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: "Hello with tools",
+        tools,
+        customerSpecificTools: true,
+      }),
+    });
+
+    const response = await POST(request, {
+      params: Promise.resolve({ slug: conversation.slug }),
+    });
+    await response.json();
+
+    expect(response.status).toBe(200);
+    expect(triggerEvent).toHaveBeenCalledWith(
+      "conversations/auto-response.create",
+      { messageId: "msg123", tools, customerSpecificTools: true },
+      { sleepSeconds: 5 * 60 },
+    );
+  });
+
   it("should return 400 for missing content", async () => {
     const { mailbox } = await mailboxFactory.create();
     const { conversation } = await conversationFactory.create({
