@@ -215,7 +215,11 @@ export const searchConversations = async (
             eq(conversationMessages.conversationId, conversations.id),
             eq(conversationMessages.role, "user"),
             isNull(conversationMessages.deletedAt),
-            gt(conversationMessages.createdAt, sql`COALESCE(${conversations.lastReadAt}, ${conversations.createdAt})`)
+            gt(
+              conversationMessages.createdAt,
+              sql`COALESCE(${conversations.lastReadAt}, ${conversations.createdAt})`
+            ),
+            isNotNull(conversations.assignedToId)
           )}
         ) as unread_messages`,
         sql`true`,
