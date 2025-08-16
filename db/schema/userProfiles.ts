@@ -22,6 +22,7 @@ export const userProfiles = pgTable("user_profiles", {
       keywords: string[];
     }>()
     .default({ role: "afk", keywords: [] }),
+  pinnedIssueGroupIds: jsonb("pinned_issue_group_ids").$type<number[]>().default([]),
 }).enableRLS();
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({

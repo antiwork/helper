@@ -1,156 +1,147 @@
-import { expect, test } from "@playwright/test";
-import { testData } from "./fixtures/test-data";
+import { expect, Page, test } from "@playwright/test";
+import { loadWidget } from "../utils/test-helpers";
 import { widgetConfigs } from "./fixtures/widget-config";
-import { ApiVerifier } from "./page-objects/apiVerifier";
-import { WidgetPage } from "./page-objects/widgetPage";
 
 test.describe("Helper Chat Widget - Basic Functionality", () => {
-  let widgetPage: WidgetPage;
-  let apiVerifier: ApiVerifier;
-
   test.beforeEach(async ({ page }) => {
-    widgetPage = new WidgetPage(page);
-    apiVerifier = new ApiVerifier(page);
-    await apiVerifier.startCapturing();
+    await page.goto("/widget/test/vanilla");
   });
 
-  test("should load widget and initialize session", async () => {
-    await widgetPage.loadWidget(widgetConfigs.anonymous);
+  test("should load widget and initialize session", async ({ page }) => {
+    const response = await page.waitForResponse(
+      (res) => res.url().includes("/api/widget/session") && res.request().method() === "POST",
+    );
 
-    await apiVerifier.verifySessionApiCall();
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
+    expect(response.ok()).toBe(true);
 
-    const inputVisible = await widgetPage.chatInput.isVisible();
+    const inputVisible = await widgetFrame.getByRole("textbox", { name: "Ask a question" }).isVisible();
     expect(inputVisible).toBe(true);
   });
 
-  test("should send message and receive AI response", async () => {
-    await widgetPage.loadWidget(widgetConfigs.authenticated);
+  test("should send message and receive AI response", async ({ page }) => {
+    const chatResponsePromise = page.waitForResponse(
+      (res) => res.url().includes("/api/chat") && res.request().method() === "POST",
+    );
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
 
-    await widgetPage.sendMessage(testData.messages.simple);
+    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("What is the weather today?");
 
-    await widgetPage.waitForResponse();
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
 
-    await apiVerifier.verifyChatApiCall();
-    await apiVerifier.verifyStreamingResponse();
+    await widgetFrame.locator('[data-message-role="assistant"]').waitFor({ state: "visible", timeout: 30000 });
 
-    const messageCount = await widgetPage.getMessageCount();
+    const chatResponse = await chatResponsePromise;
+    expect(chatResponse.ok()).toBe(true);
+    const contentType = chatResponse.headers()["content-type"] || "";
+    expect(contentType).toMatch(/text\/event-stream|application\/json/);
+
+    const messageCount = await widgetFrame.getByTestId("message").count();
     expect(messageCount).toBeGreaterThanOrEqual(2);
   });
 
-  test("should handle authenticated user data", async () => {
-    await widgetPage.loadWidget(widgetConfigs.authenticated);
+  test("should handle authenticated user data", async ({ page }) => {
+    const response = await page.waitForResponse(
+      (res) => res.url().includes("/api/widget/session") && res.request().method() === "POST",
+    );
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
 
-    // The vanilla test widget may not use the same authentication structure
-    // Just verify that the widget loads successfully with config
-    const inputVisible = await widgetPage.chatInput.isVisible();
+    const inputVisible = await widgetFrame.getByRole("textbox", { name: "Ask a question" }).isVisible();
     expect(inputVisible).toBe(true);
 
-    // Try to verify session call but don't fail if the structure is different
-    try {
-      const sessionCall = await apiVerifier.verifySessionApiCall();
-      // Session call exists, test passes
-    } catch {
-      // Session call might not exist in vanilla widget, that's okay
-      console.log("Session API call not found - vanilla widget may handle auth differently");
-    }
+    expect(response.ok()).toBe(true);
   });
 
-  test("should show loading state during message sending", async () => {
-    await widgetPage.loadWidget(widgetConfigs.anonymous);
+  test("should show loading state during message sending", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
 
-    // Fill the input but don't send yet
-    await widgetPage.chatInput.fill(testData.messages.simple);
+    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("What is the weather today?");
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
 
-    // Set up promise to check for loading state
-    const loadingStatePromise = widgetPage.page
-      .waitForFunction(
-        () => {
-          const frame = document.querySelector("iframe");
-          if (!frame || !frame.contentDocument) return false;
-          // Check for any loading indicators
-          const hasLoadingSpinner = frame.contentDocument.querySelector('[data-testid="loading-spinner"]');
-          const hasDisabledButton = frame.contentDocument.querySelector('button[type="submit"]:disabled');
-          const hasDisabledInput = frame.contentDocument.querySelector("textarea:disabled");
-          return hasLoadingSpinner || hasDisabledButton || hasDisabledInput;
-        },
-        { timeout: 5000 },
-      )
-      .catch(() => false); // Don't fail if no loading state
+    await expect(widgetFrame.getByTestId("loading-spinner")).toBeVisible();
+    await expect(widgetFrame.getByRole("button", { name: "Send message" })).toBeDisabled();
+    await expect(widgetFrame.getByRole("textbox", { name: "Ask a question" })).toBeDisabled();
 
-    // Send the message
-    await widgetPage.sendButton.click();
+    const chatResponsePromise = page.waitForResponse(
+      (res) => res.url().includes("/api/chat") && res.request().method() === "POST",
+    );
 
-    // Check if we detected any loading state
-    const hadLoadingState = await loadingStatePromise;
+    await widgetFrame.locator('[data-message-role="assistant"]').waitFor({ state: "visible", timeout: 30000 });
 
-    // Wait for response
-    await widgetPage.waitForResponse();
+    const chatResponse = await chatResponsePromise;
+    expect(chatResponse.ok()).toBe(true);
 
-    // Verify that a message was sent and response received
-    const messageCount = await widgetPage.getMessageCount();
-    expect(messageCount).toBeGreaterThanOrEqual(2); // User message + AI response
-
-    // Log whether loading state was detected (for debugging)
-    if (!hadLoadingState) {
-      console.log("No loading state detected - widget might not show loading indicators");
-    }
+    const messageCount = await widgetFrame.getByTestId("message").count();
+    expect(messageCount).toBeGreaterThanOrEqual(2);
   });
 
-  test("should persist conversation in session", async () => {
-    await widgetPage.loadWidget(widgetConfigs.authenticated);
+  test("should persist conversation in session", async ({ page }) => {
+    const chatResponses: any[] = [];
+    await page.route("**/api/chat", async (route) => {
+      const response = await route.fetch();
+      chatResponses.push({ url: route.request().url(), method: route.request().method() });
+      await route.fulfill({ response });
+    });
 
-    await widgetPage.sendMessage("First message");
-    await widgetPage.waitForResponse();
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
+    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("First message");
 
-    const firstCount = await widgetPage.getMessageCount();
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+    await widgetFrame.locator('[data-message-role="assistant"]').waitFor({ state: "visible", timeout: 30000 });
 
-    await widgetPage.sendMessage("Second message");
-    await widgetPage.waitForResponse();
+    const firstCount = await widgetFrame.getByTestId("message").count();
 
-    const secondCount = await widgetPage.getMessageCount();
-    // The widget might show messages differently - just verify count increased
+    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("Second message");
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+
+    const secondCount = await widgetFrame.getByTestId("message").count();
     expect(secondCount).toBeGreaterThan(firstCount);
 
-    // The widget might make multiple API calls - just verify we made at least 2
-    const chatCalls = apiVerifier.getApiCalls().filter((call) => call.url.includes("/api/chat"));
-    expect(chatCalls.length).toBeGreaterThanOrEqual(2);
+    await expect(widgetFrame.locator('[data-message-role="assistant"]')).toHaveCount(2);
+    expect(chatResponses.length).toBeGreaterThanOrEqual(2);
   });
 
-  test("should handle empty input gracefully", async () => {
-    await widgetPage.loadWidget(widgetConfigs.anonymous);
+  test("should handle empty input gracefully", async ({ page }) => {
+    // Check that no /api/chat call was made
+    let chatCallMade = false;
+    page.on("request", (request) => {
+      if (request.url().includes("/api/chat") && request.method() === "POST") {
+        chatCallMade = true;
+      }
+    });
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
 
-    await widgetPage.chatInput.fill("");
-    await widgetPage.sendButton.click();
+    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("");
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
 
-    const messageCount = await widgetPage.getMessageCount();
+    const messageCount = await widgetFrame.getByTestId("message").count();
     expect(messageCount).toBe(0);
 
-    const apiCalls = apiVerifier.getApiCalls();
-    const chatCalls = apiCalls.filter((call) => call.url.includes("/api/chat"));
-    expect(chatCalls.length).toBe(0);
+    expect(chatCallMade).toBe(false);
   });
 
   test.skip("should handle network errors gracefully", async ({ page }) => {
-    // Skip: Error message display from PR #756 - https://github.com/antiwork/helper/issues/756
     await page.route("**/api/chat", (route) => route.abort("failed"));
 
-    await widgetPage.loadWidget(widgetConfigs.anonymous);
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
 
-    await widgetPage.sendMessage(testData.messages.simple);
+    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("What is the weather today?");
 
-    const errorMessage = await widgetPage.getErrorMessage();
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+
+    const errorMessage = await widgetFrame.getByTestId("error-message").textContent();
     expect(errorMessage).toContain("Failed to send message");
   });
 
-  test("should maintain proper message order", async () => {
-    await widgetPage.loadWidget(widgetConfigs.authenticated);
+  test("should maintain proper message order", async ({ page }) => {
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
 
-    // Send first message and wait for complete response
-    await widgetPage.sendMessage("Question 1");
-    await widgetPage.waitForResponse();
+    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("Question 1");
 
-    // Wait for first exchange to stabilize
-    await widgetPage.page.waitForFunction(
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+    await widgetFrame.locator('[data-message-role="assistant"]').waitFor({ state: "visible", timeout: 30000 });
+
+    await page.waitForFunction(
       async () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
         return true;
@@ -158,31 +149,27 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
       { timeout: 1000 },
     );
 
-    // Get count after first exchange
-    const countAfterFirst = await widgetPage.getMessageCount();
-    expect(countAfterFirst).toBeGreaterThanOrEqual(2); // At least 1 user + 1 AI message
+    const countAfterFirst = await widgetFrame.getByTestId("message").count();
+    expect(countAfterFirst).toBeGreaterThanOrEqual(2);
 
-    // Send second message and wait for complete response
-    await widgetPage.sendMessage("Question 2");
-    await widgetPage.waitForResponse();
+    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("Question 2");
 
-    // Wait for the message count to reach at least 4
-    let finalCount = await widgetPage.getMessageCount();
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+    await widgetFrame.locator('[data-message-role="assistant"]').waitFor({ state: "visible", timeout: 30000 });
+
+    let finalCount = await widgetFrame.getByTestId("message").count();
     let attempts = 0;
     while (finalCount < 4 && attempts < 10) {
-      await widgetPage.page.waitForTimeout(500);
-      finalCount = await widgetPage.getMessageCount();
+      await page.waitForTimeout(500);
+      finalCount = await widgetFrame.getByTestId("message").count();
       attempts++;
     }
 
-    // Verify we have at least 4 messages (2 user + 2 AI)
     expect(finalCount).toBeGreaterThanOrEqual(4);
 
-    // Try to verify order if data-testid attributes exist
     try {
-      const messages = await widgetPage.widgetFrame.locator('[data-testid="message"]').all();
+      const messages = await widgetFrame.getByTestId("message").all();
       if (messages.length >= 4) {
-        // Get all message roles with retry logic
         const getRoles = async () => {
           const roles = await Promise.all(messages.slice(0, 4).map((msg) => msg.getAttribute("data-message-role")));
           return roles;
@@ -190,13 +177,11 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
 
         let roles = await getRoles();
 
-        // Retry if roles are not yet populated
         if (!roles[0] || !roles[1] || !roles[2] || !roles[3]) {
-          await widgetPage.page.waitForTimeout(1000);
+          await page.waitForTimeout(1000);
           roles = await getRoles();
         }
 
-        // Verify alternating pattern
         expect(roles[0]).toBe("user");
         expect(roles[1]).toBe("assistant");
         expect(roles[2]).toBe("user");
@@ -205,7 +190,6 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
         console.log("Data-testid messages not found - verified count only");
       }
     } catch (error) {
-      // If data-testid doesn't exist, we already verified counts
       console.log("Message role verification skipped - verified message counts instead");
     }
   });

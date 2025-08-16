@@ -1,6 +1,7 @@
 import { userFactory } from "@tests/support/factories/users";
 import { describe, expect, it, vi } from "vitest";
 import * as aiModule from "@/lib/ai";
+import { MINI_MODEL } from "@/lib/ai/core";
 import { emailKeywordsExtractor } from "@/lib/emailKeywordsExtractor";
 
 vi.mock("@/lib/ai", async () => {
@@ -39,7 +40,7 @@ describe("emailKeywordsExtractor", () => {
       ],
       system: expect.stringContaining("Generate a space-delimited list of 1-3 keywords"),
       temperature: 0,
-      model: "gpt-4o-mini",
+      model: MINI_MODEL,
       maxTokens: 500,
     });
   });

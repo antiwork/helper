@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "crypto";
+import * as Sentry from "@sentry/nextjs";
 import { waitUntil } from "@vercel/functions";
 import { eq, sql } from "drizzle-orm";
 import { NextRequest } from "next/server";
@@ -10,10 +11,10 @@ import { jobRuns } from "@/db/schema";
 import { cronJobs, eventJobs } from "@/jobs";
 import { EventData, EventName } from "@/jobs/trigger";
 import { NonRetriableError } from "@/jobs/utils";
-import { env } from "@/lib/env";
+import { getSecret, SECRET_NAMES } from "@/lib/secrets";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
-const verifyHmac = (body: string, providedHmac: string, timestamp: string): boolean => {
+const verifyHmac = async (body: string, providedHmac: string, timestamp: string): Promise<boolean> => {
   if (!timestamp) return false;
 
   // Prevent replay attacks by checking timestamp is recent (within 5 minutes)
@@ -21,7 +22,12 @@ const verifyHmac = (body: string, providedHmac: string, timestamp: string): bool
   if (isNaN(timestampSeconds) || Math.abs(Date.now() / 1000 - timestampSeconds) > 5 * 60) return false;
 
   try {
-    const expectedHmac = createHmac("sha256", env.ENCRYPT_COLUMN_SECRET).update(`${timestamp}.${body}`).digest("hex");
+    const hmacSecret = await getSecret(SECRET_NAMES.JOBS_HMAC);
+    if (!hmacSecret) {
+      return false;
+    }
+
+    const expectedHmac = createHmac("sha256", hmacSecret).update(`${timestamp}.${body}`).digest("hex");
     return timingSafeEqual(Buffer.from(providedHmac, "hex"), Buffer.from(expectedHmac, "hex"));
   } catch {
     return false;
@@ -37,6 +43,8 @@ const retrySeconds: Record<number, number> = {
 
 const handleJob = async (jobRun: typeof jobRuns.$inferSelect, handler: Promise<any>) => {
   try {
+    Sentry.setTag("job", jobRun.job);
+    Sentry.setExtra("data", jobRun.data);
     // eslint-disable-next-line no-console
     console.log(`Running job ${jobRun.id} (${jobRun.job} ${JSON.stringify(jobRun.data)})`);
     const result = await handler;
@@ -64,6 +72,8 @@ const handleJob = async (jobRun: typeof jobRuns.$inferSelect, handler: Promise<a
   }
 };
 
+export const maxDuration = 60;
+
 export const POST = async (request: NextRequest) => {
   try {
     const authHeader = request.headers.get("authorization");
@@ -74,7 +84,7 @@ export const POST = async (request: NextRequest) => {
     const providedHmac = authHeader.slice(7);
     const body = await request.text();
 
-    if (!verifyHmac(body, providedHmac, request.headers.get("x-timestamp") ?? "")) {
+    if (!(await verifyHmac(body, providedHmac, request.headers.get("x-timestamp") ?? ""))) {
       return new Response("Unauthorized", { status: 401 });
     }
 

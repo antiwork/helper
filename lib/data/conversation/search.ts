@@ -19,7 +19,6 @@ import {
 } from "drizzle-orm";
 import { memoize } from "lodash-es";
 import { db } from "@/db/client";
-import { decryptFieldValue } from "@/db/lib/encryptedField";
 import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
@@ -82,6 +81,9 @@ export const searchConversations = async (
         }
       : {}),
     ...(filters.customer?.length ? { customer: inArray(conversations.emailFrom, filters.customer) } : {}),
+    ...(filters.anonymousSessionId
+      ? { anonymousSessionId: eq(conversations.anonymousSessionId, filters.anonymousSessionId) }
+      : {}),
     ...(filters.reactionType
       ? {
           reaction: exists(
@@ -111,6 +113,11 @@ export const searchConversations = async (
       : {}),
     ...(filters.markedAsSpam
       ? { markedAsSpam: hasStatusChangeEvent("spam", filters.markedAsSpam, MARKED_AS_SPAM_BY_AGENT_MESSAGE) }
+      : {}),
+    ...(filters.issueGroupId
+      ? {
+          issueGroup: eq(conversations.issueGroupId, filters.issueGroupId),
+        }
       : {}),
   };
 
@@ -144,7 +151,7 @@ export const searchConversations = async (
   const orderByField =
     filters.status?.length === 1 && filters.status[0] === "closed"
       ? conversations.closedAt
-      : conversations.lastUserEmailCreatedAt;
+      : sql`COALESCE(${conversations.lastUserEmailCreatedAt}, ${conversations.createdAt})`;
   const isOpenTicketsOnly = filters.status?.length === 1 && filters.status[0] === "open";
   const orderBy = isOpenTicketsOnly
     ? [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)]
@@ -160,12 +167,15 @@ export const searchConversations = async (
         conversations_conversation: conversations,
         mailboxes_platformcustomer: platformCustomers,
         recent_message_cleanedUpText: sql<string | null>`recent_message.cleaned_up_text`,
+        recent_message_createdAt: sql<string | null>`recent_message.created_at`,
       })
       .from(conversations)
       .leftJoin(platformCustomers, eq(conversations.emailFrom, platformCustomers.email))
       .leftJoin(
         sql`LATERAL (
-          SELECT ${conversationMessages.cleanedUpText} as cleaned_up_text
+          SELECT
+            ${conversationMessages.cleanedUpText} as cleaned_up_text, 
+            ${conversationMessages.createdAt} as created_at
           FROM ${conversationMessages}
           WHERE ${and(
             eq(conversationMessages.conversationId, conversations.id),
@@ -183,12 +193,20 @@ export const searchConversations = async (
       .then((results) => ({
         results: results
           .slice(0, filters.limit)
-          .map(({ conversations_conversation, mailboxes_platformcustomer, recent_message_cleanedUpText }) => ({
-            ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
-            matchedMessageText:
-              matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
-            recentMessageText: recent_message_cleanedUpText ? decryptFieldValue(recent_message_cleanedUpText) : null,
-          })),
+          .map(
+            ({
+              conversations_conversation,
+              mailboxes_platformcustomer,
+              recent_message_cleanedUpText,
+              recent_message_createdAt,
+            }) => ({
+              ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
+              matchedMessageText:
+                matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
+              recentMessageText: recent_message_cleanedUpText || null,
+              recentMessageAt: recent_message_createdAt ? new Date(recent_message_createdAt) : null,
+            }),
+          ),
         nextCursor:
           results.length > filters.limit ? (parseInt(filters.cursor ?? "0") + filters.limit).toString() : null,
       })),

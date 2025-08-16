@@ -28,13 +28,14 @@ Add the `HelperProvider` to your root layout:
 
 ```tsx
 // app/layout.tsx or similar
-import { HelperProvider } from "@helperai/react";
+import { HelperWidgetScript } from "@helperai/react";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html>
       <body>
-        <HelperProvider host="YOUR_HELPER_HOST">{children}</HelperProvider>
+        <HelperWidgetScript host="YOUR_HELPER_HOST" />
+        {children}
       </body>
     </html>
   );

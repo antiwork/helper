@@ -1,47 +1,71 @@
-import { and, asc, desc, eq, lt } from "drizzle-orm";
+import { and, count, inArray } from "drizzle-orm";
+import { ConversationsResult } from "@helperai/client";
+import { getCustomerFilterForSearch } from "@/app/api/chat/customerFilter";
 import { db } from "@/db/client";
-import { conversations as conversationsTable } from "@/db/schema";
-import { withWidgetAuth } from "../../widget/utils";
+import { conversationMessages } from "@/db/schema";
+import { customerSearchSchema } from "@/lib/data/conversation/customerSearchSchema";
+import { searchConversations } from "@/lib/data/conversation/search";
+import { corsOptions, corsResponse, withWidgetAuth } from "../../widget/utils";
 
 const PAGE_SIZE = 20;
 
-export const GET = withWidgetAuth(async ({ request }, { session }) => {
-  const url = new URL(request.url);
-  const cursor = url.searchParams.get("cursor");
+export const OPTIONS = () => corsOptions("GET");
 
-  let baseCondition;
-  if (session.isAnonymous && session.anonymousSessionId) {
-    baseCondition = eq(conversationsTable.anonymousSessionId, session.anonymousSessionId);
-  } else if (session.email) {
-    baseCondition = eq(conversationsTable.emailFrom, session.email);
-  } else {
+export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
+  const url = new URL(request.url);
+
+  const customerFilter = getCustomerFilterForSearch(session);
+  if (!customerFilter) {
     return Response.json({ error: "Not authorized - Invalid session" }, { status: 401 });
   }
 
-  const whereClause = cursor ? and(baseCondition, lt(conversationsTable.createdAt, new Date(cursor))) : baseCondition;
-  const userConversations = await db.query.conversations.findMany({
-    where: whereClause,
-    orderBy: [desc(conversationsTable.createdAt)],
-    limit: PAGE_SIZE + 1,
-    with: {
-      messages: {
-        limit: 1,
-        orderBy: [asc(conversationsTable.createdAt)],
-      },
-    },
+  const searchParams: Record<string, any> = Object.fromEntries(url.searchParams.entries());
+
+  if (searchParams.status) {
+    searchParams.status = searchParams.status.split(",");
+  }
+
+  const parsedParams = customerSearchSchema.safeParse({
+    ...searchParams,
+    limit: searchParams.limit ? parseInt(searchParams.limit) : PAGE_SIZE,
   });
 
-  const hasMore = userConversations.length > PAGE_SIZE;
-  const conversations = userConversations.slice(0, PAGE_SIZE).map((conv) => ({
-    slug: conv.slug,
-    subject: conv.subject ?? "(no subject)",
-    createdAt: conv.createdAt.toISOString(),
-    firstMessage: conv.messages[0]?.cleanedUpText || conv.messages[0]?.body || null,
-  }));
+  if (!parsedParams.success) {
+    return Response.json({ error: "Invalid search parameters", details: parsedParams.error.issues }, { status: 400 });
+  }
 
-  const nextCursor = hasMore ? userConversations[PAGE_SIZE - 1]!.createdAt.toISOString() : null;
+  const { list } = await searchConversations(mailbox, { ...parsedParams.data, ...customerFilter });
+  const { results, nextCursor } = await list;
+  const messageCounts = await db
+    .select({
+      count: count(),
+      conversationId: conversationMessages.conversationId,
+    })
+    .from(conversationMessages)
+    .where(
+      and(
+        inArray(
+          conversationMessages.conversationId,
+          results.map((r) => r.id),
+        ),
+        inArray(conversationMessages.role, ["user", "staff", "ai_assistant"]),
+      ),
+    )
+    .groupBy(conversationMessages.conversationId);
 
-  return Response.json({
+  const conversations = results
+    .map((conv) => ({
+      slug: conv.slug,
+      subject: conv.subject ?? "(no subject)",
+      createdAt: conv.createdAt.toISOString(),
+      latestMessage: conv.recentMessageText || null,
+      latestMessageAt: conv.recentMessageAt?.toISOString() || null,
+      messageCount: messageCounts.find((m) => m.conversationId === conv.id)?.count || 0,
+      isUnread: !!conv.recentMessageAt && (!conv.lastReadAt || conv.recentMessageAt > conv.lastReadAt),
+    }))
+    .filter((conv) => conv.messageCount > 0);
+
+  return corsResponse<ConversationsResult>({
     conversations,
     nextCursor,
   });

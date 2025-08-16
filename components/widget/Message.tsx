@@ -37,7 +37,6 @@ export default function Message({
   hideReasoning = false,
 }: Props) {
   const { togglePromptInfo } = useWidgetView();
-
   const idFromAnnotation =
     message.annotations?.find(
       (annotation): annotation is { id: string | number } =>

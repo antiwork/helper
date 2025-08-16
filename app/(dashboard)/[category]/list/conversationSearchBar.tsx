@@ -57,7 +57,8 @@ export const ConversationSearchBar = ({
     debouncedSetSearch(search);
   }, [search]);
 
-  useHotkeys("mod+k", () => {
+  useHotkeys("mod+k", (e) => {
+    e.preventDefault();
     searchInputRef.current?.focus();
   });
 
@@ -185,7 +186,7 @@ export const ConversationSearchBar = ({
           autoFocus
         />
         <Button
-          data-testid="filter-toggle"
+          aria-label="Filter Toggle"
           type="button"
           variant="ghost"
           size="sm"

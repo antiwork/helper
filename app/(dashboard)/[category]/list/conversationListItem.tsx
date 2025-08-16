@@ -142,7 +142,7 @@ export const ConversationListItem = ({
               <div className="flex flex-col gap-2">
                 <p
                   className="font-medium text-foreground text-sm md:text-base"
-                  dangerouslySetInnerHTML={{ __html: highlightedSubject }}
+                  dangerouslySetInnerHTML={{ __html: highlightedSubject ?? "(no subject)" }}
                 />
                 {highlightedBody && (
                   <p

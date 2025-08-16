@@ -19,7 +19,7 @@ import {
   mailboxes,
 } from "@/db/schema";
 import { runAIQuery } from "@/lib/ai";
-import { GPT_4O_MINI_MODEL } from "@/lib/ai/core";
+import { MINI_MODEL } from "@/lib/ai/core";
 import { updateConversation } from "@/lib/data/conversation";
 import { createConversationMessage } from "@/lib/data/conversationMessage";
 import { createAndUploadFile, finishFileUpload, generateKey, uploadFile } from "@/lib/data/files";
@@ -29,7 +29,7 @@ import { extractAddresses, parseEmailAddress } from "@/lib/emails";
 import { env } from "@/lib/env";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
 import { extractEmailPartsFromDocument } from "@/lib/shared/html";
-import { captureExceptionAndLogIfDevelopment, captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
+import { captureExceptionAndLog, captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import { generateFilePreview } from "./generateFilePreview";
 import { triggerEvent } from "./trigger";
 import { assertDefinedOrRaiseNonRetriableError, NonRetriableError } from "./utils";
@@ -56,15 +56,15 @@ const isThankYouOrAutoResponse = async (
         temperature: 0,
         messages: [{ role: "user", content: emailContent }],
         queryType: "email_auto_ignore",
-        model: GPT_4O_MINI_MODEL,
+        model: MINI_MODEL,
         functionId: "email-auto-ignore-detector",
-        maxTokens: 10,
+        maxTokens: 500,
       })
     ).text;
 
     return content.toLowerCase().trim() === "yes";
   } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
+    captureExceptionAndLog(error);
     return false;
   }
 };
@@ -172,7 +172,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
   // Next.js API route handlers will lowercase header keys (e.g. "Authorization" -> "authorization"), but not Inngest.
   // For consistency across all potential invocations of this function, we can lowercase everything here.
   const normalizedHeaders = Object.fromEntries(
-    Object.entries(z.record(z.string()).parse(headers)).map(([key, value]) => [key.toLowerCase(), value]),
+    Object.entries(z.record(z.string(), z.string()).parse(headers)).map(([key, value]) => [key.toLowerCase(), value]),
   );
   const data = await authorizeGmailRequest(
     GmailWebhookBodySchema.parse(body),
@@ -210,7 +210,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
     assertSuccessResponseOrThrow(response);
     histories = response.data.history ?? [];
   } else {
-    captureExceptionAndLogIfDevelopment(new Error("Cached historyId expired"));
+    captureExceptionAndLog(new Error("Cached historyId expired"));
     histories =
       (await getMessagesFromHistoryId(client, data.historyId.toString()).then(assertSuccessResponseOrThrow)).data
         .history ?? [];
@@ -421,7 +421,7 @@ const authorizeGmailRequest = async (
     if (!claim?.email || claim.email !== env.GOOGLE_PUBSUB_CLAIM_EMAIL)
       throw new Error(`Invalid claim email: ${claim?.email}`);
   } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
+    captureExceptionAndLog(error);
     throw new NonRetriableError("Invalid token");
   }
   const rawData = JSON.parse(Buffer.from(body.message.data, "base64").toString("utf-8"));
@@ -508,7 +508,7 @@ export const extractAndUploadInlineImages = async (html: string) => {
         processedHtml = processedHtml.replace(match, match.replace(/src="[^"]+"/i, `src="${file.key}"`));
         fileSlugs.push(file.slug);
       } catch (error) {
-        captureExceptionAndLogIfDevelopment(error);
+        captureExceptionAndLog(error);
       }
     }),
   );

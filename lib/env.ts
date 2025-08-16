@@ -10,10 +10,17 @@ const defaultRootUrl =
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : `https://${process.env.VERCEL_URL ?? "helperai.dev"}`;
 
+// `next dev` forces NODE_ENV to "development" so we need to use a different environment variable
+export const isAIMockingEnabled = process.env.IS_TEST_ENV === "1";
+
 export const env = createEnv({
   extends: [vercel()],
   shared: {
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    CI: z
+      .enum(["true", "false", "1", "0"])
+      .default("false")
+      .transform((v) => v === "true" || v === "1"),
     DISABLE_STRICT_MODE: z
       .enum(["true", "false"])
       .default("false")
@@ -25,13 +32,7 @@ export const env = createEnv({
    */
   server: {
     // Set this for both local development and when deploying
-    OPENAI_API_KEY: z.string().min(1), // API key from https://platform.openai.com for AI models
-
-    // Set this before deploying
-    ENCRYPT_COLUMN_SECRET: defaultUnlessDeployed(
-      z.string().regex(/^[a-f0-9]{32}$/, "must be a random 32-character hex string"),
-      "1234567890abcdef1234567890abcdef",
-    ),
+    OPENAI_API_KEY: isAIMockingEnabled ? z.string().min(1).default("mock-openai-api-key") : z.string().min(1), // API key from https://platform.openai.com for AI models
 
     // Set these before or after deploying for email sending and receiving
     RESEND_API_KEY: z.string().min(1).optional(),
@@ -43,11 +44,14 @@ export const env = createEnv({
 
     // Set these when deploying if you're not using Vercel with the Supabase integration
     AUTH_URL: z.string().url().default(defaultRootUrl), // The root URL of the app; legacy name which was required by next-auth
-    POSTGRES_URL: defaultUnlessDeployed(z.string().url(), "postgresql://postgres:postgres@127.0.0.1:54322/postgres"),
+    POSTGRES_URL: defaultUnlessDeployed(
+      z.string().url(),
+      `postgresql://postgres:postgres@127.0.0.1:${process.env.LOCAL_SUPABASE_DB_PORT}/postgres`,
+    ),
     POSTGRES_URL_NON_POOLING: defaultUnlessDeployed(
       z.string().url(),
       // Same as POSTGRES_URL unless using Supabase with built-in pooling
-      "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
+      `postgresql://postgres:postgres@127.0.0.1:${process.env.LOCAL_SUPABASE_DB_PORT}/postgres`,
     ),
     DATABASE_URL: z.string().url().optional(),
     // Based on Supabase's default local development secret ("super-secret-jwt-token-with-at-least-32-characters-long")
@@ -89,9 +93,6 @@ export const env = createEnv({
       .default("")
       .transform((v) => (v ? v.split(",").map((d) => d.trim()) : [])),
 
-    // Use a separate key for the search index. Defaults to ENCRYPT_COLUMN_SECRET if not set.
-    HASH_WORDS_SECRET: z.string().optional(),
-
     // Log SQL queries to the console
     DRIZZLE_LOGGING: z.string().optional(),
 
@@ -115,16 +116,21 @@ export const env = createEnv({
     ),
 
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(), // Sentry DSN for error tracking
+
+    // Helper host URL configuration - overrides automatic detection in e2e tests
+    NEXT_PUBLIC_DEV_HOST: z.string().url().optional().default("https://helperai.dev"),
   },
   /**
    * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
    */
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
+    CI: process.env.CI,
     DISABLE_STRICT_MODE: process.env.DISABLE_STRICT_MODE,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_DEV_HOST: process.env.NEXT_PUBLIC_DEV_HOST,
   },
   skipValidation: process.env.npm_lifecycle_event === "lint" || process.env.NODE_ENV === "test",
 });

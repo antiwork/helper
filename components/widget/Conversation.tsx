@@ -1,8 +1,8 @@
 import { useChat } from "@ai-sdk/react";
 import { useQuery } from "@tanstack/react-query";
-import type { Message } from "ai";
 import { AnimatePresence } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { ConversationDetails } from "@helperai/client";
 import { ReadPageToolConfig } from "@helperai/sdk";
 import { assertDefined } from "@/components/utils/assert";
 import ChatInput from "@/components/widget/ChatInput";
@@ -84,14 +84,27 @@ export default function Conversation({
         {
           id: `staff_${Date.now()}`,
           role: "assistant",
-          content: event.data.message,
-          createdAt: new Date(event.data.timestamp),
+          content: event.data.content,
+          createdAt: new Date(event.data.createdAt),
           reactionType: null,
           reactionFeedback: null,
           reactionCreatedAt: null,
-          annotations: event.data.agentName ? [{ user: { firstName: event.data.agentName } }] : undefined,
+          annotations: event.data.staffName ? [{ user: { firstName: event.data.staffName } }] : undefined,
         },
       ]);
+
+      if (selectedConversationSlug && token) {
+        fetch(`/api/chat/conversation/${selectedConversationSlug}`, {
+          method: "PATCH",
+          body: JSON.stringify({ markRead: true }),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }).catch((error) => {
+          captureExceptionAndLog(error);
+        });
+      }
     },
   );
 
@@ -189,35 +202,73 @@ export default function Conversation({
         onLoadFailed();
         return null;
       }
-      const data = await response.json();
+      const data: ConversationDetails = await response.json();
       if (data.messages) {
         if (data.isEscalated) {
           setIsEscalated(true);
         }
 
-        const guideMessage = data.messages.find((message: any) =>
-          message.parts?.some(
-            (part: any) => part.type === "tool-invocation" && part.toolInvocation.toolName === "guide_user",
-          ),
-        );
+        const guideMessage = data.experimental_guideSessions?.at(-1);
 
         if (guideMessage) {
-          setMessages([...messages, { ...guideMessage, createdAt: new Date(guideMessage.createdAt) }]);
+          setMessages([
+            ...messages,
+            {
+              id: `guide_session_${guideMessage.uuid}`,
+              role: "assistant" as const,
+              content: "",
+              parts: [
+                {
+                  type: "tool-invocation",
+                  toolInvocation: {
+                    toolName: "guide_user",
+                    toolCallId: `g_${guideMessage.uuid}`,
+                    state: "call",
+                    args: {
+                      pendingResume: true,
+                      sessionId: guideMessage.uuid,
+                      title: guideMessage.title,
+                      instructions: guideMessage.instructions,
+                    },
+                  },
+                },
+              ],
+              createdAt: new Date(guideMessage.createdAt),
+            },
+          ]);
         }
 
         return {
-          messages: data.messages.map((message: any) => ({
+          messages: data.messages.map((message) => ({
             id: message.id,
-            role: message.role as Message["role"],
             content: message.content,
+            role: message.role === "staff" || message.role === "assistant" ? ("assistant" as const) : message.role,
             createdAt: new Date(message.createdAt),
             reactionType: message.reactionType,
             reactionFeedback: message.reactionFeedback,
-            annotations: message.annotations,
-            parts: message.parts,
-            experimental_attachments: message.experimental_attachments,
+            reactionCreatedAt: message.reactionCreatedAt,
+            experimental_attachments: message.publicAttachments.map((attachment) => ({
+              name: attachment.name ?? undefined,
+              contentType: attachment.contentType ?? undefined,
+              url: attachment.url,
+            })),
+            annotations: [
+              ...(message.staffName ? [{ user: { firstName: message.staffName } }] : []),
+              ...message.publicAttachments.map((attachment) => ({
+                attachment: { name: attachment.name, url: attachment.url },
+              })),
+              ...message.privateAttachments.map((attachment) => ({
+                attachment: { name: attachment.name, url: attachment.url },
+              })),
+            ],
           })),
-          allAttachments: data.allAttachments,
+          allAttachments: data.messages.flatMap((message) =>
+            message.privateAttachments.map((attachment) => ({
+              messageId: message.id,
+              name: attachment.name ?? "",
+              presignedUrl: attachment.url,
+            })),
+          ),
           isEscalated: data.isEscalated,
         };
       }

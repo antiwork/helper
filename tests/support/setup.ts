@@ -5,10 +5,10 @@ beforeAll(() => {
   vi.stubEnv("POSTGRES_URL", inject("TEST_DATABASE_URL"));
 
   vi.mock("@/lib/env", () => ({
+    isAIMockingEnabled: false,
     env: {
       POSTGRES_URL: inject("TEST_DATABASE_URL"),
       CRYPTO_SECRET: "secret",
-      ENCRYPT_COLUMN_SECRET: "2319a2b757d52982035248289cb0fe27",
       AUTH_URL: "http://localhost:1234",
       SLACK_CLIENT_ID: "client-id",
       NODE_ENV: "test",

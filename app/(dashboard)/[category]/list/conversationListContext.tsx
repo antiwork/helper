@@ -108,6 +108,7 @@ export const ConversationListContextProvider = ({
           [input.category]: data[input.category] - 1,
         };
       });
+      utils.mailbox.openCount.invalidate();
     }
   };
 

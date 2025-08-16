@@ -1,8 +1,8 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { HelperProvider } from "../../components/HelperProvider";
-import { generateHelperAuth } from "../../server/helper-auth";
+import { generateHelperAuth } from "@helperai/client/auth";
+import { HelperWidgetScript } from "../../components/helperWidgetScript";
 import { cleanupTestEnv, mockHelperWidget, setupTestEnv } from "../utils";
 
 // Mock client component
@@ -23,22 +23,6 @@ describe("Server Component Integration", () => {
     cleanupTestEnv();
   });
 
-  it("renders server component with generated HMAC", () => {
-    const mockConfig = {
-      ...generateHelperAuth({ email: mockEmail }),
-      title: "Test Helper",
-      customerMetadata: {},
-    };
-
-    render(
-      <HelperProvider host="https://helper.ai" {...mockConfig}>
-        <div data-testid="server-content">Server Content</div>
-      </HelperProvider>,
-    );
-
-    expect(screen.getByTestId("server-content")).toBeInTheDocument();
-  });
-
   it("initializes Helper with correct HMAC configuration", () => {
     const mockConfig = {
       ...generateHelperAuth({ email: mockEmail }),
@@ -46,11 +30,7 @@ describe("Server Component Integration", () => {
       customerMetadata: {},
     };
 
-    render(
-      <HelperProvider host="https://helper.ai" {...mockConfig}>
-        <div>Test Content</div>
-      </HelperProvider>,
-    );
+    render(<HelperWidgetScript host="https://helper.ai" {...mockConfig} />);
 
     const script = document.querySelector("script");
     act(() => {
@@ -58,24 +38,5 @@ describe("Server Component Integration", () => {
     });
 
     expect(mocks.mockInit).toHaveBeenCalledWith(mockConfig);
-  });
-
-  it("works with nested client components", () => {
-    const mockConfig = {
-      ...generateHelperAuth({ email: mockEmail }),
-      title: "Test Helper",
-      customerMetadata: {},
-    };
-
-    render(
-      <HelperProvider host="https://helper.ai" {...mockConfig}>
-        <div data-testid="server-content">
-          <ClientComponent />
-        </div>
-      </HelperProvider>,
-    );
-
-    expect(screen.getByTestId("server-content")).toBeInTheDocument();
-    expect(screen.getByTestId("client-component")).toBeInTheDocument();
   });
 });

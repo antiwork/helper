@@ -1,6 +1,8 @@
-import { generateHelperAuth, HelperProvider, type HelperWidgetConfig } from "@helperai/react";
+import { HelperClientProvider } from "@helperai/react";
 import { CustomWidgetTest } from "@/app/(dashboard)/widget/test/custom/customWidgetTest";
+import { generateSession } from "@/app/(dashboard)/widget/test/custom/generateSession";
 import { getBaseUrl } from "@/components/constants";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -9,30 +11,13 @@ export default async function WidgetTest({
 }: {
   searchParams: Promise<{ email?: string; isVip?: string; anonymous?: string }>;
 }) {
-  if (getBaseUrl() !== "https://helperai.dev") {
+  if (getBaseUrl() !== env.NEXT_PUBLIC_DEV_HOST) {
     return <div>Only available in development</div>;
   }
 
-  const { email, isVip, anonymous } = await searchParams;
-
-  const helperAuth = anonymous ? {} : generateHelperAuth({ email: email ?? "test@example.com" });
-
-  const config: HelperWidgetConfig = {
-    ...helperAuth,
-    customerMetadata: anonymous
-      ? null
-      : {
-          name: "John Doe",
-          value: isVip ? 1000_00 : 100,
-          links: {
-            "Billing Portal": "https://example.com",
-          },
-        },
-  };
-
   return (
-    <HelperProvider host="https://helperai.dev" {...config}>
+    <HelperClientProvider host={env.NEXT_PUBLIC_DEV_HOST} session={generateSession(await searchParams)}>
       <CustomWidgetTest />
-    </HelperProvider>
+    </HelperClientProvider>
   );
 }

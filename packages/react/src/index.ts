@@ -1,11 +1,20 @@
-export { HelperProvider, type HelperProviderProps, type HelperTool } from "./components/HelperProvider";
+export { HelperWidgetScript, type HelperWidgetScriptProps } from "./components/helperWidgetScript";
+export {
+  HelperClientProvider,
+  type HelperClientProviderProps,
+  useHelperClient,
+} from "./components/helperClientProvider";
 export { useHelper } from "./hooks/useHelper";
+export {
+  useConversations,
+  useConversation,
+  useUnreadConversationsCount,
+  useCreateConversation,
+  useUpdateConversation,
+  useCreateMessage,
+} from "./hooks/useConversations";
+export { useCreateSession } from "./hooks/useSession";
+export { useChat, type UseChatProps, useRealtimeEvents } from "./hooks/useChat";
+export { MessageContent } from "./components/messageContent";
 
-export { useHelperContext } from "./context/HelperContext";
-export { useConversations } from "./hooks/useConversations";
-export { useConversation } from "./hooks/useConversation";
-export { useCreateConversation } from "./hooks/useCreateConversation";
-export { useChat } from "./hooks/useChat";
-
-export * from "./server/helper-auth";
 export * from "./types";

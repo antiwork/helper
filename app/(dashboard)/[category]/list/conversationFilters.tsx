@@ -6,6 +6,7 @@ import { AssigneeFilter } from "./filters/assigneeFilter";
 import { CustomerFilter } from "./filters/customerFilter";
 import { DateFilter } from "./filters/dateFilter";
 import { EventFilter } from "./filters/eventFilter";
+import { IssueGroupFilter } from "./filters/issueGroupFilter";
 import { PromptFilter } from "./filters/promptFilter";
 import { ReactionFilter } from "./filters/reactionFilter";
 import { ResponderFilter } from "./filters/responderFilter";
@@ -20,7 +21,9 @@ interface FilterValues {
   isVip: boolean | undefined;
   isPrompt: boolean | undefined;
   reactionType: "thumbs-up" | "thumbs-down" | null;
-  events: ("request_human_support" | "resolved_by_ai")[];
+  events: "request_human_support"[];
+  issueGroupId: number | null;
+  isAssigned: boolean | undefined;
 }
 
 interface ConversationFiltersProps {
@@ -34,7 +37,7 @@ export const useConversationFilters = () => {
   const { searchParams, setSearchParams } = useConversationsListInput();
 
   const [filterValues, setFilterValues] = useState<FilterValues>({
-    assignee: searchParams.assignee ?? [],
+    assignee: searchParams.isAssigned === false ? ["unassigned"] : (searchParams.assignee ?? []),
     createdAfter: searchParams.createdAfter ?? null,
     createdBefore: searchParams.createdBefore ?? null,
     repliedBy: searchParams.repliedBy ?? [],
@@ -43,6 +46,8 @@ export const useConversationFilters = () => {
     isPrompt: searchParams.isPrompt ?? undefined,
     reactionType: searchParams.reactionType ?? null,
     events: searchParams.events ?? [],
+    issueGroupId: searchParams.issueGroupId ?? null,
+    isAssigned: searchParams.isAssigned ?? undefined,
   });
 
   const activeFilterCount = useMemo(() => {
@@ -55,6 +60,8 @@ export const useConversationFilters = () => {
     if (filterValues.isPrompt !== undefined) count++;
     if (filterValues.reactionType !== null) count++;
     if (filterValues.events.length > 0) count++;
+    if (filterValues.issueGroupId !== null) count++;
+    if (filterValues.isAssigned !== undefined) count++;
     return count;
   }, [filterValues]);
 
@@ -73,6 +80,8 @@ export const useConversationFilters = () => {
       isPrompt: searchParams.isPrompt ?? undefined,
       reactionType: searchParams.reactionType ?? null,
       events: searchParams.events ?? [],
+      issueGroupId: searchParams.issueGroupId ?? null,
+      isAssigned: searchParams.isAssigned ?? undefined,
     });
   }, [searchParams]);
 
@@ -92,6 +101,8 @@ export const useConversationFilters = () => {
       isPrompt: null,
       reactionType: null,
       events: null,
+      issueGroupId: null,
+      isAssigned: null,
     };
     setSearchParams((prev) => ({ ...prev, ...clearedFilters }));
   };
@@ -110,6 +121,7 @@ export const ConversationFilters = ({
   activeFilterCount,
   onClearFilters,
 }: ConversationFiltersProps) => {
+  const { input } = useConversationsListInput();
   return (
     <div className="flex flex-wrap items-center justify-center gap-1 md:gap-2">
       <DateFilter
@@ -119,10 +131,19 @@ export const ConversationFilters = ({
           onUpdateFilter({ createdAfter: startDate, createdBefore: endDate });
         }}
       />
-      <AssigneeFilter
-        selectedAssignees={filterValues.assignee}
-        onChange={(assignees) => onUpdateFilter({ assignee: assignees })}
-      />
+      {input.category === "all" && (
+        <AssigneeFilter
+          selectedAssignees={filterValues.isAssigned === false ? ["unassigned"] : filterValues.assignee}
+          onChange={(assignees) => {
+            const hasUnassigned = assignees.includes("unassigned");
+            const memberAssignees = assignees.filter((id) => id !== "unassigned");
+            onUpdateFilter({
+              assignee: memberAssignees,
+              isAssigned: hasUnassigned ? false : memberAssignees.length > 0 ? true : undefined,
+            });
+          }}
+        />
+      )}
       <ResponderFilter
         selectedResponders={filterValues.repliedBy}
         onChange={(responders) => onUpdateFilter({ repliedBy: responders })}
@@ -138,8 +159,12 @@ export const ConversationFilters = ({
       />
       <EventFilter selectedEvents={filterValues.events} onChange={(events) => onUpdateFilter({ events })} />
       <PromptFilter isPrompt={filterValues.isPrompt} onChange={(isPrompt) => onUpdateFilter({ isPrompt })} />
+      <IssueGroupFilter
+        issueGroupId={filterValues.issueGroupId}
+        onChange={(issueGroupId) => onUpdateFilter({ issueGroupId })}
+      />
       {activeFilterCount > 0 && (
-        <Button data-testid="clear-filters-button" variant="ghost" onClick={onClearFilters}>
+        <Button aria-label="Clear Filters" variant="ghost" onClick={onClearFilters}>
           Clear filters
         </Button>
       )}

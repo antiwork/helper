@@ -50,6 +50,13 @@ export default function MessagesList({
       data-testid="messages-list"
     >
       <div className="flex flex-col gap-3" ref={contentRef}>
+        {messages.length === 0 && status === "ready" && (
+          <div className="flex items-center justify-center py-8 text-gray-500">
+            <div className="text-center">
+              <p className="text-sm">Start a conversation by typing a message below</p>
+            </div>
+          </div>
+        )}
         {messages.map((message, index) => {
           const guide = message.parts?.find(
             (part) => part.type === "tool-invocation" && part.toolInvocation.toolName === "guide_user",

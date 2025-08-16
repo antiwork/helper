@@ -1,0 +1,502 @@
+---
+title: Client SDK Reference
+description: JavaScript/TypeScript SDK for integrating Helper into your applications
+---
+
+import { Callout } from "fumadocs-ui/components/callout";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
+
+# Client SDK Reference
+
+The Helper Client SDK provides a comprehensive JavaScript/TypeScript library for integrating Helper's chat capabilities into your applications. It offers a clean, promise-based API for managing sessions, conversations, and real-time chat interactions.
+
+## Installation
+
+<Tabs items={["npm", "yarn", "pnpm"]}>
+  <Tab value="npm">```bash npm install @helper/client ```</Tab>
+  <Tab value="yarn">```bash yarn add @helper/client ```</Tab>
+  <Tab value="pnpm">```bash pnpm add @helper/client ```</Tab>
+</Tabs>
+
+## Setup
+
+### Basic Setup
+
+```typescript
+import { HelperClient } from "@helper/client";
+
+const client = new HelperClient({
+  host: "https://your-helper-instance.com",
+  email: "john@example.com",
+  emailHash: "<generated-hmac-hash>",
+  customerMetadata: {
+    name: "John Doe",
+  },
+});
+```
+
+### Authenticating Users
+
+If your app supports user authentication, generate an email hash.
+
+1. Store the HMAC secret in secure configuration such as environment variables.
+2. Use the HMAC-SHA256 algorithm **on the server** to generate a hexadecimal hash of `<email>:<timestamp>`, where `<email>` is the logged in user's email address and `<timestamp>` is the current time in **milliseconds**.
+3. Pass the hash to the client constructor as the `emailHash` parameter, along with the `email` and `timestamp` values.
+
+### Session Parameters
+
+The client constructor accepts the following parameters:
+
+| Parameter                | Type     | Required | Description                                                                 |
+| ------------------------ | -------- | -------- | --------------------------------------------------------------------------- |
+| `host`                   | `string` | ✅       | The base URL of your Helper instance                                        |
+| `email`                  | `string` | ❌       | The logged in user's email address                                          |
+| `emailHash`              | `string` | ❌       | Hashed email for secure authentication                                      |
+| `timestamp`              | `number` | ❌       | Timestamp for hash verification                                             |
+| `customerMetadata.name`  | `string` | ❌       | The customer's name to show in the Helper UI                                |
+| `customerMetadata.value` | `number` | ❌       | The customer's value on your platform (e.g. revenue) to be used for sorting |
+| `customerMetadata.links` | `object` | ❌       | Any links (e.g. to internal systems) to show in the Helper UI               |
+
+<Callout type="info">
+  The client automatically handles session creation and token management. As long as you generate the initial
+  `emailHash`, you don't need to manually manage authentication tokens.
+</Callout>
+
+## API Reference
+
+### Client Properties
+
+#### `host`
+
+**Type:** `string` (readonly)
+
+The host URL of the Helper instance.
+
+#### `email`
+
+**Type:** `string | null`
+
+Returns the email address associated with the current session, or `null` if no email was provided.
+
+```typescript
+const userEmail = client.email;
+```
+
+### Conversations API
+
+#### `conversations.list()`
+
+Retrieves all conversations for the current session.
+
+**Returns:**
+
+```typescript
+interface ConversationsResult {
+  conversations: Array<{
+    slug: string;
+    subject: string;
+    createdAt: string;
+    latestMessage: string | null;
+    latestMessageAt: string | null;
+    messageCount: number;
+  }>;
+  nextCursor: string | null;
+}
+```
+
+**Example:**
+
+```typescript
+const { conversations, nextCursor } = await client.conversations.list();
+```
+
+#### `conversations.unread()`
+
+Retrieves the count of unread conversations for the current session.
+
+**Returns:**
+
+```typescript
+interface UnreadConversationsCountResult {
+  count: number;
+}
+```
+
+**Example:**
+
+```typescript
+const { count } = await client.conversations.unread();
+```
+
+#### `conversations.get(slug, options?)`
+
+Retrieves a specific conversation by its slug.
+
+**Parameters:**
+
+- `slug` (string): The unique identifier for the conversation
+- `options` (object, optional): Additional options
+  - `markRead` (boolean, default: `true`): Whether to mark the conversation as read
+
+**Returns:**
+
+```typescript
+interface ConversationDetails {
+  slug: string;
+  subject: string | null;
+  isEscalated: boolean;
+  messages: Array<{
+    id: string;
+    content: string;
+    role: "user" | "staff" | "assistant";
+    staffName: string | null;
+    reactionType: "thumbs-up" | "thumbs-down" | null;
+    reactionFeedback: string | null;
+    reactionCreatedAt: string | null;
+    createdAt: string;
+    publicAttachments: Array<{
+      name: string | null;
+      contentType: string | null;
+      url: string;
+    }>;
+    privateAttachments: Array<{
+      name: string | null;
+      contentType: string | null;
+      url: string;
+    }>;
+  }>;
+  experimental_guideSessions: Array<{
+    uuid: string;
+    title: string;
+    instructions: string | null;
+    createdAt: string;
+  }>;
+}
+```
+
+**Example:**
+
+```typescript
+const conversation = await client.conversations.get("conv-abc123");
+const conversationWithoutRead = await client.conversations.get("conv-abc123", { markRead: false });
+```
+
+#### `conversations.create(params?)`
+
+Creates a new conversation.
+
+**Parameters:**
+
+```typescript
+interface CreateConversationParams {
+  isPrompt?: boolean | null;
+  subject?: string | null;
+}
+```
+
+**Returns:**
+
+```typescript
+interface CreateConversationResult {
+  conversationSlug: string;
+}
+```
+
+**Example:**
+
+```typescript
+const { conversationSlug } = await client.conversations.create({
+  subject: "Support Request",
+  isPrompt: false,
+});
+```
+
+#### `conversations.update(slug, params)`
+
+Updates an existing conversation.
+
+**Parameters:**
+
+- `slug` (string): The conversation identifier
+- `params` (UpdateConversationParams): Update parameters
+
+```typescript
+interface UpdateConversationParams {
+  markRead: true;
+}
+```
+
+**Returns:**
+
+```typescript
+interface UpdateConversationResult {
+  success: true;
+}
+```
+
+**Example:**
+
+```typescript
+const result = await client.conversations.update("conv-abc123", {
+  markRead: true,
+});
+```
+
+#### `conversations.listen(conversationSlug, callbacks)`
+
+Sets up real-time listeners for conversation events.
+
+**Parameters:**
+
+- `conversationSlug` (string): The conversation to listen to
+- `callbacks` (object): Event callback functions
+
+```typescript
+interface ChatListenCallbacks {
+  onReply?: ({ message, aiMessage }: { message: Message; aiMessage: AIMessageCompat }) => void;
+  onTyping?: (isTyping: boolean) => void;
+  onSubjectChanged?: (subject: string) => void;
+}
+```
+
+**Returns:** A cleanup function to stop listening.
+
+**Example:**
+
+```typescript
+const unlisten = client.conversations.listen("conv-abc123", {
+  onReply: ({ message, aiMessage }) => {
+    console.log("New message:", message);
+  },
+  onTyping: (isTyping) => {
+    console.log("Agent typing:", isTyping);
+  },
+  onSubjectChanged: (subject) => {
+    console.log("Subject changed:", subject);
+  },
+});
+
+// Later, stop listening
+unlisten();
+```
+
+### Chat API
+
+#### `chat.handler(options)`
+
+Creates a chat handler for use with AI SDK compatible libraries.
+
+Optionally you can pass a `tools` object to allow the AI agent to perform actions on the customer's behalf.
+
+**Parameters:**
+
+```typescript
+interface ChatHandlerOptions {
+  conversation: ConversationDetails;
+  tools?: Record<string, HelperTool>;
+}
+
+interface HelperTool<Args = any, Result = any> {
+  description?: string;
+  parameters: Record<string, {
+    type: "string" | "number";
+    description?: string;
+    optional?: boolean;
+  }>;
+} & (
+  | {
+      execute: (params: Args) => Promise<Result> | Result;
+    }
+  | {
+      url: string;
+    }
+);
+```
+
+**Returns:** A handler object compatible with AI SDK's `useChat` hook.
+
+**Example:**
+
+```typescript
+import { useChat } from "ai/react";
+
+const conversation = await client.conversations.get("conv-abc123");
+
+const tools = {
+  searchDocs: {
+    description: "Search documentation",
+    parameters: {
+      query: {
+        type: "string",
+        description: "Search query",
+        optional: false,
+      },
+    },
+    execute: async (args) => {
+      return await searchDocumentation(args.query);
+    },
+  },
+};
+
+const { messages, input, handleInputChange, handleSubmit } = useChat({
+  ...client.chat.handler({ conversation, tools }),
+});
+```
+
+#### `chat.message(aiMessage)`
+
+Converts an AI SDK compatible message to Helper's message format.
+
+**Parameters:**
+
+- `aiMessage` (AIMessageCompat): Message from AI SDK
+
+**Returns:** A Helper `Message` object.
+
+**Example:**
+
+```typescript
+const helperMessage = client.chat.message(aiMessage);
+```
+
+#### `chat.messages(aiMessages)`
+
+Converts an array of AI SDK compatible messages to Helper's message format.
+
+**Parameters:**
+
+- `aiMessages` (AIMessageCompat[]): Array of messages from AI SDK
+
+**Returns:** An array of Helper `Message` objects.
+
+**Example:**
+
+```typescript
+const helperMessages = client.chat.messages(aiMessages);
+```
+
+### Tools
+
+Tools allow the AI agent to perform actions on behalf of the customer. There are two types:
+
+#### Client-Side Tools (with `execute()`)
+
+Tools with an `execute()` function run on the client side:
+
+```typescript
+const tools = {
+  getCurrentTime: {
+    description: "Get the current time",
+    parameters: {},
+    execute: async () => ({ time: new Date().toLocaleTimeString() }),
+  },
+};
+```
+
+#### Server-Side Tools (with `url`)
+
+Tools with a `url` property trigger HTTP POST requests to your endpoint:
+
+```typescript
+const tools = {
+  createTicket: {
+    description: "Create a support ticket",
+    parameters: {
+      title: { type: "string", optional: false },
+    },
+    url: "https://your-api.com/tools/create-ticket",
+  },
+};
+```
+
+For server-side tools, Helper sends the parameters, customer email and request timestamp (for HMAC verification) as a JSON body
+
+```typescript
+interface ToolRequest {
+  email: string;
+  parameters: Record<string, any>;
+  requestTimestamp: number;
+}
+```
+
+Your endpoint must verify the HMAC signature in the `Authorization` header to avoid unauthorized requests. To do this you should:
+
+- Check the `requestTimestamp` is within the last 5 minutes. Note the timestamp is in seconds.
+- Compute a SHA256 HMAC of the JSON body using your `hmacSecret` from Helper settings.
+- Ensure the HMAC in the `Authorization` header matches the computed one.
+
+If you are using the `@helperai/client` package, you can import `verifyHmac` from `@helperai/client/auth` to verify the signature.
+
+Your endpoint should then return a JSON object with a `success` property and any additional information you want to return to the AI agent.
+
+```typescript
+interface ToolResponse {
+  success: boolean;
+  [key: string]: any;
+}
+```
+
+### Sessions API
+
+<Callout type="info">
+  Session management is done automatically by the client. You shouldn't need to call this unless you want to make
+  `fetch` requests manually.
+</Callout>
+
+#### `sessions.create(params)`
+
+Creates a new session and returns authentication credentials.
+
+**Parameters:**
+
+```typescript
+interface SessionParams {
+  email?: string | null;
+  emailHash?: string | null;
+  timestamp?: number | null;
+  customerMetadata?: {
+    name?: string | null;
+    value?: number | null;
+    links?: Record<string, string> | null;
+  } | null;
+  currentToken?: string | null;
+}
+```
+
+**Returns:**
+
+```typescript
+interface CreateSessionResult {
+  token: string;
+  supabaseUrl: string;
+  supabaseAnonKey: string;
+}
+```
+
+**Example:**
+
+```typescript
+const session = await client.sessions.create({
+  email: "jane@example.com",
+  customerMetadata: {
+    name: "Jane Smith",
+    value: 1000,
+    links: { dashboard: "https://app.example.com/user/123" },
+  },
+});
+```
+
+## TypeScript Support
+
+The Helper Client SDK is written in TypeScript and provides full type safety. All interfaces and types are exported for your use:
+
+```typescript
+import {
+  ConversationDetails,
+  CreateConversationParams,
+  HelperClient,
+  HelperTool,
+  Message,
+  SessionParams,
+} from "@helper/client";
+```

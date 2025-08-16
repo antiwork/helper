@@ -5,7 +5,7 @@ import { generateGuidePlan } from "@/lib/ai/guide";
 import { createConversation, getConversationBySlug } from "@/lib/data/conversation";
 import { createGuideSession, createGuideSessionEvent } from "@/lib/data/guide";
 import { findOrCreatePlatformCustomerByEmail } from "@/lib/data/platformCustomer";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export const POST = withWidgetAuth(async ({ request }, { session }) => {
   const { title, instructions, conversationSlug } = await request.json();
@@ -61,7 +61,7 @@ export const POST = withWidgetAuth(async ({ request }, { session }) => {
       conversationId,
     });
   } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
+    captureExceptionAndLog(error);
     return corsResponse({ error: "Failed to create guide session" }, { status: 500 });
   }
 });

@@ -14,7 +14,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI for better stability */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: "html",
+  reporter: [["html", { open: process.env.CI ? "never" : "on-failure" }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -57,11 +57,10 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  /* TODO: Consider using a separate test database to avoid data conflicts
-   * and allow for more reliable test data setup/teardown */
+  // Make sure your port matches the one in your `.env.test.local` file
   webServer: {
-    command: "pnpm dev",
-    url: "https://helperai.dev",
+    command: "pnpm run with-test-env next dev --port 3020 --turbopack",
+    url: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3020",
     reuseExistingServer: true,
     ignoreHTTPSErrors: true,
     timeout: 120 * 1000, // 2 minutes for server startup

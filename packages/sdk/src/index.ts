@@ -67,6 +67,8 @@ class HelperWidget {
   private currentConversationSlug: string | null = null;
   private screenshotContext: Context | null = null;
   private renderedContactForms: Set<HTMLElement> = new Set();
+  private resizeHandler: (() => void) | null = null;
+  private messageHandler: ((event: MessageEvent) => void) | null = null;
 
   private constructor(config: HelperWidgetConfig) {
     this.config = config;
@@ -292,7 +294,7 @@ class HelperWidget {
     this.setupMutationObserver();
 
     let resizeTimeout: NodeJS.Timeout;
-    window.addEventListener("resize", () => {
+    const resizeHandler = () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
         const isSmallScreen = window.innerWidth < 640;
@@ -311,9 +313,9 @@ class HelperWidget {
           },
         });
       }, 100);
-    });
+    };
 
-    window.addEventListener("message", async (event: MessageEvent) => {
+    const messageHandler = async (event: MessageEvent) => {
       // Handle messages from our iframe
       if (event.data && event.data.type === this.messageType) {
         const { action, requestId, content } = event.data.payload || {};
@@ -426,7 +428,13 @@ class HelperWidget {
           }
         }
       }
-    });
+    };
+
+    this.resizeHandler = resizeHandler;
+    this.messageHandler = messageHandler;
+
+    window.addEventListener("resize", resizeHandler);
+    window.addEventListener("message", messageHandler);
   }
 
   private onIframeReady(): void {
@@ -743,6 +751,8 @@ class HelperWidget {
       document.body.removeChild(this.loadingOverlay);
     }
 
+    this.messageQueue = [];
+
     this.hideAllNotifications();
     this.guideManager.destroy();
 
@@ -766,6 +776,15 @@ class HelperWidget {
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
+    }
+
+    if (this.resizeHandler) {
+      window.removeEventListener("resize", this.resizeHandler);
+      this.resizeHandler = null;
+    }
+    if (this.messageHandler) {
+      window.removeEventListener("message", this.messageHandler);
+      this.messageHandler = null;
     }
   }
 
@@ -802,7 +821,11 @@ class HelperWidget {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Failed to take screenshot:", error);
-      this.sendMessageToEmbed({ action: "SCREENSHOT", content: null });
+      this.sendMessageToEmbed({
+        action: "SCREENSHOT",
+        content: null,
+        error: error instanceof Error ? error.message : "Screenshot capture failed",
+      });
     }
   }
 
@@ -856,10 +879,14 @@ class HelperWidget {
   }
 
   public static async init(config: HelperWidgetConfig): Promise<HelperWidget> {
-    if (!HelperWidget.instance) {
-      HelperWidget.instance = new HelperWidget(config);
-      await HelperWidget.instance.setup();
+    if (HelperWidget.instance) {
+      console.warn(
+        "HelperWidget.init: Destroying existing instance. If this is intentional, please call HelperWidget.destroy() before calling HelperWidget.init()",
+      );
+      HelperWidget.destroy();
     }
+    HelperWidget.instance = new HelperWidget(config);
+    await HelperWidget.instance.setup();
     return HelperWidget.instance;
   }
 

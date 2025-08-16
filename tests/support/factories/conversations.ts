@@ -39,12 +39,14 @@ export const conversationFactory = {
     userId: string,
     overrides: Partial<typeof conversationMessages.$inferInsert> = {},
   ) => {
+    const body = faker.lorem.paragraph();
+
     const [message] = await db
       .insert(conversationMessages)
       .values({
         conversationId,
         userId,
-        body: faker.lorem.paragraph(),
+        body,
         role: "staff",
         status: "sent",
         isPinned: false,
@@ -61,11 +63,13 @@ export const conversationFactory = {
     conversationId: number,
     overrides: Partial<typeof conversationMessages.$inferInsert> = {},
   ) => {
+    const body = faker.lorem.paragraph();
+
     const [message] = await db
       .insert(conversationMessages)
       .values({
         conversationId,
-        body: faker.lorem.paragraph(),
+        body,
         emailFrom: faker.internet.email(),
         role: "user",
         status: "sent",

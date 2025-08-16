@@ -4,13 +4,13 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
-import { getLatestEvents } from "@/lib/data/dashboardEvent";
 import { getGuideSessionsForMailbox } from "@/lib/data/guide";
 import { getMailboxInfo } from "@/lib/data/mailbox";
 import { conversationsRouter } from "./conversations/index";
 import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
 import { githubRouter } from "./github";
+import { issueGroupsRouter } from "./issueGroups";
 import { membersRouter } from "./members";
 import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
@@ -38,7 +38,7 @@ export const mailboxRouter = {
     ]);
 
     return {
-      conversations: all,
+      all,
       mine,
       assigned,
       unassigned: all - assigned,
@@ -79,10 +79,6 @@ export const mailboxRouter = {
         .where(eq(mailboxes.id, ctx.mailbox.id));
     }),
 
-  latestEvents: mailboxProcedure
-    .input(z.object({ cursor: z.date().optional() }))
-    .query(({ ctx, input }) => getLatestEvents(ctx.mailbox, input.cursor)),
-
   getSessionsPaginated: mailboxProcedure
     .input(
       z.object({
@@ -116,6 +112,7 @@ export const mailboxRouter = {
   websites: websitesRouter,
   metadataEndpoint: metadataEndpointRouter,
   savedReplies: savedRepliesRouter,
+  issueGroups: issueGroupsRouter,
 
   autoClose: mailboxProcedure.mutation(async ({ ctx }) => {
     if (!ctx.mailbox.autoCloseEnabled) {

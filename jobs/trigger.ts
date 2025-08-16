@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import superjson from "superjson";
 import { z } from "zod";
+import { toolBodySchema } from "@helperai/client";
 import { db } from "@/db/client";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 
@@ -21,8 +22,9 @@ const events = {
       "indexConversationMessage",
       "generateConversationSummaryEmbeddings",
       "mergeSimilarConversations",
-      "publishNewConversationEvent",
+      "publishNewMessageEvent",
       "notifyVipMessage",
+      "categorizeConversationToIssueGroup",
     ],
   },
   "conversations/email.enqueued": {
@@ -34,6 +36,7 @@ const events = {
   "conversations/auto-response.create": {
     data: z.object({
       messageId: z.number(),
+      tools: z.record(z.string(), toolBodySchema).optional(),
     }),
     jobs: ["handleAutoResponse"],
   },
@@ -96,13 +99,6 @@ const events = {
     }),
     jobs: ["crawlWebsite"],
   },
-  "conversations/check-resolution": {
-    data: z.object({
-      conversationId: z.number(),
-      messageId: z.number(),
-    }),
-    jobs: ["checkConversationResolution"],
-  },
   "messages/flagged.bad": {
     data: z.object({
       messageId: z.number(),
@@ -129,22 +125,37 @@ const events = {
       slackUserId: z.string().nullable(),
       statusMessageTs: z.string(),
       agentThreadId: z.number(),
-      confirmedReplyText: z.string().optional(),
+      confirmedReplyText: z.string().nullish(),
+      confirmedKnowledgeBaseEntry: z.string().nullish(),
     }),
     jobs: ["handleSlackAgentMessage"],
+  },
+  "conversations/send-follower-notification": {
+    data: z.object({
+      conversationId: z.number(),
+      eventType: z.enum(["new_message", "status_change", "assignment_change", "note_added"]),
+      triggeredByUserId: z.string(),
+      eventDetails: z.object({
+        message: z.string().optional(),
+        oldStatus: z.string().optional(),
+        newStatus: z.string().optional(),
+        oldAssignee: z.string().optional(),
+        newAssignee: z.string().optional(),
+        note: z.string().optional(),
+      }),
+    }),
+    jobs: ["sendFollowerNotification"],
   },
 };
 
 export type EventName = keyof typeof events;
 export type EventData<T extends EventName> = z.infer<(typeof events)[T]["data"]>;
 
-export const triggerEvent = <T extends EventName>(
+export const triggerEvent = async <T extends EventName>(
   event: T,
   data: EventData<T>,
   { sleepSeconds = 0 }: { sleepSeconds?: number } = {},
 ) => {
   const payloads = events[event].jobs.map((job) => ({ event, job, data: superjson.serialize(data) }));
-  return db.execute(
-    sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`,
-  );
+  await db.execute(sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`);
 };

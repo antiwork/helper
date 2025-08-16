@@ -2,8 +2,9 @@ import { openai } from "@ai-sdk/openai";
 import { appendClientMessage, createDataStreamResponse, generateText, Message, streamText, tool } from "ai";
 import { z } from "zod";
 import { withWidgetAuth } from "@/app/api/widget/utils";
+import { CHAT_MODEL } from "@/lib/ai/core";
 import { getGuideSessionActions, getGuideSessionByUuid } from "@/lib/data/guide";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { assertDefined } from "../../../../components/utils/assert";
 
 const PROMPT = `You are an AI agent designed to automate browser tasks for {{MAILBOX_NAME}}. Your goal is to accomplish the ultimate task following the rules.
@@ -205,7 +206,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     }),
   };
 
-  const model = openai("gpt-4.1", { parallelToolCalls: false });
+  const model = openai(CHAT_MODEL, { reasoningEffort: "low", structuredOutputs: false, parallelToolCalls: false });
 
   return createDataStreamResponse({
     execute: (dataStream) => {
@@ -217,7 +218,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
         tools,
         toolChoice: "required",
         onError: (error) => {
-          captureExceptionAndLogIfDevelopment(error);
+          captureExceptionAndLog(error);
         },
         experimental_repairToolCall: async ({ toolCall, tools, error, messages, system }) => {
           // eslint-disable-next-line no-console

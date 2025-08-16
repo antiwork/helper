@@ -47,38 +47,6 @@ function App() {
 }
 ```
 
-### Using API Hooks
-
-```tsx
-import React, { useState } from "react";
-import { useChat, useConversations, useCreateConversation } from "@helperai/react";
-
-function ChatComponent() {
-  const { conversations, loading } = useConversations();
-  const { createConversation } = useCreateConversation();
-  const [conversationSlug, setConversationSlug] = useState<string>("");
-  const { messages, send } = useChat(conversationSlug);
-
-  const startChat = async () => {
-    const { conversationSlug: newSlug } = await createConversation();
-    setConversationSlug(newSlug);
-    send("Hello!");
-  };
-
-  return (
-    <div>
-      <button onClick={startChat}>Start Chat</button>
-      {conversations.map((conv) => (
-        <div key={conv.slug}>{conv.subject}</div>
-      ))}
-      {messages.map((msg) => (
-        <div key={msg.id}>{msg.content}</div>
-      ))}
-    </div>
-  );
-}
-```
-
 ## API Reference
 
 ### Core Provider
@@ -111,64 +79,6 @@ Provides global state management for Helper functionality, supporting both widge
 ```
 
 ### Hooks
-
-#### `useConversations()`
-
-Fetches and manages a list of all conversations.
-
-```tsx
-const {
-  conversations, // Conversation[]
-  loading, // boolean
-  error, // string | null
-  refetch, // () => void
-} = useConversations();
-```
-
-#### `useConversation(conversationSlug: string)`
-
-Fetches messages for a specific conversation.
-
-```tsx
-const {
-  messages, // Message[]
-  loading, // boolean
-  error, // string | null
-  refetch, // () => void
-} = useConversation(conversationSlug);
-```
-
-#### `useCreateConversation()`
-
-Creates new conversations.
-
-```tsx
-const {
-  createConversation, // (params?: CreateConversationParams) => Promise<CreateConversationResult>
-  loading, // boolean
-  error, // string | null
-} = useCreateConversation();
-
-// Usage
-const { conversationSlug } = await createConversation({ isPrompt: false });
-```
-
-#### `useChat(conversationSlug: string)`
-
-Provides AI chat functionality for a specific conversation using the AI SDK.
-
-```tsx
-const {
-  messages, // Message[] - Array of conversation messages
-  send, // (message: string) => void - Send a message
-  aiChat, // ReturnType<typeof useAIChat> - Direct access to AI SDK chat
-} = useChat(conversationSlug);
-
-// Usage
-const conversationSlug = "my-conversation";
-const { messages, send } = useChat(conversationSlug);
-send("Hello, how can you help me?");
-```
 
 #### `useHelperContext()`
 
@@ -217,13 +127,14 @@ const authData = generateHelperAuth({
 
 ```tsx
 // app/layout.tsx
-import { HelperProvider } from "@helperai/react";
+import { HelperWidgetScript } from "@helperai/react";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <HelperProvider host={process.env.NEXT_PUBLIC_HELPER_HOST!}>{children}</HelperProvider>
+        <HelperWidgetScript host={process.env.NEXT_PUBLIC_NEXT_PUBLIC_DEV_HOST!} />
+        {children}
       </body>
     </html>
   );
@@ -269,19 +180,6 @@ export default function DashboardPage() {
 - Initialize Helper only after user authentication
 - Implement proper cache invalidation strategies
 - Use framework-specific optimizations when available
-
-### Error Handling
-
-```tsx
-function ChatComponent() {
-  const { conversations, loading, error, refetch } = useConversations();
-
-  if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage message={error} onRetry={refetch} />;
-
-  return <ConversationsList conversations={conversations} />;
-}
-```
 
 ## Troubleshooting
 

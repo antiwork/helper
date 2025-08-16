@@ -10,7 +10,7 @@ export const publishToRealtime = async <Data>({
   data,
   trim,
 }: {
-  channel: string;
+  channel: { name: string; private: boolean };
   event: string;
   data: Data;
   trim?: (data: Data, count: number) => Data;
@@ -20,10 +20,10 @@ export const publishToRealtime = async <Data>({
     json = SuperJSON.stringify(trim(data, json.length - MAX_PAYLOAD_SIZE));
   }
   if (json.length > MAX_PAYLOAD_SIZE) {
-    throw new Error(`${channel} ${event} payload is too large for realtime: ${json.length} bytes`);
+    throw new Error(`${channel.name} ${event} payload is too large for realtime: ${json.length} bytes`);
   }
   await createAdminClient()
-    .channel(channel)
+    .channel(channel.name, { config: { private: channel.private } })
     .send({
       type: "broadcast",
       event,

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { mailboxes } from "@/db/schema";
 import { getMailbox, Mailbox } from "@/lib/data/mailbox";
-import { captureExceptionAndLogIfDevelopment } from "@/lib/shared/sentry";
 import { verifyWidgetSession, type WidgetSessionPayload } from "@/lib/widgetSession";
 
 const corsHeaders = {
@@ -9,18 +8,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-export function corsOptions(method: "POST" | "PATCH" = "POST") {
+export function corsOptions(...methods: ("GET" | "POST" | "PATCH")[]) {
   return new Response(null, {
     status: 204,
     headers: {
       ...corsHeaders,
-      "Access-Control-Allow-Methods": `${method}, OPTIONS`,
+      "Access-Control-Allow-Methods": `${methods.join(", ")}, OPTIONS`,
     },
   });
 }
 
-export function corsResponse(
-  data: unknown,
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters
+export function corsResponse<Data = unknown>(
+  data: Data,
   init?: Omit<ResponseInit, "headers"> & { headers?: Record<string, string> },
   method: "POST" | "PATCH" = "POST",
 ) {
@@ -55,7 +55,8 @@ export async function authenticateWidget(request: Request): Promise<Authenticate
   try {
     session = verifyWidgetSession(token, mailbox);
   } catch (error) {
-    captureExceptionAndLogIfDevelopment(error);
+    // eslint-disable-next-line no-console
+    console.warn("Invalid session token", error);
     return { success: false, error: "Invalid session token" };
   }
 

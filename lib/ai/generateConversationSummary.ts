@@ -5,7 +5,7 @@ import { db } from "@/db/client";
 import { conversationMessages, conversations, ToolMetadata } from "@/db/schema";
 import { runAIObjectQuery } from "@/lib/ai";
 import { HELPER_TO_AI_ROLES_MAPPING } from "@/lib/ai/constants";
-import { cleanUpTextForAI } from "@/lib/ai/core";
+import { cleanUpTextForAI, MINI_MODEL } from "@/lib/ai/core";
 import { findOriginalAndMergedMessages } from "@/lib/data/conversationMessage";
 import { getMailbox } from "@/lib/data/mailbox";
 
@@ -69,6 +69,7 @@ export const generateConversationSummary = async (
   const messages = constructMessagesForConversationSummary(emails);
 
   const { summary } = await runAIObjectQuery({
+    model: MINI_MODEL,
     mailbox,
     queryType: "conversation_summary",
     functionId: "generate-conversation-summary",

@@ -9,7 +9,7 @@ import openai from "@/lib/ai/openai";
 import { ConversationMessage, createToolEvent } from "@/lib/data/conversationMessage";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { fetchMetadata, findSimilarConversations } from "@/lib/data/retrieval";
-import { cleanUpTextForAI, GPT_4O_MINI_MODEL, isWithinTokenLimit } from "../ai/core";
+import { cleanUpTextForAI, isWithinTokenLimit, MINI_MODEL } from "../ai/core";
 import type { Conversation } from "../data/conversation";
 
 export class ToolApiError extends Error {
@@ -168,7 +168,7 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
   const aiTools = buildAITools(mailboxTools, conversation.emailFrom);
 
   const { toolCalls } = await generateText({
-    model: openai(GPT_4O_MINI_MODEL),
+    model: openai(MINI_MODEL, { structuredOutputs: false }),
     tools: {
       close: {
         description: "Close the conversation",
@@ -182,7 +182,7 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
       },
       assign: {
         description:
-          "Assign the conversation to a user. The ID must start with 'user_'. Do not use this tool if no user IDs of assigned similar conversations exist.",
+          'Assign the conversation to a user. The ID must be one of those indicated by "Assigned to user ID" in the similar conversations section. Do not use this tool if no user IDs of assigned similar conversations exist.',
         parameters: z.object({
           userId: z.string(),
         }),

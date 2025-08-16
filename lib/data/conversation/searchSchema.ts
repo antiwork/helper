@@ -21,6 +21,10 @@ export const searchSchema = z.object({
   repliedBefore: z.string().datetime().optional().describe("Filter tickets where a human has replied before this date"),
   repliedBy: z.array(z.string().uuid()).optional().describe("ID of team members who have replied to the conversation"),
   customer: z.array(z.string()).optional().describe("Email address of the customer who opened the ticket"),
+  anonymousSessionId: z
+    .string()
+    .optional()
+    .describe("Anonymous session ID for identifying anonymous user conversations"),
   isVip: z.boolean().optional().describe("Filter by VIP customers"),
   minValueDollars: z.number().optional().describe("Filter by customers with a minimum value"),
   maxValueDollars: z.number().optional().describe("Filter by customers with a maximum value"),
@@ -32,9 +36,9 @@ export const searchSchema = z.object({
   reactionAfter: z.string().datetime().optional().describe("Filter tickets with reactions created after this date"),
   reactionBefore: z.string().datetime().optional().describe("Filter tickets with reactions created before this date"),
   events: z
-    .array(z.enum(["request_human_support", "resolved_by_ai"]))
+    .array(z.enum(["request_human_support"]))
     .optional()
-    .describe("Filter tickets that were escalated to humans or resolved by AI"),
+    .describe("Filter tickets that were escalated to humans"),
 
   closed: z
     .object({
@@ -77,4 +81,6 @@ export const searchSchema = z.object({
     })
     .optional()
     .describe("Filter tickets marked as spam by the Helper Slack agent or by human agents"),
+
+  issueGroupId: z.number().optional().describe("Filter tickets by issue group ID"),
 });

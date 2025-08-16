@@ -5,7 +5,7 @@ import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
 import { conversations } from "@/db/schema/conversations";
 import { generateCompletion, generateEmbedding } from "@/lib/ai";
-import { cleanUpTextForAI, GPT_4O_MINI_MODEL } from "@/lib/ai/core";
+import { cleanUpTextForAI, MINI_MODEL } from "@/lib/ai/core";
 
 const SYSTEM_PROMPT = `You will be given a support conversation between a customer and a support agent. Your task is to summarize this conversation while removing any sensitive or personally identifiable information. 
 Format in a way that it can be used as source of information for future conversations. PRIORITIZE concrete, actionable details over general conversation flow.
@@ -56,7 +56,7 @@ export const createConversationEmbedding = async (conversationId: number) => {
     system: SYSTEM_PROMPT,
     prompt,
     functionId: "summary-embedding-conversation",
-    model: GPT_4O_MINI_MODEL,
+    model: MINI_MODEL,
   });
   const embedding = await generateEmbedding(text, "embedding-conversation", { skipCache: true });
 

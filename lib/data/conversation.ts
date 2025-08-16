@@ -9,6 +9,7 @@ import { conversationMessages, conversations, gmailSupportEmails, mailboxes, pla
 import { conversationEvents } from "@/db/schema/conversationEvents";
 import { triggerEvent } from "@/jobs/trigger";
 import { runAIQuery } from "@/lib/ai";
+import { MINI_MODEL } from "@/lib/ai/core";
 import { extractAddresses } from "@/lib/emails";
 import { conversationChannelId, conversationsListChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
@@ -42,6 +43,7 @@ export const createConversation = async (
     const conversationValues = {
       ...conversation,
       conversationProvider: "chat" as const,
+      subject: conversation.subject,
     };
 
     const [newConversation] = await tx.insert(conversations).values(conversationValues).returning();
@@ -134,6 +136,7 @@ export const updateConversation = async (
 
     await triggerEvent("conversations/embedding.create", { conversationSlug: updatedConversation.slug });
   }
+
   if (updatedConversation && !skipRealtimeEvents) {
     const publishEvents = async () => {
       try {
@@ -174,6 +177,42 @@ export const updateConversation = async (
       }
     };
     await publishEvents();
+
+    if (byUserId && updatesToLog.length > 0) {
+      const notificationEvents = [];
+
+      if (current.status !== updatedConversation.status && updatedConversation.status !== "spam") {
+        notificationEvents.push(
+          triggerEvent("conversations/send-follower-notification", {
+            conversationId: updatedConversation.id,
+            eventType: "status_change" as const,
+            triggeredByUserId: byUserId,
+            eventDetails: {
+              oldStatus: current.status || "open",
+              newStatus: updatedConversation.status || "open",
+            },
+          }),
+        );
+      }
+
+      if (current.assignedToId !== updatedConversation.assignedToId) {
+        notificationEvents.push(
+          triggerEvent("conversations/send-follower-notification", {
+            conversationId: updatedConversation.id,
+            eventType: "assignment_change" as const,
+            triggeredByUserId: byUserId,
+            eventDetails: {
+              oldAssignee: current.assignedToId || undefined,
+              newAssignee: updatedConversation.assignedToId || undefined,
+            },
+          }),
+        );
+      }
+
+      if (notificationEvents.length > 0) {
+        await Promise.allSettled(notificationEvents);
+      }
+    }
   }
   return updatedConversation ?? null;
 };
@@ -194,8 +233,11 @@ export const serializeConversation = (
     updatedAt: conversation.updatedAt,
     closedAt: conversation.closedAt,
     lastUserEmailCreatedAt: conversation.lastUserEmailCreatedAt,
+    lastReadAt: conversation.lastReadAt,
+    lastMessageAt: conversation.lastMessageAt,
     assignedToId: conversation.assignedToId,
     assignedToAI: conversation.assignedToAI,
+    issueGroupId: conversation.issueGroupId,
     platformCustomer: platformCustomer
       ? {
           ...platformCustomer,
@@ -375,16 +417,18 @@ export const generateConversationSubject = async (
       ? messages[0].content
       : (
           await runAIQuery({
+            model: MINI_MODEL,
             messages: messages.filter((m) => m.role === "user").map((m) => ({ role: "user", content: m.content })),
             mailbox,
             queryType: "response_generator",
             system:
               "Generate a brief, clear subject line (max 50 chars) that summarizes the main point of these messages. Respond with only the subject line, no other text.",
-            maxTokens: 50,
+            maxTokens: 500,
             temperature: 0,
             functionId: "generate-conversation-subject",
           })
         ).text;
 
   await db.update(conversations).set({ subject }).where(eq(conversations.id, conversationId));
+  return subject;
 };

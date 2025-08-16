@@ -2,8 +2,8 @@ import { autoAssignConversation } from "./autoAssignConversation";
 import { closeInactiveConversations, closeInactiveConversationsForMailbox } from "./autoCloseInactiveConversations";
 import { bulkEmbeddingClosedConversations } from "./bulkEmbeddingClosedConversations";
 import { bulkUpdateConversations } from "./bulkUpdateConversations";
+import { categorizeConversationToIssueGroup } from "./categorizeConversationToIssueGroup";
 import { checkAssignedTicketResponseTimes } from "./checkAssignedTicketResponseTimes";
-import { checkConversationResolution } from "./checkConversationResolution";
 import { checkVipResponseTimes } from "./checkVipResponseTimes";
 import { cleanupDanglingFiles } from "./cleanupDanglingFiles";
 import { crawlWebsite } from "./crawlWebsite";
@@ -22,10 +22,11 @@ import { indexConversationMessage } from "./indexConversation";
 import { mergeSimilarConversations } from "./mergeSimilarConversations";
 import { notifyVipMessage } from "./notifyVipMessage";
 import { postEmailToGmail } from "./postEmailToGmail";
-import { publishNewConversationEvent } from "./publishNewConversationEvent";
+import { publishNewMessageEvent } from "./publishNewMessageEvent";
 import { publishRequestHumanSupport } from "./publishRequestHumanSupport";
 import { renewMailboxWatches } from "./renewMailboxWatches";
 import { scheduledWebsiteCrawl } from "./scheduledWebsiteCrawl";
+import { sendFollowerNotification } from "./sendFollowerNotification";
 import { suggestKnowledgeBankChanges } from "./suggestKnowledgeBankChanges";
 import { updateSuggestedActions } from "./updateSuggestedActions";
 
@@ -36,7 +37,7 @@ export const eventJobs = {
   indexConversationMessage,
   generateConversationSummaryEmbeddings,
   mergeSimilarConversations,
-  publishNewConversationEvent,
+  publishNewMessageEvent,
   notifyVipMessage,
   postEmailToGmail,
   handleAutoResponse,
@@ -49,22 +50,25 @@ export const eventJobs = {
   generateMailboxWeeklyReport,
   generateMailboxDailyReport,
   crawlWebsite,
-  checkConversationResolution,
   suggestKnowledgeBankChanges,
   closeInactiveConversations,
   closeInactiveConversationsForMailbox,
   autoAssignConversation,
+  categorizeConversationToIssueGroup,
   publishRequestHumanSupport,
   handleSlackAgentMessage,
+  sendFollowerNotification,
 };
 
 export const cronJobs = {
   "0 19 * * *": { bulkEmbeddingClosedConversations },
   "0 * * * *": {
-    checkAssignedTicketResponseTimes,
-    checkVipResponseTimes,
     cleanupDanglingFiles,
     closeInactiveConversations,
+  },
+  "0 14 * * 1-5": {
+    checkAssignedTicketResponseTimes,
+    checkVipResponseTimes,
   },
   "0 0 * * *": { renewMailboxWatches },
   "0 0 * * 0": { scheduledWebsiteCrawl },
