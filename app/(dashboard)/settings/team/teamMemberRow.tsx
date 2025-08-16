@@ -222,22 +222,26 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
 
   return (
     <TableRow>
-      <TableCell>
+      <TableCell className="w-[250px]">
         <div className="flex items-center gap-3">
           <Avatar fallback={getAvatarFallback(member)} size="sm" />
-          <span className="truncate">{member.email || "No email"}</span>
+          <span className="truncate" title={member.email || "No email"}>
+            {member.email || "No email"}
+          </span>
         </div>
       </TableCell>
-      <TableCell>
+      <TableCell className="w-[200px]">
         {isAdmin || member.id === currentUser?.id ? (
           <Input
             value={displayNameInput}
             onChange={(e) => handleDisplayNameChange(e.target.value)}
             placeholder="Enter display name"
-            className="w-full max-w-lg"
+            className="w-full"
           />
         ) : (
-          <span>{member.displayName || "No display name"}</span>
+          <span className="truncate block" title={member.displayName || "No display name"}>
+            {member.displayName || "No display name"}
+          </span>
         )}
       </TableCell>
       <TableCell>
