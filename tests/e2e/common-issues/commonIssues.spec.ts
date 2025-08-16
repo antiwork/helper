@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { deleteCommonIssuesFromDb } from "../utils/commonIssueCleanup";
 import { generateRandomString } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
@@ -113,6 +114,7 @@ test.describe("Common Issues", () => {
     await expectCommonIssueVisible(page, titleDescriptionIssue);
     await expectCommonIssueDescription(page, titleDescriptionIssue, testDescription);
     await expectCommonIssueConversationCount(page, titleDescriptionIssue, 0);
+    await deleteCommonIssuesFromDb([titleOnlyIssue]);
   });
 
   test("should edit existing common issue title and description", async ({ page }) => {
@@ -132,6 +134,7 @@ test.describe("Common Issues", () => {
     await editCommonIssue(page, newTitle, newTitle, newDescription);
     await expectCommonIssueVisible(page, newTitle);
     await expectCommonIssueDescription(page, newTitle, newDescription);
+    await deleteCommonIssuesFromDb([originalTitle]);
   });
 
   test("should delete common issue", async ({ page }) => {
@@ -163,5 +166,6 @@ test.describe("Common Issues", () => {
     await expectCommonIssueVisible(page, searchableTitle);
     await expectCommonIssueVisible(page, nonSearchableTitle);
     await expectCommonIssueVisible(page, issueWithSearchableDescription);
+    await deleteCommonIssuesFromDb([searchableTitle, nonSearchableTitle, issueWithSearchableDescription]);
   });
 });
