@@ -87,6 +87,16 @@ export const CustomerFilter = memo(function CustomerFilter({
                           type="checkbox"
                           className="text-emphasis dark:text-muted focus:ring-emphasis border-default bg-default h-4 w-4 rounded transition hover:cursor-pointer"
                           checked={isSelected}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            onChange(
+                              isSelected
+                                ? selectedCustomers.filter((c) => c !== customer.email)
+                                : [...selectedCustomers, customer.email],
+                            );
+                          }}
+                          aria-label={`Select ${customer.email}`}
                         />
                         <span className="truncate">{customer.email}</span>
                       </CommandItem>
