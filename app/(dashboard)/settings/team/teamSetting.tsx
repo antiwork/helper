@@ -8,6 +8,7 @@ import { useSession } from "@/components/useSession";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import { AddMember } from "./addMember";
+import { MemberCardLoadingSkeleton } from "./memberCardLoadingSkeleton";
 import TeamMemberRow, { ROLE_DISPLAY_NAMES } from "./teamMemberRow";
 import { TeamSettingLoadingSkeleton } from "./teamSettingLoadingSkeleton";
 
@@ -44,7 +45,7 @@ const TeamSetting = () => {
           />
         )}
 
-        <div className="rounded-md border">
+        <div className="rounded-md border hidden md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -75,6 +76,20 @@ const TeamSetting = () => {
               )}
             </TableBody>
           </Table>
+        </div>
+
+        <div className="md:hidden">
+          {isLoading ? (
+            <>
+              <MemberCardLoadingSkeleton />
+              <MemberCardLoadingSkeleton />
+              <MemberCardLoadingSkeleton />
+            </>
+          ) : (
+            filteredTeamMembers.map((member) => (
+              <TeamMemberRow key={member.id} member={member} isAdmin={user?.permissions === "admin"} />
+            ))
+          )}
         </div>
 
         <div className="text-sm text-muted-foreground space-y-1">
