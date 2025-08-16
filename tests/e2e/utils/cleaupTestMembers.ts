@@ -12,13 +12,6 @@ export async function cleanupTestMembers(emails: string[] = []) {
       return;
     }
 
-    console.log(`Cleaning up ${emails.length} test members:`, emails);
-
-    // Delete all test members by email in a single query`
-    const result = await db.delete(authUsers).where(inArray(authUsers.email, emails));
-
-    console.log(`Cleaned up test members`, result);
-  } catch (error) {
-    console.error("Error cleaning up test members:", error);
-  }
+    await db.delete(authUsers).where(inArray(authUsers.email, emails));
+  } catch (error) {}
 }
