@@ -184,6 +184,7 @@ export default function Conversation({
       setData(undefined);
       setIsAgentTyping(false);
       setMessages([]);
+      setIsEscalated(false);
     }
   }, [selectedConversationSlug, conversationSlug, setMessages]);
 
