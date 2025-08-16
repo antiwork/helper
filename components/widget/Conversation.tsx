@@ -177,6 +177,13 @@ export default function Conversation({
     }
   }, [selectedConversationSlug, isNewConversation, setConversationSlug]);
 
+  useEffect(() => {
+    // Clear messages when switching conversations to prevent cross-contamination
+    if (selectedConversationSlug && selectedConversationSlug !== conversationSlug) {
+      setMessages([]);
+    }
+  }, [selectedConversationSlug, conversationSlug, setMessages]);
+
   const isLoading = status === "streaming" || status === "submitted";
   const lastAIMessage = messages?.findLast((msg) => msg.role === "assistant");
 
