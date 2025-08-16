@@ -30,6 +30,7 @@ import { PromptInfo } from "@/lib/ai/promptInfo";
 import { CHAT_SYSTEM_PROMPT, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
 import { cacheFor } from "@/lib/cache";
+import { getCachedClientTools } from "@/lib/data/clientToolsCache";
 import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
 import {
   createAiDraft,
@@ -370,8 +371,14 @@ export const generateAIResponse = async ({
     };
   }
 
-  if (clientProvidedTools) {
-    Object.entries(clientProvidedTools).forEach(([toolName, tool]) => {
+  // Get cached client tools and merge with provided tools
+  const cachedTools = await getCachedClientTools({
+    customerEmail: email,
+  });
+  const allTools = { ...cachedTools, ...clientProvidedTools };
+
+  if (allTools) {
+    Object.entries(allTools).forEach(([toolName, tool]) => {
       const toolDefinition: Tool = {
         description: tool.description,
         parameters: z.object(

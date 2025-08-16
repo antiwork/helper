@@ -233,9 +233,11 @@ export class HelperClient {
     handler: ({
       conversation,
       tools = {},
+      customerSpecificTools = false,
     }: {
       conversation: ConversationDetails;
       tools?: Record<string, HelperTool>;
+      customerSpecificTools?: boolean;
     }) => {
       const formattedMessages = conversation.messages.map(formatAIMessage);
 
@@ -292,6 +294,7 @@ export class HelperClient {
           message: messages[messages.length - 1],
           conversationSlug: conversation.slug,
           tools: serializeTools(tools),
+          customerSpecificTools,
           requestBody,
         }),
         onToolCall: ({ toolCall }: { toolCall: { toolName: string; args: unknown } }) => {
@@ -351,6 +354,7 @@ const serializeTools = (tools: Record<string, HelperTool>) =>
               ? new URL(tool.url, window.location.origin).toString()
               : tool.url
             : undefined,
+        customerSpecificTools: false, // Default to false for backward compatibility
       } satisfies ToolRequestBody,
     ]),
   );
