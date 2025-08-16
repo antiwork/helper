@@ -29,7 +29,7 @@ const SectionWrapper = ({
       <div className="flex w-full flex-col gap-3 lg:max-w-xs">
         <div className="flex w-full flex-col gap-1">
           <h2 className="text-base flex items-center gap-2">{title}</h2>
-          <div className="w-full text-sm text-muted-foreground">{description}</div>
+          <p className="w-full text-sm text-muted-foreground">{description}</p>
         </div>
         {action}
       </div>

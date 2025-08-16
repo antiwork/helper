@@ -31,7 +31,7 @@ const TeamSetting = () => {
       title="Manage Team Members"
       description="Add and organize team members for efficient ticket assignment"
       fullWidth
-      sectionClassName="lg:flex-col"
+      sectionClassName="lg:flex-col gap-8"
     >
       <div className="w-full space-y-6">
         {user?.permissions === "admin" && <AddMember teamMembers={teamMembers} />}
@@ -52,7 +52,7 @@ const TeamSetting = () => {
                 <TableHead className="w-[250px]">Email</TableHead>
                 <TableHead className="w-[200px]">Name</TableHead>
                 <TableHead className="w-[100px]">Permissions</TableHead>
-                <TableHead className="w-[100px]">Support role</TableHead>
+                <TableHead className="w-[120px]">Support role</TableHead>
                 <TableHead className="min-w-[180px]">Auto-assign keywords</TableHead>
                 <TableHead>Actions</TableHead>
                 <TableHead className="w-[120px]">Status</TableHead>
