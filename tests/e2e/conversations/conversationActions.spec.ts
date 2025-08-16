@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { eq, desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { db } from "../../../db/client";
-import { conversations, conversationEvents } from "../../../db/schema";
+import { conversationEvents, conversations } from "../../../db/schema";
 
 async function getConversationStatusFromDb(conversationId: number): Promise<string> {
   const [event] = await db
@@ -24,11 +24,13 @@ async function getOpenConversation() {
     .from(conversations)
     .where(eq(conversations.status, "open"))
     .limit(1);
-  
+
   if (!result.length) {
-    throw new Error("No open conversation found in database. Please ensure there's at least one open conversation for testing.");
+    throw new Error(
+      "No open conversation found in database. Please ensure there's at least one open conversation for testing.",
+    );
   }
-  
+
   return result[0];
 }
 
@@ -68,7 +70,7 @@ test.describe("Conversation Actions", () => {
     test("should handle empty reply attempt", async ({ page }) => {
       const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
       await composer.click({ force: true });
-      
+
       try {
         await composer.evaluate((el) => {
           el.innerHTML = "";
@@ -78,19 +80,18 @@ test.describe("Conversation Actions", () => {
         await page.keyboard.press("Control+a");
         await page.keyboard.press("Delete");
       }
-      
+
       const composerText = await composer.textContent();
       if (composerText) {
         await page.keyboard.press("Control+a");
         await page.keyboard.press("Backspace");
       }
-      
 
       await composer.focus();
 
       const finalComposerText = await composer.textContent();
       expect(finalComposerText?.trim()).toBe("");
-      
+
       const replyButton = page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
       await expect(replyButton).toBeDisabled();
     });
@@ -118,7 +119,7 @@ test.describe("Conversation Actions", () => {
 
     test("should validate composer with actual content", async ({ page }) => {
       const testMessage = "This is a valid message";
-      
+
       const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
       await composer.click({ force: true });
       await composer.pressSequentially(testMessage);
@@ -177,10 +178,9 @@ test.describe("Conversation Actions", () => {
       const commandInput = page.locator('[aria-label="Command Bar Input"]');
       await commandInput.fill("generate");
 
-
       const generateDraftCommand = page.locator('[role="option"]').filter({ hasText: "Generate draft" });
       await expect(generateDraftCommand).toBeVisible();
-      
+
       const otherCommands = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
       await expect(otherCommands).not.toBeVisible();
     });
@@ -204,7 +204,6 @@ test.describe("Conversation Actions", () => {
         await expect(generateDraftCommand).toBeVisible();
         await generateDraftCommand.click();
 
-
         const composerText = await composer.textContent();
         const commandClosed = !(await commandBar.isVisible());
 
@@ -225,7 +224,6 @@ test.describe("Conversation Actions", () => {
       const toggleCcCommand = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
       await expect(toggleCcCommand).toBeVisible();
       await toggleCcCommand.click();
-
 
       const ccInput = page.locator('input[name="CC"]');
       await expect(ccInput).toBeVisible();
@@ -260,9 +258,8 @@ test.describe("Conversation Actions", () => {
         el.textContent = "";
       });
 
-
-  const openConversation = await getOpenConversation();
-  const initialStatus = await getConversationStatusFromDb(openConversation.id);
+      const openConversation = await getOpenConversation();
+      const initialStatus = await getConversationStatusFromDb(openConversation.id);
 
       if (initialStatus === "open") {
         const closeButton = page.locator('button:has-text("Close"):not(:has-text("Reply"))');
@@ -271,7 +268,7 @@ test.describe("Conversation Actions", () => {
         await closeButton.click();
         await page.waitForLoadState("networkidle");
 
-  const statusAfterClose = await getConversationStatusFromDb(openConversation.id);
+        const statusAfterClose = await getConversationStatusFromDb(openConversation.id);
 
         if (statusAfterClose === "closed") {
           await expect(page.locator("text=closed")).toBeVisible();
@@ -312,7 +309,7 @@ test.describe("Conversation Actions", () => {
 
       const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
       await composer.click({ force: true });
-      
+
       try {
         await composer.evaluate((el) => {
           el.innerHTML = "";
@@ -341,7 +338,7 @@ test.describe("Conversation Actions", () => {
           await page.keyboard.press("Control+a");
           await page.keyboard.press("Delete");
         }
-        
+
         await composer.pressSequentially(testMessage);
 
         const updatedText = await composer.textContent();
@@ -371,7 +368,7 @@ test.describe("Conversation Actions", () => {
         if (isVisible) {
           await expect(ccInput).toBeVisible();
           await ccInput.fill("test@example.com", { force: true });
-          
+
           await expect(ccInput).toHaveValue("test@example.com");
         }
       } catch (error) {
@@ -397,7 +394,7 @@ test.describe("Conversation Actions", () => {
         if (isVisible) {
           await expect(bccInput).toBeVisible();
           await bccInput.fill("bcc@example.com", { force: true });
-          
+
           await expect(bccInput).toHaveValue("bcc@example.com");
         }
       } catch (error) {
