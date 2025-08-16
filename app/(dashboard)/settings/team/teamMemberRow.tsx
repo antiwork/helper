@@ -409,26 +409,24 @@ const TeamMemberRow = ({ member, isAdmin }: TeamMemberRowProps) => {
           <div className="text-xs text-muted-foreground">Assigned conversations: {count?.total ?? 0}</div>
 
           {currentUser?.id !== member.id && isAdmin && (
-            <>
-              <div className="border-t pt-2">
-                <div className="flex justify-end">
-                  <DeleteMemberDialog
-                    member={{ id: member.id, displayName: member.displayName }}
-                    description={
-                      count?.total && count?.total > 0
-                        ? `You are about to remove ${member.displayName || member.email}. This member currently has ${count?.total} conversations assigned to them. Please reassign the tickets before deleting the member.`
-                        : `Are you sure you want to remove ${member.displayName || member.email}?`
-                    }
-                    assignedConversationCount={count?.total || 0}
-                  >
-                    <Button variant="destructive" size="sm">
-                      <Trash className="h-4 w-4 mr-2" />
-                      Remove Member
-                    </Button>
-                  </DeleteMemberDialog>
-                </div>
+            <div className="border-t pt-2">
+              <div className="flex justify-end">
+                <DeleteMemberDialog
+                  member={{ id: member.id, displayName: member.displayName }}
+                  description={
+                    count?.total && count?.total > 0
+                      ? `You are about to remove ${member.displayName || member.email}. This member currently has ${count?.total} conversations assigned to them. Please reassign the tickets before deleting the member.`
+                      : `Are you sure you want to remove ${member.displayName || member.email}?`
+                  }
+                  assignedConversationCount={count?.total || 0}
+                >
+                  <Button variant="destructive" size="sm">
+                    <Trash className="h-4 w-4 mr-2" />
+                    Remove Member
+                  </Button>
+                </DeleteMemberDialog>
               </div>
-            </>
+            </div>
           )}
         </CardContent>
       </Card>
