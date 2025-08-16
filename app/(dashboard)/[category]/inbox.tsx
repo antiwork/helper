@@ -70,7 +70,7 @@ const Inbox = () => {
 
   if (isMobile) {
     return (
-      <div className="flex grow overflow-hidden">
+      <div className="flex grow">
         <div className={cn("w-full", currentConversationSlug ? "hidden" : "block")}>
           <PageHeader title={CATEGORY_LABELS[params.category]} />
           <List />
