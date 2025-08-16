@@ -180,6 +180,9 @@ export default function Conversation({
   useEffect(() => {
     // Clear messages when switching conversations to prevent cross-contamination
     if (selectedConversationSlug && selectedConversationSlug !== conversationSlug) {
+      stop();
+      setData(undefined);
+      setIsAgentTyping(false);
       setMessages([]);
     }
   }, [selectedConversationSlug, conversationSlug, setMessages]);
