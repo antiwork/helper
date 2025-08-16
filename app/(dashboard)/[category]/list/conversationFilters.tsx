@@ -123,7 +123,7 @@ export const ConversationFilters = ({
 }: ConversationFiltersProps) => {
   const { input } = useConversationsListInput();
   return (
-    <div className="flex flex-wrap items-center justify-center gap-1 md:gap-2">
+    <div className="flex flex-wrap items-center gap-1 md:gap-2">
       <DateFilter
         startDate={filterValues.createdAfter}
         endDate={filterValues.createdBefore}

@@ -1,4 +1,4 @@
-import { Check, UserCircle } from "lucide-react";
+import { UserCircle } from "lucide-react";
 import { memo, useState, useTransition } from "react";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
@@ -83,7 +83,11 @@ export const CustomerFilter = memo(function CustomerFilter({
                           );
                         }}
                       >
-                        <Check className={`mr-2 h-4 w-4 ${isSelected ? "opacity-100" : "opacity-0"}`} />
+                        <input
+                          type="checkbox"
+                          className="text-emphasis dark:text-muted focus:ring-emphasis border-default bg-default h-4 w-4 rounded transition hover:cursor-pointer"
+                          checked={isSelected}
+                        />
                         <span className="truncate">{customer.email}</span>
                       </CommandItem>
                     );
