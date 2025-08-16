@@ -105,6 +105,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
           />
           {displayNameInput && (
             <button
+              type="button"
               className="absolute inset-y-0 right-0 flex items-center pr-3"
               onClick={() => setDisplayNameInput("")}
               disabled={isAdding}
