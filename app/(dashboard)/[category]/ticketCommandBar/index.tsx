@@ -250,6 +250,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
+          aria-label="Command Bar Input"
         />
       </div>
       <SuggestedActions
@@ -265,6 +266,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
           "rounded-t-none flex-1 flex flex-col overflow-hidden border-t [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5",
           !open && "hidden",
         )}
+        data-testid="command-bar"
       >
         <CommandList
           isLoading={isLoadingPreviousReplies}
