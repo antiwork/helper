@@ -3,11 +3,11 @@ title: Database Migrations
 description: Managing database schema changes and migrations in Helper
 ---
 
-Database migrations in Helper are managed using Drizzle ORM, which provides type-safe database schema definitions and automatic migration generation. This guide covers the standard workflow for making schema changes and handling migration conflicts.
+Database migrations in Helper are managed using [Drizzle ORM](https://orm.drizzle.team/).
 
 ## Normal Migration Workflow
 
-When you need to make changes to the database schema, follow these steps:
+When you need to make changes to the database schema:
 
 ### 1. Modify Schema Files
 
@@ -32,10 +32,7 @@ Run the generate command to create migration files based on your schema changes:
 pnpm db:generate
 ```
 
-This command will:
-- Compare your schema definitions with the current database state
-- Generate SQL migration files in `db/drizzle/`
-- Update the migration journal at `db/drizzle/meta/_journal.json`
+This command will generate SQL migration files in `db/drizzle/` to adjust the schema to match your changes.
 
 ### 3. Apply Migration
 
@@ -45,10 +42,7 @@ Apply the generated migration to your local database:
 pnpm db:migrate
 ```
 
-This command will:
-- Execute the SQL migration files against your local database
-- Update the database to match your schema definitions
-- Set up any necessary cron jobs
+This command will update your local database to match the new schema definitions.
 
 ### 4. Commit Everything
 
@@ -60,19 +54,21 @@ git commit -m "Add new_field to mailboxes table"
 ```
 
 <Callout>
-  **Important**: Always commit both the SQL migration files and the JSON metadata files. The `_journal.json` file tracks the migration history and is essential for proper migration management.
+  **Important**: Always commit both the SQL migration files and the JSON metadata files. The `_journal.json` file tracks
+  the migration history and is essential for proper migration management.
 </Callout>
 
 ## Handling Migration Conflicts
 
-When working with multiple developers, you may encounter merge conflicts with migration files. Here's how to resolve them:
+You may encounter merge conflicts with migration files. Here's how to resolve them:
 
 ### 1. Delete Your Migration Files
 
-Remove all your local migration files from the `db/drizzle/` directory:
+Remove the migration(s) and JSON snapshot(s) in your PR from the `db/drizzle/` directory:
 
 ```sh
-rm db/drizzle/0*.sql
+rm db/drizzle/0XXX_your_migration_name.sql
+rm db/drizzle/meta/0XXX_snapshot.json
 ```
 
 ### 2. Reset Migration Journal
@@ -91,73 +87,15 @@ Clear and reseed your local database to ensure a clean state:
 pnpm db:reset
 ```
 
-This command will:
-- Stop and reset the local database
-- Apply all migrations from the main branch
-- Seed the database with sample data
-
 ### 4. Regenerate Your Changes
 
 Now repeat the normal workflow:
-1. Make your schema changes again
-2. Run `pnpm db:generate`
-3. Run `pnpm db:migrate`
-4. Commit all files
+
+1. Run `pnpm db:generate`
+2. Run `pnpm db:migrate`
+3. Commit all files
 
 <Callout>
-  **Why this works**: By resetting to a clean state that matches main, you ensure your new migration will be generated with the correct sequence number and won't conflict with existing migrations.
+  **Why this works**: By resetting to a clean state that matches main, you ensure your new migration will be generated
+  with the correct sequence number and won't conflict with existing migrations.
 </Callout>
-
-## Understanding the Migration Journal
-
-The `_journal.json` file tracks all migrations with the following structure:
-
-```json
-{
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1729399291025,
-      "tag": "0000_absurd_gwen_stacy",
-      "breakpoints": true
-    }
-  ]
-}
-```
-
-- **idx**: Sequential migration index
-- **when**: Timestamp when migration was generated
-- **tag**: Unique migration identifier with format `{number}_{adjective}_{character}`
-- **breakpoints**: Whether the migration supports breakpoints for rollback
-
-## Best Practices
-
-### Schema Changes
-- Make incremental changes rather than large schema overhauls
-- Test your migrations on a copy of production data when possible
-- Consider backward compatibility when removing or renaming columns
-
-### Migration Management
-- Never edit generated migration files manually
-- Always run migrations in the same order they were generated
-- Keep migration files in version control alongside your code
-
-### Development Workflow
-- Pull the latest changes from main before generating new migrations
-- Run `pnpm db:reset` if your local database gets out of sync
-- Use descriptive commit messages that explain the schema changes
-
-### Troubleshooting
-- If `pnpm db:generate` fails, check for syntax errors in your schema files
-- If `pnpm db:migrate` fails, ensure your local database is running (`pnpm services:start`)
-- If you see "migration already exists" errors, follow the conflict resolution steps above
-
-## Related Commands
-
-- `pnpm db:check` - Validate schema without generating migrations
-- `pnpm db:seed` - Seed database with sample data only
-- `pnpm db:clear` - Reset database and apply migrations without seeding
-- `pnpm services:start` - Start required Docker services (Supabase, Nginx)
