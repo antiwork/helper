@@ -80,6 +80,7 @@ export function AddMember({ teamMembers }: TeamInviteProps) {
           />
           {emailInput && (
             <button
+              type="button"
               className="absolute inset-y-0 right-0 flex items-center pr-3"
               onClick={() => setEmailInput("")}
               disabled={isAdding}
