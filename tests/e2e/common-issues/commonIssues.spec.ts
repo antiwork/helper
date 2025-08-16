@@ -23,23 +23,6 @@ async function editCommonIssue(page: Page, currentTitle: string, newTitle: strin
   await page.getByRole("button", { name: "Save" }).click();
 }
 
-async function deleteCommonIssue(page: Page, title: string) {
-  const issueItem = page.getByTestId("common-issue-item").filter({ hasText: title });
-  await issueItem.getByRole("button", { name: "Delete" }).click();
-  await page.getByRole("button", { name: "Yes, delete" }).click();
-  await page.waitForLoadState("networkidle");
-}
-
-async function expectCommonIssueVisible(page: Page, title: string) {
-  await expect(page.getByText(title, { exact: true })).toBeVisible({ timeout: 10000 });
-}
-
-async function expectCommonIssueNotVisible(page: Page, title: string) {
-  await expect(page.getByText(title, { exact: true })).not.toBeVisible({
-    timeout: 10000,
-  });
-}
-
 async function expectCommonIssueConversationCount(page: Page, title: string, count: number) {
   const issueItem = page.getByTestId("common-issue-item").filter({ hasText: title });
   const expectedText = count === 1 ? "1 conversation" : `${count} conversations`;
@@ -48,6 +31,7 @@ async function expectCommonIssueConversationCount(page: Page, title: string, cou
 
 test.describe("Common Issues", () => {
   test.beforeEach(async ({ page }) => {
+    await page.goto("/settings/common-issues");
     await expect(page.getByText("Common Issues").first()).toBeVisible();
   });
 
@@ -63,11 +47,11 @@ test.describe("Common Issues", () => {
     await expect(page.getByRole("button", { name: "Save" })).toBeEnabled();
 
     await page.getByRole("button", { name: "Save" }).click();
-    await expectCommonIssueVisible(page, titleOnlyIssue);
+    await expect(page.getByText(titleOnlyIssue, { exact: true })).toBeVisible();
     await expectCommonIssueConversationCount(page, titleOnlyIssue, 0);
 
     await addCommonIssue(page, titleDescriptionIssue, testDescription);
-    await expectCommonIssueVisible(page, titleDescriptionIssue);
+    await expect(page.getByText(titleDescriptionIssue, { exact: true })).toBeVisible();
     const issueItem = page.getByTestId("common-issue-item").filter({ hasText: titleDescriptionIssue });
     await expect(issueItem.getByText(testDescription)).toBeVisible();
     await expectCommonIssueConversationCount(page, titleDescriptionIssue, 0);
@@ -80,16 +64,16 @@ test.describe("Common Issues", () => {
     const newDescription = `Updated description ${generateRandomString(8)}`;
 
     await addCommonIssue(page, originalTitle, originalDescription);
-    await expectCommonIssueVisible(page, originalTitle);
+    await expect(page.getByText(originalTitle, { exact: true })).toBeVisible();
     const issueItem = page.getByTestId("common-issue-item").filter({ hasText: originalTitle });
     await expect(issueItem.getByText(originalDescription)).toBeVisible();
 
     await editCommonIssue(page, originalTitle, newTitle);
-    await expectCommonIssueVisible(page, newTitle);
-    await expectCommonIssueNotVisible(page, originalTitle);
+    await expect(page.getByText(newTitle, { exact: true })).toBeVisible();
+    await expect(page.getByText(originalTitle, { exact: true })).not.toBeVisible();
 
     await editCommonIssue(page, newTitle, newTitle, newDescription);
-    await expectCommonIssueVisible(page, newTitle);
+    await expect(page.getByText(newTitle, { exact: true })).toBeVisible();
     const issueItem2 = page.getByTestId("common-issue-item").filter({ hasText: newTitle });
     await expect(issueItem2.getByText(newDescription)).toBeVisible();
   });
@@ -98,10 +82,12 @@ test.describe("Common Issues", () => {
     const testTitle = `Issue to Delete ${generateRandomString(8)}`;
 
     await addCommonIssue(page, testTitle);
-    await expectCommonIssueVisible(page, testTitle);
+    await expect(page.getByText(testTitle, { exact: true })).toBeVisible();
 
-    await deleteCommonIssue(page, testTitle);
-    await expectCommonIssueNotVisible(page, testTitle);
+    const issueItem = page.getByTestId("common-issue-item").filter({ hasText: testTitle });
+    await issueItem.getByRole("button", { name: "Delete" }).click();
+    await page.getByRole("button", { name: "Yes, delete" }).click();
+    await expect(page.getByText(testTitle, { exact: true })).not.toBeVisible();
   });
 
   test("should search common issues by title and description", async ({ page }) => {
@@ -115,13 +101,13 @@ test.describe("Common Issues", () => {
     await addCommonIssue(page, issueWithSearchableDescription, searchableDescription);
 
     await page.getByPlaceholder("Search common issues...").fill("Searchable");
-    await expectCommonIssueVisible(page, searchableTitle);
-    await expectCommonIssueVisible(page, issueWithSearchableDescription);
-    await expectCommonIssueNotVisible(page, nonSearchableTitle);
+    await expect(page.getByText(searchableTitle, { exact: true })).toBeVisible();
+    await expect(page.getByText(issueWithSearchableDescription, { exact: true })).toBeVisible();
+    await expect(page.getByText(nonSearchableTitle, { exact: true })).not.toBeVisible();
 
     await page.getByPlaceholder("Search common issues...").fill("");
-    await expectCommonIssueVisible(page, searchableTitle);
-    await expectCommonIssueVisible(page, nonSearchableTitle);
-    await expectCommonIssueVisible(page, issueWithSearchableDescription);
+    await expect(page.getByText(searchableTitle, { exact: true })).toBeVisible();
+    await expect(page.getByText(nonSearchableTitle, { exact: true })).toBeVisible();
+    await expect(page.getByText(issueWithSearchableDescription, { exact: true })).toBeVisible();
   });
 });
