@@ -10,11 +10,9 @@ import { issueGroups } from "../../../db/schema";
 export async function deleteCommonIssuesFromDb(titles: string[]): Promise<void> {
   try {
     if (titles.length > 0) {
-      const result = await db.delete(issueGroups).where(inArray(issueGroups.title, titles));
-      console.log(`✅ Test cleanup completed - deleted ${result.rowCount || 0} common issues`);
+      await db.delete(issueGroups).where(inArray(issueGroups.title, titles));
     }
   } catch (error) {
-    console.warn("Failed during common issues cleanup:", error);
     // Don't fail the test suite due to cleanup issues
   }
 }
