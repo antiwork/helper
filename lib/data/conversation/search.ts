@@ -151,7 +151,7 @@ export const searchConversations = async (
   const orderByField =
     filters.status?.length === 1 && filters.status[0] === "closed"
       ? conversations.closedAt
-      : sql`COALESCE(recent_message.created_at, ${conversations.lastMessageAt}, ${conversations.createdAt})`;
+      : sql`COALESCE(${conversations.lastMessageAt}, recent_message.created_at, ${conversations.createdAt})`;
   const isOpenTicketsOnly = filters.status?.length === 1 && filters.status[0] === "open";
   const orderBy = isOpenTicketsOnly
     ? [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)]
