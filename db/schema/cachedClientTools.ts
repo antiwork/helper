@@ -8,10 +8,7 @@ export const cachedClientTools = pgTable(
   {
     ...withTimestamps,
     id: bigint({ mode: "number" }).primaryKey().generatedByDefaultAsIdentity(),
-
-    // Single identifier (fallback/only) — email
-    customerEmail: text(), // nullable to allow a single global row if needed
-
+    customerEmail: text(),
     tools: jsonb().$type<Record<string, ToolRequestBody>>().notNull(),
   },
   (table) => [
