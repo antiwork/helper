@@ -77,7 +77,9 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
   const handleReopen = async () => {
     try {
       await updateStatus("open");
-    } catch {}
+    } catch (error) {
+      console.error("Failed to reopen conversation:", error);
+    }
   };
 
   const Icon = event.changes.assignedToAI ? Bot : event.changes.status ? statusIcons[event.changes.status] : User;
