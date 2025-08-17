@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useConversationsListInput } from "../shared/queries";
 import { highlightKeywords } from "./filters/highlightKeywords";
 
-type ListItem = ConversationListItemType & { isNew?: boolean; recentMessageAt?: Date | null };
+type ListItem = ConversationListItemType & { isNew?: boolean; recentMessageAt?: string | Date | null };
 
 type ConversationListItemProps = {
   conversation: ListItem;
@@ -135,9 +135,9 @@ export const ConversationListItem = ({
                         time={
                           conversation.latestMessageAt ??
                           // recentMessageAt comes from the lateral join in the list query
-                          (conversation as any).recentMessageAt ??
+                          conversation.recentMessageAt ??
                           conversation.lastUserEmailCreatedAt ??
-                          conversation.updatedAt
+                          conversation.createdAt
                         }
                         titlePrefix="Last activity on"
                       />
