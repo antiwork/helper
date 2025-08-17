@@ -1,5 +1,14 @@
 import { upperFirst } from "lodash-es";
-import { AlertCircle, ArrowLeftFromLine, ArrowRightFromLine, Bot, ChevronDown, ChevronRight, RotateCcw, User } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeftFromLine,
+  ArrowRightFromLine,
+  Bot,
+  ChevronDown,
+  ChevronRight,
+  RotateCcw,
+  User,
+} from "lucide-react";
 import { useState } from "react";
 import { ConversationEvent } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
@@ -68,8 +77,7 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
   const handleReopen = async () => {
     try {
       await updateStatus("open");
-    } catch {
-    }
+    } catch {}
   };
 
   const Icon = event.changes.assignedToAI ? Bot : event.changes.status ? statusIcons[event.changes.status] : User;
@@ -108,7 +116,7 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
             {isSpamEvent && (
               <div className="flex justify-center pt-2 border-t">
                 <Button
-                  variant="outline"
+                  variant="outlined"
                   size="sm"
                   onClick={handleReopen}
                   disabled={isUpdating}
