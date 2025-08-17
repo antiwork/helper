@@ -131,8 +131,15 @@ export const ConversationListItem = ({
                       <HumanizedTime time={conversation.closedAt ?? conversation.updatedAt} titlePrefix="Closed on" />
                     ) : (
                       <HumanizedTime
-                        time={conversation.lastUserEmailCreatedAt ?? conversation.updatedAt}
-                        titlePrefix="Last email received on"
+                        // Show latest activity (reply or received), falling back safely
+                        time={
+                          conversation.latestMessageAt ??
+                          // recentMessageAt comes from the lateral join in the list query
+                          (conversation as any).recentMessageAt ??
+                          conversation.lastUserEmailCreatedAt ??
+                          conversation.updatedAt
+                        }
+                        titlePrefix="Last activity on"
                       />
                     )}
                   </div>
