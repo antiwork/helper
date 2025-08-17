@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useConversationsListInput } from "../shared/queries";
 import { highlightKeywords } from "./filters/highlightKeywords";
 
-type ListItem = ConversationListItemType & { isNew?: boolean };
+type ListItem = ConversationListItemType & { isNew?: boolean; recentMessageAt?: Date | null };
 
 type ConversationListItemProps = {
   conversation: ListItem;
