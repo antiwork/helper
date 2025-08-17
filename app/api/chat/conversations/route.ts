@@ -54,15 +54,18 @@ export const GET = withWidgetAuth(async ({ request }, { session, mailbox }) => {
     .groupBy(conversationMessages.conversationId);
 
   const conversations = results
-    .map((conv) => ({
-      slug: conv.slug,
-      subject: conv.subject ?? "(no subject)",
-      createdAt: conv.createdAt.toISOString(),
-      latestMessage: conv.recentMessageText || null,
-      latestMessageAt: conv.recentMessageAt?.toISOString() || null,
-      messageCount: messageCounts.find((m) => m.conversationId === conv.id)?.count || 0,
-      isUnread: !!conv.recentMessageAt && (!conv.lastReadAt || conv.recentMessageAt > conv.lastReadAt),
-    }))
+    .map((conv) => {
+      const latest = conv.lastMessageAt ?? conv.recentMessageAt ?? conv.createdAt;
+      return {
+        slug: conv.slug,
+        subject: conv.subject ?? "(no subject)",
+        createdAt: conv.createdAt.toISOString(),
+        latestMessage: conv.recentMessageText || null,
+        latestMessageAt: latest ? latest.toISOString() : null,
+        messageCount: messageCounts.find((m) => m.conversationId === conv.id)?.count || 0,
+        isUnread: !!conv.recentMessageAt && (!conv.lastReadAt || conv.recentMessageAt > conv.lastReadAt),
+      };
+    })
     .filter((conv) => conv.messageCount > 0);
 
   return corsResponse<ConversationsResult>({

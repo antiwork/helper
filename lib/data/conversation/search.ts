@@ -148,10 +148,17 @@ export const searchConversations = async (
       : {}),
   };
 
+  // ---------- CHANGED: order by "latest message" time with safe fallbacks ----------
+  // closed lists still order by closedAt; otherwise prefer:
+  // 1) conversations.lastMessageAt (fast, indexed)
+  // 2) recent_message.created_at (from the lateral join below)
+  // 3) conversations.createdAt (brand-new threads)
   const orderByField =
     filters.status?.length === 1 && filters.status[0] === "closed"
       ? conversations.closedAt
-      : sql`COALESCE(${conversations.lastUserEmailCreatedAt}, ${conversations.createdAt})`;
+      : sql`COALESCE(${conversations.lastMessageAt}, ${sql.raw("recent_message.created_at")}, ${conversations.createdAt})`;
+  // -------------------------------------------------------------------------------
+
   const isOpenTicketsOnly = filters.status?.length === 1 && filters.status[0] === "open";
   const orderBy = isOpenTicketsOnly
     ? [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)]

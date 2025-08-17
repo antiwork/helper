@@ -10,6 +10,7 @@ type Conversation = {
   slug: string;
   subject: string;
   createdAt: string;
+  latestMessageAt?: string | null;
   latestMessage: string | null;
 };
 
@@ -127,7 +128,7 @@ export default function PreviousConversations({ token, onSelectConversation, isA
               <div className="flex items-center justify-between">
                 <div className="text-sm font-medium text-foreground">{conversation.subject}</div>
                 <div className="text-xs text-muted-foreground">
-                  <HumanizedTime time={conversation.createdAt} />
+                  <HumanizedTime time={conversation.latestMessageAt ?? conversation.createdAt} />
                 </div>
               </div>
               {conversation.latestMessage && (
