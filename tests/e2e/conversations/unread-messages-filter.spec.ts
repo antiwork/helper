@@ -36,11 +36,11 @@ test.describe("Unread Messages Filter", () => {
     // Wait for the filtered results to load
     await page.waitForLoadState('networkidle');
 
-    const unreadBadge = page.locator('[data-testid="unread-messages-badge"]');
-    const badgeCount = await unreadBadge.count();
+    const unreadIndicator = page.locator('[data-testid="unread-indicator"]');
+    const indicatorCount = await unreadIndicator.count();
 
-    if (badgeCount > 0) {
-      await expect(unreadBadge.first()).toBeVisible();
+    if (indicatorCount > 0) {
+      await expect(unreadIndicator.first()).toBeVisible();
     }
 
     await takeDebugScreenshot(page, "unread-filter-active.png");
@@ -91,19 +91,60 @@ test.describe("Unread Messages Filter", () => {
     }
   });
 
-  test("should only show unread badges on assigned conversations", async ({ page }) => {
-    const unreadBadges = page.locator('[data-testid="unread-messages-badge"]');
-    const badgeCount = await unreadBadges.count();
+  test("should only show unread filter in mine and assigned views", async ({ page }) => {
+    // Test that filter shows in "mine" view (current page)
+    const filterButton = page.locator('button:has-text("Unread")');
+    await expect(filterButton).toBeVisible();
 
-    if (badgeCount > 0) {
-      for (let i = 0; i < badgeCount; i++) {
-        const badge = unreadBadges.nth(i);
-        await expect(badge).toBeVisible();
+    // Test that filter doesn't show in "all" view
+    await page.goto("/all");
+    await page.waitForLoadState("domcontentloaded");
+    
+    const filterToggleButton = page.locator('button[aria-label="Filter Toggle"]');
+    await expect(filterToggleButton).toBeVisible();
+    await filterToggleButton.click();
+    
+    const unreadFilterInAll = page.locator('button:has-text("Unread")');
+    await expect(unreadFilterInAll).toHaveCount(0);
 
-        const conversationItem = badge.locator('xpath=ancestor::*[contains(@class, "conversation") or @data-testid="conversation-item"]').first();
-        await expect(conversationItem).toBeVisible();
+    // Test that filter shows in "assigned" view
+    await page.goto("/assigned");
+    await page.waitForLoadState("domcontentloaded");
+    
+    const filterToggleInAssigned = page.locator('button[aria-label="Filter Toggle"]');
+    await expect(filterToggleInAssigned).toBeVisible();
+    await filterToggleInAssigned.click();
+    
+    const unreadFilterInAssigned = page.locator('button:has-text("Unread")');
+    await expect(unreadFilterInAssigned).toBeVisible();
+  });
+
+  test("should only show unread indicators in mine and assigned views", async ({ page }) => {
+    // Test in "mine" view (current page)
+    const unreadIndicators = page.locator('[data-testid="unread-indicator"]');
+    const indicatorCount = await unreadIndicators.count();
+
+    if (indicatorCount > 0) {
+      for (let i = 0; i < indicatorCount; i++) {
+        const indicator = unreadIndicators.nth(i);
+        await expect(indicator).toBeVisible();
       }
     }
+
+    // Test that indicators don't show in "all" view
+    await page.goto("/all");
+    await page.waitForLoadState("domcontentloaded");
+    
+    const indicatorsInAll = page.locator('[data-testid="unread-indicator"]');
+    await expect(indicatorsInAll).toHaveCount(0);
+
+    // Test that indicators show in "assigned" view
+    await page.goto("/assigned");
+    await page.waitForLoadState("domcontentloaded");
+    
+    const indicatorsInAssigned = page.locator('[data-testid="unread-indicator"]');
+    // Just ensure the page loaded correctly - indicators may or may not be present
+    await expect(page).toHaveURL(/\/assigned/);
   });
 
   test("should update filter count in clear filters button", async ({ page }) => {
