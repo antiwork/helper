@@ -137,10 +137,12 @@ export const ConversationFilters = ({
           onUpdateFilter({ createdAfter: startDate, createdBefore: endDate });
         }}
       />
-      <UnreadMessagesFilter
-        hasUnreadMessages={filterValues.hasUnreadMessages}
-        onChange={(hasUnreadMessages) => onUpdateFilter({ hasUnreadMessages })}
-      />
+      {(input.category === "assigned" || input.category === "mine") && (
+        <UnreadMessagesFilter
+          hasUnreadMessages={filterValues.hasUnreadMessages}
+          onChange={(hasUnreadMessages) => onUpdateFilter({ hasUnreadMessages })}
+        />
+      )}
       {input.category === "all" && (
         <AssigneeFilter
           selectedAssignees={filterValues.isAssigned === false ? ["unassigned"] : filterValues.assignee}
