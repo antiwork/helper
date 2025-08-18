@@ -471,7 +471,10 @@ export const MessageActions = () => {
         }}
         onModEnter={() => !sendDisabled && handleSend({ assign: false })}
         onOptionEnter={() => !sendDisabled && handleSend({ assign: false, close: false })}
-        onSlashKey={() => commandInputRef.current?.focus()}
+        onSlashKey={() => {
+          setShowCommandBar(true);
+          setTimeout(() => commandInputRef.current?.focus(), 100);
+        }}
         enableImageUpload
         enableFileUpload
         actionButtons={actionButtons}
