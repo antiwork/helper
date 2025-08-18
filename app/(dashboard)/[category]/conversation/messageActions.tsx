@@ -30,7 +30,6 @@ import { api } from "@/trpc/react";
 import { useConversationListContext } from "../list/conversationListContext";
 import { useConversationsListInput } from "../shared/queries";
 import { TicketCommandBar } from "../ticketCommandBar";
-import { NextTicketPreview } from "./nextTicketPreview";
 import { useUndoneEmailStore } from "./useUndoneEmailStore";
 
 export const FAILED_ATTACHMENTS_TOOLTIP_MESSAGE = "Remove the failed file attachments first";
@@ -434,7 +433,6 @@ export const MessageActions = () => {
 
   return (
     <div className="flex flex-col h-full pt-4">
-      <NextTicketPreview className="mb-2" />
       <TicketCommandBar
         open={showCommandBar}
         onOpenChange={setShowCommandBar}

@@ -104,7 +104,7 @@ test.describe("Next Ticket Preview", () => {
   test("should navigate to next conversation when Switch button is clicked", async ({ page }) => {
     // First check if we have enough conversations
     const conversationCount = await getTotalConversationCount(page);
-    
+
     if (conversationCount < 2) {
       test.skip();
       return;
