@@ -1,13 +1,12 @@
 "use client";
 
-import { ChevronDown, ChevronRight, ChevronUp, DollarSign } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useConversationListContext } from "@/app/(dashboard)/[category]/list/conversationListContext";
 import HumanizedTime from "@/components/humanizedTime";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/components/utils/currency";
 import { getInitials } from "@/components/utils/initials";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
@@ -39,16 +38,16 @@ export const NextTicketPreview = ({ className }: { className?: string }) => {
 
   const email = nextConversation.emailFrom || "Anonymous";
   const displayName = email.split("@")[0];
-  const initials = getInitials(displayName);
+  const initials = getInitials(displayName || "Anonymous");
 
   return (
-    <div className={cn("border rounded-lg bg-muted/20", className)}>
+    <div className={cn("border rounded-lg bg-muted/30 shadow-sm", className)}>
       {/* Collapsible Header */}
       <div
-        className="flex items-center justify-between p-3 cursor-pointer"
+        className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors rounded-t-lg"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Button
             variant="ghost"
             size="sm"
@@ -58,14 +57,16 @@ export const NextTicketPreview = ({ className }: { className?: string }) => {
               setIsCollapsed(!isCollapsed);
             }}
             aria-label={isCollapsed ? "Expand preview" : "Collapse preview"}
+            className="h-6 w-6 p-0"
           >
-            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {isCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
           </Button>
-          <h4 className="text-sm font-medium text-muted-foreground">
-            {isLastConversation ? "First" : "Next"} Ticket: #{nextConversation.id || "T-002"}
+          <h4 className="text-sm font-medium">
+            {isLastConversation ? "First" : "Next"} Ticket:{" "}
+            <span className="text-muted-foreground">#{nextConversation.id || "T-002"}</span>
           </h4>
           {isCollapsed && (
-            <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+            <span className="text-xs text-muted-foreground truncate max-w-[250px] ml-2">
               {nextConversation.subject || "(no subject)"}
             </span>
           )}
@@ -79,21 +80,20 @@ export const NextTicketPreview = ({ className }: { className?: string }) => {
             navigateToConversation(nextConversation.slug);
           }}
           disabled={isNavigating}
-          className="text-primary hover:text-primary-foreground"
+          className="text-xs px-2 py-1 h-auto hover:bg-primary/10"
         >
-          {isNavigating ? "Switching..." : "Switch to"}
-          <ChevronRight className="h-3 w-3 ml-1" />
+          {isNavigating ? "Switching..." : "Switch →"}
         </Button>
       </div>
 
       {/* Collapsible Content */}
       {!isCollapsed && (
-        <div className="px-3 pb-3 space-y-3 border-t">
-          <div className="flex items-start gap-3 pt-3">
-            <Avatar fallback={initials} size="md" />
+        <div className="px-3 pb-3">
+          <div className="flex items-start gap-3 pt-2">
+            <Avatar fallback={initials} size="sm" />
 
             <div className="flex-1 space-y-1">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-medium text-sm">{displayName}</span>
                 <span className="text-xs text-muted-foreground">{email}</span>
                 {nextConversation.platformCustomer?.isVip && (
@@ -101,32 +101,26 @@ export const NextTicketPreview = ({ className }: { className?: string }) => {
                     VIP
                   </Badge>
                 )}
-                {nextConversation.platformCustomer?.value && (
-                  <Badge variant="secondary" className="text-xs px-1.5 py-0 flex items-center gap-0.5">
-                    <DollarSign className="h-2.5 w-2.5" />
-                    {formatCurrency(parseFloat(nextConversation.platformCustomer.value))}
-                  </Badge>
-                )}
               </div>
 
-              <h3 className="font-semibold text-base">{nextConversation.subject || "(no subject)"}</h3>
+              <h3 className="font-medium text-sm mt-1">{nextConversation.subject || "(no subject)"}</h3>
 
               {(nextConversation.recentMessageText || nextConversation.matchedMessageText) && (
-                <p className="text-sm text-foreground/90 whitespace-pre-wrap">
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
                   {(() => {
-                    const text = nextConversation.matchedMessageText || nextConversation.recentMessageText;
+                    const text = nextConversation.matchedMessageText || nextConversation.recentMessageText || "";
                     return text.length > 150 ? `${text.slice(0, 150)}...` : text;
                   })()}
                 </p>
               )}
 
-              <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
+              <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
                 <span>
-                  Created <HumanizedTime time={nextConversation.createdAt} format="long" />
+                  Created <HumanizedTime time={nextConversation.createdAt} format="short" />
                 </span>
-                <span>•</span>
+                <span className="text-muted-foreground/50">•</span>
                 <span>
-                  Updated <HumanizedTime time={nextConversation.updatedAt} format="long" />
+                  Updated <HumanizedTime time={nextConversation.updatedAt} format="short" />
                 </span>
               </div>
             </div>
