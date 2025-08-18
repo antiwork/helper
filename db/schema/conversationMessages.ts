@@ -1,6 +1,5 @@
 import { isNull, relations, sql } from "drizzle-orm";
 import { bigint, boolean, index, jsonb, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
-import { encryptedField } from "@/db/lib/encryptedField";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { CustomerInfo } from "@/types/customerInfo";
 import { withTimestamps } from "../lib/with-timestamps";
@@ -40,9 +39,7 @@ export const conversationMessages = pgTable(
     emailFrom: text(),
     emailCc: jsonb().$type<string[]>(),
     emailBcc: jsonb().$type<string[]>(),
-    unused_body: encryptedField("encrypted_body"),
     body: text("body"),
-    unused_cleanedUpText: encryptedField("encrypted_cleaned_up_text"),
     cleanedUpText: text("cleaned_up_text"),
     role: text().notNull().$type<MessageRole>(),
     userId: text("clerk_user_id"),
