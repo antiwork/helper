@@ -1,0 +1,1 @@
+ALTER TABLE "conversations_conversation" ADD COLUMN "last_read_by_assignee_at" timestamp with time zone;
