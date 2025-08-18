@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { Input } from "@/components/ui/input";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useOnOutsideClick } from "@/components/useOnOutsideClick";
+import { searchHelpArticles } from "@/lib/search/helpArticleSearch";
 
 type HelpArticle = {
   title: string;
@@ -45,7 +46,7 @@ const HelpArticleMentionPopover: React.FC<HelpArticleMentionPopoverProps> = ({
   }, [isMobile, isOpen]);
 
   const filterQuery = isMobile ? mobileQuery : query;
-  const filtered = articles.filter((a) => a.title.toLowerCase().includes(filterQuery.toLowerCase()));
+  const filtered = searchHelpArticles(articles, filterQuery, 10);
 
   if (!isOpen || (!position && !isMobile)) return null;
 
