@@ -82,6 +82,7 @@ describe("Chat API Route", () => {
         readPageTool: null,
         guideEnabled: false,
         tools,
+        customerSpecificTools: true,
       }),
     });
 
@@ -124,6 +125,76 @@ describe("Chat API Route", () => {
 
     expect(getCachedClientTools).toHaveBeenCalledWith({
       customerEmail: "test@example.com",
+    });
+  });
+
+  it("should cache tools globally when customerSpecificTools is false", async () => {
+    const { cacheClientTools } = await import("@/lib/data/clientToolsCache");
+
+    const tools: Record<string, ToolRequestBody> = {
+      testTool: {
+        description: "Test tool",
+        parameters: {
+          param1: { type: "string", description: "Test parameter" },
+        },
+        serverRequestUrl: "https://api.example.com/test",
+      },
+    };
+
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: { content: "Hello" },
+        conversationSlug: "test-conversation",
+        readPageTool: null,
+        guideEnabled: false,
+        tools,
+        customerSpecificTools: false, // Explicitly set to false for global caching
+      }),
+    });
+
+    const { POST } = await import("@/app/api/chat/route");
+    await POST(request, { params: Promise.resolve({}) });
+
+    expect(cacheClientTools).toHaveBeenCalledWith({
+      tools,
+      customerEmail: undefined, // Should be undefined for global caching
+    });
+  });
+
+  it("should cache tools globally when customerSpecificTools is not provided", async () => {
+    const { cacheClientTools } = await import("@/lib/data/clientToolsCache");
+
+    const tools: Record<string, ToolRequestBody> = {
+      testTool: {
+        description: "Test tool",
+        parameters: {
+          param1: { type: "string", description: "Test parameter" },
+        },
+        serverRequestUrl: "https://api.example.com/test",
+      },
+    };
+
+    const request = new Request("http://localhost/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: { content: "Hello" },
+        conversationSlug: "test-conversation",
+        readPageTool: null,
+        guideEnabled: false,
+        tools,
+        // customerSpecificTools not provided - should default to global caching
+      }),
+    });
+
+    const { POST } = await import("@/app/api/chat/route");
+    await POST(request, { params: Promise.resolve({}) });
+
+    expect(cacheClientTools).toHaveBeenCalledWith({
+      tools,
+      customerEmail: undefined, // Should be undefined for global caching
     });
   });
 

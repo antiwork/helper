@@ -30,6 +30,7 @@ interface ChatRequestBody {
   guideEnabled: boolean;
   isToolResult?: boolean;
   tools?: Record<string, ToolRequestBody>;
+  customerSpecificTools?: boolean;
 }
 
 const getConversation = async (conversationSlug: string, session: WidgetSessionPayload) => {
@@ -54,7 +55,8 @@ const getConversation = async (conversationSlug: string, session: WidgetSessionP
 export const OPTIONS = () => corsOptions("POST");
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
-  const { message, conversationSlug, readPageTool, guideEnabled, tools }: ChatRequestBody = await request.json();
+  const { message, conversationSlug, readPageTool, guideEnabled, tools, customerSpecificTools }: ChatRequestBody =
+    await request.json();
 
   Sentry.setTag("conversation_slug", conversationSlug);
 
@@ -66,7 +68,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
   if (tools && Object.keys(tools).length > 0) {
     await cacheClientTools({
       tools,
-      customerEmail: userEmail,
+      customerEmail: customerSpecificTools ? userEmail : undefined,
     });
   }
 
@@ -131,6 +133,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     reasoningEnabled: false,
     isHelperUser,
     tools: allTools,
+    customerSpecificTools,
     onResponse: ({ messages, isPromptConversation, isFirstMessage, humanSupportRequested }) => {
       if (
         (!isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) ||

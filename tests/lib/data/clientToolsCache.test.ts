@@ -12,12 +12,8 @@ import {
 } from "@/lib/data/clientToolsCache";
 
 describe("clientToolsCache", () => {
-  let testMailbox: any;
-
   beforeEach(async () => {
-    // Create a test mailbox for each test
-    const { mailbox } = await userFactory.createRootUser();
-    testMailbox = mailbox;
+    await userFactory.createRootUser();
   });
 
   const mockTools: Record<string, ToolRequestBody> = {

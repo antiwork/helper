@@ -329,6 +329,7 @@ export const generateAIResponse = async ({
   evaluation = false,
   guideEnabled = false,
   tools: clientProvidedTools,
+  customerSpecificTools = false,
 }: {
   messages: Message[];
   mailbox: Mailbox;
@@ -352,6 +353,7 @@ export const generateAIResponse = async ({
   evaluation?: boolean;
   dataStream?: DataStreamWriter;
   tools?: Record<string, ToolRequestBody>;
+  customerSpecificTools?: boolean;
 }) => {
   const lastMessage = messages.findLast((m: Message) => m.role === "user");
   const query = lastMessage?.content || "";
@@ -373,7 +375,7 @@ export const generateAIResponse = async ({
 
   // Get cached client tools and merge with provided tools
   const cachedTools = await getCachedClientTools({
-    customerEmail: email,
+    customerEmail: customerSpecificTools ? email : undefined,
   });
   const allTools = { ...cachedTools, ...clientProvidedTools };
 
@@ -644,6 +646,7 @@ export const respondWithAI = async ({
   isHelperUser = false,
   reasoningEnabled = true,
   tools,
+  customerSpecificTools = false,
 }: {
   conversation: Conversation;
   mailbox: Mailbox;
@@ -663,6 +666,7 @@ export const respondWithAI = async ({
   isHelperUser?: boolean;
   reasoningEnabled?: boolean;
   tools?: Record<string, ToolRequestBody>;
+  customerSpecificTools?: boolean;
 }) => {
   const previousMessages = await loadPreviousMessages(conversation.id, messageId);
   const messages = appendClientMessage({
@@ -746,6 +750,7 @@ export const respondWithAI = async ({
         guideEnabled,
         addReasoning: reasoningEnabled,
         tools,
+        customerSpecificTools,
         dataStream,
         async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources, promptInfo }) {
           const hasSensitiveToolCall = steps.some((step: any) =>

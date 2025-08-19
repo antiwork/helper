@@ -3,6 +3,7 @@ import { and, eq, isNull, or } from "drizzle-orm";
 import type { ToolRequestBody } from "@helperai/client";
 import { db, Transaction } from "@/db/client";
 import { clientToolsCache } from "@/db/schema";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export interface CacheClientToolsParams {
   tools: Record<string, ToolRequestBody>;
@@ -66,7 +67,7 @@ export const cacheClientTools = async ({
         });
       }
     } catch (error) {
-      console.error(`Error caching tool ${toolName}:`, error);
+      captureExceptionAndLog(error);
       throw error;
     }
   }
@@ -122,7 +123,7 @@ export const clearCachedClientTools = async ({
 export const getCachedToolsForAdmin = async (
   tx: Transaction | typeof db = db,
 ): Promise<
-  Array<{
+  {
     toolName: string;
     description: string;
     parameters: Record<string, any>;
@@ -131,7 +132,7 @@ export const getCachedToolsForAdmin = async (
     platformCustomerId: string | null;
     createdAt: Date;
     updatedAt: Date;
-  }>
+  }[]
 > => {
   return await tx.query.clientToolsCache.findMany({
     columns: {
