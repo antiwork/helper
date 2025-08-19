@@ -154,7 +154,14 @@ const buildPromptMessages = async (
   sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
   promptInfo: Omit<PromptInfo, "availableTools">;
 }> => {
-  const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(query, null);
+  // Fetch platform customer to get metadata
+  let platformCustomerMetadata = null;
+  if (email) {
+    const platformCustomer = await getPlatformCustomer(email);
+    platformCustomerMetadata = platformCustomer?.metadata || null;
+  }
+
+  const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(query, platformCustomerMetadata);
 
   const systemPrompt = [
     CHAT_SYSTEM_PROMPT.replaceAll("MAILBOX_NAME", mailbox.name).replaceAll(
@@ -173,7 +180,13 @@ const buildPromptMessages = async (
   if (websitePagesPrompt) {
     prompt += `\n${websitePagesPrompt}`;
   }
-  const userPrompt = email ? `\nCurrent user email: ${email}` : "Anonymous user";
+  let userPrompt = email ? `\nCurrent user email: ${email}` : "Anonymous user";
+  
+  // Add structured metadata to the prompt if available
+  if (platformCustomerMetadata) {
+    userPrompt += `\nCustomer metadata: ${JSON.stringify(platformCustomerMetadata, null, 2)}`;
+  }
+  
   prompt += userPrompt;
 
   return {
