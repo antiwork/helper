@@ -84,7 +84,7 @@ export const generateCompletion = ({
 } & ({ prompt: string; messages?: never } | { messages: CoreMessage[]; prompt?: never })) =>
   retryOnPromptLengthError(shortenPromptBy, { system, prompt, messages }, (prompt) =>
     generateText({
-      model: openai(model, { structuredOutputs: false }),
+      model: openai(model, { reasoningEffort: model === MINI_MODEL ? "low" : undefined, structuredOutputs: false }),
       temperature,
       ...options,
       ...prompt,
