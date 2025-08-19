@@ -1,4 +1,4 @@
-import { expect, Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { loadWidget } from "../utils/test-helpers";
 import { widgetConfigs } from "./fixtures/widget-config";
 
@@ -217,14 +217,14 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
     expect(inputVisible).toBe(true);
   });
 
-  test("should send chat message and store metadata in platform customer", async ({ page }) => {
+  test("should send chat message after metadata was stored during session", async ({ page }) => {
     const chatResponsePromise = page.waitForResponse(
       (res) => res.url().includes("/api/chat") && res.request().method() === "POST",
     );
 
     const { widgetFrame } = await loadWidget(page, widgetConfigs.withMetadata);
 
-    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("Test message with metadata");
+    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("Test message with metadata user");
     await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
 
     await widgetFrame.locator('[data-message-role="assistant"]').waitFor({ state: "visible", timeout: 30000 });
@@ -234,8 +234,11 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
     const contentType = chatResponse.headers()["content-type"] || "";
     expect(contentType).toMatch(/text\/event-stream|application\/json/);
 
-    // The metadata should have been processed and stored in the platform customer
-    // during the chat flow (handled by our updated chat route)
+    // The chat request body should not contain metadata (it's already stored from session)
+    const chatRequestBody = chatResponse.request().postDataJSON();
+    expect(chatRequestBody.metadata).toBeUndefined(); // Widget doesn't send metadata in chat requests
+    
+    // Verify the chat functionality works normally
     const messageCount = await widgetFrame.getByTestId("message").count();
     expect(messageCount).toBeGreaterThanOrEqual(2);
   });
