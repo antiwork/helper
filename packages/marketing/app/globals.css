@@ -308,6 +308,10 @@
     counter-reset: step;
     counter-increment: step 0;
   }
+  td,
+  th{
+    padding: 10px 16px !important;
+  }
   pre.code .token-line::before {
     counter-increment: step;
     @apply mr-4 inline-block w-4 text-right text-muted-foreground/40 content-[counter(step)];
