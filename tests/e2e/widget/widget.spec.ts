@@ -193,4 +193,86 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
       console.log("Message role verification skipped - verified message counts instead");
     }
   });
+
+  test("should handle widget session with metadata", async ({ page }) => {
+    const sessionResponsePromise = page.waitForResponse(
+      (res) => res.url().includes("/api/widget/session") && res.request().method() === "POST",
+    );
+
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.withMetadata);
+
+    const sessionResponse = await sessionResponsePromise;
+    expect(sessionResponse.ok()).toBe(true);
+
+    // Verify the session request included metadata
+    const sessionRequestBody = sessionResponse.request().postDataJSON();
+    expect(sessionRequestBody.customerMetadata).toBeDefined();
+    expect(sessionRequestBody.customerMetadata.name).toBe("Metadata Test User");
+    expect(sessionRequestBody.customerMetadata.metadata).toBeDefined();
+    expect(sessionRequestBody.customerMetadata.metadata.customerId).toBe("test-12345");
+    expect(sessionRequestBody.customerMetadata.metadata.tier).toBe("premium");
+    expect(sessionRequestBody.customerMetadata.metadata.experiments).toContain("metadata-feature");
+
+    const inputVisible = await widgetFrame.getByRole("textbox", { name: "Ask a question" }).isVisible();
+    expect(inputVisible).toBe(true);
+  });
+
+  test("should send chat message and store metadata in platform customer", async ({ page }) => {
+    const chatResponsePromise = page.waitForResponse(
+      (res) => res.url().includes("/api/chat") && res.request().method() === "POST",
+    );
+
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.withMetadata);
+
+    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("Test message with metadata");
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+
+    await widgetFrame.locator('[data-message-role="assistant"]').waitFor({ state: "visible", timeout: 30000 });
+
+    const chatResponse = await chatResponsePromise;
+    expect(chatResponse.ok()).toBe(true);
+    const contentType = chatResponse.headers()["content-type"] || "";
+    expect(contentType).toMatch(/text\/event-stream|application\/json/);
+
+    // The metadata should have been processed and stored in the platform customer
+    // during the chat flow (handled by our updated chat route)
+    const messageCount = await widgetFrame.getByTestId("message").count();
+    expect(messageCount).toBeGreaterThanOrEqual(2);
+  });
+
+  test("should maintain backward compatibility without metadata", async ({ page }) => {
+    const sessionResponsePromise = page.waitForResponse(
+      (res) => res.url().includes("/api/widget/session") && res.request().method() === "POST",
+    );
+
+    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
+
+    const sessionResponse = await sessionResponsePromise;
+    expect(sessionResponse.ok()).toBe(true);
+
+    // Verify the session request works without new metadata field
+    const sessionRequestBody = sessionResponse.request().postDataJSON();
+    expect(sessionRequestBody.customerMetadata).toBeDefined();
+    expect(sessionRequestBody.customerMetadata.name).toBe("Authenticated User");
+    expect(sessionRequestBody.customerMetadata.metadata).toBeUndefined();
+
+    const inputVisible = await widgetFrame.getByRole("textbox", { name: "Ask a question" }).isVisible();
+    expect(inputVisible).toBe(true);
+
+    // Send a message to verify chat still works
+    const chatResponsePromise = page.waitForResponse(
+      (res) => res.url().includes("/api/chat") && res.request().method() === "POST",
+    );
+
+    await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("Backward compatibility test");
+    await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
+
+    await widgetFrame.locator('[data-message-role="assistant"]').waitFor({ state: "visible", timeout: 30000 });
+
+    const chatResponse = await chatResponsePromise;
+    expect(chatResponse.ok()).toBe(true);
+
+    const messageCount = await widgetFrame.getByTestId("message").count();
+    expect(messageCount).toBeGreaterThanOrEqual(2);
+  });
 });

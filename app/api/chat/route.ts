@@ -99,7 +99,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     attachmentData,
   );
 
-  // Handle metadata if provided
+  // Handle metadata if provided (for direct API calls)
   if (metadata && userEmail) {
     const { upsertPlatformCustomer } = await import("@/lib/data/platformCustomer");
     await upsertPlatformCustomer({
@@ -107,6 +107,9 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
       customerMetadata: { metadata },
     });
   }
+  
+  // For widget usage, metadata is already stored during session creation
+  // and accessible via the platform customer record
 
   const supabase = await createClient();
   let isHelperUser = false;
