@@ -200,11 +200,7 @@ const CommonIssuesSetting = () => {
           <div className="py-8 text-center text-muted-foreground space-y-4">
             <div>{searchQuery ? "No common issues found matching your search." : "No common issues created yet."}</div>
             {!searchQuery && (
-              <Button
-                variant="outlined"
-                onClick={handleGenerateIssues}
-                className="mx-auto"
-              >
+              <Button variant="outlined" onClick={handleGenerateIssues} className="mx-auto">
                 <Sparkles className="mr-2 h-4 w-4" />
                 Generate common issues
               </Button>

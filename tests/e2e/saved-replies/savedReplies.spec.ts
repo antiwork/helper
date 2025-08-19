@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
+import { createSavedReply } from "../utils/savedReplyHelpers";
 import { debugWait, generateRandomString, takeDebugScreenshot } from "../utils/test-helpers";
 import { waitForToast } from "../utils/toastHelpers";
-import { createSavedReply } from "../utils/savedReplyHelpers";
 
 // Use the working authentication and grant clipboard permissions
 test.use({
