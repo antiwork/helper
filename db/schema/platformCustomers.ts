@@ -15,6 +15,7 @@ export const platformCustomers = pgTable(
     name: varchar(),
     value: numeric({ precision: 12, scale: 2 }),
     links: jsonb().$type<Record<string, string>>(),
+    metadata: jsonb().$type<Record<string, any>>(),
   },
   (table) => [
     index("mailboxes_platformcustomer_created_at_73183c2a").on(table.createdAt),

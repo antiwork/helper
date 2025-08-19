@@ -41,11 +41,13 @@ export const createMessageBodySchema = z.object({
     )
     .optional(),
   tools: z.record(z.string(), toolBodySchema).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 export type CreateMessageRequestBody = z.infer<typeof createMessageBodySchema>;
 export type CreateMessageParams = Omit<CreateMessageRequestBody, "attachments" | "tools"> & {
   attachments?: (File | { name: string; base64Url: string; contentType: string })[];
   tools?: Record<string, HelperServerTool>;
+  metadata?: Record<string, any>;
 };
 
 export type CreateMessageResult = {
@@ -115,6 +117,7 @@ export const sessionParamsSchema = z.object({
       name: z.string().nullish(),
       value: z.number().nullish(),
       links: z.record(z.string(), z.string()).nullish(),
+      metadata: z.record(z.string(), z.any()).nullish(),
     })
     .nullish(),
   currentToken: z.string().nullish(),

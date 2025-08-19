@@ -15,9 +15,11 @@ import { fetchMetadata } from "@/lib/data/retrieval";
 export const handleAutoResponse = async ({
   messageId,
   tools,
+  metadata,
 }: {
   messageId: number;
   tools?: Record<string, ToolRequestBody>;
+  metadata?: Record<string, any>;
 }) => {
   const message = await db.query.conversationMessages
     .findFirst({
@@ -47,17 +49,26 @@ export const handleAutoResponse = async ({
 
   await ensureCleanedUpText(message);
 
-  const customerMetadata = message.emailFrom ? await fetchMetadata(message.emailFrom) : null;
-  if (customerMetadata) {
+  // Fetch metadata via API for backward compatibility
+  const fetchedMetadata = message.emailFrom ? await fetchMetadata(message.emailFrom) : null;
+  
+  if (fetchedMetadata || metadata) {
+    // Store the fetched metadata in the message for backward compatibility
     await db
       .update(conversationMessages)
-      .set({ metadata: customerMetadata ?? null })
+      .set({ metadata: fetchedMetadata ?? null })
       .where(eq(conversationMessages.id, messageId));
 
     if (message.emailFrom) {
+      // Merge fetched metadata with provided metadata, prioritizing provided metadata  
+      const mergedCustomerMetadata = {
+        ...fetchedMetadata?.metadata,
+        metadata,
+      };
+      
       await upsertPlatformCustomer({
         email: message.emailFrom,
-        customerMetadata: customerMetadata.metadata,
+        customerMetadata: mergedCustomerMetadata,
       });
     }
   }

@@ -56,7 +56,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     expect(createUserMessage).toHaveBeenCalledWith(conversation.id, "test@example.com", "Hello world", []);
     expect(triggerEvent).toHaveBeenCalledWith(
       "conversations/auto-response.create",
-      { messageId: "msg123" },
+      { messageId: "msg123", tools: undefined, metadata: undefined },
       { sleepSeconds: 5 * 60 },
     );
   });
@@ -274,5 +274,142 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
 
     expect(response.status).toBe(400);
     expect(result.error).toBe("test.png: Missing URL");
+  });
+
+  it("should handle tools correctly", async () => {
+    const { mailbox } = await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create({
+      emailFrom: "test@example.com",
+    });
+
+    mockSession = { isAnonymous: false, email: "test@example.com" };
+    mockMailbox = mailbox;
+
+    const tools = {
+      testTool: {
+        description: "A test tool",
+        parameters: {
+          param1: { type: "string" as const, description: "Test parameter" },
+        },
+        serverRequestUrl: "https://example.com/tool",
+      },
+    };
+
+    const request = new Request("https://example.com/api", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: "Message with tools",
+        tools,
+      }),
+    });
+
+    const response = await POST(request, {
+      params: Promise.resolve({ slug: conversation.slug }),
+    });
+    const result = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(result.messageId).toBe("msg123");
+    expect(createUserMessage).toHaveBeenCalledWith(conversation.id, "test@example.com", "Message with tools", []);
+    expect(triggerEvent).toHaveBeenCalledWith(
+      "conversations/auto-response.create",
+      { messageId: "msg123", tools, metadata: undefined },
+      { sleepSeconds: 5 * 60 },
+    );
+  });
+
+  it("should handle metadata correctly", async () => {
+    const { mailbox } = await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create({
+      emailFrom: "test@example.com",
+    });
+
+    mockSession = { isAnonymous: false, email: "test@example.com" };
+    mockMailbox = mailbox;
+
+    const metadata = {
+      customerId: "12345",
+      source: "mobile-app",
+      experiments: ["feature-a", "feature-b"],
+      sessionData: {
+        timestamp: "2023-01-01T00:00:00Z",
+        userAgent: "TestAgent/1.0",
+      },
+    };
+
+    const request = new Request("https://example.com/api", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: "Message with metadata",
+        metadata,
+      }),
+    });
+
+    const response = await POST(request, {
+      params: Promise.resolve({ slug: conversation.slug }),
+    });
+    const result = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(result.messageId).toBe("msg123");
+    expect(createUserMessage).toHaveBeenCalledWith(conversation.id, "test@example.com", "Message with metadata", []);
+    expect(triggerEvent).toHaveBeenCalledWith(
+      "conversations/auto-response.create",
+      { messageId: "msg123", tools: undefined, metadata },
+      { sleepSeconds: 5 * 60 },
+    );
+  });
+
+  it("should handle both tools and metadata together", async () => {
+    const { mailbox } = await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create({
+      emailFrom: "test@example.com",
+    });
+
+    mockSession = { isAnonymous: false, email: "test@example.com" };
+    mockMailbox = mailbox;
+
+    const tools = {
+      analyticsTool: {
+        description: "Analytics tracking tool",
+        parameters: {
+          event: { type: "string" as const, description: "Event name" },
+          value: { type: "number" as const, description: "Event value", optional: true },
+        },
+        serverRequestUrl: "https://example.com/analytics",
+      },
+    };
+
+    const metadata = {
+      customerId: "67890",
+      tier: "premium",
+      region: "us-west-2",
+    };
+
+    const request = new Request("https://example.com/api", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: "Message with both tools and metadata",
+        tools,
+        metadata,
+      }),
+    });
+
+    const response = await POST(request, {
+      params: Promise.resolve({ slug: conversation.slug }),
+    });
+    const result = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(result.messageId).toBe("msg123");
+    expect(createUserMessage).toHaveBeenCalledWith(conversation.id, "test@example.com", "Message with both tools and metadata", []);
+    expect(triggerEvent).toHaveBeenCalledWith(
+      "conversations/auto-response.create",
+      { messageId: "msg123", tools, metadata },
+      { sleepSeconds: 5 * 60 },
+    );
   });
 });

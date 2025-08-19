@@ -7,6 +7,7 @@ type CustomerMetadata = {
   name?: string | null;
   value?: number | null;
   links?: Record<string, string> | null;
+  metadata?: Record<string, any> | null;
 };
 
 export type PlatformCustomer = typeof platformCustomers.$inferSelect & {
@@ -48,6 +49,7 @@ export const upsertPlatformCustomer = async ({
   if ("name" in customerMetadata) data.name = customerMetadata.name;
   if ("value" in customerMetadata) data.value = customerMetadata.value ?? null;
   if ("links" in customerMetadata) data.links = customerMetadata.links;
+  if ("metadata" in customerMetadata) data.metadata = customerMetadata.metadata;
 
   if (Object.keys(data).length === 0) return;
 

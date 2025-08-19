@@ -29,6 +29,7 @@ interface ChatRequestBody {
   guideEnabled: boolean;
   isToolResult?: boolean;
   tools?: Record<string, ToolRequestBody>;
+  metadata?: Record<string, any>;
 }
 
 const getConversation = async (conversationSlug: string, session: WidgetSessionPayload) => {
@@ -53,7 +54,7 @@ const getConversation = async (conversationSlug: string, session: WidgetSessionP
 export const OPTIONS = () => corsOptions("POST");
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
-  const { message, conversationSlug, readPageTool, guideEnabled, tools }: ChatRequestBody = await request.json();
+  const { message, conversationSlug, readPageTool, guideEnabled, tools, metadata }: ChatRequestBody = await request.json();
 
   Sentry.setTag("conversation_slug", conversationSlug);
 
@@ -97,6 +98,15 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     message.content || (attachmentData.length > 0 ? "[Image]" : ""),
     attachmentData,
   );
+
+  // Handle metadata if provided
+  if (metadata && userEmail) {
+    const { upsertPlatformCustomer } = await import("@/lib/data/platformCustomer");
+    await upsertPlatformCustomer({
+      email: userEmail,
+      customerMetadata: { metadata },
+    });
+  }
 
   const supabase = await createClient();
   let isHelperUser = false;
