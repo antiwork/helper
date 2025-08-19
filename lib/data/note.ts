@@ -3,6 +3,7 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { BasicUserProfile } from "@/db/schema";
 import { notes } from "@/db/schema/notes";
+import { triggerEvent } from "@/jobs/trigger";
 import { finishFileUpload } from "./files";
 
 export const addNote = async ({
@@ -35,6 +36,14 @@ export const addNote = async ({
       .then(takeUniqueOrThrow);
 
     await finishFileUpload({ fileSlugs, noteId: note.id }, tx);
+    if (user?.id) {
+      await triggerEvent("conversations/send-follower-notification", {
+        conversationId,
+        eventType: "note_added" as const,
+        triggeredByUserId: user.id,
+        eventDetails: { note: note.body },
+      });
+    }
 
     return note;
   });

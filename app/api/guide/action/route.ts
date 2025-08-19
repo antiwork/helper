@@ -206,7 +206,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     }),
   };
 
-  const model = openai(CHAT_MODEL, { reasoningEffort: "low", parallelToolCalls: false });
+  const model = openai(CHAT_MODEL, { reasoningEffort: "low", structuredOutputs: false, parallelToolCalls: false });
 
   return createDataStreamResponse({
     execute: (dataStream) => {

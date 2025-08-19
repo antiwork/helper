@@ -1,0 +1,2 @@
+ALTER TABLE "conversations_conversation" ADD COLUMN "last_message_at" timestamp with time zone;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "conversations_last_message_at_idx" ON "conversations_conversation" USING btree ("last_message_at");

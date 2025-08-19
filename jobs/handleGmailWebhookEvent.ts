@@ -58,7 +58,7 @@ const isThankYouOrAutoResponse = async (
         queryType: "email_auto_ignore",
         model: MINI_MODEL,
         functionId: "email-auto-ignore-detector",
-        maxTokens: 10,
+        maxTokens: 500,
       })
     ).text;
 
@@ -292,7 +292,6 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
             emailFrom: parsedEmailFrom.address,
             emailFromName: parsedEmailFrom.name,
             subject: parsedEmail.subject,
-            subjectPlaintext: parsedEmail.subject,
             status: shouldIgnore ? "closed" : "open",
             closedAt: shouldIgnore ? new Date() : null,
             conversationProvider: "gmail",
