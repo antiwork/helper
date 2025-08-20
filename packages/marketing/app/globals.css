@@ -309,8 +309,8 @@
     counter-increment: step 0;
   }
   td,
-  th{
-    padding: 10px 16px !important;
+  th {
+  @apply !px-4 !py-2.5;
   }
   pre.code .token-line::before {
     counter-increment: step;
