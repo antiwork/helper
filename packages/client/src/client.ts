@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { listenToRealtimeEvent } from "./realtime";
 import {
   ConversationDetails,
@@ -29,6 +29,12 @@ type AIMessageCompat = {
   annotations?: any[] | undefined;
 };
 
+declare global {
+  interface Window {
+    HelperSupabase?: { client: SupabaseClient };
+  }
+}
+
 export class HelperClient {
   public readonly host: string;
   private sessionParams: SessionParams;
@@ -44,16 +50,12 @@ export class HelperClient {
     return this.token!;
   };
 
-  private supabase: SupabaseClient | null = null;
-  private getSupabase = async (): Promise<SupabaseClient> => {
-    if (!this.supabase) await this.createSession();
-    return this.supabase!;
-  };
+  private supabaseParams: { url: string; anonKey: string } | null = null;
 
   private async createSession() {
     const { token, supabaseUrl, supabaseAnonKey } = await this.sessions.create(this.sessionParams);
     this.token = token;
-    this.supabase = createClient(supabaseUrl, supabaseAnonKey);
+    this.supabaseParams = { url: supabaseUrl, anonKey: supabaseAnonKey };
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -137,7 +139,11 @@ export class HelperClient {
         onSubjectChanged?: (subject: string) => void;
       },
     ) => {
-      const promise = this.getSupabase().then((supabase) => {
+      if (typeof window === "undefined") {
+        throw new Error("HelperClient.conversations.listen is only available in the browser");
+      }
+
+      const startListening = (supabase: SupabaseClient) => {
         let agentTypingTimeout: NodeJS.Timeout | null = null;
 
         const unlistenAgentTyping = listenToRealtimeEvent(
@@ -179,6 +185,27 @@ export class HelperClient {
           unlistenAgentReply();
           unlistenConversationSubject();
         };
+      };
+
+      const promise = new Promise<() => void>(async (resolve, reject) => {
+        if (!window.HelperSupabase) {
+          await this.createSession();
+          const scriptElement = document.createElement("script");
+          scriptElement.src = `${this.host}/widget/sdk-supabase.js`;
+          scriptElement.dataset.supabaseUrl = this.supabaseParams!.url;
+          scriptElement.dataset.supabaseAnonKey = this.supabaseParams!.anonKey;
+          scriptElement.onload = () => {
+            if (!window.HelperSupabase) {
+              reject(new Error("Failed to load Supabase client"));
+              return;
+            }
+            resolve(startListening(window.HelperSupabase.client));
+          };
+          scriptElement.onerror = () => {
+            reject(new Error("Failed to load Supabase client"));
+          };
+          document.head.appendChild(scriptElement);
+        }
       });
 
       return () => {
