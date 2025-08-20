@@ -167,7 +167,6 @@ export const searchConversations = async (
         conversations_conversation: conversations,
         mailboxes_platformcustomer: platformCustomers,
         recent_message_cleanedUpText: sql<string | null>`recent_message.cleaned_up_text`,
-        recent_message_cleanedUpTextPlaintext: sql<string | null>`recent_message.cleaned_up_plain_text`,
         recent_message_createdAt: sql<string | null>`recent_message.created_at`,
       })
       .from(conversations)
@@ -176,7 +175,6 @@ export const searchConversations = async (
         sql`LATERAL (
           SELECT
             ${conversationMessages.cleanedUpText} as cleaned_up_text, 
-            ${conversationMessages.cleanedUpTextPlaintext} as cleaned_up_plain_text,
             ${conversationMessages.createdAt} as created_at
           FROM ${conversationMessages}
           WHERE ${and(
@@ -200,14 +198,12 @@ export const searchConversations = async (
               conversations_conversation,
               mailboxes_platformcustomer,
               recent_message_cleanedUpText,
-              recent_message_cleanedUpTextPlaintext,
               recent_message_createdAt,
             }) => ({
               ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
               matchedMessageText:
                 matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
               recentMessageText: recent_message_cleanedUpText || null,
-              recentMessageTextPlaintext: recent_message_cleanedUpTextPlaintext || null,
               recentMessageAt: recent_message_createdAt ? new Date(recent_message_createdAt) : null,
             }),
           ),

@@ -39,23 +39,20 @@ export const generateCommonIssuesSuggestions = async (
     .selectDistinctOn([conversationMessages.conversationId], {
       conversationId: conversationMessages.conversationId,
       cleanedUpText: conversationMessages.cleanedUpText,
-      cleanedUpTextPlaintext: conversationMessages.cleanedUpTextPlaintext,
     })
     .from(conversationMessages)
     .where(and(inArray(conversationMessages.conversationId, conversationIds), eq(conversationMessages.role, "user")))
     .orderBy(conversationMessages.conversationId, asc(conversationMessages.createdAt));
 
   const firstMessageMap = new Map(
-    firstMessages
-      .map((msg) => [msg.conversationId, msg.cleanedUpText || msg.cleanedUpTextPlaintext] as const)
-      .filter(([_, text]) => text),
+    firstMessages.map((msg) => [msg.conversationId, msg.cleanedUpText] as const).filter(([_, text]) => text),
   );
 
   const conversationSummaries = conversations
     .map((conv) => ({
       subject: conv.subject,
       firstMessage: firstMessageMap.get(conv.id) || "",
-      recentMessage: conv.recentMessageText || conv.recentMessageTextPlaintext || "",
+      recentMessage: conv.recentMessageText || "",
       status: conv.status,
     }))
     .filter((conv) => conv.subject || conv.firstMessage || conv.recentMessage);
