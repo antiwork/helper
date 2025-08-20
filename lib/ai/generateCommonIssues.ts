@@ -5,6 +5,8 @@ import { conversationMessages } from "@/db/schema";
 import type { mailboxes } from "@/db/schema/mailboxes";
 import { runAIObjectQuery } from "@/lib/ai";
 import { searchConversations } from "@/lib/data/conversation/search";
+import { env, isAIMockingEnabled } from "@/lib/env";
+import { MOCKED_COMMON_ISSUES_SUGGESTIONS } from "./constants";
 
 const commonIssuesGenerationSchema = z.object({
   issues: z.array(
@@ -56,6 +58,12 @@ export const generateCommonIssuesSuggestions = async (
       status: conv.status,
     }))
     .filter((conv) => conv.subject || conv.firstMessage || conv.recentMessage);
+
+  if (env.NODE_ENV === "test" || isAIMockingEnabled) {
+    return {
+      issues: MOCKED_COMMON_ISSUES_SUGGESTIONS,
+    };
+  }
 
   const systemPrompt = `
 You are analyzing customer support conversations to identify common issue patterns that should be grouped together.
