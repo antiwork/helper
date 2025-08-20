@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { deleteSavedReplyByName } from "../utils/cleanupSavedReplies";
 import {
   clickCreateOneButton,
   clickFloatingAddButton,
@@ -251,6 +252,8 @@ test.describe("Saved Replies Management", () => {
       }
       expect(foundReply).toBe(true);
 
+      await deleteSavedReplyByName(testName);
+
       await takeDebugScreenshot(page, "saved-reply-created-from-empty.png");
     } else {
       test.skip(true, "Saved replies already exist, skipping empty state creation test");
@@ -274,6 +277,8 @@ test.describe("Saved Replies Management", () => {
       // Use the title-based helper function to verify the reply exists
       const createdReply = await findSavedReplyByTitle(page, testName);
       await expect(createdReply).toBeVisible({ timeout: 5000 });
+
+      await deleteSavedReplyByName(testName);
 
       await takeDebugScreenshot(page, "saved-reply-created.png");
     }
@@ -357,6 +362,7 @@ test.describe("Saved Replies Management", () => {
     await expect(originalReply).not.toBeVisible();
 
     await takeDebugScreenshot(page, "saved-reply-edited.png");
+    await deleteSavedReplyByName(testName);
   });
 
   test("should copy saved reply to clipboard", async ({ page }) => {
@@ -378,6 +384,7 @@ test.describe("Saved Replies Management", () => {
     await expectClipboardContent(page);
 
     await takeDebugScreenshot(page, "saved-reply-copied.png");
+    await deleteSavedReplyByName(testName);
   });
 
   test("should delete a saved reply with confirmation", async ({ page }) => {
@@ -658,6 +665,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     // Verify the reply was created
     await expectSavedRepliesVisible(page);
     await takeDebugScreenshot(page, "saved-reply-bold-text.png");
+    await deleteSavedReplyByName(testName);
   });
 
   test("should create saved reply with italic text", async ({ page }) => {
@@ -688,6 +696,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await page.waitForTimeout(1000);
 
     await takeDebugScreenshot(page, "saved-reply-italic-text.png");
+    await deleteSavedReplyByName(testName);
   });
 
   test("should create saved reply with bullet list", async ({ page }) => {
@@ -724,6 +733,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await page.waitForTimeout(1000);
 
     await takeDebugScreenshot(page, "saved-reply-bullet-list.png");
+    await deleteSavedReplyByName(testName);
   });
 
   test("should create saved reply with links", async ({ page }) => {
@@ -762,6 +772,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await page.waitForTimeout(1000);
 
     await takeDebugScreenshot(page, "saved-reply-with-link.png");
+    await deleteSavedReplyByName(testName);
   });
 
   test("should preserve formatting when editing saved reply", async ({ page }) => {
@@ -809,6 +820,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await page.waitForTimeout(1000);
 
     await takeDebugScreenshot(page, "edited-formatted-reply.png");
+    await deleteSavedReplyByName(testName);
   });
 
   test("should insert formatted saved reply into conversation", async ({ page }) => {
@@ -847,6 +859,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await expectClipboardContent(page);
 
     await takeDebugScreenshot(page, "formatted-reply-created.png");
+    await deleteSavedReplyByName(testName);
   });
 
   test("should handle mixed formatting correctly", async ({ page }) => {
@@ -892,6 +905,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await page.waitForTimeout(1000);
 
     await takeDebugScreenshot(page, "mixed-formatting-reply.png");
+    await deleteSavedReplyByName(testName);
   });
 
   test("should show toolbar controls in editor", async ({ page }) => {
