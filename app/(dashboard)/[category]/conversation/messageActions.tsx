@@ -1,5 +1,5 @@
 import { isMacOS } from "@tiptap/core";
-import { CornerUpLeft } from "lucide-react";
+import { CornerUpLeft, Eye, Lightbulb, Undo2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { create } from "zustand";
@@ -312,25 +312,27 @@ export const MessageActions = () => {
       toast.success(close ? "Replied and closed" : "Message sent!", {
         duration: 10000,
         description: (
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-2 items-center mt-2">
             {close && (
               <button
-                className="text-xs py-1 text-foreground underline"
+                className="inline-flex items-center gap-1 px-1.5 py-1 text-xs font-medium rounded-md border hover:bg-accent transition-colors"
                 onClick={() => {
                   navigateToConversation(conversation.slug);
                 }}
               >
+                <Eye className="h-3 w-3" />
                 Visit
               </button>
             )}
             <button
-              className="text-xs py-1 text-foreground underline"
+              className="inline-flex items-center gap-1 px-1.5 py-1 text-xs font-medium rounded-md border hover:bg-accent transition-colors"
               onClick={() => knowledgeBankDialogState.show(emailId)}
             >
+              <Lightbulb className="h-3 w-3" />
               Generate knowledge
             </button>
             <button
-              className="text-xs py-1 text-foreground underline"
+              className="inline-flex items-center gap-1 px-1.5 py-1 text-xs font-medium rounded-md border hover:bg-accent transition-colors"
               onClick={async () => {
                 try {
                   await utils.client.mailbox.conversations.undo.mutate({
@@ -350,6 +352,7 @@ export const MessageActions = () => {
                 }
               }}
             >
+              <Undo2 className="h-3 w-3" />
               Undo
             </button>
           </div>
@@ -469,7 +472,10 @@ export const MessageActions = () => {
         }}
         onModEnter={() => !sendDisabled && handleSend({ assign: false })}
         onOptionEnter={() => !sendDisabled && handleSend({ assign: false, close: false })}
-        onSlashKey={() => commandInputRef.current?.focus()}
+        onSlashKey={() => {
+          setShowCommandBar(true);
+          setTimeout(() => commandInputRef.current?.focus(), 100);
+        }}
         enableImageUpload
         enableFileUpload
         actionButtons={actionButtons}

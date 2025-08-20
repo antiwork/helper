@@ -1,6 +1,6 @@
 {
   "name": "@helperai/client",
-  "version": "0.3.1",
+  "version": "0.4.1",
   "description": "Helper API client for integrating customer support features",
   "keywords": [
     "helper",
@@ -47,13 +47,13 @@
     "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.49",
     "@types/node": "^22.15.3",
     "tsup": "^8.3.6",
     "typescript": "^5.3.3",
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49",
     "superjson": "^2.2",
     "zod": "^3.24"
   }
