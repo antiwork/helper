@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, isNull, or } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import type { ToolRequestBody } from "@helperai/client";
 import { db, Transaction } from "@/db/client";
 import { clientToolsCache } from "@/db/schema";
@@ -61,8 +61,8 @@ export const cacheClientTools = async ({
           description: tool.description || "",
           parameters: tool.parameters || {},
           serverRequestUrl: tool.serverRequestUrl!,
-          customerEmail: customerEmail || null,
-          platformCustomerId: platformCustomerId || null,
+          customerEmail: customerEmail ?? null,
+          platformCustomerId: platformCustomerId ?? null,
           unused_mailboxId: 0,
         });
       }
@@ -77,16 +77,24 @@ export const getCachedClientTools = async ({
   customerEmail,
   platformCustomerId,
 }: GetCachedClientToolsParams): Promise<Record<string, ToolRequestBody>> => {
-  let cachedTools = await db.query.clientToolsCache.findMany({
-    where: or(
-      eq(clientToolsCache.customerEmail, customerEmail || ""),
-      eq(clientToolsCache.platformCustomerId, platformCustomerId || ""),
-    ),
-  });
+  const scopedFilters = [eq(clientToolsCache.unused_mailboxId, 0)];
+  if (customerEmail) scopedFilters.push(eq(clientToolsCache.customerEmail, customerEmail));
+  if (platformCustomerId) scopedFilters.push(eq(clientToolsCache.platformCustomerId, platformCustomerId));
+
+  let cachedTools =
+    customerEmail || platformCustomerId
+      ? await db.query.clientToolsCache.findMany({
+          where: and(...scopedFilters),
+        })
+      : [];
 
   if (cachedTools.length === 0) {
     cachedTools = await db.query.clientToolsCache.findMany({
-      where: and(isNull(clientToolsCache.customerEmail), isNull(clientToolsCache.platformCustomerId)),
+      where: and(
+        eq(clientToolsCache.unused_mailboxId, 0),
+        isNull(clientToolsCache.customerEmail),
+        isNull(clientToolsCache.platformCustomerId),
+      ),
     });
   }
 
@@ -106,18 +114,16 @@ export const clearCachedClientTools = async ({
   customerEmail,
   platformCustomerId,
 }: GetCachedClientToolsParams): Promise<void> => {
-  const whereConditions = [];
+  const where = [eq(clientToolsCache.unused_mailboxId, 0)];
+  if (customerEmail) where.push(eq(clientToolsCache.customerEmail, customerEmail));
+  if (platformCustomerId) where.push(eq(clientToolsCache.platformCustomerId, platformCustomerId));
 
-  if (customerEmail) {
-    whereConditions.push(eq(clientToolsCache.customerEmail, customerEmail));
-  } else if (platformCustomerId) {
-    whereConditions.push(eq(clientToolsCache.platformCustomerId, platformCustomerId));
-  } else {
-    whereConditions.push(isNull(clientToolsCache.customerEmail));
-    whereConditions.push(isNull(clientToolsCache.platformCustomerId));
+  // If no identifiers provided, target global entries
+  if (where.length === 1) {
+    where.push(isNull(clientToolsCache.customerEmail), isNull(clientToolsCache.platformCustomerId));
   }
 
-  await db.delete(clientToolsCache).where(and(...whereConditions));
+  await db.delete(clientToolsCache).where(and(...where));
 };
 
 export const getCachedToolsForAdmin = async (
