@@ -366,46 +366,46 @@ export const MessageActions = () => {
   const actionButtons = (
     <>
       <div className="flex items-center gap-4 md:flex-row-reverse">
-        {(conversation?.status ?? searchParams.status) !== "spam" &&
-          ((conversation?.status ?? searchParams.status) === "closed" ? (
-            <Button variant="outlined" onClick={() => updateStatus("open")}>
-              <CornerUpLeft className="mr-2 h-4 w-4" />
-              Reopen
+        {(conversation?.status ?? searchParams.status) === "closed" ||
+        (conversation?.status ?? searchParams.status) === "spam" ? (
+          <Button variant="outlined" onClick={() => updateStatus("open")}>
+            <CornerUpLeft className="mr-2 h-4 w-4" />
+            Reopen
+          </Button>
+        ) : (
+          <>
+            <Button
+              size={isAboveMd ? "default" : "sm"}
+              variant="outlined"
+              onClick={() => updateStatus("closed")}
+              disabled={conversation?.status === "closed"}
+            >
+              Close
+              {isMacOS() && <KeyboardShortcut className="ml-2 text-sm border-primary/50">C</KeyboardShortcut>}
             </Button>
-          ) : (
-            <>
-              <Button
-                size={isAboveMd ? "default" : "sm"}
-                variant="outlined"
-                onClick={() => updateStatus("closed")}
-                disabled={conversation?.status === "closed"}
-              >
-                Close
-                {isMacOS() && <KeyboardShortcut className="ml-2 text-sm border-primary/50">C</KeyboardShortcut>}
-              </Button>
-              <Button
-                size={isAboveMd ? "default" : "sm"}
-                variant="outlined"
-                onClick={() => handleSend({ assign: false, close: false })}
-                disabled={sendDisabled}
-              >
-                Reply
-                {!sending && isMacOS() && (
-                  <KeyboardShortcut className="ml-2 text-sm border-primary/50">⌥⏎</KeyboardShortcut>
-                )}
-              </Button>
-              <Button
-                size={isAboveMd ? "default" : "sm"}
-                onClick={() => handleSend({ assign: false })}
-                disabled={sendDisabled}
-              >
-                {sending ? "Replying..." : "Reply and close"}
-                {!sending && isMacOS() && (
-                  <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌘⏎</KeyboardShortcut>
-                )}
-              </Button>
-            </>
-          ))}
+            <Button
+              size={isAboveMd ? "default" : "sm"}
+              variant="outlined"
+              onClick={() => handleSend({ assign: false, close: false })}
+              disabled={sendDisabled}
+            >
+              Reply
+              {!sending && isMacOS() && (
+                <KeyboardShortcut className="ml-2 text-sm border-primary/50">⌥⏎</KeyboardShortcut>
+              )}
+            </Button>
+            <Button
+              size={isAboveMd ? "default" : "sm"}
+              onClick={() => handleSend({ assign: false })}
+              disabled={sendDisabled}
+            >
+              {sending ? "Replying..." : "Reply and close"}
+              {!sending && isMacOS() && (
+                <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌘⏎</KeyboardShortcut>
+              )}
+            </Button>
+          </>
+        )}
       </div>
     </>
   );
