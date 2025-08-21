@@ -161,7 +161,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
   );
 
   const eventInfos = await Promise.all(
-    eventRecords.map((event) => ({
+    eventRecords.map(async (event) => ({
       ...event,
       changes: {
         ...event.changes,
@@ -169,6 +169,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
         assignedToAI: event.changes?.assignedToAI,
       },
       byUserId: event.byUserId,
+      byUserDisplayName: await getStaffName(event.byUserId),
       eventType: event.type,
       type: "event" as const,
     })),
