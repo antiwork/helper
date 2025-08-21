@@ -58,7 +58,7 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
         .filter(Boolean)
         .join(" and ");
 
-  const byUserName = getUserDisplayName(event.byUserId);
+  const byUserName = event.byUserDisplayName || getUserDisplayName(event.byUserId);
   const hasDetails = (event.byUserId && byUserName) || event.reason || event.changes.status === "spam";
 
   const Icon = event.changes.assignedToAI ? Bot : event.changes.status ? statusIcons[event.changes.status] : User;
