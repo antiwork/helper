@@ -1,20 +1,9 @@
 import { upperFirst } from "lodash-es";
-import {
-  AlertCircle,
-  ArrowLeftFromLine,
-  ArrowRightFromLine,
-  Bot,
-  ChevronDown,
-  ChevronRight,
-  RotateCcw,
-  User,
-} from "lucide-react";
+import { AlertCircle, ArrowLeftFromLine, ArrowRightFromLine, Bot, ChevronDown, ChevronRight, User } from "lucide-react";
 import { useState } from "react";
 import { ConversationEvent } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
-import { Button } from "@/components/ui/button";
 import { useMembers } from "@/components/useMembers";
-import { useConversationContext } from "./conversationContext";
 
 const eventDescriptions = {
   request_human_support: "Human support requested",
@@ -36,7 +25,6 @@ const statusIcons = {
 
 export const EventItem = ({ event }: { event: ConversationEvent }) => {
   const [detailsExpanded, setDetailsExpanded] = useState(false);
-  const { updateStatus, isUpdating } = useConversationContext();
   const { data: orgMembers, isLoading: isLoadingMembers, error: membersError } = useMembers();
 
   const getUserDisplayName = (userId: string | null | undefined): string | null => {
@@ -72,15 +60,6 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
 
   const byUserName = getUserDisplayName(event.byUserId);
   const hasDetails = (event.byUserId && byUserName) || event.reason || event.changes.status === "spam";
-  const isSpamEvent = event.changes.status === "spam";
-
-  const handleReopen = async () => {
-    try {
-      await updateStatus("open");
-    } catch (error) {
-      console.error("Failed to reopen conversation:", error);
-    }
-  };
 
   const Icon = event.changes.assignedToAI ? Bot : event.changes.status ? statusIcons[event.changes.status] : User;
 
@@ -115,20 +94,6 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
                 </div>
               )}
             </div>
-            {isSpamEvent && (
-              <div className="flex justify-center pt-2 border-t">
-                <Button
-                  variant="outlined"
-                  size="sm"
-                  onClick={handleReopen}
-                  disabled={isUpdating}
-                  className="h-7 text-xs"
-                >
-                  <RotateCcw className="h-3 w-3 mr-1" />
-                  {isUpdating ? "Reopening..." : "Reopen"}
-                </Button>
-              </div>
-            )}
           </div>
         </section>
       )}
