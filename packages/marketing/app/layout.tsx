@@ -56,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <body className={cn(inter.className, "flex flex-col min-h-screen [&_.prose_a[href^='#']]:no-underline")}>
           <RootProvider>
             <HelperWidgetScript
-              host={getBaseUrl().includes("localhost") ? "https://helperai.dev" : "https://help.gumroad.com"}
+              host={getBaseUrl().includes("localhost") ? "https://helperai.dev" : "https://help.helper.ai"}
             />
             <div className="flex flex-col min-h-screen">{children}</div>
           </RootProvider>

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { cleanupTestMembers } from "../utils/cleaupTestMembers";
 import { generateTestEmail, takeDebugScreenshot } from "../utils/test-helpers";
 
 type UserRole = "admin" | "member";
@@ -254,6 +255,7 @@ test.describe("Team Settings", () => {
     await expectMemberInvited(page, testEmail);
 
     await takeDebugScreenshot(page, "team-member-invited.png");
+    await cleanupTestMembers([testEmail]);
   });
 
   test("should show invited member in team list", async ({ page }) => {
@@ -264,6 +266,7 @@ test.describe("Team Settings", () => {
     await expectMemberInList(page, testEmail);
 
     await takeDebugScreenshot(page, "team-member-in-list.png");
+    await cleanupTestMembers([testEmail]);
   });
 
   test("should remove a team member", async ({ page }) => {
@@ -277,6 +280,7 @@ test.describe("Team Settings", () => {
     await expectMemberRemoved(page, testEmail);
 
     await takeDebugScreenshot(page, "team-member-removed.png");
+    await cleanupTestMembers([testEmail]);
   });
 
   test("should change member role from member to admin", async ({ page }) => {
@@ -290,6 +294,7 @@ test.describe("Team Settings", () => {
     await expectMemberRole(page, testEmail, "admin");
 
     await takeDebugScreenshot(page, "team-member-role-admin.png");
+    await cleanupTestMembers([testEmail]);
   });
 
   test("should change member role from admin to member", async ({ page }) => {
@@ -306,6 +311,7 @@ test.describe("Team Settings", () => {
     await expectMemberRole(page, testEmail, "member");
 
     await takeDebugScreenshot(page, "team-member-role-member.png");
+    await cleanupTestMembers([testEmail]);
   });
 
   test("should show admin permissions for admin users", async ({ page }) => {
