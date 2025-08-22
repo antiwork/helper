@@ -94,7 +94,7 @@ export default function TabsPage() {
       <PageHeader title={selectedItem?.label ?? "Settings"} />
       <FileUploadProvider>
         <div className="grow overflow-y-auto">
-          <div className="grow overflow-y-auto bg-background px-6 pb-4">{selectedItem?.content}</div>
+          <div className="grow overflow-y-auto bg-background sm:px-6 pb-4 px-4">{selectedItem?.content}</div>
         </div>
       </FileUploadProvider>
     </div>

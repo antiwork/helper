@@ -18,7 +18,7 @@ export function PageHeader({ title, children, variant = "default" }: PageHeaderP
   return (
     <div
       className={cn(
-        "flex h-14 shrink-0 items-center justify-between gap-4 border-b px-6 font-bold",
+        "flex h-14 shrink-0 items-center justify-between gap-4 border-b sm:px-6 px-4 font-bold",
         variant === "mahogany" ? "bg-sidebar text-sidebar-foreground border-sidebar" : "border-border",
       )}
     >
