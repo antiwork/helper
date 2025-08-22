@@ -2,6 +2,7 @@ import { UserCircle } from "lucide-react";
 import { memo, useState, useTransition } from "react";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Command,
   CommandEmpty,
@@ -83,13 +84,10 @@ export const CustomerFilter = memo(function CustomerFilter({
                           );
                         }}
                       >
-                        <input
-                          type="checkbox"
-                          className="text-emphasis dark:text-muted focus:ring-emphasis border-default bg-default h-4 w-4 rounded transition hover:cursor-pointer"
+                        <Checkbox
                           checked={isSelected}
                           onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => {
-                            e.stopPropagation();
+                          onCheckedChange={() => {
                             onChange(
                               isSelected
                                 ? selectedCustomers.filter((c) => c !== customer.email)
