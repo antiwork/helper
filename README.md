@@ -9,14 +9,7 @@
 
 # Helper
 
-Customer support via live chat and email.
-
-Features:
-
-- **AI agent:** Reads your docs to give world-class support for everyday queries.
-- **Dashboard:** A fully featured escalation flow for human agents to handle complex cases.
-- **Tools:** Enable customers and agents to interact with your systems using natural language.
-- **SDK:** Integrate live chat and AI-powered inline assistance into your website in seconds.
+In-app customer support center.
 
 ## Quick Start
 
