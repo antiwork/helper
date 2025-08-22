@@ -106,12 +106,9 @@ export const NextTicketPreview = ({ className }: { className?: string }) => {
               <h3 className="font-medium text-sm mt-1">{nextConversation.subject || "(no subject)"}</h3>
 
               {(nextConversation.recentMessageText || nextConversation.matchedMessageText) && (
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-                  {(() => {
-                    const text = nextConversation.matchedMessageText || nextConversation.recentMessageText || "";
-                    return text.length > 150 ? `${text.slice(0, 150)}...` : text;
-                  })()}
-                </p>
+                <div className="text-xs text-muted-foreground mt-2 whitespace-pre-wrap">
+                  {nextConversation.matchedMessageText || nextConversation.recentMessageText || ""}
+                </div>
               )}
 
               <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
