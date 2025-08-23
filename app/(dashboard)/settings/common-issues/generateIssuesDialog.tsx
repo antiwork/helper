@@ -72,8 +72,8 @@ export function GenerateIssuesDialog({ isOpen, onClose, onApprove, isCreating }:
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="text-left">
           <DialogTitle>Review generated common issues</DialogTitle>
           <p className="text-sm text-muted-foreground">
             Review and edit the AI-generated common issues before creating them. You can modify titles, descriptions, or
@@ -90,7 +90,7 @@ export function GenerateIssuesDialog({ isOpen, onClose, onApprove, isCreating }:
           ) : (
             <>
               {editableSuggestions.map((suggestion, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3">
+                <div key={index} className="border rounded-lg p-2 sm:p-4 space-y-3">
                   {editingIndex === index ? (
                     <EditIssueForm
                       suggestion={suggestion}
