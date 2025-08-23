@@ -1,15 +1,6 @@
-<p align="center">
-  <img src="./public/logo.svg#gh-light-mode-only" alt="Helper logo" width="192" />
-  <img src="./public/logo-white.svg#gh-dark-mode-only" alt="Helper logo" width="192" />
-</p>
-<p align="center">
-    <a href="https://helper.ai">helper.ai</a> |
-    <a href="https://helper.ai/docs">Docs</a>
-</p>
-
 # Helper
 
-In-app customer support center.
+In-app customer support center + live chat powered by API.
 
 ## Quick Start
 
