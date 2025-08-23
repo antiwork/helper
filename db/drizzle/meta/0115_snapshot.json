@@ -1,5 +1,5 @@
 {
-  "id": "146d10f5-5913-476e-9499-c3278e0a47a9",
+  "id": "79ff8d2f-e010-4ef1-8af3-2cb0a7539af5",
   "prevId": "0a8cdc3c-ae0e-43a5-94ed-5997020ab44d",
   "version": "7",
   "dialect": "postgresql",
@@ -1091,6 +1091,28 @@
           ],
           "isUnique": false,
           "concurrently": true,
+          "method": "btree",
+          "with": {}
+        },
+        "messages_conversation_created_at_desc_idx": {
+          "name": "messages_conversation_created_at_desc_idx",
+          "columns": [
+            {
+              "expression": "conversation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "(\"messages\".\"deleted_at\" is null and \"messages\".\"role\" in ($1, $2))",
+          "concurrently": false,
           "method": "btree",
           "with": {}
         }
@@ -2785,6 +2807,21 @@
               "expression": "mailbox_id",
               "isExpression": false,
               "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "platformcustomer_value_idx": {
+          "name": "platformcustomer_value_idx",
+          "columns": [
+            {
+              "expression": "value",
+              "isExpression": false,
+              "asc": false,
               "nulls": "last"
             }
           ],
