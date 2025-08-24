@@ -1205,12 +1205,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "last_read_by_assignee_at": {
-          "name": "last_read_by_assignee_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
         "last_message_at": {
           "name": "last_message_at",
           "type": "timestamp with time zone",
