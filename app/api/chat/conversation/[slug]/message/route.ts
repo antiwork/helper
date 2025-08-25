@@ -67,11 +67,7 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
 
   const userMessage = await createUserMessage(conversation.id, userEmail, content, attachmentData);
 
-  await triggerEvent(
-    "conversations/auto-response.create",
-    { messageId: userMessage.id, tools },
-    { sleepSeconds: 5 * 60 },
-  );
+  await triggerEvent("conversations/auto-response.create", { messageId: userMessage.id, tools });
 
   return corsResponse({
     messageId: userMessage.id,
