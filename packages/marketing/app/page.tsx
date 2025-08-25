@@ -264,7 +264,7 @@ export default function Home() {
                   className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
                   asChild
                 >
-                  <Link href="https://github.com/antiwork/helper">Get started</Link>
+                  <Link href="/installation">Installation</Link>
                 </Button>
               </div>
 
@@ -479,7 +479,7 @@ export default function Home() {
                   className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
                   asChild
                 >
-                  <Link href="https://github.com/antiwork/helper">Get started</Link>
+                  <Link href="/installation">Installation ($10k)</Link>
                 </Button>
               </div>
               <div className="space-y-12">

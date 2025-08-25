@@ -36,6 +36,18 @@ export function MarketingHeader({ bgColor = "#3D0C11" }: MarketingHeaderProps) {
           <div className="flex items-center gap-2 md:gap-4">
             <Tooltip>
               <TooltipTrigger asChild>
+                <Link href="/installation" className="flex items-center group">
+                  <span className="inline-flex items-center justify-center h-9 px-3 rounded-md border border-white/20 text-sm font-medium transition-colors duration-200 hover:text-amber-400 focus:text-amber-400">
+                    Installation
+                  </span>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>White‑glove setup</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <Link
                   href="https://github.com/antiwork/helper"
                   target="_blank"
