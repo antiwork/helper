@@ -47,6 +47,15 @@ const categorizeWithAI = async (
     return { matchedGroupId: null, reasoning: "No issue groups available for categorization" };
   }
 
+  const suspensionKeywords = ['suspended', 'suspension', 'suspend', 'account suspended', 'account suspension'];
+  const contentLower = conversationContent.toLowerCase();
+  const hasSuspensionKeywords = suspensionKeywords.some(keyword => contentLower.includes(keyword));
+  
+  const suspensionGroup = availableIssueGroups.find(group => 
+    group.title.toLowerCase().includes('suspension') || 
+    group.title.toLowerCase().includes('suspended')
+  );
+
   const result = await runAIObjectQuery({
     mailbox,
     model: MINI_MODEL,
@@ -69,6 +78,11 @@ Matching criteria:
 - Consider both direct and indirect relevance
 - Look for problem patterns, not just keyword matching
 - Prioritize accuracy over assignment rate
+
+Special attention for Account Suspension issues:
+- If the conversation contains words like "suspended", "suspension", "suspend", "account suspended", or "account suspension", strongly consider the Account Suspension category
+- Account suspension issues are often urgent and should be prioritized for proper categorization
+- These issues are distinct from general login problems and should not be categorized under "Unable to log in"
 
 If the conversation is too generic, unclear, or doesn't fit any existing categories well, return null.`,
     messages: [
@@ -176,6 +190,17 @@ export const categorizeConversationToIssueGroup = async ({ messageId }: { messag
   }
 
   const aiResult = await categorizeWithAI(conversationContent, availableIssueGroups, mailbox);
+
+  const suspensionKeywords = ['suspended', 'suspension', 'suspend', 'account suspended', 'account suspension'];
+  const contentLower = conversationContent.toLowerCase();
+  const hasSuspensionKeywords = suspensionKeywords.some(keyword => contentLower.includes(keyword));
+  
+  if (hasSuspensionKeywords && aiResult.matchedGroupId) {
+    const matchedGroup = availableIssueGroups.find(group => group.id === aiResult.matchedGroupId);
+    if (matchedGroup && (matchedGroup.title.toLowerCase().includes('suspension') || matchedGroup.title.toLowerCase().includes('suspended'))) {
+      aiResult.confidenceScore = Math.min(1.0, (aiResult.confidenceScore || 0.5) + 0.3);
+    }
+  }
 
   if (aiResult.matchedGroupId) {
     await db

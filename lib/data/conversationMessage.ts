@@ -452,6 +452,14 @@ export const createConversationMessage = async (
         },
       });
     }
+    if (message.role === "user") {
+      eventsToSend.push({
+        name: "conversations/categorize-to-issue-group" as const,
+        data: {
+          messageId: message.id,
+        },
+      });
+    }
   }
 
   if (message.status === "queueing") {

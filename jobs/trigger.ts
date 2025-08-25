@@ -130,6 +130,12 @@ const events = {
     }),
     jobs: ["handleSlackAgentMessage"],
   },
+  "conversations/categorize-to-issue-group": {
+    data: z.object({
+      messageId: z.number(),
+    }),
+    jobs: ["categorizeConversationToIssueGroup"],
+  },
   "conversations/send-follower-notification": {
     data: z.object({
       conversationId: z.number(),
