@@ -246,7 +246,7 @@ const ConversationHeader = ({
             className="text-sm text-muted-foreground whitespace-nowrap text-center mx-1"
             data-testid="conversation-counter"
           >
-            {currentIndex + 1} of {currentTotal}
+            {currentIndex < 0 ? "-" : currentIndex + 1} of {currentTotal}
             {hasNextPage ? "+" : ""}
           </span>
           <Button variant="ghost" size="sm" iconOnly onClick={moveToNextConversation} aria-label="Next conversation">

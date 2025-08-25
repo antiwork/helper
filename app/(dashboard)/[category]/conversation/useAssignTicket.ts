@@ -7,8 +7,7 @@ import { api } from "@/trpc/react";
 export const useAssignTicket = () => {
   const utils = api.useUtils();
   const { input } = useConversationsListInput();
-  const { currentConversationSlug, conversationListData, moveToNextConversation, removeConversation } =
-    useConversationListContext();
+  const { currentConversationSlug, conversationListData, removeConversation } = useConversationListContext();
   const { updateConversation } = useConversationContext();
 
   const assignTicket = (
@@ -43,9 +42,7 @@ export const useAssignTicket = () => {
       (input.category === "unassigned" && assignedToId) ||
       (input.category === "assigned" && !assignedToId)
     ) {
-      removeConversation();
-    } else {
-      moveToNextConversation();
+      removeConversation({ moveToNext: false });
     }
   };
 
