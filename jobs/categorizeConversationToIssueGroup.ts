@@ -47,7 +47,6 @@ const categorizeWithAI = async (
     return { matchedGroupId: null, reasoning: "No issue groups available for categorization" };
   }
 
-
   const result = await runAIObjectQuery({
     mailbox,
     model: MINI_MODEL,
@@ -183,13 +182,17 @@ export const categorizeConversationToIssueGroup = async ({ messageId }: { messag
 
   const aiResult = await categorizeWithAI(conversationContent, availableIssueGroups, mailbox);
 
-  const suspensionKeywords = ['suspended', 'suspension', 'suspend', 'account suspended', 'account suspension'];
+  const suspensionKeywords = ["suspended", "suspension", "suspend", "account suspended", "account suspension"];
   const contentLower = conversationContent.toLowerCase();
-  const hasSuspensionKeywords = suspensionKeywords.some(keyword => contentLower.includes(keyword));
-  
+  const hasSuspensionKeywords = suspensionKeywords.some((keyword) => contentLower.includes(keyword));
+
   if (hasSuspensionKeywords && aiResult.matchedGroupId) {
-    const matchedGroup = availableIssueGroups.find(group => group.id === aiResult.matchedGroupId);
-    if (matchedGroup && (matchedGroup.title.toLowerCase().includes('suspension') || matchedGroup.title.toLowerCase().includes('suspended'))) {
+    const matchedGroup = availableIssueGroups.find((group) => group.id === aiResult.matchedGroupId);
+    if (
+      matchedGroup &&
+      (matchedGroup.title.toLowerCase().includes("suspension") ||
+        matchedGroup.title.toLowerCase().includes("suspended"))
+    ) {
       aiResult.confidenceScore = Math.min(1.0, (aiResult.confidenceScore || 0.5) + 0.3);
     }
   }

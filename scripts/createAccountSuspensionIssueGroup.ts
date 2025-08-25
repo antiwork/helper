@@ -4,10 +4,7 @@ import { issueGroups } from "@/db/schema/issueGroups";
 
 async function createAccountSuspensionIssueGroup() {
   try {
-    const existingGroup = await db
-      .select()
-      .from(issueGroups)
-      .where(eq(issueGroups.title, "Account Suspension"));
+    const existingGroup = await db.select().from(issueGroups).where(eq(issueGroups.title, "Account Suspension"));
 
     if (existingGroup.length > 0) {
       return existingGroup[0];
