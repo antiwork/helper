@@ -47,14 +47,6 @@ const categorizeWithAI = async (
     return { matchedGroupId: null, reasoning: "No issue groups available for categorization" };
   }
 
-  const suspensionKeywords = ['suspended', 'suspension', 'suspend', 'account suspended', 'account suspension'];
-  const contentLower = conversationContent.toLowerCase();
-  const hasSuspensionKeywords = suspensionKeywords.some(keyword => contentLower.includes(keyword));
-  
-  const suspensionGroup = availableIssueGroups.find(group => 
-    group.title.toLowerCase().includes('suspension') || 
-    group.title.toLowerCase().includes('suspended')
-  );
 
   const result = await runAIObjectQuery({
     mailbox,

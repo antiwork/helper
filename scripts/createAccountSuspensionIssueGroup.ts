@@ -10,7 +10,6 @@ async function createAccountSuspensionIssueGroup() {
       .where(eq(issueGroups.title, "Account Suspension"));
 
     if (existingGroup.length > 0) {
-      console.log("Account Suspension issue group already exists:", existingGroup[0]);
       return existingGroup[0];
     }
 
@@ -24,10 +23,8 @@ async function createAccountSuspensionIssueGroup() {
       })
       .returning();
 
-    console.log("Created Account Suspension issue group:", newGroup[0]);
     return newGroup[0];
   } catch (error) {
-    console.error("Error creating Account Suspension issue group:", error);
     throw error;
   }
 }
@@ -35,11 +32,9 @@ async function createAccountSuspensionIssueGroup() {
 if (require.main === module) {
   createAccountSuspensionIssueGroup()
     .then(() => {
-      console.log("Script completed successfully");
       process.exit(0);
     })
-    .catch((error) => {
-      console.error("Script failed:", error);
+    .catch(() => {
       process.exit(1);
     });
 }
