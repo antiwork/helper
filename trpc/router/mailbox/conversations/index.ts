@@ -325,4 +325,20 @@ export const conversationsRouter = {
 
     return { following: !!follower };
   }),
+
+  markAsRead: conversationProcedure.mutation(async ({ ctx }) => {
+    // Only update lastReadByAssigneeAt if current user is the assignee
+    if (ctx.conversation.assignedToId === ctx.user.id) {
+      await db
+        .update(conversations)
+        .set({
+          lastReadByAssigneeAt: new Date(),
+        })
+        .where(eq(conversations.id, ctx.conversation.id));
+      return { success: true, updated: true };
+    }
+
+    // Silent success - user viewed conversation but wasn't assignee
+    return { success: true, updated: false };
+  }),
 } satisfies TRPCRouterRecord;

@@ -10,6 +10,7 @@ import { IssueGroupFilter } from "./filters/issueGroupFilter";
 import { PromptFilter } from "./filters/promptFilter";
 import { ReactionFilter } from "./filters/reactionFilter";
 import { ResponderFilter } from "./filters/responderFilter";
+import { UnreadMessagesFilter } from "./filters/unreadMessagesFilter";
 import { VipFilter } from "./filters/vipFilter";
 
 interface FilterValues {
@@ -24,6 +25,7 @@ interface FilterValues {
   events: "request_human_support"[];
   issueGroupId: number | null;
   isAssigned: boolean | undefined;
+  hasUnreadMessages: boolean | undefined;
 }
 
 interface ConversationFiltersProps {
@@ -48,6 +50,7 @@ export const useConversationFilters = () => {
     events: searchParams.events ?? [],
     issueGroupId: searchParams.issueGroupId ?? null,
     isAssigned: searchParams.isAssigned ?? undefined,
+    hasUnreadMessages: searchParams.hasUnreadMessages ?? undefined,
   });
 
   const activeFilterCount = useMemo(() => {
@@ -62,6 +65,7 @@ export const useConversationFilters = () => {
     if (filterValues.events.length > 0) count++;
     if (filterValues.issueGroupId !== null) count++;
     if (filterValues.isAssigned !== undefined) count++;
+    if (filterValues.hasUnreadMessages !== undefined) count++;
     return count;
   }, [filterValues]);
 
@@ -82,6 +86,7 @@ export const useConversationFilters = () => {
       events: searchParams.events ?? [],
       issueGroupId: searchParams.issueGroupId ?? null,
       isAssigned: searchParams.isAssigned ?? undefined,
+      hasUnreadMessages: searchParams.hasUnreadMessages ?? undefined,
     });
   }, [searchParams]);
 
@@ -103,6 +108,7 @@ export const useConversationFilters = () => {
       events: null,
       issueGroupId: null,
       isAssigned: null,
+      hasUnreadMessages: null,
     };
     setSearchParams((prev) => ({ ...prev, ...clearedFilters }));
   };
@@ -131,6 +137,12 @@ export const ConversationFilters = ({
           onUpdateFilter({ createdAfter: startDate, createdBefore: endDate });
         }}
       />
+      {(input.category === "assigned" || input.category === "mine") && (
+        <UnreadMessagesFilter
+          hasUnreadMessages={filterValues.hasUnreadMessages}
+          onChange={(hasUnreadMessages) => onUpdateFilter({ hasUnreadMessages })}
+        />
+      )}
       {input.category === "all" && (
         <AssigneeFilter
           selectedAssignees={filterValues.isAssigned === false ? ["unassigned"] : filterValues.assignee}

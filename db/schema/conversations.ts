@@ -24,6 +24,7 @@ export const conversations = pgTable(
     slug: randomSlugField("slug"),
     lastUserEmailCreatedAt: timestamp({ withTimezone: true, mode: "date" }),
     lastReadAt: timestamp({ withTimezone: true, mode: "date" }),
+    lastReadByAssigneeAt: timestamp({ withTimezone: true, mode: "date" }),
     lastMessageAt: timestamp("last_message_at", { withTimezone: true, mode: "date" }),
     conversationProvider: text().$type<"gmail" | "helpscout" | "chat">(),
     closedAt: timestamp({ withTimezone: true, mode: "date" }),

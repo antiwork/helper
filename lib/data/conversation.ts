@@ -196,6 +196,12 @@ export const updateConversation = async (
       }
 
       if (current.assignedToId !== updatedConversation.assignedToId) {
+        // Reset lastReadByAssigneeAt when assignee changes
+        await tx
+          .update(conversations)
+          .set({ lastReadByAssigneeAt: null })
+          .where(eq(conversations.id, updatedConversation.id));
+        
         notificationEvents.push(
           triggerEvent("conversations/send-follower-notification", {
             conversationId: updatedConversation.id,
