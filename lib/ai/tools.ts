@@ -5,6 +5,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { triggerEvent } from "@/jobs/trigger";
 import { GUIDE_USER_TOOL_NAME, REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
 import { getConversationById, updateConversation, updateOriginalConversation } from "@/lib/data/conversation";
+import { createToolEvent } from "@/lib/data/conversationMessage";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata, getPastConversationsPrompt } from "@/lib/data/retrieval";
@@ -105,13 +106,22 @@ export const buildTools = async (
     return resultString;
   };
 
+  const logToolEvent = (toolName: string, params: Record<string, any>) =>
+    createToolEvent({
+      conversationId,
+      tool: { name: toolName },
+      parameters: params,
+      userMessage: "",
+    });
+
   const tools: Record<string, Tool> = {
     knowledge_base: tool({
       description: "search the knowledge base",
       parameters: z.object({
         query: z.string().describe("query to search the knowledge base"),
       }),
-      execute: ({ query }) => reasoningMiddleware(searchKnowledgeBase(query)),
+      execute: ({ query }) =>
+        reasoningMiddleware(searchKnowledgeBase(query)).finally(() => logToolEvent("search_knowledge_base", { query })),
     }),
   };
 
@@ -131,7 +141,10 @@ export const buildTools = async (
       parameters: z.object({
         email: z.string().email().describe("email address to set for the user"),
       }),
-      execute: ({ email }) => reasoningMiddleware(setUserEmail(conversationId, email)),
+      execute: ({ email }) =>
+        reasoningMiddleware(setUserEmail(conversationId, email)).finally(() =>
+          logToolEvent("set_user_email", { email }),
+        ),
     });
   }
 
@@ -149,7 +162,9 @@ export const buildTools = async (
           : z.string().email().describe("email address to contact you (required for anonymous users)"),
       }),
       execute: ({ reason, email: newEmail }) =>
-        reasoningMiddleware(requestHumanSupport(conversationId, email, reason, newEmail)),
+        reasoningMiddleware(requestHumanSupport(conversationId, email, reason, newEmail)).finally(() =>
+          logToolEvent("fetch_user_information", { reason, newEmail }),
+        ),
     });
   }
 
@@ -159,7 +174,10 @@ export const buildTools = async (
       parameters: z.object({
         reason: z.string().describe("reason for fetching user information"),
       }),
-      execute: () => reasoningMiddleware(fetchUserInformation(email)),
+      execute: ({ reason }) =>
+        reasoningMiddleware(fetchUserInformation(email)).finally(() =>
+          logToolEvent("fetch_user_information", { reason }),
+        ),
     });
   }
 

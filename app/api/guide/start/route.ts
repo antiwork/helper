@@ -1,6 +1,9 @@
 import { waitUntil } from "@vercel/functions";
+import { and, desc, eq } from "drizzle-orm";
 import { corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { assertDefined } from "@/components/utils/assert";
+import { db } from "@/db/client";
+import { conversationMessages } from "@/db/schema";
 import { generateGuidePlan } from "@/lib/ai/guide";
 import { createConversation, getConversationBySlug } from "@/lib/data/conversation";
 import { createGuideSession, createGuideSessionEvent } from "@/lib/data/guide";
@@ -18,7 +21,7 @@ export const POST = withWidgetAuth(async ({ request }, { session }) => {
 
     if (conversationSlug) {
       const conversation = await getConversationBySlug(conversationSlug);
-      conversationId = conversation?.id ?? null;
+      conversationId = assertDefined(conversation?.id);
     } else {
       const conversation = await createConversation({
         emailFrom: session.email,
@@ -33,11 +36,20 @@ export const POST = withWidgetAuth(async ({ request }, { session }) => {
       conversationId = conversation.id;
     }
 
+    const lastAIMessage = await db.query.conversationMessages.findFirst({
+      where: and(
+        eq(conversationMessages.conversationId, conversationId),
+        eq(conversationMessages.role, "ai_assistant"),
+      ),
+      orderBy: desc(conversationMessages.createdAt),
+    });
+
     const guideSession = await createGuideSession({
       platformCustomerId: platformCustomer.id,
       title: result.title,
       instructions,
-      conversationId: assertDefined(conversationId),
+      conversationId,
+      messageId: lastAIMessage?.id ?? null,
       steps: result.next_steps.map((description) => ({ description, completed: false })),
     });
 

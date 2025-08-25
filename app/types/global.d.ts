@@ -19,6 +19,7 @@ export type Conversation = RouterOutputs["mailbox"]["conversations"]["get"];
 export type Message = Extract<Conversation["messages"][number], { type: "message" }>;
 export type Note = Extract<Conversation["messages"][number], { type: "note" }>;
 export type ConversationEvent = Extract<Conversation["messages"][number], { type: "event" }>;
+export type GuideSession = Extract<Conversation["messages"][number], { type: "guide_session" }>;
 
 export type AttachedFile = Message["files"][number];
 

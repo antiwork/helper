@@ -26,6 +26,7 @@ import {
   type AttachedFile,
   type ConversationEvent,
   type Conversation as ConversationType,
+  type GuideSession,
   type Message,
   type Note,
 } from "@/app/types/global";
@@ -48,7 +49,7 @@ import ConversationSidebar from "./conversationSidebar";
 import { MessageActions } from "./messageActions";
 
 export type ConversationWithNewMessages = Omit<ConversationType, "messages"> & {
-  messages: ((Message | Note | ConversationEvent) & { isNew?: boolean })[];
+  messages: ((Message | Note | ConversationEvent | GuideSession) & { isNew?: boolean })[];
 };
 
 const { Carousel, CarouselButton, CarouselContext } = createCarousel<AttachedFile>();

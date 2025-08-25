@@ -22,12 +22,14 @@ export const createGuideSession = async ({
   title,
   instructions,
   conversationId,
+  messageId,
   steps,
 }: {
   platformCustomerId: number;
   title: string;
   instructions: string;
   conversationId: string | number;
+  messageId: number | null;
   steps: { description: string; completed: boolean }[];
 }): Promise<GuideSession> => {
   try {
@@ -38,6 +40,7 @@ export const createGuideSession = async ({
         title,
         instructions,
         conversationId: typeof conversationId === "string" ? null : conversationId,
+        messageId,
         status: "planning",
         steps,
       })
