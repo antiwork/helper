@@ -67,15 +67,21 @@ export const mailboxRouter = {
             confetti: z.boolean().optional(),
             autoRespondEmailToChat: z.enum(["draft", "reply"]).nullable().optional(),
             disableTicketResponseTimeAlerts: z.boolean().optional(),
+            showNextTicketPreview: z.boolean().optional(),
           })
           .optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const preferences = { ...ctx.mailbox.preferences, ...(input.preferences ?? {}) };
+      const existingPreferences = ctx.mailbox.preferences || {};
+      const newPreferences = input.preferences || {};
+      const mergedPreferences = { ...existingPreferences, ...newPreferences };
+
+      const { preferences: _, ...restInput } = input;
+
       await db
         .update(mailboxes)
-        .set({ ...input, preferences })
+        .set({ ...restInput, preferences: mergedPreferences })
         .where(eq(mailboxes.id, ctx.mailbox.id));
     }),
 

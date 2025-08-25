@@ -47,6 +47,7 @@ import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
 import ConversationSidebar from "./conversationSidebar";
 import { MessageActions } from "./messageActions";
+import { NextTicketPreview } from "./nextTicketPreview";
 
 export type ConversationWithNewMessages = Omit<ConversationType, "messages"> & {
   messages: ((Message | Note | ConversationEvent | GuideSession) & { isNew?: boolean })[];
@@ -168,13 +169,16 @@ const MessageThreadPanel = ({
       <div ref={contentRef as React.RefObject<HTMLDivElement>} className="relative">
         <div className="flex flex-col gap-8 px-4 py-4 h-full">
           {conversationInfo && (
-            <MessageThread
-              conversation={conversationInfo}
-              onPreviewAttachment={(message, currentIndex) => {
-                setPreviewFileIndex(currentIndex);
-                setPreviewFiles(message.files);
-              }}
-            />
+            <>
+              <MessageThread
+                conversation={conversationInfo}
+                onPreviewAttachment={(message, currentIndex) => {
+                  setPreviewFileIndex(currentIndex);
+                  setPreviewFiles(message.files);
+                }}
+              />
+              <NextTicketPreview className="mt-4" />
+            </>
           )}
         </div>
       </div>

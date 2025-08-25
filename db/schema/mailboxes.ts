@@ -37,6 +37,7 @@ export const mailboxes = pgTable(
         confetti?: boolean;
         autoRespondEmailToChat?: "draft" | "reply" | null;
         disableTicketResponseTimeAlerts?: boolean;
+        showNextTicketPreview?: boolean;
       }>()
       .default({}),
   },

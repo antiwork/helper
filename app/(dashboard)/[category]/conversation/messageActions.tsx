@@ -1,3 +1,5 @@
+"use client";
+
 import { isMacOS } from "@tiptap/core";
 import { CornerUpLeft, Eye, Lightbulb, Undo2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
