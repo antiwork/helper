@@ -239,7 +239,7 @@ export const serializeConversation = (
     updatedAt: conversation.updatedAt,
     closedAt: conversation.closedAt,
     lastUserEmailCreatedAt: conversation.lastUserEmailCreatedAt,
-    lastReadAt: conversation.lastReadAt,
+    lastReadByCustomerAt: conversation.lastReadAt,
     lastMessageAt: conversation.lastMessageAt,
     assignedToId: conversation.assignedToId,
     assignedToAI: conversation.assignedToAI,
