@@ -1,5 +1,5 @@
 {
-  "id": "b611af28-55eb-4476-bc0f-18a766b33108",
+  "id": "f9b1b83e-c1d8-478b-b50b-9f71765a9bc8",
   "prevId": "79ff8d2f-e010-4ef1-8af3-2cb0a7539af5",
   "version": "7",
   "dialect": "postgresql",
@@ -2264,6 +2264,12 @@
         },
         "conversation_id": {
           "name": "conversation_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "message_id": {
+          "name": "message_id",
           "type": "bigint",
           "primaryKey": false,
           "notNull": false

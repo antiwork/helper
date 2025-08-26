@@ -1,0 +1,1 @@
+ALTER TABLE "guide_sessions" ADD COLUMN "message_id" bigint;

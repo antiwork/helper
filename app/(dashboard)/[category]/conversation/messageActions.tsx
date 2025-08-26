@@ -423,13 +423,8 @@ export const MessageActions = () => {
   };
 
   const handleInsertReply = (content: string) => {
-    setDraftedEmail((prev) => ({
-      ...prev,
-      message: content,
-      modified: true,
-    }));
-    setInitialMessageObject({ content });
-    setStoredMessage(content);
+    editorRef.current?.editor?.commands.insertContent(content);
+    editorRef.current?.editor?.commands.focus();
   };
 
   return (

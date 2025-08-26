@@ -4,6 +4,7 @@ import MessageItem from "@/app/(dashboard)/[category]/conversation/messageItem";
 import type { Message } from "@/app/types/global";
 import { ToolMetadata } from "@/db/schema";
 import { ConversationWithNewMessages } from "./conversation";
+import GuideSessionItem from "./guideSessionItem";
 import { ToolItem } from "./toolItem";
 
 export const MessageThread = ({
@@ -25,6 +26,8 @@ export const MessageThread = ({
         {conversation.messages.map((message, index) =>
           message.type === "event" ? (
             <EventItem key={message.id} event={message} />
+          ) : message.type === "guide_session" ? (
+            <GuideSessionItem key={message.id} guideSession={message} />
           ) : message.role === "tool" && message.type === "message" ? (
             <ToolItem
               key={message.id}

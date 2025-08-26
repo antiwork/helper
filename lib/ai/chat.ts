@@ -657,6 +657,8 @@ export const respondWithAI = async ({
   reasoningEnabled?: boolean;
   tools?: Record<string, ToolRequestBody>;
 }) => {
+  if (conversation.status === "spam") return createTextResponse("", Date.now().toString());
+
   const previousMessages = await loadPreviousMessages(conversation.id, messageId);
   const messages = appendClientMessage({
     messages: previousMessages,

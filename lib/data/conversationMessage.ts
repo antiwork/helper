@@ -12,6 +12,7 @@ import {
   conversationMessages,
   DRAFT_STATUSES,
   files,
+  guideSessions,
   mailboxes,
   MessageMetadata,
   notes,
@@ -112,7 +113,7 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
       },
     });
 
-  const [messages, noteRecords, eventRecords] = await Promise.all([
+  const [messages, noteRecords, eventRecords, guideSessionRecords] = await Promise.all([
     findOriginalAndMergedMessages(conversationId, findMessages),
     db.query.notes.findMany({
       where: eq(notes.conversationId, conversationId),
@@ -141,6 +142,19 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
         changes: true,
         byUserId: true,
         reason: true,
+      },
+    }),
+    db.query.guideSessions.findMany({
+      where: eq(guideSessions.conversationId, conversationId),
+      columns: {
+        id: true,
+        uuid: true,
+        messageId: true,
+        createdAt: true,
+        status: true,
+        title: true,
+        instructions: true,
+        steps: true,
       },
     }),
   ]);
@@ -174,7 +188,14 @@ export const getMessages = async (conversationId: number, mailbox: typeof mailbo
     })),
   );
 
-  return [...messageInfos, ...noteInfos, ...eventInfos]
+  const guideSessionInfos = await Promise.all(
+    guideSessionRecords.map((guideSession) => ({
+      ...guideSession,
+      type: "guide_session" as const,
+    })),
+  );
+
+  return [...messageInfos, ...noteInfos, ...eventInfos, ...guideSessionInfos]
     .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
     .map((info) => ({ ...info, isNew: false }));
 };
