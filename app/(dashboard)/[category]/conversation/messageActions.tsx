@@ -65,6 +65,17 @@ const useKnowledgeBankDialogState = create<
   hide: () => set({ isVisible: false }),
 }));
 
+const useAlternateHotkeyInEditor = (normalKey: string, alternateKey: string, callback: () => void) => {
+  useHotkeys(normalKey, callback, {
+    enabled: () => !isInDialog(),
+  });
+  useHotkeys(alternateKey, callback, {
+    enableOnContentEditable: true,
+    enableOnFormTags: true,
+    enabled: () => !isInDialog(),
+  });
+};
+
 export const MessageActions = () => {
   const { navigateToConversation, removeConversation } = useConversationListContext();
   const { data: conversation, updateStatus } = useConversationContext();
@@ -113,25 +124,17 @@ export const MessageActions = () => {
     { enabled: () => !isInDialog() },
   );
 
-  useHotkeys(
-    "s",
-    () => {
-      if (conversation?.status !== "spam") {
-        updateStatus("spam");
-      }
-    },
-    { enabled: () => !isInDialog() },
-  );
+  useAlternateHotkeyInEditor("s", "mod+shift+s", () => {
+    if (conversation?.status !== "spam") {
+      updateStatus("spam");
+    }
+  });
 
-  useHotkeys(
-    "c",
-    () => {
-      if (conversation?.status !== "closed") {
-        updateStatus("closed");
-      }
-    },
-    { enabled: () => !isInDialog() },
-  );
+  useAlternateHotkeyInEditor("c", "mod+shift+c", () => {
+    if (conversation?.status !== "closed") {
+      updateStatus("closed");
+    }
+  });
 
   const storageKey = `draft/${conversation?.slug}`;
   const [storedMessage, setStoredMessage] = useExpiringLocalStorage<string>(storageKey, {
@@ -186,6 +189,7 @@ export const MessageActions = () => {
   const bccRef = useRef<HTMLInputElement>(null);
   const commandInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<TipTapEditorRef | null>(null);
+  const [isEditorFocused, setIsEditorFocused] = useState(false);
 
   useEffect(() => {
     if (showCc) {
@@ -399,7 +403,11 @@ export const MessageActions = () => {
                 disabled={conversation?.status === "closed"}
               >
                 Close
-                {isMacOS() && <KeyboardShortcut className="ml-2 text-sm border-primary/50">C</KeyboardShortcut>}
+                {isMacOS() && (
+                  <KeyboardShortcut className="ml-2 text-sm border-primary/50">
+                    {isEditorFocused ? "⌘⇧C" : "C"}
+                  </KeyboardShortcut>
+                )}
               </Button>
               <Button
                 size={isAboveMd ? "default" : "sm"}
@@ -474,6 +482,7 @@ export const MessageActions = () => {
         placeholder="Type your reply here..."
         defaultContent={initialMessageObject}
         editable={true}
+        onFocusChange={setIsEditorFocused}
         onUpdate={(message, isEmpty) => {
           updateDraftedEmail({ message: isEmpty ? "" : message });
           if (!isEmpty && conversation?.slug) {
