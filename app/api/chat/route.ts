@@ -29,6 +29,7 @@ interface ChatRequestBody {
   guideEnabled: boolean;
   isToolResult?: boolean;
   tools?: Record<string, ToolRequestBody>;
+  customerSpecificTools?: boolean;
 }
 
 const getConversation = async (conversationSlug: string, session: WidgetSessionPayload) => {
@@ -53,7 +54,7 @@ const getConversation = async (conversationSlug: string, session: WidgetSessionP
 export const OPTIONS = () => corsOptions("POST");
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
-  const { message, conversationSlug, readPageTool, guideEnabled, tools }: ChatRequestBody = await request.json();
+  const { message, conversationSlug, readPageTool, guideEnabled, tools, customerSpecificTools }: ChatRequestBody = await request.json();
 
   Sentry.setTag("conversation_slug", conversationSlug);
 
