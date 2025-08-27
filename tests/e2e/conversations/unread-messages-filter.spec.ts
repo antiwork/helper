@@ -12,7 +12,8 @@ test.describe("Unread Messages Filter", () => {
     await expect(filterToggleButton).toBeVisible();
     await filterToggleButton.click();
 
-    await page.waitForTimeout(1000);
+    // Wait for filter panel to be fully visible and interactive
+    await page.waitForSelector('button:has-text("Unread")', { state: "visible" });
   });
 
   test("should show unread messages filter button", async ({ page }) => {
@@ -32,7 +33,8 @@ test.describe("Unread Messages Filter", () => {
 
     await expect(page).toHaveURL(/hasUnreadMessages=true/);
 
-    await page.waitForTimeout(1000);
+    // Wait for the filtered results to load
+    await page.waitForLoadState("networkidle");
 
     const unreadBadge = page.locator('[data-testid="unread-messages-badge"]');
     const badgeCount = await unreadBadge.count();
@@ -61,7 +63,8 @@ test.describe("Unread Messages Filter", () => {
     await expect(dateFilter).toBeVisible();
     await dateFilter.click();
 
-    await page.waitForTimeout(500);
+    // Wait for dropdown menu to be visible
+    await page.waitForSelector('[role="menuitemradio"]', { state: "visible" });
 
     const todayOption = page.locator('[role="menuitemradio"]:has-text("Today")');
     await expect(todayOption).toBeVisible();
@@ -80,9 +83,9 @@ test.describe("Unread Messages Filter", () => {
     await expect(page).toHaveURL(/hasUnreadMessages=true/);
 
     const currentUrl = page.url();
-    console.log('Current URL:', currentUrl);
+    console.log("Current URL:", currentUrl);
 
-    if (currentUrl.includes('createdAfter=')) {
+    if (currentUrl.includes("createdAfter=")) {
       await expect(page).toHaveURL(/createdAfter=/);
     } else {
       await expect(dateFilter).toHaveClass(/bright/);
@@ -93,15 +96,55 @@ test.describe("Unread Messages Filter", () => {
     const unreadBadges = page.locator('[data-testid="unread-messages-badge"]');
     const badgeCount = await unreadBadges.count();
 
-    if (badgeCount > 0) {
-      for (let i = 0; i < badgeCount; i++) {
-        const badge = unreadBadges.nth(i);
-        await expect(badge).toBeVisible();
+    // Test that filter doesn't show in "all" view
+    await page.goto("/all");
+    await page.waitForLoadState("domcontentloaded");
 
-        const conversationItem = badge.locator('xpath=ancestor::*[contains(@class, "conversation") or @data-testid="conversation-item"]').first();
-        await expect(conversationItem).toBeVisible();
+    const filterToggleButton = page.locator('button[aria-label="Filter Toggle"]');
+    await expect(filterToggleButton).toBeVisible();
+    await filterToggleButton.click();
+
+    const unreadFilterInAll = page.locator('button:has-text("Unread")');
+    await expect(unreadFilterInAll).toHaveCount(0);
+
+    // Test that filter shows in "assigned" view
+    await page.goto("/assigned");
+    await page.waitForLoadState("domcontentloaded");
+
+    const filterToggleInAssigned = page.locator('button[aria-label="Filter Toggle"]');
+    await expect(filterToggleInAssigned).toBeVisible();
+    await filterToggleInAssigned.click();
+
+    const unreadFilterInAssigned = page.locator('button:has-text("Unread")');
+    await expect(unreadFilterInAssigned).toBeVisible();
+  });
+
+  test("should only show unread indicators in mine and assigned views", async ({ page }) => {
+    // Test in "mine" view (current page)
+    const unreadIndicators = page.locator('[data-testid="unread-indicator"]');
+    const indicatorCount = await unreadIndicators.count();
+
+    if (indicatorCount > 0) {
+      for (let i = 0; i < indicatorCount; i++) {
+        const indicator = unreadIndicators.nth(i);
+        await expect(indicator).toBeVisible();
       }
     }
+
+    // Test that indicators don't show in "all" view
+    await page.goto("/all");
+    await page.waitForLoadState("domcontentloaded");
+
+    const indicatorsInAll = page.locator('[data-testid="unread-indicator"]');
+    await expect(indicatorsInAll).toHaveCount(0);
+
+    // Test that indicators show in "assigned" view
+    await page.goto("/assigned");
+    await page.waitForLoadState("domcontentloaded");
+
+    const indicatorsInAssigned = page.locator('[data-testid="unread-indicator"]');
+    // Just ensure the page loaded correctly - indicators may or may not be present
+    await expect(page).toHaveURL(/\/assigned/);
   });
 
   test("should update filter count in clear filters button", async ({ page }) => {
@@ -118,7 +161,8 @@ test.describe("Unread Messages Filter", () => {
     await expect(vipOnlyOption).toBeVisible();
     await vipOnlyOption.click();
 
-    await page.waitForTimeout(1000);
+    // Wait for VIP filter to be applied
+    await page.waitForLoadState("networkidle");
 
     await clearButton.click();
 

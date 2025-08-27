@@ -134,11 +134,11 @@ export const searchConversations = async (
                     isNull(conversationMessages.deletedAt),
                     gt(
                       conversationMessages.createdAt,
-                      sql`COALESCE(${conversations.lastReadByAssigneeAt}, ${conversations.createdAt})`
-                    )
-                  )
-                )
-            )
+                      sql`COALESCE(${conversations.lastReadByAssigneeAt}, ${conversations.createdAt})`,
+                    ),
+                  ),
+                ),
+            ),
           ),
         }
       : {}),
@@ -221,9 +221,9 @@ export const searchConversations = async (
               isNull(conversationMessages.deletedAt),
               gt(
                 conversationMessages.createdAt,
-                sql`COALESCE(${conversations.lastReadByAssigneeAt}, ${conversations.createdAt})`
+                sql`COALESCE(${conversations.lastReadByAssigneeAt}, ${conversations.createdAt})`,
               ),
-              isNotNull(conversations.assignedToId)
+              isNotNull(conversations.assignedToId),
             )}
           ) as has_unread
         ) as unread_messages`,
