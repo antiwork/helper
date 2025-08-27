@@ -17,6 +17,9 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/components/utils/currency";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
+import { useAssignTicket } from "@/app/(dashboard)/[category]/conversation/useAssignTicket";
+import { useSession } from "@/components/useSession";
+import { getFullName } from "@/lib/auth/authUtils";
 
 interface ConversationSidebarProps {
   conversation: Conversation;
@@ -84,6 +87,8 @@ const ConversationItem = ({
 const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
   const { navigateToConversation } = useConversationListContext();
   const { updateStatus } = useConversationContext();
+  const { assignTicket } = useAssignTicket();
+  const { user: currentUser } = useSession() ?? {};
   const [previousExpanded, setPreviousExpanded] = useState(true);
   const [similarExpanded, setSimilarExpanded] = useState(false);
 
@@ -110,10 +115,34 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
           </div>
           <span className="text-muted-foreground">Assignee</span>
           <div className="min-w-0">
-            <AssignPopoverButton
-              initialAssignedToId={conversation.assignedToId}
-              assignedToAI={conversation.assignedToAI}
-            />
+            {!conversation.assignedToId && !conversation.assignedToAI ? (
+              <div className="flex items-center gap-1">
+                <AssignPopoverButton
+                  initialAssignedToId={conversation.assignedToId}
+                  assignedToAI={conversation.assignedToAI}
+                />
+                <span className="text-muted-foreground">-</span>
+                {currentUser && (
+                  <button
+                    className="text-primary hover:underline text-sm"
+                    onClick={() => {
+                      const selfAssignee = {
+                        id: currentUser.id,
+                        displayName: getFullName(currentUser),
+                      };
+                      assignTicket(selfAssignee, null);
+                    }}
+                  >
+                    Assign yourself
+                  </button>
+                )}
+              </div>
+            ) : (
+              <AssignPopoverButton
+                initialAssignedToId={conversation.assignedToId}
+                assignedToAI={conversation.assignedToAI}
+              />
+            )}
           </div>
           <span className="text-muted-foreground">Issue</span>
           <div className="min-w-0">
