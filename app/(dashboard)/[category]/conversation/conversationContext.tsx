@@ -30,7 +30,7 @@ export function useConversationQuery(conversationSlug: string | null) {
       ]);
     },
   });
-  
+
   const result = api.mailbox.conversations.get.useQuery(
     {
       conversationSlug: conversationSlug ?? "",

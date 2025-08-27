@@ -201,7 +201,7 @@ export const updateConversation = async (
           .update(conversations)
           .set({ lastReadByAssigneeAt: null })
           .where(eq(conversations.id, updatedConversation.id));
-        
+
         notificationEvents.push(
           triggerEvent("conversations/send-follower-notification", {
             conversationId: updatedConversation.id,
