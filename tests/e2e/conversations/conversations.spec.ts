@@ -478,7 +478,7 @@ test.describe("Working Conversation Management", () => {
 
     const filterToggleButtonAfterRefresh = page.getByRole("button", { name: "Filter Toggle" });
     await expect(filterToggleButtonAfterRefresh).toBeVisible();
-    
+
     const filtersContainerAfterRefresh = page.locator('[data-testid="conversation-filters"]');
     await expect(filtersContainerAfterRefresh).toBeVisible();
 
@@ -511,7 +511,7 @@ test.describe("Working Conversation Management", () => {
 
     const filterToggleButtonAfterRefresh = page.getByRole("button", { name: "Filter Toggle" });
     await expect(filterToggleButtonAfterRefresh).toBeVisible();
-    
+
     const filtersContainerAfterRefresh = page.locator('[data-testid="conversation-filters"]');
     await expect(filtersContainerAfterRefresh).not.toBeVisible();
 
