@@ -3,9 +3,11 @@ import { memo } from "react";
 import { MemberFilter } from "./memberFilter";
 
 export const AssigneeFilter = memo(function AssigneeFilter({
+  includeUnassigned = true,
   selectedAssignees,
   onChange,
 }: {
+  includeUnassigned?: boolean;
   selectedAssignees: string[];
   onChange: (assignees: string[]) => void;
 }) {
@@ -18,7 +20,7 @@ export const AssigneeFilter = memo(function AssigneeFilter({
       searchPlaceholder="Search assignees..."
       emptyText="No assignees found"
       multiSelectionDisplay={(count) => `${count} assignees`}
-      includeUnassigned={true}
+      includeUnassigned={includeUnassigned}
     />
   );
 });

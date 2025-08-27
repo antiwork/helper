@@ -65,7 +65,7 @@ const useKnowledgeBankDialogState = create<
   hide: () => set({ isVisible: false }),
 }));
 
-const useAlternateHotkeyInEditor = (normalKey: string, alternateKey: string, callback: () => void) => {
+export const useAlternateHotkeyInEditor = (normalKey: string, alternateKey: string, callback: () => void) => {
   useHotkeys(normalKey, callback, {
     enabled: () => !isInDialog(),
   });

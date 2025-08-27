@@ -131,8 +131,9 @@ export const ConversationFilters = ({
           onUpdateFilter({ createdAfter: startDate, createdBefore: endDate });
         }}
       />
-      {input.category === "all" && (
+      {(input.category === "all" || input.category === "assigned") && (
         <AssigneeFilter
+          includeUnassigned={input.category === "all"}
           selectedAssignees={filterValues.isAssigned === false ? ["unassigned"] : filterValues.assignee}
           onChange={(assignees) => {
             const hasUnassigned = assignees.includes("unassigned");

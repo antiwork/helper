@@ -3,6 +3,7 @@
 import { Bot, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
+import { useAlternateHotkeyInEditor } from "@/app/(dashboard)/[category]/conversation/messageActions";
 import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
 import { isInDialog } from "@/components/isInDialog";
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,7 @@ export const AssignPopoverButton = ({
     if (open) setAssignMessage("");
   };
 
-  useHotkeys("a", () => toggleAssignModal(true), { enabled: () => !isInDialog() });
+  useAlternateHotkeyInEditor("a", "mod+shift+a", () => toggleAssignModal(true));
 
   useHotkeys(
     "i",
