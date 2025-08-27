@@ -38,8 +38,17 @@ export const List = () => {
     fetchNextPage,
   } = useConversationListContext();
 
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("conversationFiltersVisible") ?? "false") === "true";
+    }
+    return false;
+  });
   const { filterValues, activeFilterCount, updateFilter, clearFilters } = useConversationFilters();
+
+  useEffect(() => {
+    localStorage.setItem("conversationFiltersVisible", String(showFilters));
+  }, [showFilters]);
   const [allConversationsSelected, setAllConversationsSelected] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const utils = api.useUtils();
