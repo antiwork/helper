@@ -339,7 +339,7 @@ export const MessageActions = () => {
                 className="inline-flex items-center gap-1 px-1.5 py-1 text-xs font-medium rounded-md border hover:bg-accent transition-colors"
                 onClick={(event) => {
                   if (event.ctrlKey || event.metaKey) {
-                    window.open(`/conversations?id=${conversation.slug}`, '_blank');
+                    window.open(`/conversations?id=${conversation.slug}`, "_blank");
                   } else {
                     navigateToConversation(conversation.slug);
                   }
