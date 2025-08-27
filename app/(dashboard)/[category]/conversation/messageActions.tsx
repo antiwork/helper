@@ -67,11 +67,13 @@ const useKnowledgeBankDialogState = create<
 
 export const useAlternateHotkeyInEditor = (normalKey: string, alternateKey: string, callback: () => void) => {
   useHotkeys(normalKey, callback, {
+    preventDefault: true,
     enabled: () => !isInDialog(),
   });
   useHotkeys(alternateKey, callback, {
     enableOnContentEditable: true,
     enableOnFormTags: true,
+    preventDefault: true,
     enabled: () => !isInDialog(),
   });
 };
