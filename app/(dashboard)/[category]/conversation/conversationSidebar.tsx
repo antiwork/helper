@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { AssignPopoverButton } from "@/app/(dashboard)/[category]/conversation/assignPopoverButton";
 import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
 import { IssueAssignButton } from "@/app/(dashboard)/[category]/conversation/issueAssignButton";
+import { useAssignTicket } from "@/app/(dashboard)/[category]/conversation/useAssignTicket";
 import { useConversationListContext } from "@/app/(dashboard)/[category]/list/conversationListContext";
 import { Conversation } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
@@ -14,12 +15,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useSession } from "@/components/useSession";
 import { formatCurrency } from "@/components/utils/currency";
+import { getFullName } from "@/lib/auth/authUtils";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
-import { useAssignTicket } from "@/app/(dashboard)/[category]/conversation/useAssignTicket";
-import { useSession } from "@/components/useSession";
-import { getFullName } from "@/lib/auth/authUtils";
 
 interface ConversationSidebarProps {
   conversation: Conversation;
