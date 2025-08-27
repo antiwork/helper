@@ -1,6 +1,7 @@
 import { isMacOS } from "@tiptap/core";
 import { CornerUpLeft, Eye, Lightbulb, Undo2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { create } from "zustand";
 import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
@@ -12,12 +13,12 @@ import { useFileUpload } from "@/components/fileUploadContext";
 import { GenerateKnowledgeBankDialog } from "@/components/generateKnowledgeBankDialog";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
+import { isInDialog } from "@/components/isInDialog";
 import { KeyboardShortcut } from "@/components/keyboardShortcut";
 import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { useBreakpoint } from "@/components/useBreakpoint";
-import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { parseEmailList } from "@/components/utils/email";
 import { publicConversationChannelId } from "@/lib/realtime/channels";
 import { useBroadcastRealtimeEvent } from "@/lib/realtime/hooks";
@@ -102,21 +103,35 @@ export const MessageActions = () => {
     },
   });
 
-  useKeyboardShortcut("z", () => {
-    if (conversation?.status === "closed" || conversation?.status === "spam") {
-      updateStatus("open");
-    }
-  });
-  useKeyboardShortcut("s", () => {
-    if (conversation?.status !== "spam") {
-      updateStatus("spam");
-    }
-  });
-  useKeyboardShortcut("c", () => {
-    if (conversation?.status !== "closed") {
-      updateStatus("closed");
-    }
-  });
+  useHotkeys(
+    "z",
+    () => {
+      if (conversation?.status === "closed" || conversation?.status === "spam") {
+        updateStatus("open");
+      }
+    },
+    { enabled: () => !isInDialog() },
+  );
+
+  useHotkeys(
+    "s",
+    () => {
+      if (conversation?.status !== "spam") {
+        updateStatus("spam");
+      }
+    },
+    { enabled: () => !isInDialog() },
+  );
+
+  useHotkeys(
+    "c",
+    () => {
+      if (conversation?.status !== "closed") {
+        updateStatus("closed");
+      }
+    },
+    { enabled: () => !isInDialog() },
+  );
 
   const storageKey = `draft/${conversation?.slug}`;
   const [storedMessage, setStoredMessage] = useExpiringLocalStorage<string>(storageKey, {

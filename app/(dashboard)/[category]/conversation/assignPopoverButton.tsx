@@ -2,12 +2,13 @@
 
 import { Bot, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
+import { isInDialog } from "@/components/isInDialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useMembers } from "@/components/useMembers";
 import { useSession } from "@/components/useSession";
 import { getFullName } from "@/lib/auth/authUtils";
@@ -37,19 +38,21 @@ export const AssignPopoverButton = ({
     if (open) setAssignMessage("");
   };
 
-  useKeyboardShortcut("a", () => {
-    toggleAssignModal(true);
-  });
+  useHotkeys("a", () => toggleAssignModal(true), { enabled: () => !isInDialog() });
 
-  useKeyboardShortcut("i", () => {
-    if (!currentUser) return;
+  useHotkeys(
+    "i",
+    () => {
+      if (!currentUser) return;
 
-    const selfAssignee = {
-      id: currentUser.id,
-      displayName: getFullName(currentUser),
-    };
-    assignTicket(selfAssignee, null);
-  });
+      const selfAssignee = {
+        id: currentUser.id,
+        displayName: getFullName(currentUser),
+      };
+      assignTicket(selfAssignee, null);
+    },
+    { enabled: () => !isInDialog() },
+  );
 
   const [assignedTo, setAssignedTo] = useState<AssigneeOption | null>(null);
   const [assignMessage, setAssignMessage] = useState<string>("");
