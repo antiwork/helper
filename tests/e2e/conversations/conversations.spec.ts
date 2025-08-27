@@ -454,4 +454,83 @@ test.describe("Working Conversation Management", () => {
 
     await takeDebugScreenshot(page, "search-snippet-no-results.png");
   });
+
+  test("should persist filter visibility state in localStorage when toggled open", async ({ page }) => {
+    await page.evaluate(() => localStorage.removeItem("conversationFiltersVisible"));
+
+    const filterToggleButton = page.getByRole("button", { name: "Filter Toggle" });
+    await expect(filterToggleButton).toBeVisible();
+
+    const filtersContainer = page.locator('[data-testid="conversation-filters"]');
+    await expect(filtersContainer).not.toBeVisible();
+
+    const initialStorageValue = await page.evaluate(() => localStorage.getItem("conversationFiltersVisible"));
+    expect(initialStorageValue).toBeNull();
+
+    await filterToggleButton.click();
+
+    await expect(filtersContainer).toBeVisible();
+
+    const storageValueAfterOpen = await page.evaluate(() => localStorage.getItem("conversationFiltersVisible"));
+    expect(storageValueAfterOpen).toBe("true");
+
+    await page.reload();
+
+    const filterToggleButtonAfterRefresh = page.getByRole("button", { name: "Filter Toggle" });
+    await expect(filterToggleButtonAfterRefresh).toBeVisible();
+    
+    const filtersContainerAfterRefresh = page.locator('[data-testid="conversation-filters"]');
+    await expect(filtersContainerAfterRefresh).toBeVisible();
+
+    const storageValueAfterRefresh = await page.evaluate(() => localStorage.getItem("conversationFiltersVisible"));
+    expect(storageValueAfterRefresh).toBe("true");
+  });
+
+  test("should persist filter visibility state in localStorage when toggled closed", async ({ page }) => {
+    await page.evaluate(() => localStorage.setItem("conversationFiltersVisible", "true"));
+
+    await page.reload();
+
+    const filterToggleButton = page.getByRole("button", { name: "Filter Toggle" });
+    await expect(filterToggleButton).toBeVisible();
+
+    const filtersContainer = page.locator('[data-testid="conversation-filters"]');
+    await expect(filtersContainer).toBeVisible();
+
+    const initialStorageValue = await page.evaluate(() => localStorage.getItem("conversationFiltersVisible"));
+    expect(initialStorageValue).toBe("true");
+
+    await filterToggleButton.click();
+
+    await expect(filtersContainer).not.toBeVisible();
+
+    const storageValueAfterClose = await page.evaluate(() => localStorage.getItem("conversationFiltersVisible"));
+    expect(storageValueAfterClose).toBe("false");
+
+    await page.reload();
+
+    const filterToggleButtonAfterRefresh = page.getByRole("button", { name: "Filter Toggle" });
+    await expect(filterToggleButtonAfterRefresh).toBeVisible();
+    
+    const filtersContainerAfterRefresh = page.locator('[data-testid="conversation-filters"]');
+    await expect(filtersContainerAfterRefresh).not.toBeVisible();
+
+    const storageValueAfterRefresh = await page.evaluate(() => localStorage.getItem("conversationFiltersVisible"));
+    expect(storageValueAfterRefresh).toBe("false");
+  });
+
+  test("should default to hidden filters for new users without localStorage", async ({ page }) => {
+    await page.evaluate(() => localStorage.removeItem("conversationFiltersVisible"));
+
+    await page.reload();
+
+    const filterToggleButton = page.getByRole("button", { name: "Filter Toggle" });
+    await expect(filterToggleButton).toBeVisible();
+
+    const filtersContainer = page.locator('[data-testid="conversation-filters"]');
+    await expect(filtersContainer).not.toBeVisible();
+
+    const storageValue = await page.evaluate(() => localStorage.getItem("conversationFiltersVisible"));
+    expect(storageValue).toBeNull();
+  });
 });
