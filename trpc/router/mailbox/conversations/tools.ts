@@ -1,11 +1,12 @@
 import { TRPCError } from "@trpc/server";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { tools } from "@/db/schema/tools";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { callToolApi, ToolApiError } from "@/lib/tools/apiTool";
 import { conversationProcedure } from "./procedure";
+import { fetchClientTools } from "@/lib/data/clientTool";
 
 export const toolsRouter = {
   list: conversationProcedure.query(async ({ ctx }) => {
@@ -41,15 +42,26 @@ export const toolsRouter = {
       }
     });
 
+    const clientTools = await fetchClientTools(conversation.emailFrom);
+
     return {
       suggested,
-      all: mailboxTools.map((tool) => ({
+      all: [
+        ...mailboxTools.map((tool) => ({
         name: tool.name,
         slug: tool.slug,
         description: tool.description,
         parameterTypes: tool.parameters ?? [],
         customerEmailParameter: tool.customerEmailParameter,
       })),
+      ...clientTools.map(tool => ({
+        name: tool.name,
+        slug: tool.name,
+        description: tool.description,
+        parameterTypes: tool.parameters ?? [],
+        customerEmailParameter: null,
+      }))
+    ],
     };
   }),
 

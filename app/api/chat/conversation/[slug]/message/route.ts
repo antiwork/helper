@@ -7,6 +7,7 @@ import { conversations } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { createUserMessage } from "@/lib/ai/chat";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
+import { importClientTools } from "@/lib/data/clientTool";
 
 export const maxDuration = 60;
 
@@ -14,7 +15,7 @@ export const OPTIONS = () => corsOptions("POST");
 
 export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: { params } }, { session }) => {
   const { slug } = await params;
-  const { content, attachments = [], tools } = createMessageBodySchema.parse(await request.json());
+  const { content, attachments = [], tools, customerSpecificTools } = createMessageBodySchema.parse(await request.json());
 
   if (!content || content.trim().length === 0) {
     return corsResponse({ error: "Content is required" }, { status: 400 });
@@ -63,6 +64,11 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
       contentType: attachment.contentType || "image/png",
       data: base64Data,
     });
+  }
+
+  if(tools && Object.keys(tools).length > 0) {
+    const customerEmail = customerSpecificTools ? userEmail : null;
+    await importClientTools(customerEmail, tools);
   }
 
   const userMessage = await createUserMessage(conversation.id, userEmail, content, attachmentData);

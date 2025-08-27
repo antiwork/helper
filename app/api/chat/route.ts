@@ -18,6 +18,7 @@ import { validateAttachments } from "@/lib/shared/attachmentValidation";
 import { createClient } from "@/lib/supabase/server";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
 import { ToolRequestBody } from "@/packages/client/dist";
+import { importClientTools } from "@/lib/data/clientTool";
 
 export const maxDuration = 60;
 
@@ -91,6 +92,11 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
       data: base64Data,
     };
   });
+
+  if(tools && Object.keys(tools).length > 0) {
+      const customerEmail = customerSpecificTools ? userEmail : null;
+      await importClientTools(customerEmail, tools);
+    }
 
   const userMessage = await createUserMessage(
     conversation.id,
