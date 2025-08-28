@@ -668,7 +668,7 @@ export default function Home() {
                   </ul>
                   <Button
                     asChild
-                    className="w-full bg-[#2B0808] dark:bg-[#2B0808] hover:bg-[#4B2B2B] text-white dark:text-white hover:text-white font-medium px-6 py-3 rounded-lg transition-colors mt-auto"
+                    className="w-full bg-[#2B0808] dark:bg-[#2B0808] hover:bg-[#4B2B2B] text-white dark:text-white hover:text-white font-medium px-6 py-3 rounded-lg transition-colors mt-auto cursor-pointer"
                   >
                     <Link href="https://github.com/antiwork/helper" className="flex items-center justify-center">
                       <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
