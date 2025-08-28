@@ -125,16 +125,17 @@ export default function Home() {
       <div className="flex-grow">
         <section className="flex items-center justify-center min-h-screen pt-16">
           <div className="container mx-auto px-4">
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 sm:mb-3 text-center text-secondary dark:text-foreground">
+            <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-3 text-center text-secondary dark:text-foreground">
               Deliver stellar support experiences.
             </h1>
-                        <p className="text-base sm:text-lg text-center text-secondary dark:text-foreground mb-6">
+                        <p className="text-base text-sm md:text-lg text-center text-secondary dark:text-foreground mb-6">
               A native, end-to-end support center with custom UI, zero margin on model costs, and data that always stays on your servers.            </p>
             
-            <div className="w-full max-w-4xl mx-auto">
-                              <iframe
+            <div className="w-full max-w-4xl mx-auto md:py-8">
+                              <iframe 
+                  style={{ zoom: 0.8 }}
                   src="https://gumroad.com/help"
-                  className="w-full h-[60vh] rounded-2xl border-0 shadow-2xl"
+                  className="w-full h-[70vh] rounded-2xl border-0 shadow-2xl"
                   title="Gumroad Help Center"
                   allow="fullscreen"
                 />
@@ -143,7 +144,7 @@ export default function Home() {
             <div className="flex justify-center gap-4 mt-6">
               <Button
                 onClick={scrollToFeatures}
-                className="bg-[#3B1B1B] hover:bg-[#4B2B2B] text-[#FFE6B0] hover:text-[#FFE6B0] font-medium px-6 py-3 rounded-lg text-base transition-colors duration-200"
+                className="bg-[#3B1B1B] dark:bg-[#3B1B1B] hover:bg-[#4B2B2B] text-[#FFE6B0] dark:text-[#FFE6B0] hover:text-[#FFE6B0] font-medium px-6 py-3 rounded-lg text-base transition-colors duration-200"
               >
                 Learn more
               </Button>
@@ -612,10 +613,10 @@ export default function Home() {
             <h2 className="text-4xl font-bold mb-12 text-center text-secondary dark:text-foreground">Pricing</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
               
-              <div className="bg-bright rounded-2xl p-16 relative overflow-hidden flex flex-col h-full min-h-[500px]">
+              <div className="bg-gradient-to-br from-bright to-[#FFD34E] rounded-2xl p-16 relative overflow-hidden flex flex-col h-full min-h-[500px]">
                 <div className="text-[#2B0808] flex flex-col h-full">
-                  <div className="text-3xl font-bold mb-4">$10,000 +</div>
-                  <p className="text-sm mb-6">
+                  <div className="text-5xl font-bold mb-8">$10,000 +</div>
+                  <p className="text-md mb-4">
                     One-time, white-glove installation fee including custom features to build an exceptional customer support experience.
                   </p>
                   <ul className="space-y-3 mb-8 flex-grow">
@@ -625,11 +626,11 @@ export default function Home() {
                     </li>
                     <li className="flex items-center">
                       <CheckCircle className="w-5 h-5 text-[#2B0808] mr-3" />
-                      Data kept on your servers
+                      Data stays on your servers
                     </li>
                     <li className="flex items-center">
                       <CheckCircle className="w-5 h-5 text-[#2B0808] mr-3" />
-                      0 margin on model cost
+                      Zero markup on model costs
                     </li>
                     <li className="flex items-center">
                       <CheckCircle className="w-5 h-5 text-[#2B0808] mr-3" />
@@ -638,7 +639,7 @@ export default function Home() {
                   </ul>
                   <Button
                     onClick={() => setShowContactModal(true)}
-                    className="w-full bg-[#2B0808] hover:bg-[#3B1B1B] text-white hover:text-white font-medium px-6 py-3 rounded-lg transition-colors mt-auto"
+                    className="w-full bg-[#2B0808] dark:bg-[#2B0808] hover:bg-[#3B1B1B] text-white dark:text-white font-medium px-6 py-3 rounded-lg transition-colors mt-auto"
                   >
                     Contact sales
                   </Button>
@@ -647,8 +648,8 @@ export default function Home() {
 
               <div className="bg-[#3B1B1B] rounded-2xl p-16 flex flex-col h-full min-h-[500px]">
                 <div className="text-[#FFE6B0] flex flex-col h-full">
-                  <div className="text-3xl font-bold mb-4">FREE</div>
-                  <p className="text-sm mb-6">
+                  <div className="text-5xl font-bold mb-8">$0</div>
+                  <p className="text-md mb-4">
                     Leverage our open-source code to set up your own customer support solution.
                   </p>
                   <ul className="space-y-3 mb-8 flex-grow">
@@ -667,7 +668,7 @@ export default function Home() {
                   </ul>
                   <Button
                     asChild
-                    className="w-full bg-[#2B0808] hover:bg-[#4B2B2B] text-white hover:text-white font-medium px-6 py-3 rounded-lg transition-colors mt-auto"
+                    className="w-full bg-[#2B0808] dark:bg-[#2B0808] hover:bg-[#4B2B2B] text-white dark:text-white hover:text-white font-medium px-6 py-3 rounded-lg transition-colors mt-auto"
                   >
                     <Link href="https://github.com/antiwork/helper" className="flex items-center justify-center">
                       <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -696,7 +697,7 @@ export default function Home() {
 
       {showContactModal && (
         <div 
-          className="fixed inset-0 bg-[#2B0808]/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-[#1A0505]/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => setShowContactModal(false)}
         >
           <div 
@@ -704,10 +705,10 @@ export default function Home() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-[#FFE6B0]">Contact sales</h2>
+              <h2 className="text-2xl font-bold text-white">Contact sales</h2>
               <button
                 onClick={() => setShowContactModal(false)}
-                className="text-[#FFE6B0] hover:text-white transition-colors"
+                className="text-white hover:text-gray-300 transition-colors"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -717,7 +718,7 @@ export default function Home() {
             
             <form className="space-y-6">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-[#FFE6B0] mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-white mb-2">
                   Name
                 </label>
                 <input
@@ -725,13 +726,13 @@ export default function Home() {
                   id="name"
                   name="name"
                   required
-                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-[#FFE6B0] placeholder-[#FFE6B0]/50 focus:outline-none focus:border-[#FFD34E] transition-colors"
+                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#FFD34E] transition-colors"
                   placeholder="Your name"
                 />
               </div>
               
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-[#FFE6B0] mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
                   Work email
                 </label>
                 <input
@@ -739,20 +740,20 @@ export default function Home() {
                   id="email"
                   name="email"
                   required
-                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-[#FFE6B0] placeholder-[#FFE6B0]/50 focus:outline-none focus:border-[#FFD34E] transition-colors"
+                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#FFD34E] transition-colors"
                   placeholder="your.email@company.com"
                 />
               </div>
               
               <div>
-                <label htmlFor="employees" className="block text-sm font-medium text-[#FFE6B0] mb-2">
+                <label htmlFor="employees" className="block text-sm font-medium text-white mb-2">
                   Number of employees
                 </label>
                 <select
                   id="employees"
                   name="employees"
                   required
-                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-[#FFE6B0] focus:outline-none focus:border-[#FFD34E] transition-colors"
+                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-white focus:outline-none focus:border-[#FFD34E] transition-colors"
                 >
                   <option value="">Select range</option>
                   <option value="1-10">1-10</option>
@@ -764,14 +765,14 @@ export default function Home() {
               </div>
               
               <div>
-                <label htmlFor="tickets" className="block text-sm font-medium text-[#FFE6B0] mb-2">
+                <label htmlFor="tickets" className="block text-sm font-medium text-white mb-2">
                   Number of customer support tickets monthly
                 </label>
                 <select
                   id="tickets"
                   name="tickets"
                   required
-                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-[#FFE6B0] focus:outline-none focus:border-[#FFD34E] transition-colors"
+                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-white focus:outline-none focus:border-[#FFD34E] transition-colors"
                 >
                   <option value="">Select range</option>
                   <option value="0-50">0-50</option>
@@ -783,14 +784,14 @@ export default function Home() {
               </div>
               
               <div>
-                <label htmlFor="issues" className="block text-sm font-medium text-[#FFE6B0] mb-2">
+                <label htmlFor="issues" className="block text-sm font-medium text-white mb-2">
                   Most common customer support issues
                 </label>
                 <textarea
                   id="issues"
                   name="issues"
                   rows={4}
-                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-[#FFE6B0] placeholder-[#FFE6B0]/50 focus:outline-none focus:border-[#FFD34E] transition-colors resize-none"
+                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#FFD34E] transition-colors resize-none"
                   placeholder="Describe your most common support issues..."
                 />
               </div>
