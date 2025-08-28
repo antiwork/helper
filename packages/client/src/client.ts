@@ -12,6 +12,8 @@ import {
   CreateSessionResult,
   HelperTool,
   Message,
+  ReactMessageParams,
+  ReactMessageResult,
   SessionParams,
   ToolRequestBody,
   UnreadConversationsCountResult,
@@ -254,6 +256,16 @@ export class HelperClient {
         } satisfies CreateMessageRequestBody),
       });
     },
+
+    react: async (
+      conversationSlug: string,
+      messageId: string,
+      params: ReactMessageParams,
+    ): Promise<ReactMessageResult> =>
+      this.request<ReactMessageResult>(`/api/chat/conversation/${conversationSlug}/message/${messageId}`, {
+        method: "POST",
+        body: JSON.stringify(params),
+      }),
   };
 
   readonly chat = {
@@ -362,6 +374,19 @@ export class HelperClient {
       };
     },
     messages: (aiMessages: AIMessageCompat[]) => aiMessages.map(this.chat.message),
+    attachment: async (file: File) => {
+      const reader = new FileReader();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
+        reader.readAsDataURL(file);
+      });
+      return {
+        name: file.name,
+        contentType: file.type,
+        url: dataUrl,
+      };
+    },
   };
 }
 

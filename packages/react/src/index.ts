@@ -12,9 +12,10 @@ export {
   useCreateConversation,
   useUpdateConversation,
   useCreateMessage,
+  useReactToMessage,
 } from "./hooks/useConversations";
 export { useCreateSession } from "./hooks/useSession";
-export { useChat, type UseChatProps, useRealtimeEvents } from "./hooks/useChat";
+export { useChat, type UseChatProps, useRealtimeEvents, useAttachments } from "./hooks/useChat";
 export { MessageContent } from "./components/messageContent";
 
 export * from "./types";

@@ -2,7 +2,7 @@
 
 import { useChat as useAIChat } from "@ai-sdk/react";
 import { useEffect, useMemo, useState } from "react";
-import type { ConversationDetails, HelperClient, HelperTool, Message } from "@helperai/client";
+import type { ConversationDetails, ConversationsResult, HelperClient, HelperTool, Message } from "@helperai/client";
 import { useHelperClient } from "../components/helperClientProvider";
 import { useRefToLatest } from "./useRefToLatest";
 
@@ -49,6 +49,33 @@ export const useChat = ({
 
     return unlisten;
   }, [enableRealtime, conversation, client, setMessages]);
+
+  const { queryClient } = useHelperClient();
+
+  useEffect(() => {
+    if (
+      messages.at(-1)?.role === "assistant" &&
+      messages
+        .at(-1)
+        ?.parts.some(
+          (part) => part.type === "tool-invocation" && part.toolInvocation.toolName === "request_human_support",
+        )
+    ) {
+      queryClient.setQueryData(["conversation", conversation.slug], (old: ConversationDetails | undefined) =>
+        old ? { ...old, isEscalated: true } : old,
+      );
+      queryClient.setQueryData(["conversations"], (old: ConversationsResult | undefined) =>
+        old
+          ? {
+              ...old,
+              conversations: old.conversations.map((conv) =>
+                conv.slug === conversation.slug ? { ...conv, isEscalated: true } : conv,
+              ),
+            }
+          : old,
+      );
+    }
+  }, [conversation.isEscalated, setMessages]);
 
   return {
     messages: client.chat.messages(messages),
@@ -114,4 +141,25 @@ export const useRealtimeEvents = (
 
     return unlisten;
   }, [conversationSlug, client, queryClient]);
+};
+
+export const useAttachments = () => {
+  const { client } = useHelperClient();
+  const [attachments, setAttachments] = useState<File[]>([]);
+
+  const addAttachments = (files: File[] | FileList) => {
+    setAttachments((prev) => [...prev, ...Array.from(files)]);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const clearAttachments = () => {
+    setAttachments([]);
+  };
+
+  const prepareAttachments = async () => await Promise.all(attachments.map(client.chat.attachment));
+
+  return { attachments, setAttachments, addAttachments, removeAttachment, clearAttachments, prepareAttachments };
 };
