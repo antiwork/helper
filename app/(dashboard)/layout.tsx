@@ -8,6 +8,7 @@ import { StandaloneDisplayIntegration } from "@/app/(dashboard)/standaloneDispla
 import { SentryContext } from "@/components/sentryContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { SessionProvider } from "@/components/useSession";
 import { TRPCReactProvider } from "@/trpc/react";
 import { HydrateClient } from "@/trpc/server";
 
@@ -38,20 +39,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <NuqsAdapter>
       <Toaster richColors />
       <TRPCReactProvider>
-        <StandaloneDisplayIntegration />
-        <HydrateClient>
-          <SentryContext />
-          <SidebarProvider>
-            <InboxClientLayout>
-              <div className="flex h-svh w-full">
-                <Suspense>
-                  <AppSidebar />
-                </Suspense>
-                <main className="flex-1 min-w-0">{children}</main>
-              </div>
-            </InboxClientLayout>
-          </SidebarProvider>
-        </HydrateClient>
+        <SessionProvider>
+          <StandaloneDisplayIntegration />
+          <HydrateClient>
+            <SentryContext />
+            <SidebarProvider>
+              <InboxClientLayout>
+                <div className="flex h-svh w-full">
+                  <Suspense>
+                    <AppSidebar />
+                  </Suspense>
+                  <main className="flex-1 min-w-0">{children}</main>
+                </div>
+              </InboxClientLayout>
+            </SidebarProvider>
+          </HydrateClient>
+        </SessionProvider>
       </TRPCReactProvider>
     </NuqsAdapter>
   );
