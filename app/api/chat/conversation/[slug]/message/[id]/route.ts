@@ -1,7 +1,8 @@
 import { waitUntil } from "@vercel/functions";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { corsOptions, withWidgetAuth } from "@/app/api/widget/utils";
+import { reactMessageBodySchema, ReactMessageResult } from "@helperai/client";
+import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
@@ -13,15 +14,6 @@ import { publishToRealtime } from "@/lib/realtime/publish";
 
 export const OPTIONS = () => corsOptions("POST");
 
-const MessageReactionSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("thumbs-up"),
-  }),
-  z.object({
-    type: z.literal("thumbs-down"),
-    feedback: z.string().nullish(),
-  }),
-]);
 type Params = { id: string; slug: string };
 export const POST = withWidgetAuth<Params>(async ({ request, context: { params } }, { session }) => {
   const { id, slug } = await params;
@@ -60,7 +52,7 @@ export const POST = withWidgetAuth<Params>(async ({ request, context: { params }
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const reactionResult = MessageReactionSchema.safeParse({
+  const reactionResult = reactMessageBodySchema.safeParse({
     ...body,
     messageId,
   });
@@ -105,7 +97,7 @@ export const POST = withWidgetAuth<Params>(async ({ request, context: { params }
     .where(eq(conversationMessages.id, messageId));
   waitUntil(publishEvent(messageId));
 
-  return Response.json({ reaction });
+  return corsResponse<ReactMessageResult>({ reaction });
 });
 
 const publishEvent = async (messageId: number) => {
