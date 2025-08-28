@@ -276,4 +276,24 @@ test.describe("Conversation Details", () => {
     await expect(nextReplyEditor).toBeVisible();
     await expect(nextReplyEditor).toBeFocused();
   });
+
+  test("should navigate to the next conversation when clicking the next conversation preview", async ({ page }) => {
+    await setupConversation(page);
+
+    const originalSubject = await getConversationSubject(page);
+    const originalCounter = await getConversationCounter(page);
+
+    const nextConversationPreview = page.getByTestId("conversation-list-item-content");
+    await expect(nextConversationPreview.locator("text=Answer Next:")).toBeVisible();
+    await expect(nextConversationPreview.locator(`text=${originalSubject}`)).not.toBeVisible();
+
+    await nextConversationPreview.click();
+    await page.waitForLoadState("networkidle");
+    await setupConversation(page);
+
+    const newSubject = await getConversationSubject(page);
+    const newCounter = await getConversationCounter(page);
+    expect(newCounter).not.toBe(originalCounter);
+    expect(newSubject).not.toBe(originalSubject);
+  });
 });

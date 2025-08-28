@@ -10,6 +10,7 @@
     "build:preview": "pnpm run build && pnpm run db:prod:migrate && pnpm tsx --conditions=react-server ./db/seeds/index.ts",
     "clean": "git clean -xdf .cache .next node_modules",
     "deploy": "pnpm run build && pnpm run db:prod:migrate",
+    "postinstall": "pnpm run-on-packages build",
     "db:check": "pnpm services:start && pnpm run with-dev-env drizzle-kit check --config ./db/drizzle.config.ts",
     "db:generate": "pnpm services:start && pnpm run with-dev-env drizzle-kit generate --config ./db/drizzle.config.ts",
     "db:migrate": "pnpm services:start && pnpm run with-dev-env drizzle-kit migrate --config ./db/drizzle.config.ts && pnpm db:setup-cron",

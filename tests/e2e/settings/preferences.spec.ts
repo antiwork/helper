@@ -59,4 +59,16 @@ test.describe("Settings - Preferences", () => {
       await expect(testConfettiButton).not.toBeVisible();
     }
   });
+
+  test("should allow toggling on/off the next ticket preview", async ({ page }) => {
+    const nextTicketPreviewSetting = page.locator('h2:text("Show Next Ticket Preview")');
+    const nextTicketPreviewSwitch = page.locator('[aria-label="Show Next Ticket Preview Switch"]');
+
+    await expect(nextTicketPreviewSetting).toBeVisible();
+    await expect(nextTicketPreviewSwitch).toBeChecked();
+
+    await nextTicketPreviewSwitch.click();
+    await waitForSettingsSaved(page);
+    await expect(nextTicketPreviewSwitch).not.toBeChecked();
+  });
 });

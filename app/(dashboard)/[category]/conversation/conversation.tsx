@@ -21,6 +21,7 @@ import {
 import { MessageThread } from "@/app/(dashboard)/[category]/conversation/messageThread";
 import Viewers from "@/app/(dashboard)/[category]/conversation/viewers";
 import { useConversationListContext } from "@/app/(dashboard)/[category]/list/conversationListContext";
+import { ConversationListItemContent } from "@/app/(dashboard)/[category]/list/conversationListItem";
 import PreviewModal from "@/app/(dashboard)/[category]/previewModal";
 import {
   type AttachedFile,
@@ -131,7 +132,7 @@ const ScrollToTopButton = ({
       <TooltipTrigger asChild>
         <button
           className={cn(
-            "sticky bottom-4 left-4 z-10 transition-all duration-200 h-8 w-8 p-0 rounded-full",
+            "transition-all duration-200 h-8 w-8 p-0 rounded-full",
             "flex items-center justify-center",
             "bg-background border border-border shadow-xs cursor-pointer",
             "hover:border-primary hover:shadow-md hover:bg-muted",
@@ -145,7 +146,7 @@ const ScrollToTopButton = ({
           <ArrowUp className="h-4 w-4 text-foreground" />
         </button>
       </TooltipTrigger>
-      <TooltipContent>Scroll to top</TooltipContent>
+      <TooltipContent align="start">Scroll to top</TooltipContent>
     </Tooltip>
   );
 };
@@ -161,10 +162,17 @@ const MessageThreadPanel = ({
   setPreviewFileIndex: (index: number) => void;
   setPreviewFiles: (files: AttachedFile[]) => void;
 }) => {
+  const { data: mailboxPreferences } = api.mailbox.get.useQuery();
   const { data: conversationInfo } = useConversationContext();
+  const { conversationListData, currentIndex, moveToNextConversation } = useConversationListContext();
+  const nextConversation = conversationListData?.conversations[currentIndex + 1] ?? null;
 
   return (
-    <div className="grow overflow-y-auto relative" ref={scrollRef} data-testid="message-thread-panel">
+    <div
+      className="grow overflow-y-auto relative flex flex-col justify-between"
+      ref={scrollRef}
+      data-testid="message-thread-panel"
+    >
       <div ref={contentRef as React.RefObject<HTMLDivElement>} className="relative">
         <div className="flex flex-col gap-8 px-4 py-4 h-full">
           {conversationInfo && (
@@ -178,7 +186,23 @@ const MessageThreadPanel = ({
           )}
         </div>
       </div>
-      <ScrollToTopButton scrollRef={scrollRef} />
+      <div className="sticky bottom-4 left-4 right-4 z-10 mx-4 mt-2">
+        <div className="relative">
+          <div className="absolute -top-12 left-0 z-10">
+            <ScrollToTopButton scrollRef={scrollRef} />
+          </div>
+          {!mailboxPreferences?.preferences?.disableNextTicketPreview && nextConversation && (
+            <div
+              className={cn(
+                "transition-all duration-200 ease-in-out px-3 py-2 border rounded-lg bg-muted transform cursor-pointer hover:shadow-sm hover:scale-[1.01]",
+              )}
+              onClick={moveToNextConversation}
+            >
+              <ConversationListItemContent conversation={nextConversation} emailPrefix="Answer Next: " />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

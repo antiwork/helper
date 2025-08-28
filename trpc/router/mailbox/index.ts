@@ -67,6 +67,7 @@ export const mailboxRouter = {
             confetti: z.boolean().optional(),
             autoRespondEmailToChat: z.enum(["draft", "reply"]).nullable().optional(),
             disableTicketResponseTimeAlerts: z.boolean().optional(),
+            disableNextTicketPreview: z.boolean().optional(),
           })
           .optional(),
       }),

@@ -1,5 +1,4 @@
 import { Send } from "lucide-react";
-import { useQueryState } from "nuqs";
 import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
@@ -26,7 +25,6 @@ import NewConversationModalContent from "./newConversationModal";
 type ListItem = ConversationItem & { isNew?: boolean };
 
 export const List = () => {
-  const [conversationSlug] = useQueryState("id");
   const { searchParams, input } = useConversationsListInput();
   const {
     conversationListData,
@@ -312,7 +310,6 @@ export const List = () => {
             <ConversationListItem
               key={conversation.slug}
               conversation={conversation}
-              isActive={conversationSlug === conversation.slug}
               onSelectConversation={navigateToConversation}
               isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
               onToggleSelect={(isSelected, shiftKey) => toggleConversation(conversation.id, isSelected, shiftKey)}
