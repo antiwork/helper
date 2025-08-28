@@ -1,8 +1,7 @@
-import { UserCircle } from "lucide-react";
+import { Check, UserCircle } from "lucide-react";
 import { memo, useState, useTransition } from "react";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Command,
   CommandEmpty,
@@ -84,18 +83,7 @@ export const CustomerFilter = memo(function CustomerFilter({
                           );
                         }}
                       >
-                        <Checkbox
-                          checked={isSelected}
-                          onClick={(e) => e.stopPropagation()}
-                          onCheckedChange={() => {
-                            onChange(
-                              isSelected
-                                ? selectedCustomers.filter((c) => c !== customer.email)
-                                : [...selectedCustomers, customer.email],
-                            );
-                          }}
-                          aria-label={`Select ${customer.email}`}
-                        />
+                        <Check className={`mr-2 h-4 w-4 ${isSelected ? "opacity-100" : "opacity-0"}`} />
                         <span className="truncate">{customer.email}</span>
                       </CommandItem>
                     );

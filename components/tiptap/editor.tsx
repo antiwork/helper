@@ -26,7 +26,6 @@ import Toolbar from "./toolbar";
 type TipTapEditorProps = {
   defaultContent: Record<string, string>;
   onUpdate: (text: string, isEmpty: boolean) => void;
-  onFocusChange?: (isFocused: boolean) => void;
   onModEnter?: () => void;
   onOptionEnter?: () => void;
   onSlashKey?: () => void;
@@ -82,7 +81,6 @@ const initialMentionState = { isOpen: false, position: null, range: null, select
 const TipTapEditor = ({
   defaultContent,
   onUpdate,
-  onFocusChange,
   onModEnter,
   onOptionEnter,
   onSlashKey,
@@ -243,8 +241,6 @@ const TipTapEditor = ({
     },
     content: defaultContent.content || "",
     onUpdate: ({ editor }) => updateContent.current(editor),
-    onFocus: () => onFocusChange?.(true),
-    onBlur: () => onFocusChange?.(false),
   });
 
   const editorRef = useRef(editor);

@@ -3,7 +3,6 @@ import { ArrowDownUp, Filter, Search } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
-import { useAlternateHotkeyInEditor } from "@/app/(dashboard)/[category]/conversation/messageActions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -61,10 +60,6 @@ export const ConversationSearchBar = ({
   useHotkeys("mod+k", (e) => {
     e.preventDefault();
     searchInputRef.current?.focus();
-  });
-
-  useAlternateHotkeyInEditor("f", "mod+shift+f", () => {
-    setShowFilters(!showFilters);
   });
 
   const handleStatusFilterChange = useCallback(

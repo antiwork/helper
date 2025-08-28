@@ -3,7 +3,6 @@
 import { useParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { ReactNode, useEffect } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
 import { useMediaQuery } from "react-responsive";
 import Conversation from "@/app/(dashboard)/[category]/conversation/conversation";
 import { useConversationQuery } from "@/app/(dashboard)/[category]/conversation/conversationContext";
@@ -15,9 +14,9 @@ import {
 import { TabBar } from "@/app/(dashboard)/[category]/tabBar";
 import { FileUploadProvider } from "@/components/fileUploadContext";
 import { useIsMobile } from "@/components/hooks/use-mobile";
-import { isInDialog } from "@/components/isInDialog";
 import { PageHeader } from "@/components/pageHeader";
 import { useDocumentTitle } from "@/components/useDocumentTitle";
+import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
@@ -41,13 +40,8 @@ const Inbox = () => {
     moveToPreviousConversation,
   } = useConversationListContext();
 
-  useHotkeys("j", moveToNextConversation, {
-    enabled: () => !isInDialog(),
-  });
-
-  useHotkeys("k", moveToPreviousConversation, {
-    enabled: () => !isInDialog(),
-  });
+  useKeyboardShortcut("j", moveToNextConversation);
+  useKeyboardShortcut("k", moveToPreviousConversation);
 
   const utils = api.useUtils();
   const isMobile = useIsMobile();

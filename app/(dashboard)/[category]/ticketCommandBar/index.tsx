@@ -1,13 +1,12 @@
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
 import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
 import { useAssignTicket } from "@/app/(dashboard)/[category]/conversation/useAssignTicket";
-import { isInDialog } from "@/components/isInDialog";
 import { KeyboardShortcut } from "@/components/keyboardShortcut";
 import { Button } from "@/components/ui/button";
 import { Command } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
+import useKeyboardShortcut from "@/components/useKeyboardShortcut";
 import { useMembers } from "@/components/useMembers";
 import { useSession } from "@/components/useSession";
 import { cn } from "@/lib/utils";
@@ -142,9 +141,9 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     setSelectedItemId(visibleItems[0]?.id ?? null);
   }, [inputValue]);
 
-  useHotkeys("/", () => inputRef.current?.focus(), {
-    enabled: () => !isInDialog(),
-    preventDefault: true,
+  useKeyboardShortcut("/", (e) => {
+    e.preventDefault();
+    inputRef.current?.focus();
   });
 
   const handleSelect = (itemId: string) => {
