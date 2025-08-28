@@ -122,9 +122,11 @@ export default function CommonIssuesPage() {
             <DropdownMenuItem onClick={() => setSortBy("recent")}>Sort by Recent</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button variant="ghost" className="gap-2">
-          <Settings className="h-4 w-4" />
-          Manage issues
+        <Button variant="ghost" className="gap-2" asChild>
+          <Link href="/settings/common-issues">
+            <Settings className="h-4 w-4" />
+            Manage issues
+          </Link>
         </Button>
       </PageHeader>
 
