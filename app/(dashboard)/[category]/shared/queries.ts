@@ -40,6 +40,7 @@ export const useConversationsListInput = () => {
     issueGroupId: searchParams.issueGroupId ?? undefined,
     isAssigned: searchParams.isAssigned ?? undefined,
     hasUnreadMessages: searchParams.hasUnreadMessages ?? undefined,
+    displayUnreadBehavior: ["mine", "assigned"].includes(params.category),
   };
 
   return { input, searchParams, setSearchParams };

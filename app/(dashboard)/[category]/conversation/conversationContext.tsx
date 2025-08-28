@@ -42,7 +42,7 @@ export function useConversationQuery(conversationSlug: string | null) {
     if (result?.data && conversationSlug && !result.isPending && !isMarkingAsRead) {
       markAsRead({ conversationSlug });
     }
-  }, [result?.data, conversationSlug, result?.isPending, markAsRead, isMarkingAsRead]);
+  }, [result?.dataUpdatedAt, conversationSlug, result?.isPending, markAsRead, isMarkingAsRead]);
 
   return conversationSlug ? result : null;
 }

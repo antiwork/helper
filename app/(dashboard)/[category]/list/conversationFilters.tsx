@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useConversationsListInput } from "../shared/queries";
@@ -128,6 +128,14 @@ export const ConversationFilters = ({
   onClearFilters,
 }: ConversationFiltersProps) => {
   const { input } = useConversationsListInput();
+  
+  const handleUnreadMessagesChange = useCallback(
+    (hasUnreadMessages: boolean | undefined) => {
+      onUpdateFilter({ hasUnreadMessages });
+    },
+    [onUpdateFilter]
+  );
+
   return (
     <div className="flex flex-wrap items-center gap-1 md:gap-2">
       <DateFilter
@@ -137,10 +145,10 @@ export const ConversationFilters = ({
           onUpdateFilter({ createdAfter: startDate, createdBefore: endDate });
         }}
       />
-      {(input.category === "assigned" || input.category === "mine") && (
+      {input.displayUnreadBehavior && (
         <UnreadMessagesFilter
           hasUnreadMessages={filterValues.hasUnreadMessages}
-          onChange={(hasUnreadMessages) => onUpdateFilter({ hasUnreadMessages })}
+          onChange={handleUnreadMessagesChange}
         />
       )}
       {input.category === "all" && (
