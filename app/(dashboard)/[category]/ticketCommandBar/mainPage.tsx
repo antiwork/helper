@@ -11,10 +11,11 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { useCallback, useMemo, useRef } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
 import { Tool } from "@/app/(dashboard)/[category]/ticketCommandBar/toolForm";
-import useKeyboardShortcut from "@/components/useKeyboardShortcut";
+import { isInDialog } from "@/components/isInDialog";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { api } from "@/trpc/react";
 import GitHubSvg from "../icons/github.svg";
@@ -82,12 +83,18 @@ export const useMainPage = ({
 
   const isGitHubConnected = mailbox?.githubConnected && mailbox.githubRepoOwner && mailbox.githubRepoName;
 
-  useKeyboardShortcut("n", (e) => {
-    e.preventDefault();
-    onOpenChange(true);
-    setPage("notes");
-    setSelectedItemId(null);
-  });
+  useHotkeys(
+    "n",
+    () => {
+      onOpenChange(true);
+      setPage("notes");
+      setSelectedItemId(null);
+    },
+    {
+      enabled: () => !isInDialog(),
+      preventDefault: true,
+    },
+  );
 
   const handleSavedReplySelect = useCallback(
     (savedReply: { slug: string; content: string }) => {
