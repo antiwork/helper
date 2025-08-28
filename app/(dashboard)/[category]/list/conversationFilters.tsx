@@ -128,12 +128,12 @@ export const ConversationFilters = ({
   onClearFilters,
 }: ConversationFiltersProps) => {
   const { input } = useConversationsListInput();
-  
+
   const handleUnreadMessagesChange = useCallback(
     (hasUnreadMessages: boolean | undefined) => {
       onUpdateFilter({ hasUnreadMessages });
     },
-    [onUpdateFilter]
+    [onUpdateFilter],
   );
 
   return (

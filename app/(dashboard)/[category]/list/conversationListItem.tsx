@@ -118,9 +118,7 @@ export const ConversationListItem = ({
                         {formatCurrency(parseFloat(conversation.platformCustomer.value))}
                       </Badge>
                     ))}
-                  {input.displayUnreadBehavior && (
-                    <UnreadIndicator hasUnread={!!conversation.unreadMessageCount} />
-                  )}
+                  {input.displayUnreadBehavior && <UnreadIndicator hasUnread={!!conversation.unreadMessageCount} />}
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   {(conversation.assignedToId || conversation.assignedToAI) && (
