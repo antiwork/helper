@@ -6,6 +6,7 @@ import {
   Banknote,
   BookOpen,
   BookOpen as BookOpenIcon,
+  CheckCircle,
   Clock,
   FileCode,
   MessageSquare,
@@ -51,6 +52,7 @@ export default function Home() {
   const helperMessageRef = useRef<HTMLDivElement>(null);
 
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [showContactModal, setShowContactModal] = useState(false);
 
   useEffect(() => {
     const questionInterval = setInterval(() => {
@@ -121,98 +123,36 @@ export default function Home() {
       <MarketingHeader bgColor="#2B0808" />
 
       <div className="flex-grow">
-        <section className="flex items-center justify-center h-dvh pt-20">
+        <section className="flex items-center justify-center min-h-screen pt-16">
           <div className="container mx-auto px-4">
-            <h1 className="text-5xl sm:text-6xl font-bold mb-12 sm:mb-24 text-center text-secondary dark:text-foreground">
-              Helper helps customers help themselves.
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2 sm:mb-3 text-center text-secondary dark:text-foreground">
+              Deliver stellar support experiences.
             </h1>
-
-            <div className="max-w-lg mx-auto">
-              {showCustomerMessage && (
-                <motion.div
-                  className="flex justify-end mb-4 sm:mb-8"
-                  initial={{ opacity: 0, y: 20, height: 0 }}
-                  animate={{ opacity: 1, y: 0, height: "auto" }}
-                  transition={{ duration: 0.5, height: { duration: 0.6, ease: "easeOut" } }}
-                  style={{ overflow: "hidden" }}
-                  layout
-                >
-                  <div className="max-w-md w-full">
-                    <motion.div
-                      className="bg-[rgba(99,72,71,0.3)] rounded-t-2xl rounded-bl-2xl p-6 shadow-md min-h-[80px] flex items-center"
-                      initial={{ height: 0 }}
-                      animate={{ height: "auto" }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                      style={{ overflow: "hidden" }}
-                    >
-                      {customerQuestions[currentQuestionIndex] && (
-                        <AnimatedTyping
-                          text={customerQuestions[currentQuestionIndex]}
-                          speed={30}
-                          onComplete={handleCustomerTypingComplete}
-                        />
-                      )}
-                    </motion.div>
-                    <div className="flex justify-end mt-2"></div>
-                  </div>
-                </motion.div>
-              )}
-
-              {showHelperMessage && (
-                <motion.div
-                  className="flex mb-8"
-                  initial={{ opacity: 0, y: 20, height: 0 }}
-                  animate={{ opacity: 1, y: 0, height: "auto" }}
-                  transition={{ duration: 0.5, height: { duration: 0.6, ease: "easeOut" } }}
-                  style={{ overflow: "hidden" }}
-                  layout
-                >
-                  <div className="w-96">
-                    <motion.div
-                      ref={helperMessageRef}
-                      className="bg-[rgba(99,72,71,0.3)] rounded-t-2xl rounded-br-2xl p-6 shadow-md"
-                      initial={{ height: 0 }}
-                      animate={{ height: "auto" }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                      style={{ overflow: "hidden" }}
-                    >
-                      <AnimatedTyping
-                        text="Let me show you how I can help..."
-                        speed={50}
-                        onComplete={handleHelperTypingComplete}
-                      />
-                      {showHelperButton && (
-                        <motion.div
-                          className="mt-4"
-                          initial={{ opacity: 0, y: 10, height: 0 }}
-                          animate={{ opacity: 1, y: 0, height: "auto" }}
-                          transition={{ duration: 0.3, delay: 0.2, height: { duration: 0.4, ease: "easeOut" } }}
-                          style={{ overflow: "hidden" }}
-                        >
-                          <Button
-                            ref={showMeButtonRef}
-                            onClick={scrollToFeatures}
-                            className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
-                          >
-                            Take the tour
-                          </Button>
-                        </motion.div>
-                      )}
-                    </motion.div>
-                    <motion.div
-                      className="flex justify-start mt-2"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      transition={{ duration: 0.4, delay: 0.3, height: { duration: 0.4, ease: "easeOut" } }}
-                      style={{ overflow: "hidden" }}
-                    >
-                      <div className="w-8 h-8">
-                        <LogoIconAmber />
-                      </div>
-                    </motion.div>
-                  </div>
-                </motion.div>
-              )}
+                        <p className="text-base sm:text-lg text-center text-secondary dark:text-foreground mb-6">
+              A native, end-to-end support center with custom UI, zero margin on model costs, and data that always stays on your servers.            </p>
+            
+            <div className="w-full max-w-4xl mx-auto">
+                              <iframe
+                  src="https://gumroad.com/help"
+                  className="w-full h-[60vh] rounded-2xl border-0 shadow-2xl"
+                  title="Gumroad Help Center"
+                  allow="fullscreen"
+                />
+            </div>
+            
+            <div className="flex justify-center gap-4 mt-6">
+              <Button
+                onClick={scrollToFeatures}
+                className="bg-[#3B1B1B] hover:bg-[#4B2B2B] text-[#FFE6B0] hover:text-[#FFE6B0] font-medium px-6 py-3 rounded-lg text-base transition-colors duration-200"
+              >
+                Learn more
+              </Button>
+              <Button
+                onClick={() => setShowContactModal(true)}
+                className="bg-bright hover:bg-[#FFE6B0] text-[#2B0808] hover:text-[#2B0808] font-medium px-6 py-3 rounded-lg text-base transition-colors duration-200"
+              >
+                Contact sales
+              </Button>
             </div>
           </div>
         </section>
@@ -666,6 +606,82 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <section className="py-20">
+          <div className="container mx-auto px-4">
+            <h2 className="text-4xl font-bold mb-12 text-center text-secondary dark:text-foreground">Pricing</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+              
+              <div className="bg-bright rounded-2xl p-16 relative overflow-hidden flex flex-col h-full min-h-[500px]">
+                <div className="text-[#2B0808] flex flex-col h-full">
+                  <div className="text-3xl font-bold mb-4">$10,000 +</div>
+                  <p className="text-sm mb-6">
+                    One-time, white-glove installation fee including custom features to build an exceptional customer support experience.
+                  </p>
+                  <ul className="space-y-3 mb-8 flex-grow">
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-[#2B0808] mr-3" />
+                      Native, in-app support center
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-[#2B0808] mr-3" />
+                      Data kept on your servers
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-[#2B0808] mr-3" />
+                      0 margin on model cost
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-[#2B0808] mr-3" />
+                      Custom UI tailored to your business needs
+                    </li>
+                  </ul>
+                  <Button
+                    onClick={() => setShowContactModal(true)}
+                    className="w-full bg-[#2B0808] hover:bg-[#3B1B1B] text-white hover:text-white font-medium px-6 py-3 rounded-lg transition-colors mt-auto"
+                  >
+                    Contact sales
+                  </Button>
+                </div>
+              </div>
+
+              <div className="bg-[#3B1B1B] rounded-2xl p-16 flex flex-col h-full min-h-[500px]">
+                <div className="text-[#FFE6B0] flex flex-col h-full">
+                  <div className="text-3xl font-bold mb-4">FREE</div>
+                  <p className="text-sm mb-6">
+                    Leverage our open-source code to set up your own customer support solution.
+                  </p>
+                  <ul className="space-y-3 mb-8 flex-grow">
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-[#FFE6B0] mr-3" />
+                      Extend and customize as needed
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-[#FFE6B0] mr-3" />
+                      Backed by an active community
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-[#FFE6B0] mr-3" />
+                      Built with modern tooling
+                    </li>
+                  </ul>
+                  <Button
+                    asChild
+                    className="w-full bg-[#2B0808] hover:bg-[#4B2B2B] text-white hover:text-white font-medium px-6 py-3 rounded-lg transition-colors mt-auto"
+                  >
+                    <Link href="https://github.com/antiwork/helper" className="flex items-center justify-center">
+                      <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                      </svg>
+                      Get started
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <footer className="bottom-0 left-0 right-0 w-full h-24 pl-5 pb-5" style={{ backgroundColor: "#2B0808" }}>
           <div className="flex items-center">
             <a href="https://antiwork.com/" target="_blank" rel="noopener noreferrer">
@@ -677,6 +693,120 @@ export default function Home() {
           </div>
         </footer>
       </div>
+
+      {showContactModal && (
+        <div 
+          className="fixed inset-0 bg-[#2B0808]/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowContactModal(false)}
+        >
+          <div 
+            className="bg-[#3B1B1B] rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-[#FFE6B0]">Contact sales</h2>
+              <button
+                onClick={() => setShowContactModal(false)}
+                className="text-[#FFE6B0] hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <form className="space-y-6">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-[#FFE6B0] mb-2">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  required
+                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-[#FFE6B0] placeholder-[#FFE6B0]/50 focus:outline-none focus:border-[#FFD34E] transition-colors"
+                  placeholder="Your name"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-[#FFE6B0] mb-2">
+                  Work email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  required
+                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-[#FFE6B0] placeholder-[#FFE6B0]/50 focus:outline-none focus:border-[#FFD34E] transition-colors"
+                  placeholder="your.email@company.com"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="employees" className="block text-sm font-medium text-[#FFE6B0] mb-2">
+                  Number of employees
+                </label>
+                <select
+                  id="employees"
+                  name="employees"
+                  required
+                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-[#FFE6B0] focus:outline-none focus:border-[#FFD34E] transition-colors"
+                >
+                  <option value="">Select range</option>
+                  <option value="1-10">1-10</option>
+                  <option value="11-50">11-50</option>
+                  <option value="51-200">51-200</option>
+                  <option value="201-500">201-500</option>
+                  <option value="500+">500+</option>
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="tickets" className="block text-sm font-medium text-[#FFE6B0] mb-2">
+                  Number of customer support tickets monthly
+                </label>
+                <select
+                  id="tickets"
+                  name="tickets"
+                  required
+                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-[#FFE6B0] focus:outline-none focus:border-[#FFD34E] transition-colors"
+                >
+                  <option value="">Select range</option>
+                  <option value="0-50">0-50</option>
+                  <option value="51-200">51-200</option>
+                  <option value="201-500">201-500</option>
+                  <option value="501-1000">501-1000</option>
+                  <option value="1000+">1000+</option>
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="issues" className="block text-sm font-medium text-[#FFE6B0] mb-2">
+                  Most common customer support issues
+                </label>
+                <textarea
+                  id="issues"
+                  name="issues"
+                  rows={4}
+                  className="w-full px-4 py-3 bg-[#2B0808] border border-[#4B2B2B] rounded-lg text-[#FFE6B0] placeholder-[#FFE6B0]/50 focus:outline-none focus:border-[#FFD34E] transition-colors resize-none"
+                  placeholder="Describe your most common support issues..."
+                />
+              </div>
+              
+              <div className="pt-4">
+                <Button
+                  type="submit"
+                  className="w-full bg-[#FFD34E] hover:bg-[#FFE6B0] text-[#2B0808] hover:text-[#2B0808] font-medium px-8 py-3 rounded-lg transition-colors"
+                >
+                  Send
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
