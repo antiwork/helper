@@ -1,6 +1,6 @@
 {
-  "id": "0a1c83b6-d952-48e3-8cce-92e4e3a357d6",
-  "prevId": "f9b1b83e-c1d8-478b-b50b-9f71765a9bc8",
+  "id": "f9b1b83e-c1d8-478b-b50b-9f71765a9bc8",
+  "prevId": "79ff8d2f-e010-4ef1-8af3-2cb0a7539af5",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -26,15 +26,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "agent_messages_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "agent_thread_id": {
@@ -86,9 +86,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "agent_messages_slack_unique_idx": {
           "name": "agent_messages_slack_unique_idx",
@@ -107,9 +107,9 @@
             }
           ],
           "isUnique": true,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -141,15 +141,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "agent_threads_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "mailbox_id": {
@@ -183,9 +183,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "agent_threads_slack_channel_thread_ts_idx": {
           "name": "agent_threads_slack_channel_thread_ts_idx",
@@ -204,9 +204,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -238,15 +238,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "mailboxes_aiusageevent_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "model_name": {
@@ -305,9 +305,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "mailboxes_aiusageevent_mailbox_id_a4908f79": {
           "name": "mailboxes_aiusageevent_mailbox_id_a4908f79",
@@ -320,9 +320,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "mailboxes_aiusageevent_model_name_84b8ca7a": {
           "name": "mailboxes_aiusageevent_model_name_84b8ca7a",
@@ -335,9 +335,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "mailboxes_aiusageevent_model_name_84b8ca7a_like": {
           "name": "mailboxes_aiusageevent_model_name_84b8ca7a_like",
@@ -350,9 +350,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "mailboxes_aiusageevent_query_type_b4a486cb": {
           "name": "mailboxes_aiusageevent_query_type_b4a486cb",
@@ -365,9 +365,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "mailboxes_aiusageevent_query_type_b4a486cb_like": {
           "name": "mailboxes_aiusageevent_query_type_b4a486cb_like",
@@ -380,9 +380,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -402,15 +402,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "cache_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "key": {
@@ -444,9 +444,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -454,10 +454,10 @@
       "uniqueConstraints": {
         "cache_key_idx": {
           "name": "cache_key_idx",
+          "nullsNotDistinct": false,
           "columns": [
             "key"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -486,15 +486,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "conversation_events_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "conversation_id": {
@@ -541,9 +541,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversation_events_by_clerk_user_id_idx": {
           "name": "conversation_events_by_clerk_user_id_idx",
@@ -556,9 +556,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversation_events_type_created_at_idx": {
           "name": "conversation_events_type_created_at_idx",
@@ -577,9 +577,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -611,15 +611,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "conversation_followers_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "conversation_id": {
@@ -647,9 +647,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversation_followers_user_id_idx": {
           "name": "conversation_followers_user_id_idx",
@@ -662,9 +662,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -672,11 +672,11 @@
       "uniqueConstraints": {
         "conversation_followers_conversation_user_unique": {
           "name": "conversation_followers_conversation_user_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "conversation_id",
             "user_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -705,15 +705,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "messages_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "conversation_id": {
@@ -897,9 +897,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_email_conversation_id_391ad973": {
           "name": "conversations_email_conversation_id_391ad973",
@@ -912,9 +912,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_email_gmail_message_id_3f6ee5ab": {
           "name": "conversations_email_gmail_message_id_3f6ee5ab",
@@ -927,9 +927,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_email_gmail_thread_id_68f031bf": {
           "name": "conversations_email_gmail_thread_id_68f031bf",
@@ -942,9 +942,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_email_is_pinned_ab83d24f": {
           "name": "conversations_email_is_pinned_ab83d24f",
@@ -957,9 +957,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_email_message_id_a19e9ac9": {
           "name": "conversations_email_message_id_a19e9ac9",
@@ -972,9 +972,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_email_response_to_id_af0048dc": {
           "name": "conversations_email_response_to_id_af0048dc",
@@ -987,9 +987,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_email_clerk_user_id": {
           "name": "conversations_email_clerk_user_id",
@@ -1002,24 +1002,24 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "search_index_idx": {
           "name": "search_index_idx",
           "columns": [
             {
               "expression": "string_to_array(\"search_index\", ' ') array_ops",
-              "isExpression": true,
               "asc": true,
+              "isExpression": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "gin",
-          "concurrently": false
+          "with": {}
         },
         "messages_reason_idx": {
           "name": "messages_reason_idx",
@@ -1032,9 +1032,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": true,
           "method": "btree",
-          "concurrently": true
+          "with": {}
         },
         "messages_slack_message_ts_idx": {
           "name": "messages_slack_message_ts_idx",
@@ -1047,9 +1047,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": true,
           "method": "btree",
-          "concurrently": true
+          "with": {}
         },
         "messages_reaction_count_idx": {
           "name": "messages_reaction_count_idx",
@@ -1068,10 +1068,10 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"messages\".\"deleted_at\" is null",
-          "concurrently": true
+          "concurrently": true,
+          "method": "btree",
+          "with": {}
         },
         "messages_role_created_at_idx": {
           "name": "messages_role_created_at_idx",
@@ -1090,9 +1090,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": true,
           "method": "btree",
-          "concurrently": true
+          "with": {}
         },
         "messages_conversation_created_at_desc_idx": {
           "name": "messages_conversation_created_at_desc_idx",
@@ -1111,10 +1111,10 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "(\"messages\".\"deleted_at\" is null and \"messages\".\"role\" in ($1, $2))",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -1146,15 +1146,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "conversations_conversation_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "email_from": {
@@ -1335,9 +1335,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_conversation_closed_at_16474e94": {
           "name": "conversations_conversation_closed_at_16474e94",
@@ -1350,9 +1350,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_conversation_created_at_1ec48787": {
           "name": "conversations_conversation_created_at_1ec48787",
@@ -1365,9 +1365,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_conversation_email_from_aab3d292": {
           "name": "conversations_conversation_email_from_aab3d292",
@@ -1380,9 +1380,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_conversation_email_from_aab3d292_like": {
           "name": "conversations_conversation_email_from_aab3d292_like",
@@ -1395,9 +1395,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_conversation_last_user_email_created_at_fc6b89db": {
           "name": "conversations_conversation_last_user_email_created_at_fc6b89db",
@@ -1410,9 +1410,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_conversation_mailbox_id_7fb25662": {
           "name": "conversations_conversation_mailbox_id_7fb25662",
@@ -1425,9 +1425,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_conversation_slug_9924e9b1_like": {
           "name": "conversations_conversation_slug_9924e9b1_like",
@@ -1440,9 +1440,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "embedding_vector_index": {
           "name": "embedding_vector_index",
@@ -1456,9 +1456,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "hnsw",
-          "concurrently": false
+          "with": {}
         },
         "conversations_anonymous_session_id_idx": {
           "name": "conversations_anonymous_session_id_idx",
@@ -1471,9 +1471,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_merged_into_id_idx": {
           "name": "conversations_merged_into_id_idx",
@@ -1486,9 +1486,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_issue_group_id_idx": {
           "name": "conversations_issue_group_id_idx",
@@ -1501,9 +1501,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_last_message_at_idx": {
           "name": "conversations_last_message_at_idx",
@@ -1516,9 +1516,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_conversation_status_last_user_email_created_at_idx": {
           "name": "conversations_conversation_status_last_user_email_created_at_idx",
@@ -1537,10 +1537,10 @@
             }
           ],
           "isUnique": false,
-          "with": {},
-          "method": "btree",
           "where": "\"conversations_conversation\".\"merged_into_id\" is null",
-          "concurrently": false
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -1548,10 +1548,10 @@
       "uniqueConstraints": {
         "conversations_conversation_slug_key": {
           "name": "conversations_conversation_slug_key",
+          "nullsNotDistinct": false,
           "columns": [
             "slug"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -1580,15 +1580,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "faqs_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "reply": {
@@ -1660,9 +1660,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "faqs_mailbox_id_idx": {
           "name": "faqs_mailbox_id_idx",
@@ -1675,9 +1675,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "faqs_embedding_index": {
           "name": "faqs_embedding_index",
@@ -1691,9 +1691,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "hnsw",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -1701,10 +1701,10 @@
       "uniqueConstraints": {
         "faqs_message_id_key": {
           "name": "faqs_message_id_key",
+          "nullsNotDistinct": false,
           "columns": [
             "message_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -1733,15 +1733,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "conversations_file_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "name": {
@@ -1817,9 +1817,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_file_message_id_idx": {
           "name": "conversations_file_message_id_idx",
@@ -1832,9 +1832,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_file_note_id_idx": {
           "name": "conversations_file_note_id_idx",
@@ -1847,9 +1847,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -1857,10 +1857,10 @@
       "uniqueConstraints": {
         "conversations_file_slug_key": {
           "name": "conversations_file_slug_key",
+          "nullsNotDistinct": false,
           "columns": [
             "slug"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -1889,15 +1889,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "mailboxes_gmailsupportemail_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "email": {
@@ -1943,9 +1943,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "mailboxes_supportemail_email_99536dd8_like": {
           "name": "mailboxes_supportemail_email_99536dd8_like",
@@ -1958,9 +1958,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -1968,10 +1968,10 @@
       "uniqueConstraints": {
         "mailboxes_supportemail_email_key": {
           "name": "mailboxes_supportemail_email_key",
+          "nullsNotDistinct": false,
           "columns": [
             "email"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -1988,15 +1988,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "guide_session_events_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "guide_session_id": {
@@ -2045,9 +2045,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "guide_session_events_guide_session_id_idx": {
           "name": "guide_session_events_guide_session_id_idx",
@@ -2060,9 +2060,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "guide_session_events_type_idx": {
           "name": "guide_session_events_type_idx",
@@ -2075,9 +2075,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "guide_session_events_mailbox_id_idx": {
           "name": "guide_session_events_mailbox_id_idx",
@@ -2090,9 +2090,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -2112,15 +2112,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "guide_session_replays_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "guide_session_id": {
@@ -2174,9 +2174,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "guide_session_replays_timestamp_idx": {
           "name": "guide_session_replays_timestamp_idx",
@@ -2189,9 +2189,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "guide_session_replays_mailbox_id_idx": {
           "name": "guide_session_replays_mailbox_id_idx",
@@ -2204,9 +2204,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -2238,15 +2238,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "guide_sessions_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "uuid": {
@@ -2327,9 +2327,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "guide_sessions_platform_customer_id_idx": {
           "name": "guide_sessions_platform_customer_id_idx",
@@ -2342,9 +2342,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "guide_sessions_conversation_id_idx": {
           "name": "guide_sessions_conversation_id_idx",
@@ -2357,9 +2357,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "guide_sessions_mailbox_id_idx": {
           "name": "guide_sessions_mailbox_id_idx",
@@ -2372,9 +2372,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "guide_sessions_status_idx": {
           "name": "guide_sessions_status_idx",
@@ -2387,9 +2387,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -2397,10 +2397,10 @@
       "uniqueConstraints": {
         "guide_sessions_uuid_unique": {
           "name": "guide_sessions_uuid_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "uuid"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -2429,15 +2429,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "mailboxes_mailbox_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "name": {
@@ -2597,9 +2597,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -2607,17 +2607,17 @@
       "uniqueConstraints": {
         "mailboxes_mailbox_slug_key": {
           "name": "mailboxes_mailbox_slug_key",
+          "nullsNotDistinct": false,
           "columns": [
             "slug"
-          ],
-          "nullsNotDistinct": false
+          ]
         },
         "mailboxes_mailbox_support_email_id_key": {
           "name": "mailboxes_mailbox_support_email_id_key",
+          "nullsNotDistinct": false,
           "columns": [
             "gmail_support_email_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -2646,15 +2646,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "mailboxes_metadataapi_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "url": {
@@ -2700,9 +2700,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -2710,10 +2710,10 @@
       "uniqueConstraints": {
         "mailboxes_metadataapi_mailbox_id_key": {
           "name": "mailboxes_metadataapi_mailbox_id_key",
+          "nullsNotDistinct": false,
           "columns": [
             "mailbox_id"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -2742,15 +2742,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "mailboxes_platformcustomer_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "mailbox_id": {
@@ -2796,9 +2796,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "mailboxes_platformcustomer_mailbox_id_58ea76bf": {
           "name": "mailboxes_platformcustomer_mailbox_id_58ea76bf",
@@ -2811,9 +2811,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "platformcustomer_value_idx": {
           "name": "platformcustomer_value_idx",
@@ -2826,24 +2826,24 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "mailboxes_platformcustomer_email_ilike": {
           "name": "mailboxes_platformcustomer_email_ilike",
           "columns": [
             {
               "expression": "\"email\" gin_trgm_ops",
-              "isExpression": true,
               "asc": true,
+              "isExpression": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": true,
           "method": "gin",
-          "concurrently": true
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -2851,10 +2851,10 @@
       "uniqueConstraints": {
         "mailboxes_platformcustomer_email_key": {
           "name": "mailboxes_platformcustomer_email_key",
+          "nullsNotDistinct": false,
           "columns": [
             "email"
-          ],
-          "nullsNotDistinct": false
+          ]
         }
       },
       "policies": {},
@@ -2883,15 +2883,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "conversations_note_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "body": {
@@ -2943,9 +2943,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_note_conversation_id_a486ed4c": {
           "name": "conversations_note_conversation_id_a486ed4c",
@@ -2958,9 +2958,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "conversations_note_clerk_user_id": {
           "name": "conversations_note_clerk_user_id",
@@ -2973,9 +2973,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -3007,15 +3007,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "message_notifications_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "message_id": {
@@ -3074,9 +3074,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "message_notifications_conversation_id_idx": {
           "name": "message_notifications_conversation_id_idx",
@@ -3089,9 +3089,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "message_notifications_platform_customer_id_idx": {
           "name": "message_notifications_platform_customer_id_idx",
@@ -3104,9 +3104,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "message_notifications_status_idx": {
           "name": "message_notifications_status_idx",
@@ -3119,9 +3119,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -3153,15 +3153,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "website_docs_crawls_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "website_id": {
@@ -3219,9 +3219,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "website_crawls_website_id_idx": {
           "name": "website_crawls_website_id_idx",
@@ -3234,9 +3234,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "website_crawls_status_idx": {
           "name": "website_crawls_status_idx",
@@ -3249,9 +3249,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -3283,15 +3283,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "website_docs_pages_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "website_id": {
@@ -3361,9 +3361,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "website_pages_website_id_idx": {
           "name": "website_pages_website_id_idx",
@@ -3376,9 +3376,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "website_pages_website_crawl_id_idx": {
           "name": "website_pages_website_crawl_id_idx",
@@ -3391,9 +3391,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "website_pages_url_idx": {
           "name": "website_pages_url_idx",
@@ -3406,9 +3406,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "website_pages_embedding_index": {
           "name": "website_pages_embedding_index",
@@ -3422,9 +3422,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "hnsw",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -3456,15 +3456,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "website_docs_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "mailbox_id": {
@@ -3504,9 +3504,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "websites_mailbox_id_idx": {
           "name": "websites_mailbox_id_idx",
@@ -3519,9 +3519,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "websites_url_idx": {
           "name": "websites_url_idx",
@@ -3534,9 +3534,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -3568,15 +3568,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "tool_apis_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "name": {
@@ -3622,9 +3622,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -3656,15 +3656,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "tools_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "name": {
@@ -3776,9 +3776,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "tools_tool_api_id_idx": {
           "name": "tools_tool_api_id_idx",
@@ -3791,9 +3791,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "unique_slug_idx": {
           "name": "unique_slug_idx",
@@ -3806,9 +3806,9 @@
             }
           ],
           "isUnique": true,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -3840,15 +3840,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "job_runs_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "queue_message_id": {
@@ -3914,9 +3914,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "job_runs_job_idx": {
           "name": "job_runs_job_idx",
@@ -3929,9 +3929,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "job_runs_status_idx": {
           "name": "job_runs_status_idx",
@@ -3944,9 +3944,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -4020,16 +4020,16 @@
         "user_profiles_id_users_id_fk": {
           "name": "user_profiles_id_users_id_fk",
           "tableFrom": "user_profiles",
+          "tableTo": "users",
+          "schemaTo": "auth",
           "columnsFrom": [
             "id"
           ],
-          "tableTo": "users",
-          "schemaTo": "auth",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -4060,15 +4060,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "saved_replies_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "slug": {
@@ -4128,9 +4128,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "saved_replies_created_by_user_idx": {
           "name": "saved_replies_created_by_user_idx",
@@ -4143,9 +4143,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "saved_replies_slug_idx": {
           "name": "saved_replies_slug_idx",
@@ -4158,9 +4158,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "saved_replies_slug_mailbox_unique": {
           "name": "saved_replies_slug_mailbox_unique",
@@ -4179,24 +4179,24 @@
             }
           ],
           "isUnique": true,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {
         "saved_replies_mailbox_id_mailboxes_mailbox_id_fk": {
           "name": "saved_replies_mailbox_id_mailboxes_mailbox_id_fk",
           "tableFrom": "saved_replies",
+          "tableTo": "mailboxes_mailbox",
           "columnsFrom": [
             "mailbox_id"
           ],
-          "tableTo": "mailboxes_mailbox",
           "columnsTo": [
             "id"
           ],
-          "onUpdate": "no action",
-          "onDelete": "cascade"
+          "onDelete": "cascade",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -4227,15 +4227,15 @@
           "primaryKey": true,
           "notNull": true,
           "identity": {
+            "type": "byDefault",
             "name": "issue_groups_id_seq",
+            "schema": "public",
             "increment": "1",
+            "startWith": "1",
             "minValue": "1",
             "maxValue": "9223372036854775807",
-            "startWith": "1",
             "cache": "1",
-            "cycle": false,
-            "schema": "public",
-            "type": "byDefault"
+            "cycle": false
           }
         },
         "title": {
@@ -4269,9 +4269,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "btree",
-          "concurrently": false
+          "with": {}
         },
         "issue_groups_embedding_idx": {
           "name": "issue_groups_embedding_idx",
@@ -4285,9 +4285,9 @@
             }
           ],
           "isUnique": false,
-          "with": {},
+          "concurrently": false,
           "method": "hnsw",
-          "concurrently": false
+          "with": {}
         }
       },
       "foreignKeys": {},
@@ -4328,10 +4328,10 @@
     }
   },
   "schemas": {},
-  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
+  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},
