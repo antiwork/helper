@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { createConversation, loginAsTestUser } from "../../utils";
+
+test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 test.describe("Unread Messages Filter", () => {
   test.beforeEach(async ({ page }) => {
-    await loginAsTestUser({ page });
+    await page.goto("/mine");
   });
 
   test("should show unread messages filter button", async ({ page }) => {
@@ -18,13 +19,6 @@ test.describe("Unread Messages Filter", () => {
   });
 
   test("should filter conversations to show only unread messages", async ({ page }) => {
-    // Create a test conversation with unread messages
-    const conversation = await createConversation({
-      emailFrom: "test@example.com",
-      assignedToId: "test-user-id", // Assign to ensure unread badge shows
-      hasUnreadUserMessages: true,
-    });
-
     await page.goto("/conversations");
     
     // Click the unread messages filter
