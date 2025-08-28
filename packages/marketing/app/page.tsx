@@ -639,7 +639,7 @@ export default function Home() {
                   </ul>
                   <Button
                     onClick={() => setShowContactModal(true)}
-                    className="w-full bg-[#2B0808] dark:bg-[#2B0808] hover:bg-[#3B1B1B] text-white dark:text-white font-medium px-6 py-3 rounded-lg transition-colors mt-auto"
+                    className="w-full bg-[#2B0808] dark:bg-[#2B0808] hover:bg-[#3B1B1B] text-white dark:text-white font-medium px-6 py-3 rounded-lg transition-colors mt-auto cursor-pointer"
                   >
                     Contact sales
                   </Button>
