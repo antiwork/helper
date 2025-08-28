@@ -54,7 +54,7 @@ export function useConversationQuery(conversationSlug: string | null) {
       hasMarkedAsRead.current = conversationSlug;
       markAsRead({ conversationSlug });
     }
-  }, [result?.data, conversationSlug, result?.isPending, markAsRead, isMarkingAsRead]);
+  }, [conversationSlug, result?.isPending, markAsRead, isMarkingAsRead]);
 
   // Reset the ref when conversationSlug changes
   useEffect(() => {
