@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpDown, Plus, Search, Users } from "lucide-react";
+import { ArrowUpDown, Plus, Search, Settings, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -122,6 +122,10 @@ export default function CommonIssuesPage() {
             <DropdownMenuItem onClick={() => setSortBy("recent")}>Sort by Recent</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <Button variant="ghost" className="gap-2">
+          <Settings className="h-4 w-4" />
+          Manage issues
+        </Button>
       </PageHeader>
 
       <div className="flex-1 overflow-y-auto">
