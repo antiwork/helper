@@ -1,0 +1,15 @@
+---
+title: Running alongside other apps
+description: Configure custom reverse proxy setups for local development
+---
+
+We use nginx for local development with HTTPS, listening on port 80 and 443. If you use a similar method to run other apps locally, these ports can conflict.
+
+In this case, you can add a `helperai.dev` listener to your other project's nginx (or other reverse proxy) and run the reverse proxy in Docker with the label `com.antiwork.helper.proxy`.
+
+If a container with that label is running, Helper won't start its own nginx and will expect you to handle the routing yourself.
+
+See [Gumroad](https://github.com/antiwork/gumroad) for an example:
+
+- [nginx configuration](https://github.com/antiwork/gumroad/blob/main/docker/local-nginx/helperai_dev.conf)
+- [Labelled container in the Docker Compose file](https://github.com/antiwork/gumroad/blob/main/docker/docker-compose-local.yml)
