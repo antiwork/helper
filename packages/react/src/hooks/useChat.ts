@@ -27,8 +27,31 @@ export const useChat = ({
 }: UseChatProps): UseChatResult => {
   const { client } = useHelperClient();
   const [agentTyping, setAgentTyping] = useState(false);
+  const { queryClient } = useHelperClient();
 
-  const chatHandler = useMemo(() => client.chat.handler({ conversation, tools }), [client, conversation, tools]);
+  const chatHandler = useMemo(
+    () =>
+      client.chat.handler({
+        conversation,
+        tools,
+        onEscalated: () => {
+          queryClient.setQueryData(["conversation", conversation.slug], (old: ConversationDetails | undefined) =>
+            old ? { ...old, isEscalated: true } : old,
+          );
+          queryClient.setQueryData(["conversations"], (old: ConversationsResult | undefined) =>
+            old
+              ? {
+                  ...old,
+                  conversations: old.conversations.map((conv) =>
+                    conv.slug === conversation.slug ? { ...conv, isEscalated: true } : conv,
+                  ),
+                }
+              : old,
+          );
+        },
+      }),
+    [client, conversation, tools],
+  );
 
   const { messages, setMessages, ...rest } = useAIChat({
     ...chatHandler,
@@ -49,33 +72,6 @@ export const useChat = ({
 
     return unlisten;
   }, [enableRealtime, conversation, client, setMessages]);
-
-  const { queryClient } = useHelperClient();
-
-  useEffect(() => {
-    if (
-      messages.at(-1)?.role === "assistant" &&
-      messages
-        .at(-1)
-        ?.parts.some(
-          (part) => part.type === "tool-invocation" && part.toolInvocation.toolName === "request_human_support",
-        )
-    ) {
-      queryClient.setQueryData(["conversation", conversation.slug], (old: ConversationDetails | undefined) =>
-        old ? { ...old, isEscalated: true } : old,
-      );
-      queryClient.setQueryData(["conversations"], (old: ConversationsResult | undefined) =>
-        old
-          ? {
-              ...old,
-              conversations: old.conversations.map((conv) =>
-                conv.slug === conversation.slug ? { ...conv, isEscalated: true } : conv,
-              ),
-            }
-          : old,
-      );
-    }
-  }, [conversation.isEscalated, setMessages]);
 
   return {
     messages: client.chat.messages(messages),

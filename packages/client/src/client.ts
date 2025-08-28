@@ -222,23 +222,7 @@ export class HelperClient {
         attachment: File | { name: string; base64Url: string; contentType: string },
       ): Promise<{ name: string; contentType: string; url: string }> => {
         if (attachment instanceof File) {
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              const result = reader.result;
-              if (typeof result === "string") {
-                resolve({
-                  name: attachment.name,
-                  contentType: attachment.type,
-                  url: result,
-                });
-              } else {
-                reject(new Error("Failed to read file as data URL"));
-              }
-            };
-            reader.onerror = () => reject(new Error("Failed to read file"));
-            reader.readAsDataURL(attachment);
-          });
+          return this.chat.attachment(attachment);
         }
         return Promise.resolve({
           name: attachment.name,
@@ -272,9 +256,11 @@ export class HelperClient {
     handler: ({
       conversation,
       tools = {},
+      onEscalated,
     }: {
       conversation: ConversationDetails;
       tools?: Record<string, HelperTool>;
+      onEscalated?: () => void;
     }) => {
       const formattedMessages = conversation.messages.map(formatAIMessage);
 
@@ -334,14 +320,13 @@ export class HelperClient {
           requestBody,
         }),
         onToolCall: ({ toolCall }: { toolCall: { toolName: string; args: unknown } }) => {
+          if (toolCall.toolName === "request_human_support") {
+            onEscalated?.();
+            return;
+          }
           const tool = tools[toolCall.toolName];
-          if (!tool) {
-            throw new Error(`Tool ${toolCall.toolName} not found`);
-          }
-          if (!("execute" in tool)) {
-            throw new Error(`Tool ${toolCall.toolName} is not executable on the client`);
-          }
-          return tool.execute(toolCall.args);
+          if (!tool) throw new Error(`Tool ${toolCall.toolName} not found`);
+          if ("execute" in tool) return tool.execute(toolCall.args);
         },
       };
     },
