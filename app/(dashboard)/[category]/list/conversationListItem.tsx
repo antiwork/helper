@@ -118,7 +118,7 @@ export const ConversationListItem = ({
                         {formatCurrency(parseFloat(conversation.platformCustomer.value))}
                       </Badge>
                     ))}
-                  {(input.category === "assigned" || input.category === "mine") && (
+                  {input.displayUnreadBehavior && (
                     <UnreadIndicator hasUnread={!!conversation.unreadMessageCount} />
                   )}
                 </div>
