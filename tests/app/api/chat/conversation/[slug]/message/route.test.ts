@@ -271,4 +271,40 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     expect(response.status).toBe(400);
     expect(result.error).toBe("test.png: Missing URL");
   });
+
+  it("should pass through tools and customerInfoUrl to triggerEvent", async () => {
+    const { mailbox } = await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create({
+      emailFrom: "test@example.com",
+    });
+
+    mockSession = { isAnonymous: false, email: "test@example.com" };
+    mockMailbox = mailbox;
+
+    const tools = { search: { description: "Search the web", parameters: { query: { type: "string" } } } };
+    const customerInfoUrl = "https://example.com/customer-info";
+
+    const request = new Request("https://example.com/api", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: "Hello world",
+        tools,
+        customerInfoUrl,
+      }),
+    });
+
+    const response = await POST(request, {
+      params: Promise.resolve({ slug: conversation.slug }),
+    });
+    const result = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(result.messageId).toBe("msg123");
+    expect(triggerEvent).toHaveBeenCalledWith("conversations/auto-response.create", {
+      messageId: "msg123",
+      tools,
+      customerInfoUrl,
+    });
+  });
 });

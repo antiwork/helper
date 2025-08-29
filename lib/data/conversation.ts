@@ -278,12 +278,13 @@ export const serializeConversationWithMessages = async (
   return {
     ...serializeConversation(mailbox, conversation, platformCustomer),
     mergedInto,
-    customerMetadata: platformCustomer
+    customerInfo: platformCustomer
       ? {
           name: platformCustomer.name,
           value: platformCustomer.value ? parseFloat(platformCustomer.value) : null,
           links: platformCustomer.links,
           isVip: platformCustomer.isVip,
+          metadata: platformCustomer.metadata,
         }
       : null,
     draft: null,

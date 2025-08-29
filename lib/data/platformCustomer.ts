@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { platformCustomers } from "@/db/schema";
-import { CustomerInfo } from "@/packages/client/dist";
+import { CustomerInfo } from "@/lib/metadataApiClient";
 import { getMailbox } from "./mailbox";
 
 export type PlatformCustomer = typeof platformCustomers.$inferSelect & {
@@ -31,20 +31,21 @@ export const getPlatformCustomer = async (email: string): Promise<PlatformCustom
 
 export const upsertPlatformCustomer = async ({
   email,
-  customerMetadata,
+  customerMetadata: customerInfo,
 }: {
   email: string;
   // `links` is deprecated, use `actions` instead
   customerMetadata: CustomerInfo & { links?: Record<string, string> | null };
 }) => {
-  if (!customerMetadata) return;
+  if (!customerInfo) return;
 
   const data: Record<string, unknown> = {};
 
-  if ("name" in customerMetadata) data.name = customerMetadata.name;
-  if ("value" in customerMetadata) data.value = customerMetadata.value ?? null;
-  if ("links" in customerMetadata) data.links = customerMetadata.links;
-  if ("actions" in customerMetadata) data.links = customerMetadata.actions;
+  if ("name" in customerInfo) data.name = customerInfo.name;
+  if ("value" in customerInfo) data.value = customerInfo.value ?? null;
+  if ("links" in customerInfo) data.links = customerInfo.links;
+  if ("actions" in customerInfo) data.links = customerInfo.actions;
+  if ("metadata" in customerInfo) data.metadata = customerInfo.metadata;
 
   if (Object.keys(data).length === 0) return;
 
