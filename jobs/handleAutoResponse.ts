@@ -1,5 +1,5 @@
 import { and, eq, gt, inArray } from "drizzle-orm";
-import { CustomerInfo, ToolRequestBody } from "@helperai/client";
+import { ToolRequestBody } from "@helperai/client";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations } from "@/db/schema";
@@ -15,11 +15,11 @@ import { fetchMetadata } from "@/lib/data/retrieval";
 export const handleAutoResponse = async ({
   messageId,
   tools,
-  customer,
+  customerInfoUrl,
 }: {
   messageId: number;
   tools?: Record<string, ToolRequestBody>;
-  customer?: CustomerInfo | null;
+  customerInfoUrl?: string | null;
 }) => {
   const message = await db.query.conversationMessages
     .findFirst({
@@ -49,7 +49,7 @@ export const handleAutoResponse = async ({
 
   await ensureCleanedUpText(message);
 
-  if (!customer) {
+  if (!customerInfoUrl) {
     // Legacy metadata fetching
     const customerMetadata = message.emailFrom ? await fetchMetadata(message.emailFrom) : null;
     if (customerMetadata) {
@@ -89,7 +89,7 @@ export const handleAutoResponse = async ({
     conversation,
     mailbox,
     tools,
-    customer,
+    customerInfoUrl,
     userEmail: message.emailFrom,
     message: {
       id: message.id.toString(),

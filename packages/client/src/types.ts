@@ -29,14 +29,6 @@ export const toolBodySchema = z.object({
 });
 export type ToolRequestBody = z.infer<typeof toolBodySchema>;
 
-export const customerInfoSchema = z.object({
-  name: z.string().nullish(),
-  value: z.number().nullish(),
-  metadata: z.record(z.string(), z.any()).nullish(),
-  actions: z.record(z.string(), z.string()).nullish(),
-});
-export type CustomerInfo = z.infer<typeof customerInfoSchema>;
-
 export const createMessageBodySchema = z.object({
   content: z.string(),
   attachments: z
@@ -49,7 +41,7 @@ export const createMessageBodySchema = z.object({
     )
     .optional(),
   tools: z.record(z.string(), toolBodySchema).optional(),
-  customer: z.union([customerInfoSchema, z.string()]).nullish(),
+  customerInfoUrl: z.string().nullish(),
 });
 export type CreateMessageRequestBody = z.infer<typeof createMessageBodySchema>;
 export type CreateMessageParams = Omit<CreateMessageRequestBody, "attachments" | "tools"> & {
