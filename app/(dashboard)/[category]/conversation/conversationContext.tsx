@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useConversationListContext } from "@/app/(dashboard)/[category]/list/conversationListContext";
 import { assertDefined } from "@/components/utils/assert";
@@ -21,6 +21,8 @@ const ConversationContext = createContext<ConversationContextType | null>(null);
 
 export function useConversationQuery(conversationSlug: string | null) {
   const utils = api.useUtils();
+  const hasMarkedAsRead = useRef<string | null>(null);
+
   const { mutate: markAsRead, isPending: isMarkingAsRead } = api.mailbox.conversations.markAsRead.useMutation({
     onSuccess: async () => {
       await Promise.all([
@@ -42,10 +44,24 @@ export function useConversationQuery(conversationSlug: string | null) {
 
   // Mark conversation as read as soon as it loads (user opened it)
   useEffect(() => {
-    if (result?.data && conversationSlug && !result.isPending && !isMarkingAsRead) {
+    if (
+      result?.data &&
+      conversationSlug &&
+      !result.isPending &&
+      !isMarkingAsRead &&
+      hasMarkedAsRead.current !== conversationSlug
+    ) {
+      hasMarkedAsRead.current = conversationSlug;
       markAsRead({ conversationSlug });
     }
-  }, [result?.dataUpdatedAt, conversationSlug, result?.isPending, markAsRead, isMarkingAsRead]);
+  }, [conversationSlug, result?.isPending, markAsRead, isMarkingAsRead]);
+
+  // Reset the ref when conversationSlug changes
+  useEffect(() => {
+    if (hasMarkedAsRead.current !== conversationSlug) {
+      hasMarkedAsRead.current = null;
+    }
+  }, [conversationSlug]);
 
   return conversationSlug ? result : null;
 }

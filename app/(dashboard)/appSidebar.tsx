@@ -158,10 +158,10 @@ export function AppSidebar() {
                     )}
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname === `/all` && !currentIssueGroupId} tooltip="All">
+                    <SidebarMenuButton asChild isActive={pathname === `/all` && !currentIssueGroupId} tooltip="Open">
                       <Link href={`/all`} onClick={handleItemClick}>
                         <Inbox className="size-4" />
-                        <span className="group-data-[collapsible=icon]:hidden">All</span>
+                        <span className="group-data-[collapsible=icon]:hidden">Open</span>
                       </Link>
                     </SidebarMenuButton>
                     {openCounts && openCounts.all > 0 && <SidebarMenuBadge>{openCounts.all}</SidebarMenuBadge>}
