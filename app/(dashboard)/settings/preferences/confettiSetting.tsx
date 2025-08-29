@@ -6,17 +6,18 @@ import { triggerConfetti } from "@/components/confetti";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
 import { Button } from "@/components/ui/button";
-import { RouterOutputs } from "@/trpc";
+import { useSession } from "@/components/useSession";
 import { api } from "@/trpc/react";
 import { SwitchSectionWrapper } from "../sectionWrapper";
 
-const ConfettiSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
-  const [confettiEnabled, setConfettiEnabled] = useState(mailbox.preferences?.confetti ?? false);
+const ConfettiSetting = () => {
+  const { user } = useSession() ?? {};
+  const [confettiEnabled, setConfettiEnabled] = useState(user?.preferences?.confetti ?? false);
   const savingIndicator = useSavingIndicator();
   const utils = api.useUtils();
-  const { mutate: update } = api.mailbox.update.useMutation({
+  const { mutate: update } = api.user.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate();
+      utils.user.currentUser.invalidate();
       savingIndicator.setState("saved");
     },
     onError: (error) => {
@@ -28,7 +29,11 @@ const ConfettiSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
   const handleSwitchChange = (checked: boolean) => {
     setConfettiEnabled(checked);
     savingIndicator.setState("saving");
-    update({ preferences: { confetti: checked } });
+    update({
+      preferences: {
+        confetti: checked,
+      },
+    });
   };
 
   const handleTestConfetti = () => {

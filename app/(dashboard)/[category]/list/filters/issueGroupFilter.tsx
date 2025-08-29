@@ -44,7 +44,7 @@ export const IssueGroupFilter = memo(function IssueGroupFilter({
           }}
           className="flex flex-col"
         >
-          <DropdownMenuRadioItem value="all">All conversations</DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="all">Open conversations</DropdownMenuRadioItem>
           {isLoading ? (
             <DropdownMenuRadioItem value="loading" disabled>
               Loading...

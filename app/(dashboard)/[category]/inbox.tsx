@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
 const CATEGORY_LABELS = {
-  all: "All",
+  all: "Open",
   mine: "Mine",
   assigned: "Assigned",
   unassigned: "Up for grabs",

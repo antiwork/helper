@@ -47,7 +47,8 @@ const settingsItems = [
   { label: "Customers", id: "customers", icon: UserPlus },
   { label: "In-App Chat", id: "in-app-chat", icon: MonitorSmartphone },
   { label: "Integrations", id: "integrations", icon: LinkIcon },
-  { label: "Preferences", id: "preferences", icon: SettingsIcon },
+  { label: "Mailbox", id: "mailbox", icon: Inbox },
+  { label: "User preferences", id: "preferences", icon: SettingsIcon },
 ] as const;
 
 export function AppSidebar() {
@@ -158,10 +159,10 @@ export function AppSidebar() {
                     )}
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname === `/all` && !currentIssueGroupId} tooltip="All">
+                    <SidebarMenuButton asChild isActive={pathname === `/all` && !currentIssueGroupId} tooltip="Open">
                       <Link href={`/all`} onClick={handleItemClick}>
                         <Inbox className="size-4" />
-                        <span className="group-data-[collapsible=icon]:hidden">All</span>
+                        <span className="group-data-[collapsible=icon]:hidden">Open</span>
                       </Link>
                     </SidebarMenuButton>
                     {openCounts && openCounts.all > 0 && <SidebarMenuBadge>{openCounts.all}</SidebarMenuBadge>}
