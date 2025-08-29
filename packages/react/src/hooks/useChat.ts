@@ -9,6 +9,7 @@ import { useRefToLatest } from "./useRefToLatest";
 export interface UseChatProps {
   conversation: ConversationDetails;
   tools?: Record<string, HelperTool>;
+  customerInfoUrl?: string | null;
   enableRealtime?: boolean;
   ai?: Parameters<typeof useAIChat>[0];
 }
@@ -22,6 +23,7 @@ type UseChatResult = Omit<ReturnType<typeof useAIChat>, "messages"> & {
 export const useChat = ({
   conversation,
   tools = {},
+  customerInfoUrl,
   enableRealtime = true,
   ai: aiOptions,
 }: UseChatProps): UseChatResult => {
@@ -34,6 +36,7 @@ export const useChat = ({
       client.chat.handler({
         conversation,
         tools,
+        customerInfoUrl,
         onEscalated: () => {
           queryClient.setQueryData(["conversation", conversation.slug], (old: ConversationDetails | undefined) =>
             old ? { ...old, isEscalated: true } : old,
