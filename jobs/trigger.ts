@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import superjson from "superjson";
 import { z } from "zod";
-import { toolBodySchema } from "@helperai/client";
+import { customerInfoSchema, toolBodySchema } from "@helperai/client";
 import { db } from "@/db/client";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 
@@ -37,6 +37,7 @@ const events = {
     data: z.object({
       messageId: z.number(),
       tools: z.record(z.string(), toolBodySchema).optional(),
+      customer: customerInfoSchema.nullish(),
     }),
     jobs: ["handleAutoResponse"],
   },

@@ -20,7 +20,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { remark } from "remark";
 import remarkHtml from "remark-html";
 import { z } from "zod";
-import { ToolRequestBody } from "@helperai/client";
+import { CustomerInfo, ToolRequestBody } from "@helperai/client";
 import { ReadPageToolConfig } from "@helperai/sdk";
 import { db } from "@/db/client";
 import { conversationMessages, files, MessageMetadata, ToolMetadata } from "@/db/schema";
@@ -149,6 +149,7 @@ const buildPromptMessages = async (
   email: string | null,
   query: string,
   guideEnabled = false,
+  customer?: CustomerInfo | null,
 ): Promise<{
   messages: CoreMessage[];
   sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
@@ -173,7 +174,15 @@ const buildPromptMessages = async (
   if (websitePagesPrompt) {
     prompt += `\n${websitePagesPrompt}`;
   }
-  const userPrompt = email ? `\nCurrent user email: ${email}` : "Anonymous user";
+  let userPrompt;
+  if (customer) {
+    userPrompt = "Current user details:\n";
+    if (email) userPrompt += `- Email: ${email}\n`;
+    if (customer.name) userPrompt += `- Name: ${customer.name}\n`;
+    customer.metadata;
+  } else {
+    userPrompt = email ? `\nCurrent user email: ${email}` : "Anonymous user";
+  }
   prompt += userPrompt;
 
   return {
@@ -328,6 +337,7 @@ export const generateAIResponse = async ({
   evaluation = false,
   guideEnabled = false,
   tools: clientProvidedTools,
+  customer,
 }: {
   messages: Message[];
   mailbox: Mailbox;
@@ -351,6 +361,7 @@ export const generateAIResponse = async ({
   evaluation?: boolean;
   dataStream?: DataStreamWriter;
   tools?: Record<string, ToolRequestBody>;
+  customer?: CustomerInfo | null;
 }) => {
   const lastMessage = messages.findLast((m: Message) => m.role === "user");
   const query = lastMessage?.content || "";
@@ -360,9 +371,15 @@ export const generateAIResponse = async ({
     messages: systemMessages,
     sources,
     promptInfo,
-  } = await buildPromptMessages(mailbox, email, query, guideEnabled);
+  } = await buildPromptMessages(mailbox, email, query, guideEnabled, customer);
 
-  const tools = await buildTools(conversationId, email, true, guideEnabled);
+  const tools = await buildTools({
+    conversationId,
+    email,
+    customerMetadataProvided: !!customer,
+    includeHumanSupport: true,
+    guideEnabled,
+  });
   if (readPageTool) {
     tools[readPageTool.toolName] = {
       description: readPageTool.toolDescription,
@@ -637,6 +654,7 @@ export const respondWithAI = async ({
   isHelperUser = false,
   reasoningEnabled = true,
   tools,
+  customer,
 }: {
   conversation: Conversation;
   mailbox: Mailbox;
@@ -656,6 +674,7 @@ export const respondWithAI = async ({
   isHelperUser?: boolean;
   reasoningEnabled?: boolean;
   tools?: Record<string, ToolRequestBody>;
+  customer?: CustomerInfo | null;
 }) => {
   if (conversation.status === "spam") return createTextResponse("", Date.now().toString());
 
@@ -741,6 +760,7 @@ export const respondWithAI = async ({
         guideEnabled,
         addReasoning: reasoningEnabled,
         tools,
+        customer,
         dataStream,
         async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources, promptInfo }) {
           const hasSensitiveToolCall = steps.some((step: any) =>

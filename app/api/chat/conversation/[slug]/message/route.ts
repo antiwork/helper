@@ -1,23 +1,39 @@
 import { and, eq } from "drizzle-orm";
-import { createMessageBodySchema } from "@helperai/client";
+import { createMessageBodySchema, CustomerInfo } from "@helperai/client";
 import { getCustomerFilter } from "@/app/api/chat/customerFilter";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { createUserMessage } from "@/lib/ai/chat";
+import { decryptCustomerData, isEncryptedString } from "@/lib/crypto";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
 
 export const maxDuration = 60;
 
 export const OPTIONS = () => corsOptions("POST");
 
-export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: { params } }, { session }) => {
+export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: { params } }, { session, mailbox }) => {
   const { slug } = await params;
-  const { content, attachments = [], tools } = createMessageBodySchema.parse(await request.json());
+  const { content, attachments = [], tools, customer } = createMessageBodySchema.parse(await request.json());
 
   if (!content || content.trim().length === 0) {
     return corsResponse({ error: "Content is required" }, { status: 400 });
+  }
+
+  // Decrypt customer data if it's provided as an encrypted string
+  let decryptedCustomer: CustomerInfo | null = null;
+  if (customer !== null && customer !== undefined) {
+    if (isEncryptedString(customer)) {
+      try {
+        decryptedCustomer = decryptCustomerData<CustomerInfo>(customer, mailbox.widgetHMACSecret);
+      } catch (_error) {
+        return corsResponse({ error: "Invalid encrypted customer data" }, { status: 400 });
+      }
+    } else {
+      // Customer data is already in plain format
+      decryptedCustomer = customer;
+    }
   }
 
   const customerFilter = getCustomerFilter(session);
@@ -67,7 +83,11 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
 
   const userMessage = await createUserMessage(conversation.id, userEmail, content, attachmentData);
 
-  await triggerEvent("conversations/auto-response.create", { messageId: userMessage.id, tools });
+  await triggerEvent("conversations/auto-response.create", {
+    messageId: userMessage.id,
+    tools,
+    customer: decryptedCustomer,
+  });
 
   return corsResponse({
     messageId: userMessage.id,
