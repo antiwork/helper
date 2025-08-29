@@ -3,7 +3,6 @@ import { db } from "@/db/client";
 import { conversations, conversationMessages as emails, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getFullName } from "@/lib/auth/authUtils";
-import { UserRole, UserRoles } from "@/lib/data/user";
 
 type DateRange = {
   startDate?: Date;
@@ -15,7 +14,6 @@ export type MemberStats = {
   email: string | undefined;
   displayName: string | null;
   replyCount: number;
-  role: UserRole;
 }[];
 
 export async function getMemberStats(dateRange?: DateRange): Promise<MemberStats> {
@@ -61,7 +59,6 @@ export async function getMemberStats(dateRange?: DateRange): Promise<MemberStats
         email: user.email ?? undefined,
         displayName: getFullName(user),
         replyCount: replyCounts[user.id] || 0,
-        role: user.access?.role || UserRoles.AFK,
       };
     })
     .sort((a, b) => b.replyCount - a.replyCount);

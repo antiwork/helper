@@ -23,6 +23,10 @@ export const userProfiles = pgTable("user_profiles", {
     }>()
     .default({ role: "afk", keywords: [] }),
   pinnedIssueGroupIds: jsonb("pinned_issue_group_ids").$type<number[]>().default([]),
+  preferences: jsonb().$type<{
+    confetti?: boolean;
+    disableNextTicketPreview?: boolean;
+  }>(),
 }).enableRLS();
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({

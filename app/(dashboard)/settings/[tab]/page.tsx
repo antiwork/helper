@@ -1,6 +1,5 @@
 "use client";
 
-import { BookOpen, Layers, Link, MonitorSmartphone, Settings as SettingsIcon, UserPlus, Users } from "lucide-react";
 import { useParams } from "next/navigation";
 import Loading from "@/app/(dashboard)/loading";
 import { FileUploadProvider } from "@/components/fileUploadContext";
@@ -16,6 +15,7 @@ import ConnectSupportEmail from "../integrations/connectSupportEmail";
 import GitHubSetting from "../integrations/githubSetting";
 import SlackSetting from "../integrations/slackSetting";
 import KnowledgeSetting from "../knowledge/knowledgeSetting";
+import MailboxSetting from "../preferences/mailboxSetting";
 import PreferencesSetting from "../preferences/preferencesSetting";
 import TeamSetting from "../team/teamSetting";
 import MetadataEndpointSetting from "../tools/metadataEndpointSetting";
@@ -33,25 +33,21 @@ export default function TabsPage() {
     {
       label: "Knowledge",
       id: "knowledge",
-      icon: BookOpen,
       content: <KnowledgeSetting websitesEnabled={mailbox.firecrawlEnabled} />,
     },
     {
       label: "Team",
       id: "team",
-      icon: Users,
       content: <TeamSetting />,
     },
     {
       label: "Common Issues",
       id: "common-issues",
-      icon: Layers,
       content: <CommonIssuesSetting />,
     },
     {
       label: "Customers",
       id: "customers",
-      icon: UserPlus,
       content: (
         <>
           <CustomerSetting mailbox={mailbox} />
@@ -62,13 +58,11 @@ export default function TabsPage() {
     {
       label: "In-App Chat",
       id: "in-app-chat",
-      icon: MonitorSmartphone,
       content: <ChatWidgetSetting mailbox={mailbox} />,
     },
     {
       label: "Integrations",
       id: "integrations",
-      icon: Link,
       content: (
         <>
           <ToolSetting />
@@ -80,10 +74,14 @@ export default function TabsPage() {
       ),
     },
     {
-      label: "Preferences",
+      label: "Mailbox",
+      id: "mailbox",
+      content: <MailboxSetting mailbox={mailbox} />,
+    },
+    {
+      label: "User preferences",
       id: "preferences",
-      icon: SettingsIcon,
-      content: <PreferencesSetting mailbox={mailbox} />,
+      content: <PreferencesSetting />,
     },
   ];
 

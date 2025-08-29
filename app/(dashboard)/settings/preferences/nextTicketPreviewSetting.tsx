@@ -4,20 +4,21 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useSavingIndicator } from "@/components/hooks/useSavingIndicator";
 import { SavingIndicator } from "@/components/savingIndicator";
-import { RouterOutputs } from "@/trpc";
+import { useSession } from "@/components/useSession";
 import { api } from "@/trpc/react";
 import { SwitchSectionWrapper } from "../sectionWrapper";
 
-const NextTicketPreviewSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
+const NextTicketPreviewSetting = () => {
+  const { user } = useSession() ?? {};
   const [nextTicketPreviewEnabled, setNextTicketPreviewEnabled] = useState(
-    !mailbox.preferences?.disableNextTicketPreview,
+    !user?.preferences?.disableNextTicketPreview,
   );
   const savingIndicator = useSavingIndicator();
   const utils = api.useUtils();
 
-  const { mutate: update } = api.mailbox.update.useMutation({
+  const { mutate: update } = api.user.update.useMutation({
     onSuccess: () => {
-      utils.mailbox.get.invalidate();
+      utils.user.currentUser.invalidate();
       savingIndicator.setState("saved");
     },
     onError: (error) => {
