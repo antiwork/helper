@@ -4,7 +4,7 @@ import { authUsers } from "../supabaseSchema/auth";
 
 export type AccessRole = "afk" | "core" | "nonCore";
 
-// Created automatically when a user is inserted via a Postgres trigger. See db/drizzle/0101_little_arclight.sql
+// Created automatically when a user is inserted via a Postgres trigger. See db/drizzle/0101_complete_wraith.sql
 export const userProfiles = pgTable("user_profiles", {
   id: uuid()
     .primaryKey()
@@ -23,6 +23,10 @@ export const userProfiles = pgTable("user_profiles", {
     }>()
     .default({ role: "afk", keywords: [] }),
   pinnedIssueGroupIds: jsonb("pinned_issue_group_ids").$type<number[]>().default([]),
+  preferences: jsonb().$type<{
+    confetti?: boolean;
+    disableNextTicketPreview?: boolean;
+  }>(),
 }).enableRLS();
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({

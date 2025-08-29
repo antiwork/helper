@@ -38,6 +38,7 @@ export const guideSessions = pgTable(
     uuid: uuid("uuid").notNull().defaultRandom(),
     platformCustomerId: bigint({ mode: "number" }).notNull(),
     conversationId: bigint({ mode: "number" }),
+    messageId: bigint({ mode: "number" }),
     status: guideSessionStatusEnum("status").notNull().default("started"),
     title: text().notNull(),
     instructions: text(),

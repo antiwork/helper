@@ -23,7 +23,7 @@ type ConversationListContextType = {
   minimize: () => void;
   moveToNextConversation: () => void;
   moveToPreviousConversation: () => void;
-  removeConversation: () => void;
+  removeConversation: (options?: { moveToNext?: boolean }) => void;
   removeConversationKeepActive: () => void;
   navigateToConversation: (conversationSlug: string) => void;
 };
@@ -117,10 +117,10 @@ export const ConversationListContextProvider = ({
     removeConversationFromList((c) => c.slug === currentConversationSlug);
   };
 
-  const removeConversation = () => {
+  const removeConversation = ({ moveToNext = true }: { moveToNext?: boolean } = {}) => {
     debouncedInvalidate();
     removeConversationFromList((c) => c.slug === currentConversationSlug);
-    moveToNextConversation();
+    if (moveToNext) moveToNextConversation();
   };
 
   useRealtimeEventOnce<{

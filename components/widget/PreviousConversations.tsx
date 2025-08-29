@@ -11,6 +11,7 @@ type Conversation = {
   subject: string;
   createdAt: string;
   latestMessage: string | null;
+  latestMessageAt: string | null;
 };
 
 type ConversationsResponse = {
@@ -127,7 +128,7 @@ export default function PreviousConversations({ token, onSelectConversation, isA
               <div className="flex items-center justify-between">
                 <div className="text-sm font-medium text-foreground">{conversation.subject}</div>
                 <div className="text-xs text-muted-foreground">
-                  <HumanizedTime time={conversation.createdAt} />
+                  <HumanizedTime time={conversation.latestMessageAt ?? conversation.createdAt} />
                 </div>
               </div>
               {conversation.latestMessage && (

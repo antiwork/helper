@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { NextResponse } from "next/server";
+import { env } from "@/lib/env";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ name: string }> }): Promise<NextResponse> {
   const { name } = await params;
@@ -11,7 +12,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ nam
   const filePath = path.join(process.cwd(), "public", name);
 
   try {
-    const fileContents = await fs.readFile(filePath, "utf8");
+    const fileContents = (await fs.readFile(filePath, "utf8"))
+      .replaceAll("{{NEXT_PUBLIC_SUPABASE_URL}}", env.NEXT_PUBLIC_SUPABASE_URL)
+      .replaceAll("{{NEXT_PUBLIC_SUPABASE_ANON_KEY}}", env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
     return new NextResponse(fileContents, {
       status: 200,

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useConversationsListInput } from "../shared/queries";
@@ -10,6 +10,7 @@ import { IssueGroupFilter } from "./filters/issueGroupFilter";
 import { PromptFilter } from "./filters/promptFilter";
 import { ReactionFilter } from "./filters/reactionFilter";
 import { ResponderFilter } from "./filters/responderFilter";
+import { UnreadMessagesFilter } from "./filters/unreadMessagesFilter";
 import { VipFilter } from "./filters/vipFilter";
 
 interface FilterValues {
@@ -24,6 +25,7 @@ interface FilterValues {
   events: "request_human_support"[];
   issueGroupId: number | null;
   isAssigned: boolean | undefined;
+  hasUnreadMessages: boolean | undefined;
 }
 
 interface ConversationFiltersProps {
@@ -48,6 +50,7 @@ export const useConversationFilters = () => {
     events: searchParams.events ?? [],
     issueGroupId: searchParams.issueGroupId ?? null,
     isAssigned: searchParams.isAssigned ?? undefined,
+    hasUnreadMessages: searchParams.hasUnreadMessages ?? undefined,
   });
 
   const activeFilterCount = useMemo(() => {
@@ -62,6 +65,7 @@ export const useConversationFilters = () => {
     if (filterValues.events.length > 0) count++;
     if (filterValues.issueGroupId !== null) count++;
     if (filterValues.isAssigned !== undefined) count++;
+    if (filterValues.hasUnreadMessages !== undefined) count++;
     return count;
   }, [filterValues]);
 
@@ -82,6 +86,7 @@ export const useConversationFilters = () => {
       events: searchParams.events ?? [],
       issueGroupId: searchParams.issueGroupId ?? null,
       isAssigned: searchParams.isAssigned ?? undefined,
+      hasUnreadMessages: searchParams.hasUnreadMessages ?? undefined,
     });
   }, [searchParams]);
 
@@ -103,6 +108,7 @@ export const useConversationFilters = () => {
       events: null,
       issueGroupId: null,
       isAssigned: null,
+      hasUnreadMessages: null,
     };
     setSearchParams((prev) => ({ ...prev, ...clearedFilters }));
   };
@@ -122,8 +128,16 @@ export const ConversationFilters = ({
   onClearFilters,
 }: ConversationFiltersProps) => {
   const { input } = useConversationsListInput();
+
+  const handleUnreadMessagesChange = useCallback(
+    (hasUnreadMessages: boolean | undefined) => {
+      onUpdateFilter({ hasUnreadMessages });
+    },
+    [onUpdateFilter],
+  );
+
   return (
-    <div className="flex flex-wrap items-center justify-center gap-1 md:gap-2">
+    <div className="flex flex-wrap items-center gap-1 md:gap-2">
       <DateFilter
         startDate={filterValues.createdAfter}
         endDate={filterValues.createdBefore}
@@ -131,8 +145,15 @@ export const ConversationFilters = ({
           onUpdateFilter({ createdAfter: startDate, createdBefore: endDate });
         }}
       />
+      {input.displayUnreadBehavior && (
+        <UnreadMessagesFilter
+          hasUnreadMessages={filterValues.hasUnreadMessages}
+          onChange={handleUnreadMessagesChange}
+        />
+      )}
       {input.category === "all" && (
         <AssigneeFilter
+          includeUnassigned={input.category === "all"}
           selectedAssignees={filterValues.isAssigned === false ? ["unassigned"] : filterValues.assignee}
           onChange={(assignees) => {
             const hasUnassigned = assignees.includes("unassigned");

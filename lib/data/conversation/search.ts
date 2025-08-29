@@ -54,9 +54,9 @@ export const searchConversations = async (
   let where: Record<string, SQL> = {
     notMerged: isNull(conversations.mergedIntoId),
     ...(filters.status?.length ? { status: inArray(conversations.status, filters.status) } : {}),
-    ...(filters.assignee?.length ? { assignee: inArray(conversations.assignedToId, filters.assignee) } : {}),
     ...(filters.isAssigned === true ? { assignee: isNotNull(conversations.assignedToId) } : {}),
     ...(filters.isAssigned === false ? { assignee: isNull(conversations.assignedToId) } : {}),
+    ...(filters.assignee?.length ? { assignee: inArray(conversations.assignedToId, filters.assignee) } : {}),
     ...(filters.isPrompt !== undefined ? { isPrompt: eq(conversations.isPrompt, filters.isPrompt) } : {}),
     ...(filters.createdAfter ? { createdAfter: gt(conversations.createdAt, new Date(filters.createdAfter)) } : {}),
     ...(filters.createdBefore ? { createdBefore: lt(conversations.createdAt, new Date(filters.createdBefore)) } : {}),
@@ -119,6 +119,29 @@ export const searchConversations = async (
           issueGroup: eq(conversations.issueGroupId, filters.issueGroupId),
         }
       : {}),
+    ...(filters.hasUnreadMessages
+      ? {
+          hasUnreadMessages: and(
+            isNotNull(conversations.assignedToId),
+            exists(
+              db
+                .select()
+                .from(conversationMessages)
+                .where(
+                  and(
+                    eq(conversationMessages.conversationId, conversations.id),
+                    eq(conversationMessages.role, "user"),
+                    isNull(conversationMessages.deletedAt),
+                    gt(
+                      conversationMessages.createdAt,
+                      sql`COALESCE(${conversations.lastReadByAssigneeAt}, ${conversations.createdAt})`,
+                    ),
+                  ),
+                ),
+            ),
+          ),
+        }
+      : {}),
   };
 
   const matches = filters.search ? await searchEmailsByKeywords(filters.search, Object.values(where)) : [];
@@ -151,7 +174,7 @@ export const searchConversations = async (
   const orderByField =
     filters.status?.length === 1 && filters.status[0] === "closed"
       ? conversations.closedAt
-      : sql`COALESCE(${conversations.lastUserEmailCreatedAt}, ${conversations.createdAt})`;
+      : sql`COALESCE(${conversations.lastMessageAt}, ${conversations.createdAt})`;
   const isOpenTicketsOnly = filters.status?.length === 1 && filters.status[0] === "open";
   const orderBy = isOpenTicketsOnly
     ? [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)]
@@ -168,6 +191,7 @@ export const searchConversations = async (
         mailboxes_platformcustomer: platformCustomers,
         recent_message_cleanedUpText: sql<string | null>`recent_message.cleaned_up_text`,
         recent_message_createdAt: sql<string | null>`recent_message.created_at`,
+        has_unread_messages: sql<boolean>`unread_messages.has_unread`,
       })
       .from(conversations)
       .leftJoin(platformCustomers, eq(conversations.emailFrom, platformCustomers.email))
@@ -186,6 +210,25 @@ export const searchConversations = async (
         ) as recent_message`,
         sql`true`,
       )
+      .leftJoin(
+        sql`LATERAL (
+          SELECT EXISTS(
+            SELECT 1
+            FROM ${conversationMessages}
+            WHERE ${and(
+              eq(conversationMessages.conversationId, conversations.id),
+              eq(conversationMessages.role, "user"),
+              isNull(conversationMessages.deletedAt),
+              gt(
+                conversationMessages.createdAt,
+                sql`COALESCE(${conversations.lastReadByAssigneeAt}, ${conversations.createdAt})`,
+              ),
+              isNotNull(conversations.assignedToId),
+            )}
+          ) as has_unread
+        ) as unread_messages`,
+        sql`true`,
+      )
       .where(and(...Object.values(where)))
       .orderBy(...orderBy)
       .limit(filters.limit + 1) // Get one extra to determine if there's a next page
@@ -199,12 +242,14 @@ export const searchConversations = async (
               mailboxes_platformcustomer,
               recent_message_cleanedUpText,
               recent_message_createdAt,
+              has_unread_messages,
             }) => ({
               ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
               matchedMessageText:
                 matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
               recentMessageText: recent_message_cleanedUpText || null,
               recentMessageAt: recent_message_createdAt ? new Date(recent_message_createdAt) : null,
+              unreadMessageCount: has_unread_messages ? 1 : undefined,
             }),
           ),
         nextCursor:

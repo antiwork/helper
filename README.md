@@ -1,22 +1,6 @@
-<p align="center">
-  <img src="./public/logo.svg#gh-light-mode-only" alt="Helper logo" width="192" />
-  <img src="./public/logo-white.svg#gh-dark-mode-only" alt="Helper logo" width="192" />
-</p>
-<p align="center">
-    <a href="https://helper.ai">helper.ai</a> |
-    <a href="https://helper.ai/docs">Docs</a>
-</p>
-
 # Helper
 
-Customer support via live chat and email.
-
-Features:
-
-- **AI agent:** Reads your docs to give world-class support for everyday queries.
-- **Dashboard:** A fully featured escalation flow for human agents to handle complex cases.
-- **Tools:** Enable customers and agents to interact with your systems using natural language.
-- **SDK:** Integrate live chat and AI-powered inline assistance into your website in seconds.
+In-app customer support center + live chat powered by API.
 
 ## Quick Start
 

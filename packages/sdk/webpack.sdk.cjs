@@ -75,5 +75,15 @@ module.exports = (env) => {
         path: path.resolve(__dirname, "../../public"),
       },
     },
+    {
+      ...baseConfig,
+      entry: path.resolve(__dirname, "src/supabase.ts"),
+      output: {
+        filename: "sdk-supabase.js",
+        chunkFilename: "sdk-[name]-[chunkhash].js",
+        globalObject: "this",
+        path: path.resolve(__dirname, "../../public"),
+      },
+    },
   ];
 };

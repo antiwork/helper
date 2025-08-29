@@ -20,6 +20,7 @@ export const platformCustomers = pgTable(
     index("mailboxes_platformcustomer_created_at_73183c2a").on(table.createdAt),
     index("mailboxes_platformcustomer_mailbox_id_58ea76bf").on(table.unused_mailboxId),
     unique("mailboxes_platformcustomer_email_key").on(table.email),
+    index("platformcustomer_value_idx").on(table.value.desc().nullsLast()),
     index("mailboxes_platformcustomer_email_ilike")
       .using("gin", sql`${table.email} gin_trgm_ops`)
       .concurrently(),

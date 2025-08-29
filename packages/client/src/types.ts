@@ -53,6 +53,20 @@ export type CreateMessageResult = {
   conversationSlug: string;
 };
 
+export const reactMessageBodySchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("thumbs-up"),
+  }),
+  z.object({
+    type: z.literal("thumbs-down"),
+    feedback: z.string().nullish(),
+  }),
+]);
+export type ReactMessageParams = z.infer<typeof reactMessageBodySchema>;
+export type ReactMessageResult = {
+  reaction: ReactMessageParams;
+};
+
 export const conversationSchema = z.object({
   slug: z.string(),
   subject: z.string(),
@@ -60,6 +74,7 @@ export const conversationSchema = z.object({
   latestMessage: z.string().nullable(),
   latestMessageAt: z.string().datetime().nullable(),
   messageCount: z.number(),
+  isEscalated: z.boolean(),
   isUnread: z.boolean(),
 });
 export type Conversation = z.infer<typeof conversationSchema>;

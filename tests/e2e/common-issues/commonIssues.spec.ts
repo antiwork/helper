@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { deleteCommonIssuesFromDb } from "../utils/commonIssueCleanup";
 import { generateRandomString } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
@@ -55,6 +56,7 @@ test.describe("Common Issues", () => {
     const issueItem = page.getByTestId("common-issue-item").filter({ hasText: titleDescriptionIssue });
     await expect(issueItem.getByText(testDescription)).toBeVisible();
     await expectCommonIssueConversationCount(page, titleDescriptionIssue, 0);
+    await deleteCommonIssuesFromDb([titleOnlyIssue, titleDescriptionIssue]);
   });
 
   test("should edit existing common issue title and description", async ({ page }) => {
@@ -73,9 +75,11 @@ test.describe("Common Issues", () => {
     await expect(page.getByText(originalTitle, { exact: true })).not.toBeVisible();
 
     await editCommonIssue(page, newTitle, newTitle, newDescription);
+
     await expect(page.getByText(newTitle, { exact: true })).toBeVisible();
     const issueItem2 = page.getByTestId("common-issue-item").filter({ hasText: newTitle });
     await expect(issueItem2.getByText(newDescription)).toBeVisible();
+    await deleteCommonIssuesFromDb([newTitle]);
   });
 
   test("should delete common issue", async ({ page }) => {
@@ -109,5 +113,6 @@ test.describe("Common Issues", () => {
     await expect(page.getByText(searchableTitle, { exact: true })).toBeVisible();
     await expect(page.getByText(nonSearchableTitle, { exact: true })).toBeVisible();
     await expect(page.getByText(issueWithSearchableDescription, { exact: true })).toBeVisible();
+    await deleteCommonIssuesFromDb([searchableTitle, nonSearchableTitle, issueWithSearchableDescription]);
   });
 });

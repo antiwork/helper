@@ -4,6 +4,7 @@ import MessageItem from "@/app/(dashboard)/[category]/conversation/messageItem";
 import type { Message } from "@/app/types/global";
 import { ToolMetadata } from "@/db/schema";
 import { ConversationWithNewMessages } from "./conversation";
+import GuideSessionItem from "./guideSessionItem";
 import { ToolItem } from "./toolItem";
 
 export const MessageThread = ({
@@ -15,7 +16,7 @@ export const MessageThread = ({
 }) => {
   return (
     <div className="flex h-full flex-col" data-testid="message-thread">
-      <div className="flex flex-1 flex-col gap-8 pb-4 mb-4">
+      <div className="flex flex-1 flex-col gap-8">
         {conversation.isPrompt && (
           <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
             <HelpCircle className="h-4 w-4 text-muted-foreground" />
@@ -25,6 +26,8 @@ export const MessageThread = ({
         {conversation.messages.map((message, index) =>
           message.type === "event" ? (
             <EventItem key={message.id} event={message} />
+          ) : message.type === "guide_session" ? (
+            <GuideSessionItem key={message.id} guideSession={message} />
           ) : message.role === "tool" && message.type === "message" ? (
             <ToolItem
               key={message.id}

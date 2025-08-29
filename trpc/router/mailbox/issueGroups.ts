@@ -30,15 +30,14 @@ export const issueGroupsRouter = {
           description: issueGroups.description,
           createdAt: issueGroups.createdAt,
           updatedAt: issueGroups.updatedAt,
-          totalCount: sql<number>`COUNT(CASE WHEN ${conversations.id} IS NOT NULL THEN 1 END)::int`,
-          openCount: sql<number>`COUNT(CASE WHEN ${conversations.status} = 'open' THEN 1 END)::int`,
-          todayCount: sql<number>`COUNT(CASE WHEN ${conversations.status} = 'open' AND ${conversations.createdAt} >= ${startOfToday}::timestamp THEN 1 END)::int`,
-          weekCount: sql<number>`COUNT(CASE WHEN ${conversations.status} = 'open' AND ${conversations.createdAt} >= ${startOfWeek}::timestamp THEN 1 END)::int`,
-          monthCount: sql<number>`COUNT(CASE WHEN ${conversations.status} = 'open' AND ${conversations.createdAt} >= ${startOfMonth}::timestamp THEN 1 END)::int`,
-          vipCount: sql<number>`COUNT(CASE WHEN ${conversations.status} = 'open' AND ${platformCustomers.value} >= COALESCE(${mailboxes.vipThreshold}, 999999) * 100 THEN 1 END)::int`,
+          openCount: sql<number>`COUNT(*)::int`,
+          todayCount: sql<number>`COUNT(CASE WHEN ${conversations.createdAt} >= ${startOfToday}::timestamp THEN 1 END)::int`,
+          weekCount: sql<number>`COUNT(CASE WHEN ${conversations.createdAt} >= ${startOfWeek}::timestamp THEN 1 END)::int`,
+          monthCount: sql<number>`COUNT(CASE WHEN ${conversations.createdAt} >= ${startOfMonth}::timestamp THEN 1 END)::int`,
+          vipCount: sql<number>`COUNT(CASE WHEN ${platformCustomers.value} >= COALESCE(${mailboxes.vipThreshold}, 999999) * 100 THEN 1 END)::int`,
         })
         .from(issueGroups)
-        .leftJoin(conversations, eq(issueGroups.id, conversations.issueGroupId))
+        .leftJoin(conversations, and(eq(issueGroups.id, conversations.issueGroupId), eq(conversations.status, "open")))
         .leftJoin(platformCustomers, eq(conversations.emailFrom, platformCustomers.email))
         .leftJoin(mailboxes, eq(mailboxes.id, ctx.mailbox.id))
         .groupBy(

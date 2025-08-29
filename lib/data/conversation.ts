@@ -196,6 +196,12 @@ export const updateConversation = async (
       }
 
       if (current.assignedToId !== updatedConversation.assignedToId) {
+        // Reset lastReadByAssigneeAt when assignee changes
+        await tx
+          .update(conversations)
+          .set({ lastReadByAssigneeAt: null })
+          .where(eq(conversations.id, updatedConversation.id));
+
         notificationEvents.push(
           triggerEvent("conversations/send-follower-notification", {
             conversationId: updatedConversation.id,
@@ -233,7 +239,7 @@ export const serializeConversation = (
     updatedAt: conversation.updatedAt,
     closedAt: conversation.closedAt,
     lastUserEmailCreatedAt: conversation.lastUserEmailCreatedAt,
-    lastReadAt: conversation.lastReadAt,
+    lastReadByCustomerAt: conversation.lastReadAt,
     lastMessageAt: conversation.lastMessageAt,
     assignedToId: conversation.assignedToId,
     assignedToAI: conversation.assignedToAI,

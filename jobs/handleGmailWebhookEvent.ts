@@ -46,11 +46,11 @@ const isThankYouOrAutoResponse = async (
     const content = (
       await runAIQuery({
         system: [
-          "Determine if an email is either a simple thank you message with no follow-up questions OR an auto-response (like out-of-office or automated confirmation).",
+          "Determine if an email is either a standalone thank you message with no follow-up questions OR an auto-response (like out-of-office or automated confirmation).",
           "Respond with 'yes' if the email EITHER:",
-          "1. Is just a thank you message with no follow-up questions",
+          "1. Is just a thank you message with no follow-up questions, additional information, or other instructions",
           "2. Contains wording like 'We'll respond to you as soon as we can.'. Always respond with 'yes' if similar wording to this is present even if there are other instructions present.",
-          "Respond with 'no' followed by a reason if the email contains questions or requires a response.",
+          "Respond with 'no' followed by a reason if the email contains questions, information that may an agent may need to check, or otherwise requires a response.",
         ].join("\n"),
         mailbox,
         temperature: 0,

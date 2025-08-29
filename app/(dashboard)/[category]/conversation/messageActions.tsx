@@ -1,6 +1,7 @@
 import { isMacOS } from "@tiptap/core";
-import { CornerUpLeft } from "lucide-react";
+import { CornerUpLeft, Eye, Lightbulb, Undo2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { create } from "zustand";
 import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
@@ -12,12 +13,13 @@ import { useFileUpload } from "@/components/fileUploadContext";
 import { GenerateKnowledgeBankDialog } from "@/components/generateKnowledgeBankDialog";
 import { useExpiringLocalStorage } from "@/components/hooks/use-expiring-local-storage";
 import { useSpeechRecognition } from "@/components/hooks/useSpeechRecognition";
+import { isInDialog } from "@/components/isInDialog";
 import { KeyboardShortcut } from "@/components/keyboardShortcut";
 import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { useBreakpoint } from "@/components/useBreakpoint";
-import useKeyboardShortcut from "@/components/useKeyboardShortcut";
+import { useSession } from "@/components/useSession";
 import { parseEmailList } from "@/components/utils/email";
 import { publicConversationChannelId } from "@/lib/realtime/channels";
 import { useBroadcastRealtimeEvent } from "@/lib/realtime/hooks";
@@ -64,6 +66,19 @@ const useKnowledgeBankDialogState = create<
   hide: () => set({ isVisible: false }),
 }));
 
+export const useAlternateHotkeyInEditor = (normalKey: string, alternateKey: string, callback: () => void) => {
+  useHotkeys(normalKey, callback, {
+    preventDefault: true,
+    enabled: () => !isInDialog(),
+  });
+  useHotkeys(alternateKey, callback, {
+    enableOnContentEditable: true,
+    enableOnFormTags: true,
+    preventDefault: true,
+    enabled: () => !isInDialog(),
+  });
+};
+
 export const MessageActions = () => {
   const { navigateToConversation, removeConversation } = useConversationListContext();
   const { data: conversation, updateStatus } = useConversationContext();
@@ -87,10 +102,10 @@ export const MessageActions = () => {
     [broadcastEvent],
   );
 
-  const { data: mailboxPreferences } = api.mailbox.get.useQuery();
+  const { user } = useSession() ?? {};
 
   const triggerMailboxConfetti = () => {
-    if (!mailboxPreferences?.preferences?.confetti) return;
+    if (!user?.preferences?.confetti) return;
     triggerConfetti();
   };
 
@@ -102,17 +117,23 @@ export const MessageActions = () => {
     },
   });
 
-  useKeyboardShortcut("z", () => {
-    if (conversation?.status === "closed" || conversation?.status === "spam") {
-      updateStatus("open");
-    }
-  });
-  useKeyboardShortcut("s", () => {
+  useHotkeys(
+    "z",
+    () => {
+      if (conversation?.status === "closed" || conversation?.status === "spam") {
+        updateStatus("open");
+      }
+    },
+    { enabled: () => !isInDialog() },
+  );
+
+  useAlternateHotkeyInEditor("s", "mod+shift+s", () => {
     if (conversation?.status !== "spam") {
       updateStatus("spam");
     }
   });
-  useKeyboardShortcut("c", () => {
+
+  useAlternateHotkeyInEditor("c", "mod+shift+c", () => {
     if (conversation?.status !== "closed") {
       updateStatus("closed");
     }
@@ -171,6 +192,7 @@ export const MessageActions = () => {
   const bccRef = useRef<HTMLInputElement>(null);
   const commandInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<TipTapEditorRef | null>(null);
+  const [isEditorFocused, setIsEditorFocused] = useState(false);
 
   useEffect(() => {
     if (showCc) {
@@ -312,25 +334,31 @@ export const MessageActions = () => {
       toast.success(close ? "Replied and closed" : "Message sent!", {
         duration: 10000,
         description: (
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-2 items-center mt-2">
             {close && (
               <button
-                className="text-xs py-1 text-foreground underline"
-                onClick={() => {
-                  navigateToConversation(conversation.slug);
+                className="inline-flex items-center gap-1 px-1.5 py-1 text-xs font-medium rounded-md border hover:bg-accent transition-colors"
+                onClick={(event) => {
+                  if (event.ctrlKey || event.metaKey) {
+                    window.open(`/conversations?id=${conversation.slug}`, "_blank");
+                  } else {
+                    navigateToConversation(conversation.slug);
+                  }
                 }}
               >
+                <Eye className="h-3 w-3" />
                 Visit
               </button>
             )}
             <button
-              className="text-xs py-1 text-foreground underline"
+              className="inline-flex items-center gap-1 px-1.5 py-1 text-xs font-medium rounded-md border hover:bg-accent transition-colors"
               onClick={() => knowledgeBankDialogState.show(emailId)}
             >
+              <Lightbulb className="h-3 w-3" />
               Generate knowledge
             </button>
             <button
-              className="text-xs py-1 text-foreground underline"
+              className="inline-flex items-center gap-1 px-1.5 py-1 text-xs font-medium rounded-md border hover:bg-accent transition-colors"
               onClick={async () => {
                 try {
                   await utils.client.mailbox.conversations.undo.mutate({
@@ -350,6 +378,7 @@ export const MessageActions = () => {
                 }
               }}
             >
+              <Undo2 className="h-3 w-3" />
               Undo
             </button>
           </div>
@@ -381,7 +410,11 @@ export const MessageActions = () => {
                 disabled={conversation?.status === "closed"}
               >
                 Close
-                {isMacOS() && <KeyboardShortcut className="ml-2 text-sm border-primary/50">C</KeyboardShortcut>}
+                {isMacOS() && (
+                  <KeyboardShortcut className="ml-2 text-sm border-primary/50">
+                    {isEditorFocused ? "⌘⇧C" : "C"}
+                  </KeyboardShortcut>
+                )}
               </Button>
               <Button
                 size={isAboveMd ? "default" : "sm"}
@@ -420,13 +453,8 @@ export const MessageActions = () => {
   };
 
   const handleInsertReply = (content: string) => {
-    setDraftedEmail((prev) => ({
-      ...prev,
-      message: content,
-      modified: true,
-    }));
-    setInitialMessageObject({ content });
-    setStoredMessage(content);
+    editorRef.current?.editor?.commands.insertContent(content);
+    editorRef.current?.editor?.commands.focus();
   };
 
   return (
@@ -461,6 +489,7 @@ export const MessageActions = () => {
         placeholder="Type your reply here..."
         defaultContent={initialMessageObject}
         editable={true}
+        onFocusChange={setIsEditorFocused}
         onUpdate={(message, isEmpty) => {
           updateDraftedEmail({ message: isEmpty ? "" : message });
           if (!isEmpty && conversation?.slug) {
