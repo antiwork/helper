@@ -149,7 +149,7 @@ export const fetchMetadata = async (email: string) => {
       email,
       timestamp: timestamp(),
     });
-    return metadata;
+    return metadata?.user_info ?? null;
   } catch (error) {
     captureExceptionAndLog(error);
     return null;

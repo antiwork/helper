@@ -1,13 +1,8 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { platformCustomers } from "@/db/schema";
+import { CustomerInfo } from "@/packages/client/dist";
 import { getMailbox } from "./mailbox";
-
-type CustomerMetadata = {
-  name?: string | null;
-  value?: number | null;
-  links?: Record<string, string> | null;
-};
 
 export type PlatformCustomer = typeof platformCustomers.$inferSelect & {
   isVip: boolean;
@@ -39,7 +34,8 @@ export const upsertPlatformCustomer = async ({
   customerMetadata,
 }: {
   email: string;
-  customerMetadata: CustomerMetadata;
+  // `links` is deprecated, use `actions` instead
+  customerMetadata: CustomerInfo & { links?: Record<string, string> | null };
 }) => {
   if (!customerMetadata) return;
 
@@ -48,6 +44,7 @@ export const upsertPlatformCustomer = async ({
   if ("name" in customerMetadata) data.name = customerMetadata.name;
   if ("value" in customerMetadata) data.value = customerMetadata.value ?? null;
   if ("links" in customerMetadata) data.links = customerMetadata.links;
+  if ("actions" in customerMetadata) data.links = customerMetadata.actions;
 
   if (Object.keys(data).length === 0) return;
 

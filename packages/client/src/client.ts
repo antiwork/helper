@@ -256,10 +256,12 @@ export class HelperClient {
     handler: ({
       conversation,
       tools = {},
+      customerInfoUrl,
       onEscalated,
     }: {
       conversation: ConversationDetails;
       tools?: Record<string, HelperTool>;
+      customerInfoUrl?: string | null;
       onEscalated?: () => void;
     }) => {
       const formattedMessages = conversation.messages.map(formatAIMessage);
@@ -317,6 +319,7 @@ export class HelperClient {
           message: messages[messages.length - 1],
           conversationSlug: conversation.slug,
           tools: serializeTools(tools),
+          customerInfoUrl,
           requestBody,
         }),
         onToolCall: ({ toolCall }: { toolCall: { toolName: string; args: unknown } }) => {

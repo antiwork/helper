@@ -37,6 +37,7 @@ const events = {
     data: z.object({
       messageId: z.number(),
       tools: z.record(z.string(), toolBodySchema).optional(),
+      customerInfoUrl: z.string().nullish(),
     }),
     jobs: ["handleAutoResponse"],
   },

@@ -88,14 +88,23 @@ const setUserEmail = async (conversationId: number, email: string) => {
   return "Your email has been set. You can now request human support if needed.";
 };
 
-export const buildTools = async (
-  conversationId: number,
-  email: string | null,
+export const buildTools = async ({
+  conversationId,
+  email,
+  customerMetadataProvided,
   includeHumanSupport = true,
   guideEnabled = false,
   includeMailboxTools = true,
-  reasoningMiddlewarePrompt?: string,
-): Promise<Record<string, Tool>> => {
+  reasoningMiddlewarePrompt,
+}: {
+  conversationId: number;
+  email: string | null;
+  customerMetadataProvided: boolean;
+  includeHumanSupport?: boolean;
+  guideEnabled?: boolean;
+  includeMailboxTools?: boolean;
+  reasoningMiddlewarePrompt?: string;
+}): Promise<Record<string, Tool>> => {
   const metadataApi = await getMetadataApiByMailbox();
 
   const reasoningMiddleware = async (result: Promise<string | undefined> | string | undefined) => {
@@ -168,7 +177,7 @@ export const buildTools = async (
     });
   }
 
-  if (metadataApi && email) {
+  if (!customerMetadataProvided && metadataApi && email) {
     tools.fetch_user_information = tool({
       description: "fetch user related information",
       parameters: z.object({
