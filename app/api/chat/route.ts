@@ -7,6 +7,7 @@ import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/util
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { createUserMessage, respondWithAI } from "@/lib/ai/chat";
+import { importClientTools } from "@/lib/data/clientTool";
 import {
   CHAT_CONVERSATION_SUBJECT,
   generateConversationSubject,
@@ -15,10 +16,10 @@ import {
 import { publicConversationChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createClient } from "@/lib/supabase/server";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
 import { ToolRequestBody } from "@/packages/client/dist";
-import { importClientTools } from "@/lib/data/clientTool";
 
 export const maxDuration = 60;
 
@@ -93,10 +94,14 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     };
   });
 
-  if(tools && Object.keys(tools).length > 0) {
-      const customerEmail = customerSpecificTools ? userEmail : null;
+  if (tools && Object.keys(tools).length > 0) {
+    const customerEmail = customerSpecificTools ? userEmail : null;
+    try {
       await importClientTools(customerEmail, tools);
+    } catch (error) {
+      return captureExceptionAndLog(error);
     }
+  }
 
   const userMessage = await createUserMessage(
     conversation.id,

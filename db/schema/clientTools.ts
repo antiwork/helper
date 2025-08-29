@@ -13,7 +13,7 @@ export const clientTools = pgTable(
         customer_email: text(),
     },
     (table) => [
-        uniqueIndex("unique_customer_email_tool_idx").on(table.customer_email, table.tool_name).where(sql`${table.customer_email} IS NOT NULL`),
+        uniqueIndex("unique_tool_idx").on(table.tool_name, table.customer_email),
         index("idx_client_tools_customer_email").on(table.customer_email).where(sql`${table.customer_email} IS NOT NULL`),
     ],
 ).enableRLS();
