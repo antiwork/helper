@@ -6,6 +6,7 @@ import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { createUserMessage } from "@/lib/ai/chat";
+import { cacheClientTools } from "@/lib/data/clientToolsCache";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
 
 export const maxDuration = 60;
@@ -31,6 +32,14 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
   }
 
   const userEmail = session.isAnonymous ? null : session.email || null;
+
+  // Cache client-provided tools if any
+  if (tools && Object.keys(tools).length > 0) {
+    await cacheClientTools({
+      tools,
+      customerEmail: userEmail,
+    });
+  }
 
   const validationResult = validateAttachments(
     attachments.map((att) => ({
