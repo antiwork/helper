@@ -205,6 +205,7 @@
     "@types/react-dom": "19.1.2",
     "@types/ua-parser-js": "^0.7.39",
     "@vercel/sdk": "^1.8.2",
+    "@vitest/browser": "^3.2.4",
     "@vitest/coverage-v8": "^2.1.1",
     "autoevals": "^0.0.117",
     "classnames": "^2.5.1",
