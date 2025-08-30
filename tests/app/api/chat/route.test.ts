@@ -3,7 +3,7 @@ import type { ToolRequestBody } from "@helperai/client";
 
 // Mock the data functions
 vi.mock("@/lib/data/clientToolsCache", () => ({
-  cacheClientTools: vi.fn(),
+  cacheClientTools: vi.fn().mockResolvedValue(undefined),
   getCachedClientTools: vi.fn(),
 }));
 

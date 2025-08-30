@@ -66,10 +66,12 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
 
   // Cache client-provided tools if any
   if (tools && Object.keys(tools).length > 0) {
-    await cacheClientTools({
-      tools,
-      customerEmail: customerSpecificTools ? userEmail : undefined,
-    });
+    waitUntil(
+      cacheClientTools({
+        tools,
+        customerEmail: customerSpecificTools ? userEmail : undefined,
+      }),
+    );
   }
 
   const attachments = message.experimental_attachments ?? [];

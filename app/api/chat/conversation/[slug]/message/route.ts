@@ -8,6 +8,7 @@ import { triggerEvent } from "@/jobs/trigger";
 import { createUserMessage } from "@/lib/ai/chat";
 import { cacheClientTools } from "@/lib/data/clientToolsCache";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
+import { waitUntil } from "@vercel/functions";
 
 export const maxDuration = 60;
 
@@ -40,7 +41,7 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
 
   // Cache client-provided tools if any
   if (tools && Object.keys(tools).length > 0) {
-    (request as any).waitUntil?.(
+    waitUntil(
       cacheClientTools({
         tools,
         customerEmail: customerSpecificTools ? userEmail : undefined,
