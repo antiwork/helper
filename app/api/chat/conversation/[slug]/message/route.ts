@@ -9,6 +9,7 @@ import { createUserMessage } from "@/lib/ai/chat";
 import { importClientTools } from "@/lib/data/clientTool";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { waitUntil } from "@vercel/functions";
 
 export const maxDuration = 60;
 
@@ -75,7 +76,7 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
   if (tools && Object.keys(tools).length > 0) {
     const customerEmail = customerSpecificTools ? userEmail : null;
     try {
-      await importClientTools(customerEmail, tools);
+      waitUntil(importClientTools(customerEmail, tools));
     } catch (error) {
       return captureExceptionAndLog(error);
     }

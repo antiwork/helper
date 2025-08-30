@@ -94,10 +94,10 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     };
   });
 
-  if (tools && Object.keys(tools).length > 0) {
+  if (tools && Object.keys(tools ?? {}).length > 0) {
     const customerEmail = customerSpecificTools ? userEmail : null;
     try {
-      await importClientTools(customerEmail, tools);
+      waitUntil(importClientTools(customerEmail, tools));
     } catch (error) {
       return captureExceptionAndLog(error);
     }
