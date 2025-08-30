@@ -31,41 +31,26 @@ export const cacheClientTools = async ({
     const [toolName, tool] = toolEntry;
 
     try {
-      // First try to find existing record
-      const existingTool = await db.query.clientToolsCache.findFirst({
-        where: and(
-          eq(clientToolsCache.toolName, toolName),
-          eq(clientToolsCache.unused_mailboxId, 0),
-          customerEmail ? eq(clientToolsCache.customerEmail, customerEmail) : isNull(clientToolsCache.customerEmail),
-          platformCustomerId
-            ? eq(clientToolsCache.platformCustomerId, platformCustomerId)
-            : isNull(clientToolsCache.platformCustomerId),
-        ),
-      });
-
-      if (existingTool) {
-        // Update existing record
-        await db
-          .update(clientToolsCache)
-          .set({
-            description: tool.description || "",
-            parameters: tool.parameters || {},
-            serverRequestUrl: tool.serverRequestUrl!,
-            updatedAt: new Date(),
-          })
-          .where(eq(clientToolsCache.id, existingTool.id));
-      } else {
-        // Insert new record
-        await db.insert(clientToolsCache).values({
+      // Use onConflictDoUpdate with non-nullable columns (empty strings instead of NULL)
+      await db
+        .insert(clientToolsCache)
+        .values({
           toolName,
           description: tool.description || "",
           parameters: tool.parameters || {},
           serverRequestUrl: tool.serverRequestUrl!,
-          customerEmail: customerEmail ?? null,
-          platformCustomerId: platformCustomerId ?? null,
-          unused_mailboxId: 0,
+          customerEmail: customerEmail || "", // Empty string instead of NULL
+          platformCustomerId: platformCustomerId || "", // Empty string instead of NULL
+        })
+        .onConflictDoUpdate({
+          target: [clientToolsCache.toolName, clientToolsCache.customerEmail, clientToolsCache.platformCustomerId],
+          set: {
+            description: tool.description || "",
+            parameters: tool.parameters || {},
+            serverRequestUrl: tool.serverRequestUrl!,
+            updatedAt: new Date(),
+          },
         });
-      }
     } catch (error) {
       captureExceptionAndLog(error);
       throw error;
@@ -77,7 +62,7 @@ export const getCachedClientTools = async ({
   customerEmail,
   platformCustomerId,
 }: GetCachedClientToolsParams): Promise<Record<string, ToolRequestBody>> => {
-  const scopedFilters = [eq(clientToolsCache.unused_mailboxId, 0)];
+  const scopedFilters: any[] = [];
   if (customerEmail) scopedFilters.push(eq(clientToolsCache.customerEmail, customerEmail));
   if (platformCustomerId) scopedFilters.push(eq(clientToolsCache.platformCustomerId, platformCustomerId));
 
@@ -90,11 +75,7 @@ export const getCachedClientTools = async ({
 
   if (cachedTools.length === 0) {
     cachedTools = await db.query.clientToolsCache.findMany({
-      where: and(
-        eq(clientToolsCache.unused_mailboxId, 0),
-        isNull(clientToolsCache.customerEmail),
-        isNull(clientToolsCache.platformCustomerId),
-      ),
+      where: and(eq(clientToolsCache.customerEmail, ""), eq(clientToolsCache.platformCustomerId, "")),
     });
   }
 
@@ -114,32 +95,19 @@ export const clearCachedClientTools = async ({
   customerEmail,
   platformCustomerId,
 }: GetCachedClientToolsParams): Promise<void> => {
-  const where = [eq(clientToolsCache.unused_mailboxId, 0)];
+  const where: any[] = [];
   if (customerEmail) where.push(eq(clientToolsCache.customerEmail, customerEmail));
   if (platformCustomerId) where.push(eq(clientToolsCache.platformCustomerId, platformCustomerId));
 
   // If no identifiers provided, target global entries
-  if (where.length === 1) {
-    where.push(isNull(clientToolsCache.customerEmail), isNull(clientToolsCache.platformCustomerId));
+  if (where.length === 0) {
+    where.push(eq(clientToolsCache.customerEmail, ""), eq(clientToolsCache.platformCustomerId, ""));
   }
 
   await db.delete(clientToolsCache).where(and(...where));
 };
 
-export const getCachedToolsForAdmin = async (
-  tx: Transaction | typeof db = db,
-): Promise<
-  {
-    toolName: string;
-    description: string;
-    parameters: Record<string, any>;
-    serverRequestUrl: string;
-    customerEmail: string | null;
-    platformCustomerId: string | null;
-    createdAt: Date;
-    updatedAt: Date;
-  }[]
-> => {
+export const getCachedToolsForAdmin = async (tx: Transaction | typeof db = db) => {
   return await tx.query.clientToolsCache.findMany({
     columns: {
       toolName: true,

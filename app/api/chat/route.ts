@@ -7,7 +7,7 @@ import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/util
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { createUserMessage, respondWithAI } from "@/lib/ai/chat";
-import { cacheClientTools, getCachedClientTools } from "@/lib/data/clientToolsCache";
+import { cacheClientTools } from "@/lib/data/clientToolsCache";
 import {
   CHAT_CONVERSATION_SUBJECT,
   generateConversationSubject,
@@ -72,11 +72,6 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     });
   }
 
-  // Get cached tools and merge with provided tools
-  const cachedTools = await getCachedClientTools({
-    customerEmail: userEmail,
-  });
-  const allTools = { ...cachedTools, ...tools };
   const attachments = message.experimental_attachments ?? [];
 
   const validationResult = validateAttachments(
@@ -132,7 +127,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     sendEmail: false,
     reasoningEnabled: false,
     isHelperUser,
-    tools: allTools,
+    tools,
     customerSpecificTools,
     onResponse: ({ messages, isPromptConversation, isFirstMessage, humanSupportRequested }) => {
       if (

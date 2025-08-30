@@ -15,7 +15,12 @@ export const OPTIONS = () => corsOptions("POST");
 
 export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: { params } }, { session }) => {
   const { slug } = await params;
-  const { content, attachments = [], tools } = createMessageBodySchema.parse(await request.json());
+  const {
+    content,
+    attachments = [],
+    tools,
+    customerSpecificTools,
+  } = createMessageBodySchema.parse(await request.json());
 
   if (!content || content.trim().length === 0) {
     return corsResponse({ error: "Content is required" }, { status: 400 });
@@ -35,10 +40,12 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
 
   // Cache client-provided tools if any
   if (tools && Object.keys(tools).length > 0) {
-    await cacheClientTools({
-      tools,
-      customerEmail: userEmail,
-    });
+    (request as any).waitUntil?.(
+      cacheClientTools({
+        tools,
+        customerEmail: customerSpecificTools ? userEmail : undefined,
+      }),
+    );
   }
 
   const validationResult = validateAttachments(

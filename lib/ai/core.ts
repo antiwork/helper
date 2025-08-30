@@ -7,26 +7,14 @@ import { assertDefined } from "@/components/utils/assert";
 import openai from "@/lib/ai/openai";
 import { cacheFor } from "@/lib/cache";
 
-const _GPT_4O_MODEL = "gpt-4o";
-const _GPT_4O_MINI_MODEL = "gpt-4o-mini";
-const _GPT_4_1_MODEL = "gpt-4.1";
-const _O4_MINI_MODEL = "o4-mini-2025-04-16";
-const _GPT_4_1_MINI_MODEL = "gpt-4.1-mini";
-const GPT_5_MODEL = "gpt-5";
-const GPT_5_MINI_MODEL = "gpt-5-mini";
+const GPT_4_1_MODEL = "gpt-4.1";
+const GPT_4_1_MINI_MODEL = "gpt-4.1-mini";
 
-export type AvailableModel =
-  | typeof _O4_MINI_MODEL
-  | typeof _GPT_4O_MINI_MODEL
-  | typeof _GPT_4O_MODEL
-  | typeof _GPT_4_1_MINI_MODEL
-  | typeof _GPT_4_1_MODEL
-  | typeof GPT_5_MODEL
-  | typeof GPT_5_MINI_MODEL;
+export type AvailableModel = typeof GPT_4_1_MINI_MODEL | typeof GPT_4_1_MODEL;
 
 const EMBEDDING_MODEL = "text-embedding-3-small";
-export const CHAT_MODEL = GPT_5_MODEL;
-export const MINI_MODEL = GPT_5_MINI_MODEL;
+export const CHAT_MODEL = GPT_4_1_MODEL;
+export const MINI_MODEL = GPT_4_1_MINI_MODEL;
 
 export const generateEmbedding = async (
   value: string,

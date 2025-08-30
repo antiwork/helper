@@ -84,7 +84,7 @@ describe("clientToolsCache", () => {
 
       expect(cachedTool).toMatchObject({
         toolName: "testTool",
-        customerEmail: null, // Should be null for global tools
+        customerEmail: "",
       });
     });
 

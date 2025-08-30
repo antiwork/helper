@@ -95,39 +95,6 @@ describe("Chat API Route", () => {
     });
   });
 
-  it("should retrieve cached tools", async () => {
-    const { getCachedClientTools } = await import("@/lib/data/clientToolsCache");
-
-    const cachedTools = {
-      cachedTool: {
-        description: "Cached tool",
-        parameters: {},
-        serverRequestUrl: "https://api.example.com/cached",
-      },
-    };
-
-    vi.mocked(getCachedClientTools).mockResolvedValue(cachedTools);
-
-    const request = new Request("http://localhost/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: { content: "Hello" },
-        conversationSlug: "test-conversation",
-        readPageTool: null,
-        guideEnabled: false,
-        tools: {},
-      }),
-    });
-
-    const { POST } = await import("@/app/api/chat/route");
-    await POST(request, { params: Promise.resolve({}) });
-
-    expect(getCachedClientTools).toHaveBeenCalledWith({
-      customerEmail: "test@example.com",
-    });
-  });
-
   it("should cache tools globally when customerSpecificTools is false", async () => {
     const { cacheClientTools } = await import("@/lib/data/clientToolsCache");
 
@@ -195,39 +162,6 @@ describe("Chat API Route", () => {
     expect(cacheClientTools).toHaveBeenCalledWith({
       tools,
       customerEmail: undefined, // Should be undefined for global caching
-    });
-  });
-
-  it("should handle anonymous sessions", async () => {
-    const { getCachedClientTools } = await import("@/lib/data/clientToolsCache");
-
-    // Set anonymous session for this test
-    mockSession = { isAnonymous: true, email: null };
-
-    // Set conversation without emailFrom for anonymous session
-    mockConversationData = {
-      id: 1,
-      slug: "test-conversation",
-      emailFrom: null, // No emailFrom for anonymous sessions
-    };
-
-    const request = new Request("http://localhost/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message: { content: "Hello" },
-        conversationSlug: "test-conversation",
-        readPageTool: null,
-        guideEnabled: false,
-        tools: {},
-      }),
-    });
-
-    const { POST } = await import("@/app/api/chat/route");
-    await POST(request, { params: Promise.resolve({}) });
-
-    expect(getCachedClientTools).toHaveBeenCalledWith({
-      customerEmail: null,
     });
   });
 

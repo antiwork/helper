@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { env } from "@/lib/env";
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   if (env.NODE_ENV !== "development") {
     return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
   }
