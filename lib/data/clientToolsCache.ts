@@ -31,7 +31,6 @@ export const cacheClientTools = async ({
     const [toolName, tool] = toolEntry;
 
     try {
-      // Use onConflictDoUpdate with non-nullable columns (empty strings instead of NULL)
       await db
         .insert(clientToolsCache)
         .values({
