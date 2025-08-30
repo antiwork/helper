@@ -54,6 +54,11 @@ export const ChatView = ({ conversation }: { conversation: ConversationDetails }
             return `The status of ${productId} is ${Math.random() > 0.5 ? "active" : "inactive"}`;
           },
         },
+        listCoupons: {
+          description: "Get list of all available discount coupons and their details",
+          parameters: {},
+          url: `/widget/test/custom/tool/list-coupons`,
+        },
       },
     }),
   });
