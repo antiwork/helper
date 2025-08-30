@@ -1,3 +1,4 @@
+import "@testing-library/jest-dom/vitest";
 import { truncateDb } from "@tests/support/setupDatabase";
 import { afterAll, beforeAll, beforeEach, inject, vi } from "vitest";
 

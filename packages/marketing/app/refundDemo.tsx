@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
 import { MousePointer, MousePointerClick } from "lucide-react";
+import { motion, useInView } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import AnimatedTyping from "./animatedTyping";
 

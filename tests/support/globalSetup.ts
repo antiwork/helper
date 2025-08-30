@@ -1,10 +1,12 @@
+/// <reference types="@vitest/browser/context" />
+
 /* eslint-disable no-console */
-import type { GlobalSetupContext } from "vitest/node";
+import type { TestProject } from "vitest/node";
 import { setupDockerTestDb } from "./setupDatabase";
 
 let testDatabase: Awaited<ReturnType<typeof setupDockerTestDb>> | undefined;
 
-export async function setup({ provide }: GlobalSetupContext) {
+export async function setup({ provide }: TestProject) {
   console.log("Starting global setup...");
   console.log("Setting up Docker test database...");
   testDatabase = await setupDockerTestDb();
