@@ -841,6 +841,13 @@
       "when": 1756409848361,
       "tag": "0119_nostalgic_doctor_faustus",
       "breakpoints": true
+    },
+    {
+      "idx": 120,
+      "version": "7",
+      "when": 1756556027518,
+      "tag": "0120_daily_vargas",
+      "breakpoints": true
     }
   ]
 }
