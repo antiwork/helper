@@ -128,7 +128,7 @@ const CommonIssuesSetting = () => {
 
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
 
-  const createFromSuggestionsMutation = api.mailbox.issueGroups.createFromSuggestions.useMutation({
+  const bulkCreateMutation = api.mailbox.issueGroups.bulkCreate.useMutation({
     onSuccess: (data) => {
       utils.mailbox.issueGroups.listAll.invalidate();
       toast.success(`Created ${data.createdIssues} common issues from your conversations`);
@@ -144,7 +144,7 @@ const CommonIssuesSetting = () => {
   };
 
   const handleApproveSuggestions = async (approvedSuggestions: { title: string; description?: string }[]) => {
-    await createFromSuggestionsMutation.mutateAsync({ suggestions: approvedSuggestions });
+    await bulkCreateMutation.mutateAsync({ items: approvedSuggestions });
   };
 
   const handleCreateIssue = async () => {
@@ -301,7 +301,7 @@ const CommonIssuesSetting = () => {
         isOpen={showGenerateDialog}
         onClose={() => setShowGenerateDialog(false)}
         onApprove={handleApproveSuggestions}
-        isCreating={createFromSuggestionsMutation.isPending}
+        isCreating={bulkCreateMutation.isPending}
       />
     </SectionWrapper>
   );

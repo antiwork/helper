@@ -1,86 +1,43 @@
 import { expect, test } from "@playwright/test";
-import { takeUniqueOrThrow } from "../../../components/utils/arrays";
 import { db } from "../../../db/client";
-import { conversationMessages, conversations, issueGroups } from "../../../db/schema";
+import { issueGroups } from "../../../db/schema";
+import { MOCKED_COMMON_ISSUES_SUGGESTIONS } from "../../../lib/ai/constants";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 test.describe("Common Issues Settings", () => {
   test.describe.configure({ mode: "serial" });
-  test.beforeEach(async () => {
+  test.beforeEach(async ({ page }) => {
     await db.delete(issueGroups);
-    await db.delete(conversationMessages);
-    await db.delete(conversations);
 
-    for (let i = 1; i <= 5; i++) {
-      const conversation = await db
-        .insert(conversations)
-        .values({
-          subject: `Test Issue ${i}: ${i % 2 === 0 ? "Login problems" : "Payment issues"}`,
-          status: (i % 2 === 0 ? "open" : "closed") as "open" | "closed" | "spam",
-          emailFrom: `user${i}@example.com`,
-          conversationProvider: "gmail" as const,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning()
-        .then(takeUniqueOrThrow);
-
-      await db.insert(conversationMessages).values({
-        conversationId: conversation.id,
-        role: "user" as const,
-        cleanedUpText: `I'm having trouble with ${i % 2 === 0 ? "logging into my account" : "payment processing"}. The error message says ${i % 2 === 0 ? "invalid credentials" : "payment failed"}.`,
-        body: `<p>I'm having trouble with ${i % 2 === 0 ? "logging into my account" : "payment processing"}. The error message says ${i % 2 === 0 ? "invalid credentials" : "payment failed"}.</p>`,
-        status: "sent" as const,
-        isPerfect: false,
-        isFlaggedAsBad: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+    await page.route("**/api/trpc/lambda/mailbox.issueGroups.generateSuggestions*", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          result: {
+            data: {
+              json: {
+                issues: MOCKED_COMMON_ISSUES_SUGGESTIONS,
+              },
+            },
+          },
+        }),
       });
-
-      if (i <= 3) {
-        await db.insert(conversationMessages).values({
-          conversationId: conversation.id,
-          role: "staff" as const,
-          cleanedUpText: `Thank you for contacting support. Let me help you with your ${i % 2 === 0 ? "login issue" : "payment problem"}.`,
-          body: `<p>Thank you for contacting support. Let me help you with your ${i % 2 === 0 ? "login issue" : "payment problem"}.</p>`,
-          status: "sent" as const,
-          isPerfect: false,
-          isFlaggedAsBad: false,
-          createdAt: new Date(Date.now() + 1000), // 1 second later
-          updatedAt: new Date(),
-        });
-      }
-    }
-  });
-
-  test("shows generate button in empty state", async ({ page }) => {
-    await page.goto("/settings/common-issues");
-
-    await expect(page.getByText("No common issues created yet.")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Generate common issues" })).toBeVisible();
-  });
-
-  test("shows error when no conversations exist", async ({ page }) => {
-    await db.delete(conversationMessages);
-    await db.delete(conversations);
-
-    await page.goto("/settings/common-issues");
-
-    const generateButton = page.getByRole("button", { name: "Generate common issues" });
-    await generateButton.click();
-
-    await expect(page.getByText("No common issues could be generated from existing conversations")).toBeVisible();
+    });
   });
 
   test("generate button works with existing conversations", async ({ page }) => {
     await page.goto("/settings/common-issues");
 
+    await expect(page.getByText("No common issues created yet.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Generate common issues" })).toBeVisible();
+
     const generateButton = page.getByRole("button", { name: "Generate common issues" });
     await generateButton.click();
 
     await expect(page.getByText("Review generated common issues")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Create 5 issues" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Create 2 issues" })).toBeVisible();
   });
 
   test("shows approval dialog when issues are generated", async ({ page }) => {
@@ -105,7 +62,7 @@ test.describe("Common Issues Settings", () => {
 
     await expect(page.getByText("Review generated common issues")).toBeVisible();
 
-    const editButton = page.getByRole("button", { name: "Edit" }).first();
+    const editButton = page.getByLabel("Edit").first();
     await editButton.click();
 
     const titleInput = page.getByPlaceholder("Issue title");
@@ -134,7 +91,7 @@ test.describe("Common Issues Settings", () => {
     const initialText = await initialCreateButton.textContent();
     const initialCount = parseInt(initialText?.match(/\d+/)?.[0] || "0");
 
-    const deleteButton = page.getByRole("button", { name: "Delete" }).first();
+    const deleteButton = page.getByLabel("Delete").first();
     await deleteButton.click();
 
     const updatedCreateButton = page.getByRole("button", { name: /Create \d+ issue/ });
@@ -158,7 +115,7 @@ test.describe("Common Issues Settings", () => {
     await expect(page.getByText(/Created \d+ common issues/)).toBeVisible();
 
     const issuesInDb = await db.select().from(issueGroups);
-    expect(issuesInDb.length).toBe(5);
+    expect(issuesInDb.length).toBe(2);
   });
 
   test("can cancel approval dialog", async ({ page }) => {

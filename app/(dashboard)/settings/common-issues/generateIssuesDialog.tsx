@@ -194,10 +194,10 @@ function ViewIssue({ suggestion, onEdit, onDelete }: ViewIssueProps) {
           {suggestion.description && <p className="text-sm text-muted-foreground mt-1">{suggestion.description}</p>}
         </div>
         <div className="flex gap-1 ml-2">
-          <Button variant="ghost" size="sm" onClick={onEdit}>
+          <Button aria-label="Edit" variant="ghost" size="sm" onClick={onEdit}>
             <Edit2 className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={onDelete}>
+          <Button aria-label="Delete" variant="ghost" size="sm" onClick={onDelete}>
             <Trash className="h-4 w-4" />
           </Button>
         </div>

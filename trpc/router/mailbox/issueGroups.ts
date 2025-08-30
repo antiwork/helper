@@ -314,10 +314,10 @@ export const issueGroupsRouter = {
     return result;
   }),
 
-  createFromSuggestions: mailboxProcedure
+  bulkCreate: mailboxProcedure
     .input(
       z.object({
-        suggestions: z.array(
+        items: z.array(
           z.object({
             title: z.string(),
             description: z.string().optional(),
@@ -327,12 +327,12 @@ export const issueGroupsRouter = {
     )
     .mutation(async ({ input }) => {
       const createdIssues = await Promise.all(
-        input.suggestions.map((suggestion) =>
+        input.items.map((item) =>
           db
             .insert(issueGroups)
             .values({
-              title: suggestion.title,
-              description: suggestion.description,
+              title: item.title,
+              description: item.description,
               createdAt: new Date(),
               updatedAt: new Date(),
             })

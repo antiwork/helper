@@ -36,24 +36,4 @@ export const MOCKED_COMMON_ISSUES_SUGGESTIONS = [
     reasoning:
       "Overly aggressive behavior is a common friction point with AI assistants and tends to generate repeated requests to tune sensitivity.",
   },
-  {
-    title: "Suggestion UI Obstruction",
-    description: "Feedback that popup suggestion panels obscure existing code or important context in the editor.",
-    reasoning:
-      "In-IDE overlays frequently cause visibility and focus issues, making this a typical UI/UX support pattern.",
-  },
-  {
-    title: "Granular Configuration Controls",
-    description:
-      "Requests for finer controls over when/how suggestions appear (per-language, per-file, trigger conditions, enable/disable).",
-    reasoning:
-      "Users have varied workflows and need customization; gaps in settings commonly lead to support tickets and feature requests.",
-  },
-  {
-    title: "Private Codebase Training",
-    description:
-      "Inquiries about training/adapting the assistant on an organization's repositories and internal APIs/patterns.",
-    reasoning:
-      "Enterprise and team customers often seek model customization to improve relevance and maintain internal standards, making this a recurring theme.",
-  },
 ];
