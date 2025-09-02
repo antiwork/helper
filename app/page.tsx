@@ -5,6 +5,8 @@ import { env } from "@/lib/env";
 import { TRPCReactProvider } from "@/trpc/react";
 import { HomepageContent } from "./homepageContent";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const mailbox = await getMailbox();
 
