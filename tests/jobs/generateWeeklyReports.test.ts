@@ -67,7 +67,7 @@ describe("generateMailboxWeeklyReport", () => {
     });
 
     vi.mocked(getMemberStats).mockResolvedValue([
-      { id: "user1", email: "john@example.com", displayName: "John Doe", replyCount: 5, role: "core" },
+      { id: "user1", email: "john@example.com", displayName: "John Doe", replyCount: 5 },
     ]);
 
     vi.mocked(getSlackUsersByEmail).mockResolvedValue(new Map([["john@example.com", "SLACK123"]]));
@@ -95,7 +95,7 @@ describe("generateMailboxWeeklyReport", () => {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "*Core members:*",
+              text: "*Team members:*",
             },
           },
           {
@@ -134,17 +134,17 @@ describe("generateMailboxWeeklyReport", () => {
     // Create mock data with both core and non-core members, active and inactive
     vi.mocked(getMemberStats).mockResolvedValue([
       // Active core members
-      { id: "user1", email: "john@example.com", displayName: "John Doe", replyCount: 10, role: "core" },
-      { id: "user2", email: "jane@example.com", displayName: "Jane Smith", replyCount: 5, role: "core" },
+      { id: "user1", email: "john@example.com", displayName: "John Doe", replyCount: 10 },
+      { id: "user2", email: "jane@example.com", displayName: "Jane Smith", replyCount: 5 },
       // Inactive core member
-      { id: "user3", email: "alex@example.com", displayName: "Alex Johnson", replyCount: 0, role: "core" },
+      { id: "user3", email: "alex@example.com", displayName: "Alex Johnson", replyCount: 0 },
       // Active non-core members
-      { id: "user4", email: "sam@example.com", displayName: "Sam Wilson", replyCount: 8, role: "nonCore" },
-      { id: "user5", email: "pat@example.com", displayName: "Pat Brown", replyCount: 3, role: "nonCore" },
+      { id: "user4", email: "sam@example.com", displayName: "Sam Wilson", replyCount: 8 },
+      { id: "user5", email: "pat@example.com", displayName: "Pat Brown", replyCount: 3 },
       // Inactive non-core member
-      { id: "user6", email: "chris@example.com", displayName: "Chris Lee", replyCount: 0, role: "nonCore" },
+      { id: "user6", email: "chris@example.com", displayName: "Chris Lee", replyCount: 0 },
       // AFK member
-      { id: "user7", email: "bob@example.com", displayName: "Bob White", replyCount: 0, role: "afk" },
+      { id: "user7", email: "bob@example.com", displayName: "Bob White", replyCount: 0 },
     ]);
 
     vi.mocked(getSlackUsersByEmail).mockResolvedValue(
@@ -179,56 +179,28 @@ describe("generateMailboxWeeklyReport", () => {
               emoji: true,
             },
           },
-          // Core members header
+          // Team members header
           {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "*Core members:*",
+              text: "*Team members:*",
             },
           },
-          // Active core members mention by slack ID
+          // Team members mention by slack ID
           {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "• <@SLACK1>: 10\n• <@SLACK2>: 5",
+              text: "• <@SLACK1>: 10\n• <@SLACK4>: 8\n• <@SLACK2>: 5\n• <@SLACK5>: 3",
             },
           },
-          // Inactive core members
+          // Inactive members
           {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "*No tickets answered:* <@SLACK3>",
-            },
-          },
-          // Divider between sections
-          {
-            type: "divider",
-          },
-          // Non-core members header
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: "*Non-core members:*",
-            },
-          },
-          // Active non-core members mention by name
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: "• Sam Wilson: 8\n• Pat Brown: 3",
-            },
-          },
-          // Inactive non-core members
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: "*No tickets answered:* Chris Lee",
+              text: "*No tickets answered:* <@SLACK3>, <@SLACK6>, <@SLACK7>",
             },
           },
           // Divider before total
