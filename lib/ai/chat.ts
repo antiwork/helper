@@ -30,6 +30,7 @@ import { PromptInfo } from "@/lib/ai/promptInfo";
 import { CHAT_SYSTEM_PROMPT, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
 import { buildTools } from "@/lib/ai/tools";
 import { cacheFor } from "@/lib/cache";
+import { getCachedClientTools } from "@/lib/data/clientToolsCache";
 import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
 import {
   createAiDraft,
@@ -328,6 +329,7 @@ export const generateAIResponse = async ({
   evaluation = false,
   guideEnabled = false,
   tools: clientProvidedTools,
+  customerSpecificTools = false,
 }: {
   messages: Message[];
   mailbox: Mailbox;
@@ -351,6 +353,7 @@ export const generateAIResponse = async ({
   evaluation?: boolean;
   dataStream?: DataStreamWriter;
   tools?: Record<string, ToolRequestBody>;
+  customerSpecificTools?: boolean;
 }) => {
   const lastMessage = messages.findLast((m: Message) => m.role === "user");
   const query = lastMessage?.content || "";
@@ -370,8 +373,13 @@ export const generateAIResponse = async ({
     };
   }
 
-  if (clientProvidedTools) {
-    Object.entries(clientProvidedTools).forEach(([toolName, tool]) => {
+  const cachedTools = await getCachedClientTools({
+    customerEmail: customerSpecificTools ? email : null,
+  });
+  const allTools = { ...cachedTools, ...clientProvidedTools };
+
+  if (allTools) {
+    Object.entries(allTools).forEach(([toolName, tool]) => {
       const toolDefinition: Tool = {
         description: tool.description,
         parameters: z.object(
@@ -637,6 +645,7 @@ export const respondWithAI = async ({
   isHelperUser = false,
   reasoningEnabled = true,
   tools,
+  customerSpecificTools = false,
 }: {
   conversation: Conversation;
   mailbox: Mailbox;
@@ -656,6 +665,7 @@ export const respondWithAI = async ({
   isHelperUser?: boolean;
   reasoningEnabled?: boolean;
   tools?: Record<string, ToolRequestBody>;
+  customerSpecificTools?: boolean;
 }) => {
   if (conversation.status === "spam") return createTextResponse("", Date.now().toString());
 
@@ -741,6 +751,7 @@ export const respondWithAI = async ({
         guideEnabled,
         addReasoning: reasoningEnabled,
         tools,
+        customerSpecificTools,
         dataStream,
         async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources, promptInfo }) {
           const hasSensitiveToolCall = steps.some((step: any) =>

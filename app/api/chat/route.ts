@@ -7,6 +7,7 @@ import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/util
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { createUserMessage, respondWithAI } from "@/lib/ai/chat";
+import { cacheClientTools } from "@/lib/data/clientToolsCache";
 import {
   CHAT_CONVERSATION_SUBJECT,
   generateConversationSubject,
@@ -29,6 +30,7 @@ interface ChatRequestBody {
   guideEnabled: boolean;
   isToolResult?: boolean;
   tools?: Record<string, ToolRequestBody>;
+  customerSpecificTools?: boolean;
 }
 
 const getConversation = async (conversationSlug: string, session: WidgetSessionPayload) => {
@@ -53,13 +55,24 @@ const getConversation = async (conversationSlug: string, session: WidgetSessionP
 export const OPTIONS = () => corsOptions("POST");
 
 export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => {
-  const { message, conversationSlug, readPageTool, guideEnabled, tools }: ChatRequestBody = await request.json();
+  const { message, conversationSlug, readPageTool, guideEnabled, tools, customerSpecificTools }: ChatRequestBody =
+    await request.json();
 
   Sentry.setTag("conversation_slug", conversationSlug);
 
   const conversation = await getConversation(conversationSlug, session);
 
   const userEmail = session.isAnonymous ? null : session.email || null;
+
+  if (tools && Object.keys(tools).length > 0) {
+    waitUntil(
+      cacheClientTools({
+        tools,
+        customerEmail: customerSpecificTools ? userEmail : null,
+      }),
+    );
+  }
+
   const attachments = message.experimental_attachments ?? [];
 
   const validationResult = validateAttachments(
@@ -116,6 +129,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     reasoningEnabled: false,
     isHelperUser,
     tools,
+    customerSpecificTools,
     onResponse: ({ messages, isPromptConversation, isFirstMessage, humanSupportRequested }) => {
       if (
         (!isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) ||

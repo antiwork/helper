@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import { and, eq } from "drizzle-orm";
 import { createMessageBodySchema } from "@helperai/client";
 import { getCustomerFilter } from "@/app/api/chat/customerFilter";
@@ -6,6 +7,7 @@ import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { createUserMessage } from "@/lib/ai/chat";
+import { cacheClientTools } from "@/lib/data/clientToolsCache";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
 
 export const maxDuration = 60;
@@ -14,7 +16,12 @@ export const OPTIONS = () => corsOptions("POST");
 
 export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: { params } }, { session }) => {
   const { slug } = await params;
-  const { content, attachments = [], tools } = createMessageBodySchema.parse(await request.json());
+  const {
+    content,
+    attachments = [],
+    tools,
+    customerSpecificTools,
+  } = createMessageBodySchema.parse(await request.json());
 
   if (!content || content.trim().length === 0) {
     return corsResponse({ error: "Content is required" }, { status: 400 });
@@ -31,6 +38,15 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
   }
 
   const userEmail = session.isAnonymous ? null : session.email || null;
+
+  if (tools && Object.keys(tools).length > 0) {
+    waitUntil(
+      cacheClientTools({
+        tools,
+        customerEmail: customerSpecificTools ? userEmail : null,
+      }),
+    );
+  }
 
   const validationResult = validateAttachments(
     attachments.map((att) => ({
