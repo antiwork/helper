@@ -38,7 +38,7 @@ export default function StatsPage() {
             <div className="relative group">
               <div className="flex items-center gap-4 cursor-pointer group-hover:underline decoration-white decoration-2 underline-offset-4">
                 <Calendar className="h-8 w-8 text-white" />
-                <span className="text-5xl font-semibold text-white">{getCurrentTimeframeLabel()}</span>
+                <span className="text-5xl font-semibold text-white" data-testid="timeframe-label">{getCurrentTimeframeLabel()}</span>
                 <ChevronDown className="h-6 w-6 text-white transition-transform group-hover:rotate-180" />
               </div>
 

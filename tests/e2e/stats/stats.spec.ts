@@ -10,7 +10,7 @@ test.describe("Stats Dashboard", () => {
   });
 
   test("should display stats dashboard without navigation", async ({ page }) => {
-    const timeframeDisplay = page.locator("span.text-5xl");
+    const timeframeDisplay = page.getByTestId("timeframe-label");
     await expect(timeframeDisplay).toBeVisible();
 
     await expect(timeframeDisplay).toHaveText("This week");
@@ -40,7 +40,7 @@ test.describe("Stats Dashboard", () => {
     await expect(unassignedCard.getByText("Unassigned")).toBeVisible();
     await expect(mineCard.getByText("Mine")).toBeVisible();
 
-    const largeNumbers = page.locator(".text-8xl");
+    const largeNumbers = page.locator('[data-testid^="metric-value-"]');
     await expect(largeNumbers).toHaveCount(4);
 
     const allOpenValue = page.getByTestId("metric-value-all-open");
@@ -56,9 +56,8 @@ test.describe("Stats Dashboard", () => {
     const allOpenText = await allOpenValue.textContent();
     expect(allOpenText).toMatch(/^\d+$/);
 
-    const largeTimeframe = page.locator(".text-5xl");
-    const timeframeCount = await largeTimeframe.count();
-    expect(timeframeCount).toBeGreaterThanOrEqual(1);
+    const largeTimeframe = page.getByTestId("timeframe-label");
+    await expect(largeTimeframe).toBeVisible();
 
     const leaderboardSection = page.getByTestId("leaderboard-section");
     await expect(leaderboardSection).toBeVisible();
@@ -76,7 +75,7 @@ test.describe("Stats Dashboard", () => {
   });
 
   test("should have functional day filtering", async ({ page }) => {
-    const timeframeDisplay = page.locator("span.text-5xl");
+    const timeframeDisplay = page.getByTestId("timeframe-label");
 
     await expect(timeframeDisplay).toHaveText("This week");
 
