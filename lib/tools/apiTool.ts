@@ -3,7 +3,7 @@ import { and, eq, inArray, isNotNull, isNull, ne, or } from "drizzle-orm";
 import { mapValues } from "lodash-es";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { conversationEvents, conversationMessages, conversations, ToolMetadata } from "@/db/schema";
+import { ClientTool, conversationEvents, conversationMessages, conversations, ToolMetadata } from "@/db/schema";
 import type { Tool } from "@/db/schema/tools";
 import openai from "@/lib/ai/openai";
 import { ConversationMessage, createToolEvent } from "@/lib/data/conversationMessage";
@@ -114,6 +114,64 @@ export const callToolApi = async (
     parameters: params,
     userMessage: "Tool executed successfully.",
     userId,
+  });
+
+  return {
+    data,
+    success: true,
+  };
+};
+
+export const callCachedToolApi = async (conversation: Conversation, tool: ClientTool, params: Record<string, any>) => {
+  const queryParams = new URLSearchParams(params).toString();
+  const url = `${tool.serverRequestUrl}?${queryParams}`;
+
+  const parsedTool = { name: tool.name, description: tool.description ?? undefined, url: url }
+  let response;
+  try {
+    response = await fetch(url);
+  } catch (error) {
+    await createToolEvent({
+      conversationId: conversation.id,
+      tool: parsedTool,
+      error:
+        error instanceof Error ? (error.cause instanceof Error ? error.cause.message : error.message) : "Unknown error",
+      parameters: params,
+      userMessage: "The API returned an error",
+    });
+    return {
+      success: false,
+      message: "The API returned an error",
+    };
+  }
+
+  if (!response.ok) {
+    let responseBody;
+    try {
+      responseBody = await response.clone().json();
+    } catch {
+      responseBody = await response.text();
+    }
+    await createToolEvent({
+      conversationId: conversation.id,
+      tool: parsedTool,
+      error: { status: response.status, statusText: response.statusText, body: responseBody },
+      parameters: params,
+      userMessage: "The API returned an error",
+    });
+    return {
+      success: false,
+    };
+  }
+
+  const data = await response.json();
+
+  await createToolEvent({
+    conversationId: conversation.id,
+    tool: parsedTool,
+    data,
+    parameters: params,
+    userMessage: "Tool executed successfully.",
   });
 
   return {

@@ -6,7 +6,7 @@ import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export const importClientTools = async (customerEmail: string | null, tools: Record<string, ToolRequestBody>) => {
   try {
-    const serverTools = Object.fromEntries(Object.entries(tools).filter(([, tool]) => tool.serverRequestUrl));
+    const serverTools = Object.fromEntries(Object.entries(tools).filter(([, tool]) => !!tool.serverRequestUrl));
 
     if (Object.keys(serverTools).length === 0) return;
 

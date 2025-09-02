@@ -1,12 +1,14 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull, or } from "drizzle-orm";
 import { z } from "zod";
+import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
+import { clientTools } from "@/db/schema";
 import { tools } from "@/db/schema/tools";
-import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { callToolApi, ToolApiError } from "@/lib/tools/apiTool";
-import { conversationProcedure } from "./procedure";
 import { fetchClientTools } from "@/lib/data/clientTool";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { callCachedToolApi, callToolApi, ToolApiError } from "@/lib/tools/apiTool";
+import { conversationProcedure } from "./procedure";
 
 export const toolsRouter = {
   list: conversationProcedure.query(async ({ ctx }) => {
@@ -48,20 +50,20 @@ export const toolsRouter = {
       suggested,
       all: [
         ...mailboxTools.map((tool) => ({
-        name: tool.name,
-        slug: tool.slug,
-        description: tool.description,
-        parameterTypes: tool.parameters ?? [],
-        customerEmailParameter: tool.customerEmailParameter,
-      })),
-      ...clientTools.map(tool => ({
-        name: tool.name,
-        slug: tool.name,
-        description: tool.description,
-        parameterTypes: tool.parameters ?? [],
-        customerEmailParameter: null,
-      }))
-    ],
+          name: tool.name,
+          slug: tool.slug,
+          description: tool.description,
+          parameterTypes: tool.parameters ?? [],
+          customerEmailParameter: tool.customerEmailParameter,
+        })),
+        ...clientTools.map((tool) => ({
+          name: tool.name,
+          slug: tool.name,
+          description: tool.description,
+          parameterTypes: tool.parameters ?? [],
+          customerEmailParameter: null,
+        })),
+      ],
     };
   }),
 
@@ -80,12 +82,28 @@ export const toolsRouter = {
         where: and(eq(tools.slug, toolSlug), eq(tools.enabled, true)),
       });
 
-      if (!tool) {
+      const whereCustomerEmail = conversation.emailFrom
+        ? eq(clientTools.customerEmail, conversation.emailFrom)
+        : undefined;
+
+      const whereClause = whereCustomerEmail
+        ? or(whereCustomerEmail, isNull(clientTools.customerEmail))
+        : isNull(clientTools.customerEmail);
+
+      const cachedTool = await db.query.clientTools.findFirst({
+        where: and(eq(clientTools.name, toolSlug), whereClause),
+      });
+
+      if (!tool && !cachedTool) {
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
       try {
-        return await callToolApi(conversation, tool, params);
+        if (tool) {
+          return await callToolApi(conversation, tool, params);
+        } else {
+          return await callCachedToolApi(conversation, assertDefined(cachedTool), params);
+        }
       } catch (error) {
         if (error instanceof ToolApiError) {
           throw new TRPCError({

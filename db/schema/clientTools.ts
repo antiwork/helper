@@ -10,6 +10,8 @@ export type ToolParameter = {
 };
 type ToolParameters = ToolParameter[];
 
+export type ClientTool = typeof clientTools.$inferSelect;
+
 export const clientTools = pgTable(
     "client_tools",
     {
