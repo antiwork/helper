@@ -6,7 +6,6 @@ import { describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { getMailboxInfo } from "@/lib/data/mailbox";
-import { UserRoles } from "@/lib/data/user";
 import { createCaller } from "@/trpc";
 
 vi.mock("@/lib/data/user", async (importOriginal) => ({
@@ -67,21 +66,18 @@ describe("mailboxRouter", () => {
           email: user.email,
           displayName: user.email,
           replyCount: 0,
-          role: UserRoles.AFK,
         },
         {
           id: user3.id,
           email: user3.email,
           displayName: user3.email,
           replyCount: 1,
-          role: UserRoles.AFK,
         },
         {
           id: user2.id,
           email: user2.email,
           displayName: user2.email,
           replyCount: 2,
-          role: UserRoles.AFK,
         },
       ]);
     });

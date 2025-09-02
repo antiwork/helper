@@ -120,9 +120,7 @@ const parseMessagesWithMocks = (input: string) => {
     autoCloseEnabled: false,
     autoCloseDaysOfInactivity: 14,
     chatIntegrationUsed: false,
-    preferences: {
-      confetti: false,
-    },
+    preferences: {},
     isWhitelabel: false,
   };
 

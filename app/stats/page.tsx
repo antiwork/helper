@@ -1,9 +1,8 @@
 "use client";
 
-import { Crown, Calendar, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { Calendar, ChevronDown } from "lucide-react";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/trpc/react";
 
@@ -21,7 +20,7 @@ export default function StatsPage() {
   const { data: leaderboardData } = api.mailbox.leaderboard.useQuery({ days: selectedDays });
 
   const getCurrentTimeframeLabel = () => {
-    const option = dayOptions.find(opt => opt.value === selectedDays);
+    const option = dayOptions.find((opt) => opt.value === selectedDays);
     return option ? option.label : "This week";
   };
 
@@ -31,7 +30,7 @@ export default function StatsPage() {
       <div className="absolute top-8 left-8 z-10">
         <Image src="/logo-white.svg" alt="Helper" width={120} height={32} />
       </div>
-      
+
       <div className="space-y-8 max-w-screen-lg mx-auto">
         <div className="text-center">
           {/* Centered Calendar Icon with Dropdown - Replaces Ticket Dashboard title */}
@@ -42,7 +41,7 @@ export default function StatsPage() {
                 <span className="text-5xl font-semibold text-white">{getCurrentTimeframeLabel()}</span>
                 <ChevronDown className="h-6 w-6 text-white transition-transform group-hover:rotate-180" />
               </div>
-              
+
               {/* Dropdown Menu */}
               <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-[hsl(0_20%_22%)] border border-white/20 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-20 min-w-[200px]">
                 {dayOptions.map((option) => (
@@ -50,7 +49,7 @@ export default function StatsPage() {
                     key={option.value}
                     onClick={() => setSelectedDays(option.value)}
                     className={`w-full text-left px-4 py-3 hover:bg-white/10 transition-colors duration-200 first:rounded-t-lg last:rounded-b-lg ${
-                      selectedDays === option.value ? 'bg-white/20 text-yellow-400' : 'text-white'
+                      selectedDays === option.value ? "bg-white/20 text-yellow-400" : "text-white"
                     }`}
                   >
                     {option.label}
@@ -105,42 +104,38 @@ export default function StatsPage() {
               key={member.userId}
               data-testid="leaderboard-entry"
               className={`flex items-center justify-between px-6 py-4 rounded-lg ${
-                index === 0 
-                  ? 'bg-bright text-[hsl(0_58%_10%)]' 
-                  : 'bg-[#331111] text-bright'
+                index === 0 ? "bg-bright text-[hsl(0_58%_10%)]" : "bg-[#331111] text-bright"
               }`}
             >
-                              <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 w-16">
-                    <div className={`font-bold ${index === 0 ? 'text-[hsl(0_58%_10%)]' : 'text-bg-bright'}`}>
-                      {index === 0 ? (
-                        <Image 
-                          src="/images/1st-place-medal.png" 
-                          alt="1st Place" 
-                          width={124} 
-                          height={124} 
-                          className="-translate-y-2 scale-125"
-                        />
-                      ) : (
-                        <span className="text-4xl">#{index + 1}</span>
-                      )}
-                    </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 w-16">
+                  <div className={`font-bold ${index === 0 ? "text-[hsl(0_58%_10%)]" : "text-bg-bright"}`}>
+                    {index === 0 ? (
+                      <Image
+                        src="/images/1st-place-medal.png"
+                        alt="1st Place"
+                        width={124}
+                        height={124}
+                        className="-translate-y-2 scale-125"
+                      />
+                    ) : (
+                      <span className="text-4xl">#{index + 1}</span>
+                    )}
                   </div>
+                </div>
                 <div>
-                  <div className={`text-2xl font-semibold ${index === 0 ? 'text-[hsl(0_58%_10%)]' : 'text-amber-100'}`}>
+                  <div className={`text-2xl font-semibold ${index === 0 ? "text-[hsl(0_58%_10%)]" : "text-amber-100"}`}>
                     {member.displayName}
                   </div>
                 </div>
               </div>
-              <div className={`text-5xl font-bold ${index === 0 ? 'text-[hsl(0_58%_10%)]' : 'text-amber-100'}`}>
+              <div className={`text-5xl font-bold ${index === 0 ? "text-[hsl(0_58%_10%)]" : "text-amber-100"}`}>
                 {member.replyCount}
               </div>
             </div>
           ))}
           {!leaderboardData?.leaderboard.length && (
-            <div className="text-center text-2xl text-white/70 py-12">
-              No activity in the selected time period
-            </div>
+            <div className="text-center text-2xl text-white/70 py-12">No activity in the selected time period</div>
           )}
         </div>
       </div>
