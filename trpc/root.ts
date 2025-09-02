@@ -1,9 +1,9 @@
+import { generateSampleQuestions } from "@/lib/ai/sampleQuestions";
 import { userRouter } from "@/trpc/router/user";
 import { gmailSupportEmailRouter } from "./router/gmailSupportEmail";
 import { mailboxRouter } from "./router/mailbox";
 import { organizationRouter } from "./router/organization";
 import { createTRPCRouter, publicProcedure } from "./trpc";
-import { generateSampleQuestions } from "@/lib/ai/sampleQuestions";
 
 export const appRouter = createTRPCRouter({
   mailbox: mailboxRouter,
