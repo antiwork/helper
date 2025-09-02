@@ -81,7 +81,7 @@ export const ThreadView = ({ conversation }: { conversation: ConversationDetails
           url: "/widget/test/custom/tool",
         },
       },
-            customerSpecificTools: true,
+      customerSpecificTools: true,
     });
   };
 
