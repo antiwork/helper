@@ -2,13 +2,13 @@ import { sql} from "drizzle-orm";
 import { bigint, jsonb, pgTable, text, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { withTimestamps } from "../lib/with-timestamps";
 
-export type ToolParameter = {
+export type ClientToolParameter = {
   name: string;
   description?: string;
   type: "string" | "number";
   optional?: boolean | undefined;
 };
-type ToolParameters = ToolParameter[];
+type ClientToolParameters = ClientToolParameter[];
 
 export type ClientTool = typeof clientTools.$inferSelect;
 
@@ -20,7 +20,7 @@ export const clientTools = pgTable(
         name: text().notNull(),
         customerEmail: text(),
         description: text(),
-        parameters: jsonb().default("[]").$type<ToolParameters>(),
+        parameters: jsonb().default("[]").$type<ClientToolParameters>(),
         serverRequestUrl: text(),
     },
     (table) => [
