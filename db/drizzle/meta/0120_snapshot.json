@@ -1,5 +1,5 @@
 {
-  "id": "54a890d3-11c9-4cf0-ba09-494e33af7563",
+  "id": "5f170094-2ff6-4ae8-a711-9e28a9ab40d3",
   "prevId": "5dc70d87-8df0-41a2-ace5-36fff56cb3fd",
   "version": "7",
   "dialect": "postgresql",
@@ -497,20 +497,33 @@
             "cycle": false
           }
         },
-        "tool_name": {
-          "name": "tool_name",
+        "name": {
+          "name": "name",
           "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "tool": {
-          "name": "tool",
-          "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         },
         "customer_email": {
           "name": "customer_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parameters": {
+          "name": "parameters",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'[]'"
+        },
+        "server_request_url": {
+          "name": "server_request_url",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -521,7 +534,7 @@
           "name": "unique_tool_idx",
           "columns": [
             {
-              "expression": "tool_name",
+              "expression": "name",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

@@ -2,40 +2,48 @@ import { sql } from "drizzle-orm";
 import { ToolRequestBody } from "@helperai/client";
 import { db } from "@/db/client";
 import { clientTools } from "@/db/schema/clientTools";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export const importClientTools = async (customerEmail: string | null, tools: Record<string, ToolRequestBody>) => {
-  const serverTools = Object.fromEntries(Object.entries(tools).filter(([, tool]) => tool.serverRequestUrl));
+  try {
+    const serverTools = Object.fromEntries(Object.entries(tools).filter(([, tool]) => tool.serverRequestUrl));
 
-  if (Object.keys(serverTools).length === 0) return;
+    if (Object.keys(serverTools).length === 0) return;
 
-  const values = Object.entries(serverTools).map(([toolName, tool]) => ({
-    customer_email: customerEmail || null,
-    tool_name: toolName,
-    tool,
-  }));
+    const values = Object.entries(serverTools).map(([name, tool]) => ({
+      customerEmail: customerEmail || null,
+      name: name,
+      description: tool.description,
+      parameters: Object.entries(tool.parameters).map(([name, param]) => ({
+        name,
+        ...param,
+      })),
+      serverRequestUrl: tool.serverRequestUrl,
+    }));
 
-  await db.transaction(async (tx) => {
-    await tx
+    await db
       .insert(clientTools)
       .values(values)
       .onConflictDoUpdate({
-        target: [clientTools.tool_name, clientTools.customer_email],
+        target: [clientTools.name, clientTools.customerEmail],
         set: {
-          tool: sql`excluded.tool`,
+          description: sql`excluded.description`,
+          parameters: sql`excluded.parameters`,
+          serverRequestUrl: sql`excluded.server_request_url`,
           updatedAt: sql`excluded.updated_at`,
         },
       });
-  });
+  } catch (error) {
+    return captureExceptionAndLog(error);
+  }
 };
 
 export const fetchClientTools = async (customerEmail: string | null) => {
   const tools = await db.query.clientTools.findMany({
-    columns: { tool: true, tool_name: true },
+    columns: { name: true, description: true, parameters: true, serverRequestUrl: true },
     where: (fields, operators) =>
-      customerEmail
-        ? operators.eq(fields.customer_email, customerEmail)
-        : operators.isNull(fields.customer_email),
+      customerEmail ? operators.eq(fields.customerEmail, customerEmail) : operators.isNull(fields.customerEmail),
   });
 
-  return tools.map((t) => ({ ...t.tool, name: t.tool_name }));
+  return tools;
 };

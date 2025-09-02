@@ -47,13 +47,11 @@ describe("toolsRouter", () => {
       });
 
       await clientToolsFactory.create({
-        customer_email: user.email,
-        tool_name: "FirstTool",
-        tool: {
-          description: "A test client tool",
-          serverRequestUrl: "https://first-tool.com",
-          parameters: {},
-        },
+        customerEmail: user.email,
+        name: "FirstTool",
+        description: "A test client tool",
+        serverRequestUrl: "https://first-tool.com",
+        parameters: [],
       });
 
       const caller = createCaller(await createTestTRPCContext(user));
@@ -86,7 +84,7 @@ describe("toolsRouter", () => {
           name: "FirstTool",
           slug: "FirstTool",
           description: "A test client tool",
-          parameterTypes: {},
+          parameterTypes: [],
           customerEmailParameter: null,
         },
       ]);

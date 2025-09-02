@@ -16,7 +16,6 @@ import {
 import { publicConversationChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
-import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createClient } from "@/lib/supabase/server";
 import { WidgetSessionPayload } from "@/lib/widgetSession";
 import { ToolRequestBody } from "@/packages/client/dist";
@@ -96,11 +95,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
 
   if (tools && Object.keys(tools ?? {}).length > 0) {
     const customerEmail = customerSpecificTools ? userEmail : null;
-    try {
-      waitUntil(importClientTools(customerEmail, tools));
-    } catch (error) {
-      return captureExceptionAndLog(error);
-    }
+    waitUntil(importClientTools(customerEmail, tools));
   }
 
   const userMessage = await createUserMessage(

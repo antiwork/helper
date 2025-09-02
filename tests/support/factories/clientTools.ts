@@ -8,13 +8,11 @@ type ClientTool = typeof clientTools.$inferInsert;
 export const clientToolsFactory = {
   create: async (overrides: Partial<ClientTool>) => {
     const defaultTool: ClientTool = {
-      tool_name: faker.company.name(),
-      tool: {
-        description: faker.lorem.sentence(),
-        serverRequestUrl: faker.internet.url(),
-        parameters: {},
-      },
-      customer_email: null
+      name: faker.company.name(),
+      description: faker.lorem.sentence(),
+      serverRequestUrl: faker.internet.url(),
+      parameters: [],
+      customerEmail: null,
     };
 
     const toolData = { ...defaultTool, ...overrides };
