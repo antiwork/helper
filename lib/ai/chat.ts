@@ -28,13 +28,12 @@ import { CHAT_MODEL, isWithinTokenLimit, MINI_MODEL } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { CHAT_SYSTEM_PROMPT, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
-import { buildTools } from "@/lib/ai/tools";
+import { buildTools, callServerSideTool } from "@/lib/ai/tools";
 import { cacheFor } from "@/lib/cache";
 import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
 import {
   createAiDraft,
   createConversationMessage,
-  createToolEvent,
   getLastAiGeneratedDraft,
   getMessagesOnly,
 } from "@/lib/data/conversationMessage";
@@ -42,7 +41,6 @@ import { createAndUploadFile, downloadFile, getFileUrl } from "@/lib/data/files"
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
-import { createHmacDigest } from "@/lib/metadataApiClient";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLog, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
 
@@ -373,7 +371,7 @@ export const generateAIResponse = async ({
   if (clientProvidedTools) {
     Object.entries(clientProvidedTools).forEach(([toolName, tool]) => {
       const toolDefinition: Tool = {
-        description: tool.description,
+        description: tool.description ?? undefined,
         parameters: z.object(
           Object.fromEntries(
             Object.entries(tool.parameters).map(([key, value]) => {
@@ -391,22 +389,15 @@ export const generateAIResponse = async ({
       };
 
       if (tool.serverRequestUrl) {
-        toolDefinition.execute = async (params: Record<string, any>) => {
-          const result = await callToolEndpoint(tool, email, params, mailbox);
-          await createToolEvent({
+        toolDefinition.execute = (params: Record<string, any>) =>
+          callServerSideTool({
+            tool,
+            toolName,
             conversationId,
-            tool: {
-              name: toolName,
-              description: tool.description,
-              url: tool.serverRequestUrl,
-            },
-            data: result.success ? result.data : undefined,
-            error: result.success ? undefined : result.error,
-            parameters: params,
-            userMessage: result.success ? "Tool executed successfully." : "Tool execution failed.",
+            email,
+            params,
+            mailbox,
           });
-          return result;
-        };
       }
 
       tools[toolName] = toolDefinition;
@@ -573,55 +564,6 @@ const createAssistantMessage = (
       reasoning: options?.reasoning,
     },
   });
-};
-
-const callToolEndpoint = async (
-  tool: ToolRequestBody,
-  email: string | null,
-  parameters: Record<string, any>,
-  mailbox: Mailbox,
-) => {
-  if (!tool.serverRequestUrl) {
-    throw new Error("Tool does not have a server request URL");
-  }
-
-  const requestBody = { email, parameters, requestTimestamp: Math.floor(Date.now() / 1000) };
-  const hmacDigest = createHmacDigest(mailbox.widgetHMACSecret, { json: requestBody });
-  const hmacSignature = hmacDigest.toString("base64");
-
-  try {
-    const response = await fetch(tool.serverRequestUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${hmacSignature}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!response.ok) {
-      let error = `Server returned ${response.status}: ${response.statusText}`;
-      try {
-        const data = await response.json();
-        if (data.error) error = data.error;
-      } catch {}
-      return {
-        success: false,
-        error,
-      };
-    }
-
-    const data = await response.json();
-    return {
-      success: true,
-      data,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
 };
 
 export const respondWithAI = async ({

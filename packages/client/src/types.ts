@@ -16,16 +16,16 @@ export type HelperServerTool = HelperToolBase & {
 export type HelperTool<Args = any, Result = any> = HelperClientTool<Args, Result> | HelperServerTool;
 
 export const toolBodySchema = z.object({
-  description: z.string().optional(),
+  description: z.string().nullish(),
   parameters: z.record(
     z.string(),
     z.object({
       type: z.enum(["string", "number"]),
-      description: z.string().optional(),
-      optional: z.boolean().optional(),
+      description: z.string().nullish(),
+      optional: z.boolean().nullish(),
     }),
   ),
-  serverRequestUrl: z.string().optional(),
+  serverRequestUrl: z.string().nullish(),
 });
 export type ToolRequestBody = z.infer<typeof toolBodySchema>;
 

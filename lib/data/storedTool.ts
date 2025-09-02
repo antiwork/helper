@@ -1,10 +1,10 @@
 import { sql } from "drizzle-orm";
 import { ToolRequestBody } from "@helperai/client";
 import { db } from "@/db/client";
-import { clientTools } from "@/db/schema/clientTools";
+import { storedTools } from "@/db/schema/storedTools";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
-export const importClientTools = async (customerEmail: string | null, tools: Record<string, ToolRequestBody>) => {
+export const storeTools = async (customerEmail: string | null, tools: Record<string, ToolRequestBody>) => {
   try {
     const serverTools = Object.fromEntries(Object.entries(tools).filter(([, tool]) => !!tool.serverRequestUrl));
 
@@ -12,20 +12,22 @@ export const importClientTools = async (customerEmail: string | null, tools: Rec
 
     const values = Object.entries(serverTools).map(([name, tool]) => ({
       customerEmail: customerEmail || null,
-      name: name,
+      name,
       description: tool.description,
       parameters: Object.entries(tool.parameters).map(([name, param]) => ({
-        name,
         ...param,
+        name,
+        optional: param.optional ?? false,
+        description: param.description ?? null,
       })),
       serverRequestUrl: tool.serverRequestUrl,
     }));
 
     await db
-      .insert(clientTools)
+      .insert(storedTools)
       .values(values)
       .onConflictDoUpdate({
-        target: [clientTools.name, clientTools.customerEmail],
+        target: [storedTools.name, storedTools.customerEmail],
         set: {
           description: sql`excluded.description`,
           parameters: sql`excluded.parameters`,
@@ -38,8 +40,8 @@ export const importClientTools = async (customerEmail: string | null, tools: Rec
   }
 };
 
-export const fetchClientTools = async (customerEmail: string | null) => {
-  const tools = await db.query.clientTools.findMany({
+export const fetchStoredTools = async (customerEmail: string | null) => {
+  const tools = await db.query.storedTools.findMany({
     columns: { name: true, description: true, parameters: true, serverRequestUrl: true },
     where: (fields, operators) =>
       customerEmail ? operators.eq(fields.customerEmail, customerEmail) : operators.isNull(fields.customerEmail),

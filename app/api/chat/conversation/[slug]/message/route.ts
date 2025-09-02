@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import { and, eq } from "drizzle-orm";
 import { createMessageBodySchema } from "@helperai/client";
 import { getCustomerFilter } from "@/app/api/chat/customerFilter";
@@ -6,9 +7,8 @@ import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { createUserMessage } from "@/lib/ai/chat";
-import { importClientTools } from "@/lib/data/clientTool";
+import { storeTools } from "@/lib/data/storedTool";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
-import { waitUntil } from "@vercel/functions";
 
 export const maxDuration = 60;
 
@@ -74,12 +74,12 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
 
   if (tools && Object.keys(tools).length > 0) {
     const customerEmail = customerSpecificTools ? userEmail : null;
-    waitUntil(importClientTools(customerEmail, tools));
+    waitUntil(storeTools(customerEmail, tools));
   }
 
   const userMessage = await createUserMessage(conversation.id, userEmail, content, attachmentData);
 
-  await triggerEvent("conversations/auto-response.create", { messageId: userMessage.id, tools, customerSpecificTools });
+  await triggerEvent("conversations/auto-response.create", { messageId: userMessage.id, tools });
 
   return corsResponse({
     messageId: userMessage.id,

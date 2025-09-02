@@ -1,5 +1,5 @@
 {
-  "id": "5f170094-2ff6-4ae8-a711-9e28a9ab40d3",
+  "id": "67c50349-94d3-4e0d-bb7c-87b7a2cfc828",
   "prevId": "5dc70d87-8df0-41a2-ace5-36fff56cb3fd",
   "version": "7",
   "dialect": "postgresql",
@@ -460,117 +460,6 @@
           ]
         }
       },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": true
-    },
-    "public.client_tools": {
-      "name": "client_tools",
-      "schema": "",
-      "columns": {
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "id": {
-          "name": "id",
-          "type": "bigint",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "byDefault",
-            "name": "client_tools_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "9223372036854775807",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "customer_email": {
-          "name": "customer_email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "parameters": {
-          "name": "parameters",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'[]'"
-        },
-        "server_request_url": {
-          "name": "server_request_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "unique_tool_idx": {
-          "name": "unique_tool_idx",
-          "columns": [
-            {
-              "expression": "name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "customer_email",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "idx_client_tools_customer_email": {
-          "name": "idx_client_tools_customer_email",
-          "columns": [
-            {
-              "expression": "customer_email",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"client_tools\".\"customer_email\" IS NOT NULL",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": true
@@ -4410,6 +4299,117 @@
           "isUnique": false,
           "concurrently": false,
           "method": "hnsw",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.stored_tools": {
+      "name": "stored_tools",
+      "schema": "",
+      "columns": {
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "byDefault",
+            "name": "stored_tools_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "customer_email": {
+          "name": "customer_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parameters": {
+          "name": "parameters",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'"
+        },
+        "server_request_url": {
+          "name": "server_request_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "unique_tool_idx": {
+          "name": "unique_tool_idx",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "customer_email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_stored_tools_customer_email": {
+          "name": "idx_stored_tools_customer_email",
+          "columns": [
+            {
+              "expression": "customer_email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"stored_tools\".\"customer_email\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
           "with": {}
         }
       },

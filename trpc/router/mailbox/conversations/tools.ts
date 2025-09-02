@@ -1,13 +1,13 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, isNull, or } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 import { z } from "zod";
-import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { clientTools } from "@/db/schema";
+import { StoredToolParameter, storedTools } from "@/db/schema";
 import { tools } from "@/db/schema/tools";
-import { fetchClientTools } from "@/lib/data/clientTool";
+import { callServerSideTool } from "@/lib/ai/tools";
+import { fetchStoredTools } from "@/lib/data/storedTool";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
-import { callCachedToolApi, callToolApi, ToolApiError } from "@/lib/tools/apiTool";
+import { callToolApi, ToolApiError } from "@/lib/tools/apiTool";
 import { conversationProcedure } from "./procedure";
 
 export const toolsRouter = {
@@ -44,7 +44,7 @@ export const toolsRouter = {
       }
     });
 
-    const clientTools = await fetchClientTools(conversation.emailFrom);
+    const clientTools = await fetchStoredTools(conversation.emailFrom);
 
     return {
       suggested,
@@ -60,7 +60,7 @@ export const toolsRouter = {
           name: tool.name,
           slug: tool.name,
           description: tool.description,
-          parameterTypes: tool.parameters ?? [],
+          parameterTypes: tool.parameters?.map((param) => ({ ...param, required: !param.optional })) ?? [],
           customerEmailParameter: null,
         })),
       ],
@@ -83,27 +83,37 @@ export const toolsRouter = {
       });
 
       const whereCustomerEmail = conversation.emailFrom
-        ? eq(clientTools.customerEmail, conversation.emailFrom)
+        ? eq(storedTools.customerEmail, conversation.emailFrom)
         : undefined;
 
       const whereClause = whereCustomerEmail
-        ? or(whereCustomerEmail, isNull(clientTools.customerEmail))
-        : isNull(clientTools.customerEmail);
+        ? or(whereCustomerEmail, isNull(storedTools.customerEmail))
+        : isNull(storedTools.customerEmail);
 
-      const cachedTool = await db.query.clientTools.findFirst({
-        where: and(eq(clientTools.name, toolSlug), whereClause),
+      const cachedTool = await db.query.storedTools.findFirst({
+        where: and(eq(storedTools.name, toolSlug), whereClause),
       });
-
-      if (!tool && !cachedTool) {
-        throw new TRPCError({ code: "NOT_FOUND" });
-      }
 
       try {
         if (tool) {
           return await callToolApi(conversation, tool, params);
-        } else {
-          return await callCachedToolApi(conversation, assertDefined(cachedTool), params);
+        } else if (cachedTool) {
+          return await callServerSideTool({
+            tool: {
+              ...cachedTool,
+              parameters: cachedTool.parameters.reduce<Record<string, StoredToolParameter>>(
+                (acc, param) => ({ ...acc, [param.name]: param }),
+                {},
+              ),
+            },
+            toolName: toolSlug,
+            conversationId: conversation.id,
+            email: conversation.emailFrom,
+            params,
+            mailbox: ctx.mailbox,
+          });
         }
+        throw new TRPCError({ code: "NOT_FOUND" });
       } catch (error) {
         if (error instanceof ToolApiError) {
           throw new TRPCError({

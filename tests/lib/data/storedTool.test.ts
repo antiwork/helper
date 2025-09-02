@@ -2,15 +2,15 @@ import { and, eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { ToolRequestBody } from "@helperai/client";
 import { db } from "@/db/client";
-import { clientTools } from "@/db/schema/clientTools";
-import { fetchClientTools, importClientTools } from "@/lib/data/clientTool";
+import { storedTools } from "@/db/schema/storedTools";
+import { fetchStoredTools, storeTools } from "@/lib/data/storedTool";
 
-describe("importClientTools", () => {
+describe("storeTools", () => {
   it("does nothing if no server tools are provided", async () => {
-    await importClientTools("user@example.com", {
+    await storeTools("user@example.com", {
       toolA: { description: "desc", parameters: {}, serverRequestUrl: undefined },
     });
-    const tools = await db.select().from(clientTools).execute();
+    const tools = await db.select().from(storedTools).execute();
     expect(tools.length).toBe(0);
   });
 
@@ -20,8 +20,8 @@ describe("importClientTools", () => {
       parameters: {},
       serverRequestUrl: "https://api.example.com/tool",
     };
-    await importClientTools("user@example.com", { toolA: tool });
-    const tools = await db.select().from(clientTools).execute();
+    await storeTools("user@example.com", { toolA: tool });
+    const tools = await db.select().from(storedTools).execute();
     expect(tools.length).toBe(1);
     expect(tools[0]?.name).toBe("toolA");
     expect(tools[0]?.customerEmail).toBe("user@example.com");
@@ -38,13 +38,13 @@ describe("importClientTools", () => {
       serverRequestUrl: "https://api.example.com/updated",
     };
 
-    await importClientTools("override@example.com", { toolA: initialTool });
-    await importClientTools("override@example.com", { toolA: updatedTool });
+    await storeTools("override@example.com", { toolA: initialTool });
+    await storeTools("override@example.com", { toolA: updatedTool });
 
     const tools = await db
       .select()
-      .from(clientTools)
-      .where(and(eq(clientTools.customerEmail, "override@example.com"), eq(clientTools.name, "toolA")))
+      .from(storedTools)
+      .where(and(eq(storedTools.customerEmail, "override@example.com"), eq(storedTools.name, "toolA")))
       .execute();
 
     expect(tools.length).toBe(1);
@@ -58,8 +58,8 @@ describe("importClientTools", () => {
       parameters: {},
       serverRequestUrl: "https://api.example.com/tool",
     };
-    await importClientTools(null, { toolA: tool });
-    const tools = await db.select().from(clientTools).execute();
+    await storeTools(null, { toolA: tool });
+    const tools = await db.select().from(storedTools).execute();
     expect(tools.length).toBe(1);
     expect(tools[0]?.customerEmail).toBeNull();
   });
@@ -68,7 +68,7 @@ describe("importClientTools", () => {
 describe("fetchClientTools", () => {
   it("fetches tools for a specific customer", async () => {
     await db
-      .insert(clientTools)
+      .insert(storedTools)
       .values({
         customerEmail: "fetch-user@example.com",
         name: "toolA",
@@ -78,13 +78,13 @@ describe("fetchClientTools", () => {
       })
       .execute();
 
-    const result = await fetchClientTools("fetch-user@example.com");
+    const result = await fetchStoredTools("fetch-user@example.com");
     expect(result).toEqual([{ description: "desc", parameters: [], serverRequestUrl: "url", name: "toolA" }]);
   });
 
   it("fetches tools for null customer", async () => {
     await db
-      .insert(clientTools)
+      .insert(storedTools)
       .values({
         customerEmail: null,
         name: "toolA",
@@ -94,12 +94,12 @@ describe("fetchClientTools", () => {
       })
       .execute();
 
-    const result = await fetchClientTools(null);
+    const result = await fetchStoredTools(null);
     expect(result).toEqual([{ description: "desc", parameters: [], serverRequestUrl: "url", name: "toolA" }]);
   });
 
   it("returns empty array if no tools found", async () => {
-    const result = await fetchClientTools("fetch-user@example.com");
+    const result = await fetchStoredTools("fetch-user@example.com");
     expect(result).toEqual([]);
   });
 });
