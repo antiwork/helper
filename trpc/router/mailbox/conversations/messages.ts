@@ -64,12 +64,11 @@ export const messagesRouter = {
         fileSlugs: z.array(z.string()),
         cc: z.array(z.string().email()),
         bcc: z.array(z.string().email()),
-        shouldAutoAssign: z.boolean().optional().default(true),
         shouldClose: z.boolean().optional().default(true),
         responseToId: z.number().nullable(),
       }),
     )
-    .mutation(async ({ input: { message, fileSlugs, cc, bcc, shouldAutoAssign, shouldClose, responseToId }, ctx }) => {
+    .mutation(async ({ input: { message, fileSlugs, cc, bcc, shouldClose, responseToId }, ctx }) => {
       const id = await createReply({
         conversationId: ctx.conversation.id,
         user: ctx.user,
@@ -77,7 +76,7 @@ export const messagesRouter = {
         fileSlugs,
         cc,
         bcc,
-        shouldAutoAssign,
+        shouldAutoAssign: ctx.user?.preferences?.autoAssignOnReply ?? true,
         close: shouldClose,
         responseToId,
       });
