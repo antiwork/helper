@@ -109,6 +109,8 @@ export const MessageActions = () => {
     triggerConfetti();
   };
 
+  const shouldAutoAssign = !!user?.preferences?.autoAssignOnReply && !conversation?.assignedToId;
+
   const replyMutation = api.mailbox.conversations.messages.reply.useMutation({
     onSuccess: async (_, variables) => {
       await utils.mailbox.conversations.get.invalidate({
@@ -419,7 +421,7 @@ export const MessageActions = () => {
               <Button
                 size={isAboveMd ? "default" : "sm"}
                 variant="outlined"
-                onClick={() => handleSend({ assign: false, close: false })}
+                onClick={() => handleSend({ assign: shouldAutoAssign, close: false })}
                 disabled={sendDisabled}
               >
                 Reply
@@ -429,7 +431,7 @@ export const MessageActions = () => {
               </Button>
               <Button
                 size={isAboveMd ? "default" : "sm"}
-                onClick={() => handleSend({ assign: false })}
+                onClick={() => handleSend({ assign: shouldAutoAssign })}
                 disabled={sendDisabled}
               >
                 {sending ? "Replying..." : "Reply and close"}
@@ -496,8 +498,8 @@ export const MessageActions = () => {
             handleTypingEvent(conversation.slug);
           }
         }}
-        onModEnter={() => !sendDisabled && handleSend({ assign: false })}
-        onOptionEnter={() => !sendDisabled && handleSend({ assign: false, close: false })}
+        onModEnter={() => !sendDisabled && handleSend({ assign: shouldAutoAssign })}
+        onOptionEnter={() => !sendDisabled && handleSend({ assign: shouldAutoAssign, close: false })}
         onSlashKey={() => {
           setShowCommandBar(true);
           setTimeout(() => commandInputRef.current?.focus(), 100);

@@ -26,6 +26,7 @@ export const userProfiles = pgTable("user_profiles", {
   preferences: jsonb().$type<{
     confetti?: boolean;
     disableNextTicketPreview?: boolean;
+    autoAssignOnReply?: boolean;
   }>(),
 }).enableRLS();
 
