@@ -1,11 +1,11 @@
 import { CoreMessage, Tool, tool } from "ai";
-import { and, eq, inArray, isNull, notInArray, or, SQL } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNull, notInArray, or, sql, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { getBaseUrl } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, DRAFT_STATUSES, faqs, userProfiles } from "@/db/schema";
+import { conversationMessages, conversations, DRAFT_STATUSES, faqs, savedReplies, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
 import { runAIQuery } from "@/lib/ai";
@@ -355,6 +355,60 @@ export const generateAgentResponse = async (
       },
     }),
   };
+
+  tools.replyWithSavedReply = tool({
+    description: "Search for a saved reply by title and send it as a response to a ticket.",
+    parameters: z.object({
+      ticketId: z.union([z.string(), z.number()]),
+      title: z.string().describe("The title/name of the saved reply to search for"),
+    }),
+    execute: async ({ ticketId, title }) => {
+      showStatus(`Searching for saved reply...`, { toolName: "replyWithSavedReply", parameters: { ticketId, title } });
+      
+      try {
+        const conversation = await findConversation(ticketId);
+        if (!conversation) return { error: "Ticket not found" };
+
+        const savedRepliesResults = await db.query.savedReplies.findMany({
+          where: and(
+            eq(savedReplies.isActive, true),
+            ilike(savedReplies.name, `%${title}%`)
+          ),
+          orderBy: [desc(savedReplies.usageCount), desc(savedReplies.updatedAt)],
+          limit: 5,
+        });
+
+        if (savedRepliesResults.length === 0) {
+          return { error: `No saved reply found with title containing "${title}"` };
+        }
+
+        const selectedReply = savedRepliesResults[0]!;
+        
+        await createReply({
+          conversationId: conversation.id,
+          message: selectedReply.content,
+          user: slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null,
+          close: false,
+          shouldAutoAssign: false,
+        });
+
+        await db
+          .update(savedReplies)
+          .set({
+            usageCount: sql`${savedReplies.usageCount} + 1`,
+            updatedAt: new Date(),
+          })
+          .where(eq(savedReplies.slug, selectedReply.slug));
+
+        return { 
+          message: `Reply sent using saved reply "${selectedReply.name}"${savedRepliesResults.length > 1 ? ` (${savedRepliesResults.length - 1} other matches found)` : ''}` 
+        };
+      } catch (error) {
+        captureExceptionAndLog(error);
+        return { error: "Failed to send saved reply" };
+      }
+    },
+  });
 
   if (confirmedReplyText) {
     tools.sendReply = tool({
