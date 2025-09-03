@@ -364,16 +364,13 @@ export const generateAgentResponse = async (
     }),
     execute: async ({ ticketId, title }) => {
       showStatus(`Searching for saved reply...`, { toolName: "replyWithSavedReply", parameters: { ticketId, title } });
-      
+
       try {
         const conversation = await findConversation(ticketId);
         if (!conversation) return { error: "Ticket not found" };
 
         const savedRepliesResults = await db.query.savedReplies.findMany({
-          where: and(
-            eq(savedReplies.isActive, true),
-            ilike(savedReplies.name, `%${title}%`)
-          ),
+          where: and(eq(savedReplies.isActive, true), ilike(savedReplies.name, `%${title}%`)),
           orderBy: [desc(savedReplies.usageCount), desc(savedReplies.updatedAt)],
           limit: 5,
         });
@@ -383,7 +380,7 @@ export const generateAgentResponse = async (
         }
 
         const selectedReply = savedRepliesResults[0]!;
-        
+
         await createReply({
           conversationId: conversation.id,
           message: selectedReply.content,
@@ -400,8 +397,8 @@ export const generateAgentResponse = async (
           })
           .where(eq(savedReplies.slug, selectedReply.slug));
 
-        return { 
-          message: `Reply sent using saved reply "${selectedReply.name}"${savedRepliesResults.length > 1 ? ` (${savedRepliesResults.length - 1} other matches found)` : ''}` 
+        return {
+          message: `Reply sent using saved reply "${selectedReply.name}"${savedRepliesResults.length > 1 ? ` (${savedRepliesResults.length - 1} other matches found)` : ""}`,
         };
       } catch (error) {
         captureExceptionAndLog(error);
