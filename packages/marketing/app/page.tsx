@@ -9,6 +9,8 @@ import {
   CheckCircle,
   Clock,
   FileCode,
+  Globe,
+  Mail,
   MessageSquare,
   Monitor,
   MousePointer,
@@ -53,6 +55,7 @@ export default function Home() {
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("web");
 
   useEffect(() => {
     const questionInterval = setInterval(() => {
@@ -89,9 +92,11 @@ export default function Home() {
   }, [helperTypingComplete]);
 
   const scrollToFeatures = () => {
-    const smarterSupportSection = document.getElementById("smarter-support");
-    if (smarterSupportSection) {
-      const rect = smarterSupportSection.getBoundingClientRect();
+    // Scroll to the knowledge section (first section after hero)
+    const sections = document.querySelectorAll('section');
+    if (sections.length > 1) {
+      const targetSection = sections[1];
+      const rect = targetSection.getBoundingClientRect();
       const targetScrollY = window.scrollY + rect.top - 40;
       window.scrollTo({
         top: targetScrollY,
@@ -125,20 +130,89 @@ export default function Home() {
       <div className="flex-grow">
         <section className="flex items-center justify-center min-h-screen pt-16">
           <div className="container mx-auto px-4">
-            <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-3 text-center text-secondary dark:text-foreground">
+            <h1 className="text-4xl md:text-5xl sm:text-4xl font-bold mb-2 sm:mb-3 text-center text-secondary dark:text-foreground pt-4">
               Deliver stellar support experiences.
             </h1>
-                        <p className="text-base text-sm md:text-lg text-center text-secondary dark:text-foreground mb-6">
+                        <p className="text-base text-sm md:text-lg text-center text-secondary dark:text-foreground mb-4">
               A native, end-to-end support center with custom UI, zero margin on model costs, and data that always stays on your servers.            </p>
             
-            <div className="w-full max-w-4xl mx-auto md:py-8">
-                              <iframe 
-                  style={{ zoom: 0.8 }}
-                  src="https://gumroad.com/help"
-                  className="w-full h-[70vh] rounded-2xl border-0 shadow-2xl"
-                  title="Gumroad Help Center"
-                  allow="fullscreen"
-                />
+            <div className="w-full max-w-4xl mx-auto pt-2">
+              {/* Tab Navigation */}
+              <div className="flex justify-center mb-6">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setActiveTab("web")}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
+                      activeTab === "web"
+                        ? "bg-[#2B0808] border-2 border-[#459EFD] text-[#FFE6B0]"
+                        : "bg-[#3B1B1B] text-[#FFE6B0] hover:bg-[#4B2B2B]"
+                    }`}
+                  >
+                    <Globe className="w-4 h-4" style={{ color: activeTab === "web" ? "#459EFD" : "#FFE6B0" }} />
+                    Web
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("inbox")}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
+                      activeTab === "inbox"
+                        ? "bg-[#2B0808] border-2 border-[#FF90E8] text-[#FFE6B0]"
+                        : "bg-[#3B1B1B] text-[#FFE6B0] hover:bg-[#4B2B2B]"
+                    }`}
+                  >
+                    <Mail className="w-4 h-4" style={{ color: activeTab === "inbox" ? "#FF90E8" : "#FFE6B0" }} />
+                    Inbox
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("slack")}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
+                      activeTab === "slack"
+                        ? "bg-[#2B0808] border-2 border-[#FF4343] text-[#FFE6B0]"
+                        : "bg-[#3B1B1B] text-[#FFE6B0] hover:bg-[#4B2B2B]"
+                    }`}
+                  >
+                    <img 
+                      src="slack-logo-icon.png" 
+                      alt="Slack" 
+                      className="w-4 h-4"
+                    />
+                    Slack
+                  </button>
+                </div>
+              </div>
+
+              {/* Tab Content */}
+              <div className="rounded-2xl shadow-2xl overflow-hidden h-[60vh]">
+                {activeTab === "web" && (
+                  <iframe 
+                    style={{ zoom: 0.8 }}
+                    src="https://gumroad.com/help"
+                    className="w-full h-full border-16 border-[#3B1B1B] dark:border-[#3B1B1B]"
+                    title="Gumroad Help Center"
+                    allow="fullscreen"
+                  />
+                )}
+                {activeTab === "inbox" && (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="w-full h-full flex items-center justify-center">
+                      <img 
+                        src="Helper-inbox-desktop.png" 
+                        alt="Helper Inbox Desktop"
+                        className="hidden md:block w-full h-full object-contain"
+                      />
+                      <img 
+                        src="Helper-inbox-mobile.png" 
+                        alt="Helper Inbox Mobile"
+                        className="block md:hidden w-full h-full object-contain"
+                      />
+                    </div>
+                  </div>
+                )}
+                {activeTab === "slack" && (
+                  <div className="h-full flex items-center justify-center p-4">
+                    <SlackInterface />
+                  </div>
+                )}
+              </div>
             </div>
             
             <div className="flex justify-center gap-4 mt-6">
@@ -158,71 +232,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="smarter-support" className="py-12 md:py-20">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-16 gap-0 items-start">
-              <div className="lg:sticky lg:top-20">
-                <h2 className="text-4xl md:text-5xl font-bold mb-8 text-secondary dark:text-foreground text-left">
-                  Helper guides users and resolves issues before they become tickets.
-                </h2>
-                <div className="space-y-6 mb-12 mt-8">
-                  <div className="flex items-start gap-4 md:items-center">
-                    <MousePointer className="w-6 h-6 text-amber-400" />
-                    <span>
-                      <span className="font-bold text-bright">Helping hand</span>
-                      <span className="text-secondary dark:text-foreground">
-                        {" "}
-                        shows your customers how, instead of telling them.
-                      </span>
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-4 md:items-center">
-                    <BookOpenIcon className="w-6 h-6" style={{ color: "#459EFD" }} />
-                    <span>
-                      <span className="font-bold" style={{ color: "#459EFD" }}>
-                        Citations
-                      </span>
-                      <span className="text-secondary dark:text-foreground">
-                        {" "}
-                        back Helper's answers with real help doc snippets.
-                      </span>
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-4 md:items-center">
-                    <PlayCircle className="w-6 h-6" style={{ color: "#FF90E8" }} />
-                    <span>
-                      <span className="font-bold" style={{ color: "#FF90E8" }}>
-                        Tools
-                      </span>
-                      <span className="text-secondary dark:text-foreground">
-                        {" "}
-                        handle common requests automatically. No agent needed.
-                      </span>
-                    </span>
-                  </div>
-                </div>
-                <Button
-                  className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
-                  asChild
-                >
-                  <Link href="https://github.com/antiwork/helper">Get started</Link>
-                </Button>
-              </div>
 
-              <div className="order-1 md:order-2">
-                <div className="flex flex-col gap-24">
-                  <RefundDemo />
-                  <div className="hidden lg:block">
-                    <CitationsDemo />
-                  </div>
-                  <div className="hidden lg:block">
-                    <ToolsDemo />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
         <section className="py-12 md:py-20">
           <div className="container mx-auto px-4">
@@ -373,98 +383,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="py-12 md:py-20">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-1 xl:grid-cols-2 xl:gap-16 gap-0 items-start">
-              <div className="md:static xl:sticky xl:top-20">
-                <h2 className="text-4xl md:text-5xl font-bold mb-8 text-secondary dark:text-foreground text-left">
-                  Helper steps back when humans need to step in.
-                </h2>
-                <p className="text-lg text-secondary dark:text-foreground mb-8 text-left">
-                  Get notified in Slack when complex or high-priority issues arise, use @helper to quickly surface
-                  context, and easily return tickets to Helper once your team has resolved the issue.
-                </p>
-                <div className="space-y-6 mb-12">
-                  <div className="flex items-start gap-4 md:items-center">
-                    <TriangleAlert className="w-6 h-6" style={{ color: "#FF4343" }} />
-                    <span>
-                      <span className="font-bold" style={{ color: "#FF4343" }}>
-                        Smart escalation
-                      </span>
-                      <span className="text-secondary dark:text-foreground"> to human agents for complex issues.</span>
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-4 md:items-center">
-                    <Sparkles className="w-6 h-6" style={{ color: "#C2D44B" }} />
-                    <span>
-                      <span className="font-bold" style={{ color: "#C2D44B" }}>
-                        @helper
-                      </span>
-                      <span className="text-secondary dark:text-foreground">
-                        {" "}
-                        commands for quick information retrieval.
-                      </span>
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-4 md:items-center">
-                    <Star className="w-6 h-6" style={{ color: "#FEB81D" }} />
-                    <span>
-                      <span className="font-bold" style={{ color: "#FEB81D" }}>
-                        Priority notifications
-                      </span>
-                      <span className="text-secondary dark:text-foreground"> for VIP customers.</span>
-                    </span>
-                  </div>
-                </div>
-                <Button
-                  className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
-                  asChild
-                >
-                  <Link href="https://github.com/antiwork/helper">Get started</Link>
-                </Button>
-              </div>
-              <div className="space-y-12">
-                <div id="slackInterface" className="hidden xl:block">
-                  <SlackInterface />
-                </div>
-                <div id="slackNotification" className="hidden xl:block">
-                  <SlackNotification />
-                </div>
-                <div className="xl:hidden mt-12">
-                  <div className="relative">
-                    <div className="overflow-hidden">
-                      <div
-                        className="flex transition-transform duration-300 ease-in-out"
-                        style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-                      >
-                        <div className="w-full flex-shrink-0">
-                          <SlackInterface />
-                        </div>
-                        <div className="w-full flex-shrink-0">
-                          <SlackNotification />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex justify-center gap-2 mt-4">
-                      <button
-                        onClick={() => setCurrentSlide(0)}
-                        className={`w-2 h-2 rounded-full ${currentSlide === 0 ? "bg-[#FEB81D]" : "bg-[#FEB81D]/30"}`}
-                        aria-label="Show Slack interface slide"
-                        aria-pressed={currentSlide === 0}
-                      />
-                      <button
-                        onClick={() => setCurrentSlide(1)}
-                        className={`w-2 h-2 rounded-full ${currentSlide === 1 ? "bg-[#FEB81D]" : "bg-[#FEB81D]/30"}`}
-                        aria-label="Show Slack notification slide"
-                        aria-pressed={currentSlide === 1}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+
 
         <section className="py-20">
           <div className="container mx-auto px-4">
@@ -506,10 +425,10 @@ export default function Home() {
             </div>
             <div className="flex justify-center mt-12">
               <Button
-                className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
-                asChild
+                onClick={() => setShowContactModal(true)}
+                className="bg-bright hover:bg-[#FFE6B0] text-[#2B0808] hover:text-[#2B0808] font-medium px-6 py-3 rounded-lg text-base transition-colors duration-200"
               >
-                <Link href="https://github.com/antiwork/helper">Get started</Link>
+                Contact sales
               </Button>
             </div>
           </div>
