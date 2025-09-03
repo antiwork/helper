@@ -28,21 +28,20 @@ import { CHAT_MODEL, isWithinTokenLimit, MINI_MODEL } from "@/lib/ai/core";
 import openai from "@/lib/ai/openai";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { CHAT_SYSTEM_PROMPT, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
-import { buildTools } from "@/lib/ai/tools";
+import { buildTools, callServerSideTool } from "@/lib/ai/tools";
 import { cacheFor } from "@/lib/cache";
 import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
 import {
   createAiDraft,
   createConversationMessage,
-  createToolEvent,
   getLastAiGeneratedDraft,
   getMessagesOnly,
 } from "@/lib/data/conversationMessage";
 import { createAndUploadFile, downloadFile, getFileUrl } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
-import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
+import { getPlatformCustomer, PlatformCustomer, upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
-import { createHmacDigest } from "@/lib/metadataApiClient";
+import { CustomerInfo, getMetadata } from "@/lib/metadataApiClient";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLog, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
 
@@ -144,17 +143,35 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
     });
 };
 
+const fetchCustomerInfo = async (customerInfoUrl: string, mailbox: Mailbox) => {
+  try {
+    const metadata = await getMetadata(
+      { url: customerInfoUrl, hmacSecret: mailbox.widgetHMACSecret },
+      { timestamp: Math.floor(Date.now() / 1000) },
+    );
+    return metadata?.customer ?? null;
+  } catch (error) {
+    captureExceptionAndLog(error);
+    return null;
+  }
+};
+
 const buildPromptMessages = async (
   mailbox: Mailbox,
   email: string | null,
   query: string,
   guideEnabled = false,
+  customerInfoUrl?: string | null,
 ): Promise<{
   messages: CoreMessage[];
   sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
   promptInfo: Omit<PromptInfo, "availableTools">;
+  customerInfo: CustomerInfo | null;
 }> => {
-  const { knowledgeBank, websitePagesPrompt, websitePages } = await fetchPromptRetrievalData(query, null);
+  const [{ knowledgeBank, websitePagesPrompt, websitePages }, customerInfo] = await Promise.all([
+    fetchPromptRetrievalData(query, null),
+    customerInfoUrl ? fetchCustomerInfo(customerInfoUrl, mailbox) : null,
+  ]);
 
   const systemPrompt = [
     CHAT_SYSTEM_PROMPT.replaceAll("MAILBOX_NAME", mailbox.name).replaceAll(
@@ -173,7 +190,17 @@ const buildPromptMessages = async (
   if (websitePagesPrompt) {
     prompt += `\n${websitePagesPrompt}`;
   }
-  const userPrompt = email ? `\nCurrent user email: ${email}` : "Anonymous user";
+  let userPrompt;
+  if (customerInfo) {
+    userPrompt = "Current user details:\n";
+    if (email) userPrompt += `- Email: ${email}\n`;
+    if (customerInfo.name) userPrompt += `- Name: ${customerInfo.name}\n`;
+    for (const [key, value] of Object.entries(customerInfo.metadata ?? {})) {
+      userPrompt += `- ${key}: ${typeof value === "string" ? value : JSON.stringify(value)}\n`;
+    }
+  } else {
+    userPrompt = email ? `\nCurrent user email: ${email}` : "Anonymous user";
+  }
   prompt += userPrompt;
 
   return {
@@ -190,6 +217,7 @@ const buildPromptMessages = async (
       websitePages: websitePages.map((page) => ({ url: page.url, title: page.pageTitle, similarity: page.similarity })),
       userPrompt,
     },
+    customerInfo,
   };
 };
 
@@ -328,6 +356,7 @@ export const generateAIResponse = async ({
   evaluation = false,
   guideEnabled = false,
   tools: clientProvidedTools,
+  customerInfoUrl,
 }: {
   messages: Message[];
   mailbox: Mailbox;
@@ -351,6 +380,7 @@ export const generateAIResponse = async ({
   evaluation?: boolean;
   dataStream?: DataStreamWriter;
   tools?: Record<string, ToolRequestBody>;
+  customerInfoUrl?: string | null;
 }) => {
   const lastMessage = messages.findLast((m: Message) => m.role === "user");
   const query = lastMessage?.content || "";
@@ -360,9 +390,23 @@ export const generateAIResponse = async ({
     messages: systemMessages,
     sources,
     promptInfo,
-  } = await buildPromptMessages(mailbox, email, query, guideEnabled);
+    customerInfo,
+  } = await buildPromptMessages(mailbox, email, query, guideEnabled, customerInfoUrl);
 
-  const tools = await buildTools(conversationId, email, true, guideEnabled);
+  if (email && customerInfo?.metadata) {
+    await upsertPlatformCustomer({
+      email,
+      customerMetadata: customerInfo.metadata,
+    });
+  }
+
+  const tools = await buildTools({
+    conversationId,
+    email,
+    customerMetadataProvided: !!customerInfoUrl,
+    includeHumanSupport: true,
+    guideEnabled,
+  });
   if (readPageTool) {
     tools[readPageTool.toolName] = {
       description: readPageTool.toolDescription,
@@ -373,7 +417,7 @@ export const generateAIResponse = async ({
   if (clientProvidedTools) {
     Object.entries(clientProvidedTools).forEach(([toolName, tool]) => {
       const toolDefinition: Tool = {
-        description: tool.description,
+        description: tool.description ?? undefined,
         parameters: z.object(
           Object.fromEntries(
             Object.entries(tool.parameters).map(([key, value]) => {
@@ -391,22 +435,15 @@ export const generateAIResponse = async ({
       };
 
       if (tool.serverRequestUrl) {
-        toolDefinition.execute = async (params: Record<string, any>) => {
-          const result = await callToolEndpoint(tool, email, params, mailbox);
-          await createToolEvent({
+        toolDefinition.execute = (params: Record<string, any>) =>
+          callServerSideTool({
+            tool,
+            toolName,
             conversationId,
-            tool: {
-              name: toolName,
-              description: tool.description,
-              url: tool.serverRequestUrl,
-            },
-            data: result.success ? result.data : undefined,
-            error: result.success ? undefined : result.error,
-            parameters: params,
-            userMessage: result.success ? "Tool executed successfully." : "Tool execution failed.",
+            email,
+            params,
+            mailbox,
           });
-          return result;
-        };
       }
 
       tools[toolName] = toolDefinition;
@@ -575,55 +612,6 @@ const createAssistantMessage = (
   });
 };
 
-const callToolEndpoint = async (
-  tool: ToolRequestBody,
-  email: string | null,
-  parameters: Record<string, any>,
-  mailbox: Mailbox,
-) => {
-  if (!tool.serverRequestUrl) {
-    throw new Error("Tool does not have a server request URL");
-  }
-
-  const requestBody = { email, parameters, requestTimestamp: Math.floor(Date.now() / 1000) };
-  const hmacDigest = createHmacDigest(mailbox.widgetHMACSecret, { json: requestBody });
-  const hmacSignature = hmacDigest.toString("base64");
-
-  try {
-    const response = await fetch(tool.serverRequestUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${hmacSignature}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!response.ok) {
-      let error = `Server returned ${response.status}: ${response.statusText}`;
-      try {
-        const data = await response.json();
-        if (data.error) error = data.error;
-      } catch {}
-      return {
-        success: false,
-        error,
-      };
-    }
-
-    const data = await response.json();
-    return {
-      success: true,
-      data,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-};
-
 export const respondWithAI = async ({
   conversation,
   mailbox,
@@ -637,6 +625,7 @@ export const respondWithAI = async ({
   isHelperUser = false,
   reasoningEnabled = true,
   tools,
+  customerInfoUrl,
 }: {
   conversation: Conversation;
   mailbox: Mailbox;
@@ -656,6 +645,7 @@ export const respondWithAI = async ({
   isHelperUser?: boolean;
   reasoningEnabled?: boolean;
   tools?: Record<string, ToolRequestBody>;
+  customerInfoUrl?: string | null;
 }) => {
   if (conversation.status === "spam") return createTextResponse("", Date.now().toString());
 
@@ -741,6 +731,7 @@ export const respondWithAI = async ({
         guideEnabled,
         addReasoning: reasoningEnabled,
         tools,
+        customerInfoUrl,
         dataStream,
         async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources, promptInfo }) {
           const hasSensitiveToolCall = steps.some((step: any) =>

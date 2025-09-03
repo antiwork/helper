@@ -6,12 +6,15 @@ import { triggerEvent } from "@/jobs/trigger";
 import { GUIDE_USER_TOOL_NAME, REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
 import { getConversationById, updateConversation, updateOriginalConversation } from "@/lib/data/conversation";
 import { createToolEvent } from "@/lib/data/conversationMessage";
+import { Mailbox } from "@/lib/data/mailbox";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata, getPastConversationsPrompt } from "@/lib/data/retrieval";
 import { getMailboxToolsForChat } from "@/lib/data/tools";
+import { createHmacDigest } from "@/lib/metadataApiClient";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
+import { ToolRequestBody } from "@/packages/client/dist";
 
 const fetchUserInformation = async (email: string) => {
   try {
@@ -88,14 +91,23 @@ const setUserEmail = async (conversationId: number, email: string) => {
   return "Your email has been set. You can now request human support if needed.";
 };
 
-export const buildTools = async (
-  conversationId: number,
-  email: string | null,
+export const buildTools = async ({
+  conversationId,
+  email,
+  customerMetadataProvided,
   includeHumanSupport = true,
   guideEnabled = false,
   includeMailboxTools = true,
-  reasoningMiddlewarePrompt?: string,
-): Promise<Record<string, Tool>> => {
+  reasoningMiddlewarePrompt,
+}: {
+  conversationId: number;
+  email: string | null;
+  customerMetadataProvided: boolean;
+  includeHumanSupport?: boolean;
+  guideEnabled?: boolean;
+  includeMailboxTools?: boolean;
+  reasoningMiddlewarePrompt?: string;
+}): Promise<Record<string, Tool>> => {
   const metadataApi = await getMetadataApiByMailbox();
 
   const reasoningMiddleware = async (result: Promise<string | undefined> | string | undefined) => {
@@ -168,7 +180,7 @@ export const buildTools = async (
     });
   }
 
-  if (metadataApi && email) {
+  if (!customerMetadataProvided && metadataApi && email) {
     tools.fetch_user_information = tool({
       description: "fetch user related information",
       parameters: z.object({
@@ -207,4 +219,84 @@ export const buildTools = async (
   }
 
   return tools;
+};
+
+export const callServerSideTool = async ({
+  tool,
+  toolName,
+  conversationId,
+  email,
+  params,
+  mailbox,
+}: {
+  tool: ToolRequestBody;
+  toolName: string;
+  conversationId: number;
+  email: string | null;
+  params: Record<string, any>;
+  mailbox: Mailbox;
+}) => {
+  const result = await fetchToolEndpoint(tool, email, params, mailbox);
+  await createToolEvent({
+    conversationId,
+    tool: {
+      name: toolName,
+      description: tool.description,
+      url: tool.serverRequestUrl,
+    },
+    data: result.success ? result.data : undefined,
+    error: result.success ? undefined : result.error,
+    parameters: params,
+    userMessage: result.success ? "Tool executed successfully." : "Tool execution failed.",
+  });
+  return result;
+};
+
+const fetchToolEndpoint = async (
+  tool: ToolRequestBody,
+  email: string | null,
+  parameters: Record<string, any>,
+  mailbox: Mailbox,
+) => {
+  if (!tool.serverRequestUrl) {
+    throw new Error("Tool does not have a server request URL");
+  }
+
+  const requestBody = { email, parameters, requestTimestamp: Math.floor(Date.now() / 1000) };
+  const hmacDigest = createHmacDigest(mailbox.widgetHMACSecret, { json: requestBody });
+  const hmacSignature = hmacDigest.toString("base64");
+
+  try {
+    const response = await fetch(tool.serverRequestUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${hmacSignature}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      let error = `Server returned ${response.status}: ${response.statusText}`;
+      try {
+        const data = await response.json();
+        if (data.error) error = data.error;
+      } catch {}
+      return {
+        success: false,
+        error,
+      };
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
 };

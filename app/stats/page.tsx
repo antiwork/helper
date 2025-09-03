@@ -31,14 +31,16 @@ export default function StatsPage() {
         <Image src="/logo-white.svg" alt="Helper" width={120} height={32} />
       </div>
 
-      <div className="space-y-8 max-w-screen-lg mx-auto">
+      <main className="space-y-8 max-w-screen-lg mx-auto" data-testid="stats-main-content">
         <div className="text-center">
           {/* Centered Calendar Icon with Dropdown - Replaces Ticket Dashboard title */}
           <div className="flex justify-center mb-8">
             <div className="relative group">
               <div className="flex items-center gap-4 cursor-pointer group-hover:underline decoration-white decoration-2 underline-offset-4">
                 <Calendar className="h-8 w-8 text-white" />
-                <span className="text-5xl font-semibold text-white">{getCurrentTimeframeLabel()}</span>
+                <span className="text-5xl font-semibold text-white" data-testid="timeframe-label">
+                  {getCurrentTimeframeLabel()}
+                </span>
                 <ChevronDown className="h-6 w-6 text-white transition-transform group-hover:rotate-180" />
               </div>
 
@@ -60,45 +62,53 @@ export default function StatsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="text-center bg-[#331111] border-none text-white">
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-6" data-testid="metrics-grid">
+          <Card className="text-center bg-[#331111] border-none text-white" data-testid="metric-card-all-open">
             <CardHeader>
               <CardTitle className="text-2xl text-amber-100">All Open</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-8xl font-bold text-bright">{openCounts?.all ?? 0}</div>
+              <div className="text-8xl font-bold text-bright" data-testid="metric-value-all-open">
+                {openCounts?.all ?? 0}
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="text-center bg-[#331111] border-none text-white">
+          <Card className="text-center bg-[#331111] border-none text-white" data-testid="metric-card-assigned">
             <CardHeader>
               <CardTitle className="text-2xl text-amber-100">Assigned</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-8xl font-bold text-[#459EFD]">{openCounts?.assigned ?? 0}</div>
+              <div className="text-8xl font-bold text-[#459EFD]" data-testid="metric-value-assigned">
+                {openCounts?.assigned ?? 0}
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="text-center bg-[#331111] border-none text-white">
+          <Card className="text-center bg-[#331111] border-none text-white" data-testid="metric-card-unassigned">
             <CardHeader>
               <CardTitle className="text-2xl text-amber-100">Unassigned</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-8xl font-bold text-[#FF4343]">{openCounts?.unassigned ?? 0}</div>
+              <div className="text-8xl font-bold text-[#FF4343]" data-testid="metric-value-unassigned">
+                {openCounts?.unassigned ?? 0}
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="text-center bg-[#331111] border-none text-white">
+          <Card className="text-center bg-[#331111] border-none text-white" data-testid="metric-card-mine">
             <CardHeader>
               <CardTitle className="text-2xl text-amber-100">Mine</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-8xl font-bold text-[#FF90E8]">{openCounts?.mine ?? 0}</div>
+              <div className="text-8xl font-bold text-[#FF90E8]" data-testid="metric-value-mine">
+                {openCounts?.mine ?? 0}
+              </div>
             </CardContent>
           </Card>
-        </div>
+        </section>
 
-        <div className="space-y-4">
+        <section className="space-y-4" data-testid="leaderboard-section">
           {leaderboardData?.leaderboard.map((member, index) => (
             <div
               key={member.userId}
@@ -137,8 +147,8 @@ export default function StatsPage() {
           {!leaderboardData?.leaderboard.length && (
             <div className="text-center text-2xl text-white/70 py-12">No activity in the selected time period</div>
           )}
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }

@@ -23,9 +23,15 @@ describe("getMetadata", () => {
   };
 
   it("returns the metadata when the API call is successful", async () => {
+    const mockResponse = {
+      success: true,
+      user_info: { prompt: "Some prompt", metadata: {} },
+      customer: { name: "Some name", value: 1000, metadata: {}, actions: {} },
+    };
+
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: () => ({ success: true, user_info: { prompt: "Some prompt", metadata: {} } }),
+      json: () => mockResponse,
     });
     global.fetch = mockFetch;
 
@@ -37,7 +43,7 @@ describe("getMetadata", () => {
 
     const hmacSignature = createHmacDigest(mockEndpoint.hmacSecret, { query: mockQueryParams }).toString("base64");
     const urlWithParams = `${mockEndpoint.url}?email=${encodeURIComponent(mockQueryParams.email)}&timestamp=${mockQueryParams.timestamp}`;
-    expect(result).toEqual({ prompt: "Some prompt", metadata: {} });
+    expect(result).toEqual(mockResponse);
     expect(mockFetch).toHaveBeenCalledWith(
       urlWithParams,
       expect.objectContaining({
@@ -73,10 +79,10 @@ describe("getMetadata", () => {
     // JSON response missing `metadata`
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: () => ({ success: true }),
+      json: () => ({ ok: true }),
     });
     await expect(getMetadata(mockEndpoint, mockQueryParams)).rejects.toThrow(
-      new MetadataAPIError("Invalid format for JSON response: 'user_info' Required"),
+      new MetadataAPIError("Invalid format for JSON response: 'success' Invalid literal value, expected true"),
     );
 
     // Multiple errors

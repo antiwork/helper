@@ -1,4 +1,4 @@
-import { CornerUpLeft, DollarSign, ExternalLink, Mail } from "lucide-react";
+import { ChevronDown, ChevronRight, CornerUpLeft, DollarSign, ExternalLink, Mail } from "lucide-react";
 import { useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { useAssignTicket } from "@/app/(dashboard)/[category]/conversation/useAs
 import { useConversationListContext } from "@/app/(dashboard)/[category]/list/conversationListContext";
 import { Conversation } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
+import { JsonView } from "@/components/jsonView";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { SimilarityCircle } from "@/components/similarityCircle";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -91,6 +92,7 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
   const { user: currentUser } = useSession() ?? {};
   const [previousExpanded, setPreviousExpanded] = useState(true);
   const [similarExpanded, setSimilarExpanded] = useState(false);
+  const [metadataExpanded, setMetadataExpanded] = useState(false);
 
   const { data: customerConversations, isFetching: isFetchingPrevious } = api.mailbox.conversations.list.useQuery(
     { customer: [conversation.emailFrom ?? ""], sort: "newest" },
@@ -159,19 +161,19 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
             <span
               className={cn(
                 "truncate",
-                conversation.customerMetadata?.name || conversation.emailFrom
+                conversation.customerInfo?.name || conversation.emailFrom
                   ? "text-base font-medium"
                   : "text-muted-foreground",
               )}
-              title={conversation.customerMetadata?.name || conversation.emailFrom || ""}
+              title={conversation.customerInfo?.name || conversation.emailFrom || ""}
             >
-              {conversation.customerMetadata?.name || conversation.emailFrom || "Anonymous"}
+              {conversation.customerInfo?.name || conversation.emailFrom || "Anonymous"}
             </span>
-            {conversation.customerMetadata?.isVip && <Badge variant="bright">VIP</Badge>}
-            {conversation.customerMetadata?.value && conversation.customerMetadata.value > 0 && (
+            {conversation.customerInfo?.isVip && <Badge variant="bright">VIP</Badge>}
+            {conversation.customerInfo?.value && conversation.customerInfo.value > 0 && (
               <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
                 <DollarSign className="h-4 w-4" />
-                {formatCurrency(conversation.customerMetadata.value)}
+                {formatCurrency(conversation.customerInfo.value)}
               </div>
             )}
           </div>
@@ -192,7 +194,7 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
             </CopyToClipboard>
           )}
 
-          {Object.entries(conversation.customerMetadata?.links ?? {}).map(([label, url], idx) => (
+          {Object.entries(conversation.customerInfo?.links ?? {}).map(([label, url], idx) => (
             <a
               key={idx}
               className="col-start-2 mt-1 flex items-center gap-2 hover:underline"
@@ -204,6 +206,27 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
               {label}
             </a>
           ))}
+
+          {conversation.customerInfo?.metadata && Object.keys(conversation.customerInfo.metadata).length > 0 && (
+            <>
+              <div className="col-start-2 mt-2">
+                <button
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => setMetadataExpanded(!metadataExpanded)}
+                >
+                  {metadataExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                  <span>Details</span>
+                </button>
+              </div>
+              {metadataExpanded && (
+                <div className="col-start-2 mt-2 text-xs text-muted-foreground border rounded p-2 overflow-x-auto">
+                  <div className="font-mono">
+                    <JsonView data={conversation.customerInfo.metadata} />
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
