@@ -38,9 +38,7 @@ export async function getMetadata(endpoint: { url: string; hmacSecret: string },
       throw new MetadataAPIError(`HTTP error occurred: ${response.status}`);
     }
 
-    const data = validateResponse(await response.json());
-
-    return data.user_info ? data.user_info : null;
+    return validateResponse(await response.json());
   } catch (error) {
     if (error instanceof MetadataAPIError) {
       throw error;
@@ -75,6 +73,15 @@ function createHmacSignature(
 
 const responseSchema = z.object({
   success: z.literal(true),
+  customer: z
+    .object({
+      name: z.string().nullish(),
+      value: z.number().nullish(),
+      metadata: z.record(z.string(), z.any()).nullish(),
+      actions: z.record(z.string(), z.string()).nullish(),
+    })
+    .optional(),
+  // Deprecated
   user_info: z
     .object({
       prompt: z.string(),
@@ -87,8 +94,10 @@ const responseSchema = z.object({
     .refine((data) => {
       const { prompt, metadata } = data;
       return prompt.length <= METADATA_API_MAX_LENGTH && JSON.stringify(metadata).length <= METADATA_API_MAX_LENGTH;
-    }, `Exceeded maximum length of ${METADATA_API_MAX_LENGTH} characters`),
+    }, `Exceeded maximum length of ${METADATA_API_MAX_LENGTH} characters`)
+    .optional(),
 });
+export type CustomerInfo = z.infer<typeof responseSchema>["customer"];
 
 function validateResponse(data: any) {
   const parsedData = responseSchema.safeParse(data);

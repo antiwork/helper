@@ -26,12 +26,12 @@ export const useToolExecution = () => {
       if (result.success) {
         setIsSuccess(true);
         toast.success(`Tool "${name}" executed successfully`, {
-          description: result.message,
+          description: "message" in result ? result.message : undefined,
         });
         refetch();
         return true;
       }
-      throw new Error(result.message);
+      throw new Error("error" in result ? result.error : undefined);
     } catch (error) {
       toast.error(`Failed to execute tool "${name}"`, {
         description: error instanceof Error ? error.message : "Unknown error",

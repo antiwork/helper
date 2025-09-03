@@ -237,6 +237,7 @@ export class HelperClient {
           ...params,
           tools: serializeTools(params.tools ?? {}),
           attachments: await Promise.all((params.attachments ?? []).map(prepareAttachment)),
+          customerSpecificTools: params.customerSpecificTools ?? false,
         } satisfies CreateMessageRequestBody),
       });
     },
@@ -256,10 +257,14 @@ export class HelperClient {
     handler: ({
       conversation,
       tools = {},
+      customerSpecificTools = false,
+      customerInfoUrl,
       onEscalated,
     }: {
       conversation: ConversationDetails;
       tools?: Record<string, HelperTool>;
+      customerSpecificTools?: boolean;
+      customerInfoUrl?: string | null;
       onEscalated?: () => void;
     }) => {
       const formattedMessages = conversation.messages.map(formatAIMessage);
@@ -317,6 +322,8 @@ export class HelperClient {
           message: messages[messages.length - 1],
           conversationSlug: conversation.slug,
           tools: serializeTools(tools),
+          customerSpecificTools,
+          customerInfoUrl,
           requestBody,
         }),
         onToolCall: ({ toolCall }: { toolCall: { toolName: string; args: unknown } }) => {

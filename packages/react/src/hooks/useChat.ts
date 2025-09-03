@@ -9,8 +9,10 @@ import { useRefToLatest } from "./useRefToLatest";
 export interface UseChatProps {
   conversation: ConversationDetails;
   tools?: Record<string, HelperTool>;
+  customerInfoUrl?: string | null;
   enableRealtime?: boolean;
   ai?: Parameters<typeof useAIChat>[0];
+  customerSpecificTools?: boolean;
 }
 
 type UseChatResult = Omit<ReturnType<typeof useAIChat>, "messages"> & {
@@ -22,8 +24,10 @@ type UseChatResult = Omit<ReturnType<typeof useAIChat>, "messages"> & {
 export const useChat = ({
   conversation,
   tools = {},
+  customerInfoUrl,
   enableRealtime = true,
   ai: aiOptions,
+  customerSpecificTools = false,
 }: UseChatProps): UseChatResult => {
   const { client } = useHelperClient();
   const [agentTyping, setAgentTyping] = useState(false);
@@ -34,6 +38,8 @@ export const useChat = ({
       client.chat.handler({
         conversation,
         tools,
+        customerSpecificTools,
+        customerInfoUrl,
         onEscalated: () => {
           queryClient.setQueryData(["conversation", conversation.slug], (old: ConversationDetails | undefined) =>
             old ? { ...old, isEscalated: true } : old,
@@ -50,7 +56,7 @@ export const useChat = ({
           );
         },
       }),
-    [client, conversation, tools],
+    [client, conversation, tools, customerSpecificTools],
   );
 
   const { messages, setMessages, ...rest } = useAIChat({
