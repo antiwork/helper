@@ -175,6 +175,8 @@ test.describe("Help Article Search", () => {
     });
     await expect(popover).toBeVisible({ timeout: 10000 });
 
+    await editor.focus();
+
     // Close popover with Escape key
     await page.keyboard.press("Escape");
 
