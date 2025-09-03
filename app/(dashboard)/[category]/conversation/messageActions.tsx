@@ -260,7 +260,7 @@ export const MessageActions = () => {
 
   const knowledgeBankDialogState = useKnowledgeBankDialogState();
 
-  const handleSend = async ({ assign, close = true }: { assign: boolean; close?: boolean }) => {
+  const handleSend = async ({ close = true }: { close?: boolean }) => {
     if (sendDisabled || !conversation?.slug) return;
 
     stopRecording();
@@ -288,7 +288,6 @@ export const MessageActions = () => {
         fileSlugs: readyFiles.flatMap((f) => (f.slug ? [f.slug] : [])),
         cc: cc.data,
         bcc: bcc.data,
-        shouldAutoAssign: assign,
         shouldClose: close,
         responseToId: lastUserMessage?.id ?? null,
       });
@@ -319,7 +318,7 @@ export const MessageActions = () => {
           });
           // Remove conversation from list and move to next
           removeConversation();
-          if (!assign) shouldTriggerConfetti = true;
+          if (user?.preferences?.autoAssignOnReply && !conversation.assignedToId) shouldTriggerConfetti = true; // If the message is not assigned to anyone and auto assign is on then it will be assigned to the current user hence trigger confetti
         } catch (error) {
           captureExceptionAndLog(error);
           toast.error("Message sent but failed to close conversation", {
@@ -419,7 +418,7 @@ export const MessageActions = () => {
               <Button
                 size={isAboveMd ? "default" : "sm"}
                 variant="outlined"
-                onClick={() => handleSend({ assign: false, close: false })}
+                onClick={() => handleSend({ close: false })}
                 disabled={sendDisabled}
               >
                 Reply
@@ -427,11 +426,7 @@ export const MessageActions = () => {
                   <KeyboardShortcut className="ml-2 text-sm border-primary/50">⌥⏎</KeyboardShortcut>
                 )}
               </Button>
-              <Button
-                size={isAboveMd ? "default" : "sm"}
-                onClick={() => handleSend({ assign: false })}
-                disabled={sendDisabled}
-              >
+              <Button size={isAboveMd ? "default" : "sm"} onClick={() => handleSend} disabled={sendDisabled}>
                 {sending ? "Replying..." : "Reply and close"}
                 {!sending && isMacOS() && (
                   <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌘⏎</KeyboardShortcut>
@@ -496,8 +491,8 @@ export const MessageActions = () => {
             handleTypingEvent(conversation.slug);
           }
         }}
-        onModEnter={() => !sendDisabled && handleSend({ assign: false })}
-        onOptionEnter={() => !sendDisabled && handleSend({ assign: false, close: false })}
+        onModEnter={() => !sendDisabled && handleSend}
+        onOptionEnter={() => !sendDisabled && handleSend({ close: false })}
         onSlashKey={() => {
           setShowCommandBar(true);
           setTimeout(() => commandInputRef.current?.focus(), 100);
