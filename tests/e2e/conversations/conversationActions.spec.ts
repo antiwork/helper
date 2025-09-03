@@ -1,38 +1,19 @@
 import { expect, test } from "@playwright/test";
-import { desc, eq } from "drizzle-orm";
-import { db } from "../../../db/client";
-import { conversationEvents, conversations } from "../../../db/schema";
-
-async function getConversationStatusFromDb(conversationId: number): Promise<string> {
-  const [event] = await db
-    .select({ changes: conversationEvents.changes })
-    .from(conversationEvents)
-    .where(eq(conversationEvents.conversationId, conversationId))
-    .orderBy(desc(conversationEvents.createdAt))
-    .limit(1);
-  if (event && event.changes && event.changes.status) {
-    return event.changes.status;
-  }
-  return "unknown";
-}
+import {
+  getConversationStatusFromDb,
+  getOpenConversation,
+  getCurrentUserId,
+  getUserAutoAssignPreference,
+  setUserAutoAssignPreference,
+  createUnassignedConversation,
+  getConversationAssignedTo,
+  setConversationAssignment,
+  cleanupTestConversation,
+  waitForConversationAssignment,
+  sendReplyMessage,
+} from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
-
-async function getOpenConversation() {
-  const result = await db
-    .select({ id: conversations.id, slug: conversations.slug })
-    .from(conversations)
-    .where(eq(conversations.status, "open"))
-    .limit(1);
-
-  if (!result.length) {
-    throw new Error(
-      "No open conversation found in database. Please ensure there's at least one open conversation for testing.",
-    );
-  }
-
-  return result[0];
-}
 
 test.describe("Conversation Actions", () => {
   test.describe.configure({ mode: "serial" });
@@ -418,6 +399,74 @@ test.describe("Conversation Actions", () => {
         console.error("Failed to assign conversation to issue:", error);
         await page.keyboard.press("Escape");
       }
+    });
+  });
+
+  test.describe("Auto-Assign on Reply", () => {
+    let testConversation: { id: number; slug: string };
+    let currentUserId: string;
+    let originalAutoAssignPreference: boolean;
+
+    test.beforeEach(async ({ page }) => {
+      currentUserId = await getCurrentUserId();
+      
+      originalAutoAssignPreference = await getUserAutoAssignPreference(currentUserId);
+      
+      testConversation = await createUnassignedConversation();
+      
+      await page.goto(`/conversations?id=${testConversation.slug}`);
+      await page.waitForLoadState("networkidle");
+    });
+
+    test.afterEach(async () => {
+      await setUserAutoAssignPreference(currentUserId, originalAutoAssignPreference);
+      await cleanupTestConversation(testConversation.id);
+    });
+
+    test("should auto-assign conversation when enabled and replying to unassigned conversation", async ({ page }) => {
+      await setUserAutoAssignPreference(currentUserId, true);
+
+      await page.reload();
+      await page.waitForLoadState("networkidle");
+
+      const initialAssignment = await getConversationAssignedTo(testConversation.id);
+      expect(initialAssignment).toBeNull();
+
+      const testMessage = "Auto-assign test reply message";
+      await sendReplyMessage(page, testMessage);
+
+      await waitForConversationAssignment(testConversation.id, currentUserId);
+    });
+
+    test("should not auto-assign conversation when disabled and replying to unassigned conversation", async ({ page }) => {
+      await setUserAutoAssignPreference(currentUserId, false);
+      
+      await page.reload();
+      await page.waitForLoadState("networkidle");
+
+      const initialAssignment = await getConversationAssignedTo(testConversation.id);
+      expect(initialAssignment).toBeNull();
+
+      const testMessage = "No auto-assign test reply message";
+      await sendReplyMessage(page, testMessage);
+
+      await waitForConversationAssignment(testConversation.id, null);
+    });
+
+    test("should not change assignment when conversation is already assigned", async ({ page }) => {
+      await setUserAutoAssignPreference(currentUserId, true);
+
+      const otherUserId = "other-user-id-123";
+
+      await setConversationAssignment(testConversation.id, otherUserId);
+
+      const initialAssignment = await getConversationAssignedTo(testConversation.id);
+      expect(initialAssignment).toBe(otherUserId);
+
+      const testMessage = "Reply to already assigned conversation";
+      await sendReplyMessage(page, testMessage);
+
+      await waitForConversationAssignment(testConversation.id, otherUserId);
     });
   });
 });
