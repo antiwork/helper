@@ -7,17 +7,6 @@ import { conversationFactory } from "../../../tests/support/factories/conversati
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
-const mockHelpArticles = [
-  { title: "How to manage your account", url: "https://help.example.com/account" },
-  { title: "Getting started guide", url: "https://help.example.com/getting-started" },
-  { title: "Account settings", url: "https://help.example.com/account-settings" },
-  { title: "Billing and payments", url: "https://help.example.com/billing" },
-  { title: "API documentation", url: "https://help.example.com/api" },
-  { title: "Security best practices", url: "https://help.example.com/security" },
-  { title: "Troubleshooting common issues", url: "https://help.example.com/troubleshooting" },
-  { title: "Contact support", url: "https://help.example.com/contact" },
-];
-
 test.describe("Help Article Search", () => {
   let testConversationId: number | null = null;
   let testUserId: string | null = null;
@@ -60,26 +49,7 @@ test.describe("Help Article Search", () => {
     }
   });
 
-  test.beforeEach(async ({ page, context }) => {
-    await context.route("**/api/trpc/**", async (route) => {
-      const url = route.request().url();
-      if (url.includes("mailbox.websites.pages")) {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            result: {
-              data: {
-                json: mockHelpArticles,
-              },
-            },
-          }),
-        });
-      } else {
-        await route.continue();
-      }
-    });
-
+  test.beforeEach(async ({ page }) => {
     await page.goto("/mine", { timeout: 15000 });
     await page.waitForLoadState("networkidle", { timeout: 10000 });
 
@@ -155,10 +125,10 @@ test.describe("Help Article Search", () => {
     const count = await articleItems.count();
     expect(count).toBeGreaterThan(0);
 
-    // Verify first article contains "account"
+    // Verify first article contains "next.js integration"
     const firstArticle = articleItems.first().locator("span.font-medium");
     const text = await firstArticle.textContent();
-    expect(text?.toLowerCase()).toContain("account");
+    expect(text?.toLowerCase()).toContain("next.js integration");
   });
 
   test("should insert article link when selected", async ({ page }) => {

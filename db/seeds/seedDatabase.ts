@@ -18,7 +18,16 @@ import { db } from "@/db/client";
 import { indexConversationMessage } from "@/jobs/indexConversation";
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/server";
-import { conversationMessages, conversations, mailboxesMetadataApi, userProfiles } from "../schema";
+import {
+  conversationMessages,
+  conversations,
+  mailboxesMetadataApi,
+  userProfiles,
+  websiteCrawls,
+  websitePages,
+  websites,
+} from "../schema";
+import { helpArticlesData } from "./helpArticlesData";
 
 const getTables = async () => {
   const result = await db.execute(sql`
@@ -95,6 +104,7 @@ export const seedDatabase = async () => {
     );
 
     await createSettingsPageRecords();
+    await seedHelpArticles();
 
     await generateSeedsFromFixtures();
     const conversationRecords = await db.select().from(conversations);
@@ -244,6 +254,61 @@ const generateSeedsFromFixtures = async () => {
         }
       }),
   );
+};
+
+const seedHelpArticles = async () => {
+  console.log("Seeding help articles...");
+
+  // Create website entry for helper.ai/docs
+  const helperDocsWebsite = await db
+    .insert(websites)
+    .values({
+      name: "Helper AI Documentation",
+      url: "https://helper.ai/docs",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .returning()
+    .then(takeUniqueOrThrow);
+
+  // Create a successful crawl for the website
+  const crawl = await db
+    .insert(websiteCrawls)
+    .values({
+      websiteId: helperDocsWebsite.id,
+      name: "Initial crawl for Helper AI Documentation",
+      status: "success",
+      startedAt: subDays(new Date(), 1),
+      completedAt: new Date(),
+      metadata: {
+        pageCount: helpArticlesData.length,
+        creditsUsed: helpArticlesData.length,
+      },
+      createdAt: subDays(new Date(), 1),
+      updatedAt: new Date(),
+    })
+    .returning()
+    .then(takeUniqueOrThrow);
+
+  // Insert all help articles as website pages
+  for (const article of helpArticlesData) {
+    await db.insert(websitePages).values({
+      websiteId: helperDocsWebsite.id,
+      websiteCrawlId: crawl.id,
+      url: article.url,
+      pageTitle: article.title,
+      rawHtml: `<html><head><title>${article.title}</title></head><body><h1>${article.title}</h1><p>Documentation content for ${article.title}</p></body></html>`,
+      markdown: `# ${article.title}\n\nDocumentation content for ${article.title}`,
+      metadata: {
+        title: article.title,
+        description: `Help article about ${article.title}`,
+      },
+      createdAt: subDays(new Date(), 1),
+      updatedAt: new Date(),
+    });
+  }
+
+  console.log(`Seeded ${helpArticlesData.length} help articles`);
 };
 
 const createSettingsPageRecords = async () => {
