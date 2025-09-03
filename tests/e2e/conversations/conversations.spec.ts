@@ -20,7 +20,7 @@ test.describe("Working Conversation Management", () => {
   }
 
   test("should display dashboard with conversations", async ({ page }) => {
-    await expect(page).toHaveTitle("Helper");
+    await expect(page).toHaveTitle("Mine");
 
     const searchInput = page.getByRole("textbox", { name: "Search conversations" });
     await expect(searchInput).toBeVisible();
@@ -349,9 +349,9 @@ test.describe("Working Conversation Management", () => {
 
     await page.reload();
 
-    await toggleFilters();
-
     const dateFilterButtonAfterRefresh = page.getByRole("button", { name: "Date Filter" });
+    await expect(dateFilterButton).toBeVisible();
+
     await expect(dateFilterButtonAfterRefresh).toHaveText(/Last 30 days/);
     const clearFiltersButton = page.getByRole("button", { name: "Clear Filters" });
     await expect(clearFiltersButton).toBeVisible();
