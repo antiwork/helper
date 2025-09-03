@@ -260,7 +260,7 @@ export const MessageActions = () => {
 
   const knowledgeBankDialogState = useKnowledgeBankDialogState();
 
-  const handleSend = async ({ assign, close = true }: { assign: boolean; close?: boolean }) => {
+  const handleSend = async ({ close = true }: { close?: boolean }) => {
     if (sendDisabled || !conversation?.slug) return;
 
     stopRecording();
@@ -282,13 +282,15 @@ export const MessageActions = () => {
         ?.filter((m) => m.type === "message" && m.role === "user")
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
 
+      const shouldAutoAssign = user?.preferences?.autoAssignOnReply ?? false;
+
       const { id: emailId } = await replyMutation.mutateAsync({
         conversationSlug,
         message: draftedEmail.message,
         fileSlugs: readyFiles.flatMap((f) => (f.slug ? [f.slug] : [])),
         cc: cc.data,
         bcc: bcc.data,
-        shouldAutoAssign: assign,
+        shouldAutoAssign,
         shouldClose: close,
         responseToId: lastUserMessage?.id ?? null,
       });
@@ -319,7 +321,7 @@ export const MessageActions = () => {
           });
           // Remove conversation from list and move to next
           removeConversation();
-          if (!assign) shouldTriggerConfetti = true;
+          if (!shouldAutoAssign) shouldTriggerConfetti = true;
         } catch (error) {
           captureExceptionAndLog(error);
           toast.error("Message sent but failed to close conversation", {
@@ -419,7 +421,7 @@ export const MessageActions = () => {
               <Button
                 size={isAboveMd ? "default" : "sm"}
                 variant="outlined"
-                onClick={() => handleSend({ assign: false, close: false })}
+                onClick={() => handleSend({ close: false })}
                 disabled={sendDisabled}
               >
                 Reply
@@ -429,7 +431,7 @@ export const MessageActions = () => {
               </Button>
               <Button
                 size={isAboveMd ? "default" : "sm"}
-                onClick={() => handleSend({ assign: false })}
+                onClick={() => handleSend({ close: true })}
                 disabled={sendDisabled}
               >
                 {sending ? "Replying..." : "Reply and close"}
@@ -496,8 +498,8 @@ export const MessageActions = () => {
             handleTypingEvent(conversation.slug);
           }
         }}
-        onModEnter={() => !sendDisabled && handleSend({ assign: false })}
-        onOptionEnter={() => !sendDisabled && handleSend({ assign: false, close: false })}
+        onModEnter={() => !sendDisabled && handleSend({ close: true })}
+        onOptionEnter={() => !sendDisabled && handleSend({ close: false })}
         onSlashKey={() => {
           setShowCommandBar(true);
           setTimeout(() => commandInputRef.current?.focus(), 100);
