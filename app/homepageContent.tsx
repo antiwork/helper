@@ -61,7 +61,13 @@ const ChatWidget = ({
               </div>
             ))}
             {agentTyping && <div className="animate-default-pulse text-muted">An agent is typing...</div>}
-            {status === "submitted" && <div className="animate-default-pulse text-muted">Thinking...</div>}
+            {status === "submitted" && (
+              <div className="flex items-center gap-1">
+                <div className="size-2 bg-foreground rounded-full animate-default-pulse [animation-delay:-0.3s]" />
+                <div className="size-2 bg-foreground rounded-full animate-default-pulse [animation-delay:-0.15s]" />
+                <div className="size-2 bg-foreground rounded-full animate-default-pulse" />
+              </div>
+            )}
           </div>
         </div>
       </div>
