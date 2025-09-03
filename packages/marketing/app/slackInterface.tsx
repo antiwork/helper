@@ -22,23 +22,39 @@ function SlackInterface() {
           </div>
           <div className="flex-1">
             <div className="font-bold text-[13px] md:text-[15px] leading-tight">
-              Gumroad Helper <span className="bg-[#FEB81D] text-black text-xs px-1.5 py-0.5 rounded font-bold ml-1">APP</span> <span className="text-xs text-gray-400 ml-2">12:00 PM</span>
+              Gumroad Helper{" "}
+              <span className="bg-[#FEB81D] text-black text-xs px-1.5 py-0.5 rounded font-bold ml-1">APP</span>{" "}
+              <span className="text-xs text-gray-400 ml-2">12:00 PM</span>
             </div>
             <div className="mt-1 text-[13px] md:text-[15px] leading-snug text-gray-100">
               <div className="font-semibold mb-2">Daily Summary for Gumroad:</div>
               <div className="space-y-1">
-                <div>• <span className="font-medium">Open tickets:</span> 67</div>
-                <div>• <span className="font-medium">Tickets answered:</span> 137</div>
-                <div>• <span className="font-medium">Open tickets over $0:</span> 23</div>
-                <div>• <span className="font-medium">Tickets answered over $0:</span> 55</div>
-                <div>• <span className="font-medium">Average reply time:</span> 28h 8m</div>
-                <div>• <span className="font-medium">VIP average reply time:</span> 17h 20m</div>
-                <div>• <span className="font-medium">Average time existing open tickets have been open:</span> 42h 43m</div>
+                <div>
+                  • <span className="font-medium">Open tickets:</span> 67
+                </div>
+                <div>
+                  • <span className="font-medium">Tickets answered:</span> 137
+                </div>
+                <div>
+                  • <span className="font-medium">Open tickets over $0:</span> 23
+                </div>
+                <div>
+                  • <span className="font-medium">Tickets answered over $0:</span> 55
+                </div>
+                <div>
+                  • <span className="font-medium">Average reply time:</span> 28h 8m
+                </div>
+                <div>
+                  • <span className="font-medium">VIP average reply time:</span> 17h 20m
+                </div>
+                <div>
+                  • <span className="font-medium">Average time existing open tickets have been open:</span> 42h 43m
+                </div>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-start py-4">
           <div
             className="w-7 h-7 md:w-8 md:h-8 bg-blue-600 flex items-center justify-center text-white font-bold mr-3"
@@ -51,11 +67,11 @@ function SlackInterface() {
               Mike <span className="text-xs text-gray-400 ml-2">12:05 PM</span>
             </div>
             <div className="mt-1 text-[13px] md:text-[15px] leading-snug text-gray-100">
-            <span className="font-semibold text-[#FEB81D]">@Helper</span> How many tickets did I answer last week?
+              <span className="font-semibold text-[#FEB81D]">@Helper</span> How many tickets did I answer last week?
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-start py-4">
           <div
             className="w-8 h-8 flex items-center justify-center mr-3 p-1"
@@ -68,7 +84,11 @@ function SlackInterface() {
               Helper <span className="text-xs text-gray-400 ml-2">12:05 PM</span>
             </div>
             <div className="mt-1 text-[13px] md:text-[15px] leading-snug text-gray-100">
-              <div className="mb-2"> <span className="font-semibold text-[#FEB81D]">@mike</span> You answered <span className="font-semibold">78 tickets</span> last week! 🎉</div>
+              <div className="mb-2">
+                {" "}
+                <span className="font-semibold text-[#FEB81D]">@mike</span> You answered{" "}
+                <span className="font-semibold">78 tickets</span> last week! 🎉
+              </div>
             </div>
           </div>
         </div>

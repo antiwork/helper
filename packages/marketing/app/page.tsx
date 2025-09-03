@@ -93,7 +93,7 @@ export default function Home() {
 
   const scrollToFeatures = () => {
     // Scroll to the knowledge section (first section after hero)
-    const sections = document.querySelectorAll('section');
+    const sections = document.querySelectorAll("section");
     if (sections.length > 1) {
       const targetSection = sections[1];
       const rect = targetSection.getBoundingClientRect();
@@ -133,9 +133,11 @@ export default function Home() {
             <h1 className="text-4xl md:text-5xl sm:text-4xl font-bold mb-2 sm:mb-3 text-center text-secondary dark:text-foreground pt-4">
               Deliver stellar support experiences.
             </h1>
-                        <p className="text-base text-sm md:text-lg text-center text-secondary dark:text-foreground mb-4">
-              A native, end-to-end support center with custom UI, zero margin on model costs, and data that always stays on your servers.            </p>
-            
+            <p className="text-base text-sm md:text-lg text-center text-secondary dark:text-foreground mb-4">
+              A native, end-to-end support center with custom UI, zero margin on model costs, and data that always stays
+              on your servers.{" "}
+            </p>
+
             <div className="w-full max-w-4xl mx-auto pt-2">
               {/* Tab Navigation */}
               <div className="flex justify-center mb-6">
@@ -170,11 +172,7 @@ export default function Home() {
                         : "bg-[#3B1B1B] text-[#FFE6B0] hover:bg-[#4B2B2B]"
                     }`}
                   >
-                    <img 
-                      src="slack-logo-icon.png" 
-                      alt="Slack" 
-                      className="w-4 h-4"
-                    />
+                    <img src="slack-logo-icon.png" alt="Slack" className="w-4 h-4" />
                     Slack
                   </button>
                 </div>
@@ -183,7 +181,7 @@ export default function Home() {
               {/* Tab Content */}
               <div className="rounded-2xl shadow-2xl overflow-hidden h-[60vh]">
                 {activeTab === "web" && (
-                  <iframe 
+                  <iframe
                     style={{ zoom: 0.8 }}
                     src="https://gumroad.com/help"
                     className="w-full h-full border-16 border-[#3B1B1B] dark:border-[#3B1B1B]"
@@ -194,13 +192,13 @@ export default function Home() {
                 {activeTab === "inbox" && (
                   <div className="h-full flex items-center justify-center">
                     <div className="w-full h-full flex items-center justify-center">
-                      <img 
-                        src="Helper-inbox-desktop.png" 
+                      <img
+                        src="Helper-inbox-desktop.png"
                         alt="Helper Inbox Desktop"
                         className="hidden md:block w-full h-full object-contain"
                       />
-                      <img 
-                        src="Helper-inbox-mobile.png" 
+                      <img
+                        src="Helper-inbox-mobile.png"
                         alt="Helper Inbox Mobile"
                         className="block md:hidden w-full h-full object-contain"
                       />
@@ -231,8 +229,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-
 
         <section className="py-12 md:py-20">
           <div className="container mx-auto px-4">
@@ -382,8 +378,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-
 
         <section className="py-20">
           <div className="container mx-auto px-4">
