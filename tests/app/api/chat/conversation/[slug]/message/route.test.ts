@@ -43,9 +43,9 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
       testServerTool: {
         description: "A tool for testing server functionality",
         parameters: {},
-        serverRequestUrl: "https://example.com/api/tools/testServerTool"
-      }
-    }
+        serverRequestUrl: "https://example.com/api/tools/testServerTool",
+      },
+    };
     const request = new Request("https://example.com/api", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -61,7 +61,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     expect(result.messageId).toBe("msg123");
     expect(result.conversationSlug).toBe(conversation.slug);
     expect(createUserMessage).toHaveBeenCalledWith(conversation.id, "test@example.com", "Hello world", []);
-    expect(triggerEvent).toHaveBeenCalledWith("conversations/auto-response.create", { messageId: "msg123", tools, customerSpecificTools: true });
+    expect(triggerEvent).toHaveBeenCalledWith("conversations/auto-response.create", { messageId: "msg123", tools });
   });
 
   it("should work with anonymous session", async () => {
