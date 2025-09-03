@@ -4,6 +4,7 @@ import { userFactory } from "@tests/support/factories/users";
 import { createTestTRPCContext } from "@tests/support/trpcUtils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { callToolApi, ToolApiError } from "@/lib/tools/apiTool";
+import { clientToolsFactory } from "@/tests/support/factories/clientTools";
 import { createCaller } from "@/trpc";
 
 vi.mock("@/lib/tools/apiTool", () => ({
@@ -26,6 +27,7 @@ describe("toolsRouter", () => {
     it("returns available tools for a conversation", async () => {
       const { user } = await userFactory.createRootUser();
       const { conversation } = await conversationFactory.create({
+        emailFrom: user.email,
         suggestedActions: [
           {
             type: "tool",
@@ -44,6 +46,14 @@ describe("toolsRouter", () => {
         authenticationToken: "test-token",
       });
 
+      await clientToolsFactory.create({
+        customerEmail: user.email,
+        name: "FirstTool",
+        description: "A test client tool",
+        serverRequestUrl: "https://first-tool.com",
+        parameters: [],
+      });
+
       const caller = createCaller(await createTestTRPCContext(user));
       const result = await caller.mailbox.conversations.tools.list({
         conversationSlug: conversation.slug,
@@ -60,6 +70,22 @@ describe("toolsRouter", () => {
               test: "params",
             },
           },
+        },
+      ]);
+      expect(result.all).toEqual([
+        {
+          name: "Test Tool",
+          slug: "test-tool",
+          description: "A test tool",
+          parameterTypes: [],
+          customerEmailParameter: null,
+        },
+        {
+          name: "FirstTool",
+          slug: "FirstTool",
+          description: "A test client tool",
+          parameterTypes: [],
+          customerEmailParameter: null,
         },
       ]);
     });

@@ -39,10 +39,17 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     mockSession = { isAnonymous: false, email: "test@example.com" };
     mockMailbox = mailbox;
 
+    const tools = {
+      testServerTool: {
+        description: "A tool for testing server functionality",
+        parameters: {},
+        serverRequestUrl: "https://example.com/api/tools/testServerTool",
+      },
+    };
     const request = new Request("https://example.com/api", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: "Hello world" }),
+      body: JSON.stringify({ content: "Hello world", tools, customerSpecificTools: true }),
     });
 
     const response = await POST(request, {
@@ -54,7 +61,7 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     expect(result.messageId).toBe("msg123");
     expect(result.conversationSlug).toBe(conversation.slug);
     expect(createUserMessage).toHaveBeenCalledWith(conversation.id, "test@example.com", "Hello world", []);
-    expect(triggerEvent).toHaveBeenCalledWith("conversations/auto-response.create", { messageId: "msg123" });
+    expect(triggerEvent).toHaveBeenCalledWith("conversations/auto-response.create", { messageId: "msg123", tools });
   });
 
   it("should work with anonymous session", async () => {

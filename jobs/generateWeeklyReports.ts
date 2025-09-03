@@ -6,7 +6,6 @@ import { TIME_ZONE } from "@/jobs/generateDailyReports";
 import { triggerEvent } from "@/jobs/trigger";
 import { getMailbox } from "@/lib/data/mailbox";
 import { getMemberStats, MemberStats } from "@/lib/data/stats";
-import { UserRoles } from "@/lib/data/user";
 import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
 
 const formatDateRange = (start: Date, end: Date) => {
@@ -64,12 +63,8 @@ export async function generateMailboxReport({
   }
 
   const slackUsersByEmail = await getSlackUsersByEmail(slackBotToken);
-  const coreMembers = stats.filter((member) => member.role === UserRoles.CORE);
-  const nonCoreMembers = stats.filter((member) => member.role === UserRoles.NON_CORE);
 
-  // Process each team member group
-  const coreData = processRoleGroup(coreMembers, slackUsersByEmail);
-  const nonCoreData = processRoleGroup(nonCoreMembers, slackUsersByEmail);
+  const allMembersData = processAllMembers(stats, slackUsersByEmail);
 
   const tableData: { name: string; count: number; slackUserId?: string }[] = [];
 
@@ -101,73 +96,36 @@ export async function generateMailboxReport({
     },
   ];
 
-  // core members stats section
-  if (coreMembers.length > 0) {
+  if (allMembersData.activeLines.length > 0) {
     blocks.push({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: "*Core members:*",
+        text: "*Team members:*",
       },
     });
 
-    if (coreData.activeLines.length > 0) {
-      blocks.push({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: coreData.activeLines.join("\n"),
-        },
-      });
-    }
-
-    if (coreData.inactiveList) {
-      blocks.push({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `*No tickets answered:* ${coreData.inactiveList}`,
-        },
-      });
-    }
-
-    blocks.push({ type: "divider" });
-  }
-
-  // non-core members stats section
-  if (nonCoreMembers.length > 0) {
     blocks.push({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: "*Non-core members:*",
+        text: allMembersData.activeLines.join("\n"),
       },
     });
-
-    if (nonCoreData.activeLines.length > 0) {
-      blocks.push({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: nonCoreData.activeLines.join("\n"),
-        },
-      });
-    }
-
-    if (nonCoreData.inactiveList) {
-      blocks.push({
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `*No tickets answered:* ${nonCoreData.inactiveList}`,
-        },
-      });
-    }
-
-    blocks.push({ type: "divider" });
   }
 
-  // totals section
+  if (allMembersData.inactiveList) {
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*No tickets answered:* ${allMembersData.inactiveList}`,
+      },
+    });
+  }
+
+  blocks.push({ type: "divider" });
+
   const summaryParts = [];
   if (totalTicketsResolved > 0) {
     summaryParts.push("*Total replies:*");
@@ -193,17 +151,14 @@ export async function generateMailboxReport({
   return "Report sent";
 }
 
-function processRoleGroup(members: MemberStats, slackUsersByEmail: Map<string, string>) {
+function processAllMembers(members: MemberStats, slackUsersByEmail: Map<string, string>) {
   const activeMembers = members.filter((member) => member.replyCount > 0).sort((a, b) => b.replyCount - a.replyCount);
   const inactiveMembers = members.filter((member) => member.replyCount === 0);
 
   const activeLines = activeMembers.map((member) => {
     const formattedCount = member.replyCount.toLocaleString();
     const slackUserId = slackUsersByEmail.get(member.email!);
-    const userName =
-      member.role === UserRoles.CORE && slackUserId
-        ? `<@${slackUserId}>`
-        : member.displayName || member.email || "Unknown";
+    const userName = slackUserId ? `<@${slackUserId}>` : member.displayName || member.email || "Unknown";
 
     return `• ${userName}: ${formattedCount}`;
   });
@@ -213,10 +168,7 @@ function processRoleGroup(members: MemberStats, slackUsersByEmail: Map<string, s
       ? inactiveMembers
           .map((member) => {
             const slackUserId = slackUsersByEmail.get(member.email!);
-            const userName =
-              member.role === UserRoles.CORE && slackUserId
-                ? `<@${slackUserId}>`
-                : member.displayName || member.email || "Unknown";
+            const userName = slackUserId ? `<@${slackUserId}>` : member.displayName || member.email || "Unknown";
 
             return userName;
           })

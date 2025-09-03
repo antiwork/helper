@@ -1,4 +1,5 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
+import { subDays } from "date-fns";
 import { and, count, eq, isNotNull, isNull, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
@@ -6,6 +7,7 @@ import { conversations, mailboxes } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { getGuideSessionsForMailbox } from "@/lib/data/guide";
 import { getMailboxInfo } from "@/lib/data/mailbox";
+import { getMemberStats } from "@/lib/data/stats";
 import { conversationsRouter } from "./conversations/index";
 import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
@@ -130,4 +132,26 @@ export const mailboxRouter = {
       message: "Auto-close job triggered successfully",
     };
   }),
+
+  leaderboard: mailboxProcedure
+    .input(
+      z.object({
+        days: z.number().min(1).max(365).default(7),
+      }),
+    )
+    .query(async ({ input }) => {
+      const stats = await getMemberStats({
+        startDate: subDays(new Date(), input.days),
+        endDate: new Date(),
+      });
+
+      return {
+        leaderboard: stats.map((member) => ({
+          userId: member.id,
+          displayName: member.displayName || "Unknown",
+          email: member.email,
+          replyCount: member.replyCount,
+        })),
+      };
+    }),
 } satisfies TRPCRouterRecord;

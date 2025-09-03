@@ -6,7 +6,7 @@ import Underline from "@tiptap/extension-underline";
 import { TextSelection } from "@tiptap/pm/state";
 import { BubbleMenu, EditorContent, useEditor, type FocusPosition } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import partition from "lodash/partition";
+import { partition } from "lodash-es";
 import { useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode, type Ref } from "react";
 import { toast } from "sonner";
 import UAParser from "ua-parser-js";

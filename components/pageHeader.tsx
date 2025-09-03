@@ -18,12 +18,12 @@ export function PageHeader({ title, children, variant = "default" }: PageHeaderP
   return (
     <div
       className={cn(
-        "flex h-14 shrink-0 items-center justify-between gap-4 border-b sm:px-6 px-4 font-bold",
+        "flex h-14 shrink-0 items-center justify-between gap-4 border-b sm:px-6 px-4",
         variant === "mahogany" ? "bg-sidebar text-sidebar-foreground border-sidebar" : "border-border",
       )}
     >
       <div className="flex items-center gap-4">
-        <h1 className="text-lg">{title}</h1>
+        <h1 className="text-lg font-bold">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
         {isMobile && (

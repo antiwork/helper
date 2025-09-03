@@ -1,1 +1,0 @@
-ALTER TABLE "mailboxes_platformcustomer" ADD COLUMN "metadata" jsonb;

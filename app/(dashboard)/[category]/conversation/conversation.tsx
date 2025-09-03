@@ -40,6 +40,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBreakpoint } from "@/components/useBreakpoint";
+import { useSession } from "@/components/useSession";
 import type { serializeMessage } from "@/lib/data/conversationMessage";
 import { conversationChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
@@ -162,7 +163,7 @@ const MessageThreadPanel = ({
   setPreviewFileIndex: (index: number) => void;
   setPreviewFiles: (files: AttachedFile[]) => void;
 }) => {
-  const { data: mailboxPreferences } = api.mailbox.get.useQuery();
+  const { user } = useSession() ?? {};
   const { data: conversationInfo } = useConversationContext();
   const { conversationListData, currentIndex, moveToNextConversation } = useConversationListContext();
   const nextConversation = conversationListData?.conversations[currentIndex + 1] ?? null;
@@ -191,7 +192,7 @@ const MessageThreadPanel = ({
           <div className="absolute -top-12 left-0 z-10">
             <ScrollToTopButton scrollRef={scrollRef} />
           </div>
-          {!mailboxPreferences?.preferences?.disableNextTicketPreview && nextConversation && (
+          {!user?.preferences?.disableNextTicketPreview && nextConversation && (
             <div
               className={cn(
                 "transition-all duration-200 ease-in-out px-3 py-2 border rounded-lg bg-muted transform cursor-pointer hover:shadow-sm hover:scale-[1.01]",

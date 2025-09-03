@@ -34,10 +34,8 @@ export const mailboxes = pgTable(
     chatIntegrationUsed: boolean().notNull().default(false),
     preferences: jsonb()
       .$type<{
-        confetti?: boolean;
         autoRespondEmailToChat?: "draft" | "reply" | null;
         disableTicketResponseTimeAlerts?: boolean;
-        disableNextTicketPreview?: boolean;
       }>()
       .default({}),
   },
