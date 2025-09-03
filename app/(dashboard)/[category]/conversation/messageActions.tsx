@@ -19,6 +19,7 @@ import LabeledInput from "@/components/labeledInput";
 import TipTapEditor, { type TipTapEditorRef } from "@/components/tiptap/editor";
 import { Button } from "@/components/ui/button";
 import { useBreakpoint } from "@/components/useBreakpoint";
+import { useSession } from "@/components/useSession";
 import { parseEmailList } from "@/components/utils/email";
 import { publicConversationChannelId } from "@/lib/realtime/channels";
 import { useBroadcastRealtimeEvent } from "@/lib/realtime/hooks";
@@ -101,10 +102,10 @@ export const MessageActions = () => {
     [broadcastEvent],
   );
 
-  const { data: mailboxPreferences } = api.mailbox.get.useQuery();
+  const { user } = useSession() ?? {};
 
   const triggerMailboxConfetti = () => {
-    if (!mailboxPreferences?.preferences?.confetti) return;
+    if (!user?.preferences?.confetti) return;
     triggerConfetti();
   };
 

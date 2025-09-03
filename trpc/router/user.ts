@@ -173,6 +173,7 @@ export const userRouter = {
         email: authUsers.email,
         displayName: userProfiles.displayName,
         permissions: userProfiles.permissions,
+        preferences: userProfiles.preferences,
       })
       .from(authUsers)
       .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
@@ -181,6 +182,33 @@ export const userRouter = {
     if (!user) throw new TRPCError({ code: "UNAUTHORIZED" });
     return user;
   }),
+
+  update: protectedProcedure
+    .input(
+      z.object({
+        preferences: z
+          .object({
+            confetti: z.boolean().optional(),
+            disableNextTicketPreview: z.boolean().optional(),
+          })
+          .optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) {
+        throw new TRPCError({ code: "UNAUTHORIZED" });
+      }
+
+      const [currentProfile] = await db.select().from(userProfiles).where(eq(userProfiles.id, ctx.user.id));
+      if (!currentProfile) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User profile not found" });
+      }
+
+      await db
+        .update(userProfiles)
+        .set({ preferences: { ...currentProfile.preferences, ...input.preferences } })
+        .where(eq(userProfiles.id, ctx.user.id));
+    }),
 } satisfies TRPCRouterRecord;
 
 const isSignupPossible = (email: string) => {

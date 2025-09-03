@@ -554,7 +554,7 @@ export const createToolEvent = async ({
   tx = db,
 }: {
   conversationId: number;
-  tool: Tool | { name: string; description?: string; url?: string };
+  tool: Tool | { name: string; description?: string | null; url?: string | null };
   data?: any;
   error?: any;
   parameters: Record<string, any>;
