@@ -25,7 +25,7 @@ export const useChat = ({
   tools = {},
   enableRealtime = true,
   ai: aiOptions,
-  customerSpecificTools = false
+  customerSpecificTools = false,
 }: UseChatProps): UseChatResult => {
   const { client } = useHelperClient();
   const [agentTyping, setAgentTyping] = useState(false);
