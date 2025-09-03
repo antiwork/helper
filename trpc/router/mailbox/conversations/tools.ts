@@ -122,6 +122,10 @@ export const toolsRouter = {
           });
         }
 
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
         captureExceptionAndLog(error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
