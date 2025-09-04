@@ -427,7 +427,11 @@ export const MessageActions = () => {
                   <KeyboardShortcut className="ml-2 text-sm border-primary/50">⌥⏎</KeyboardShortcut>
                 )}
               </Button>
-              <Button size={isAboveMd ? "default" : "sm"} onClick={() => handleSend} disabled={sendDisabled}>
+              <Button
+                size={isAboveMd ? "default" : "sm"}
+                onClick={() => handleSend({ close: true })}
+                disabled={sendDisabled}
+              >
                 {sending ? "Replying..." : "Reply and close"}
                 {!sending && isMacOS() && (
                   <KeyboardShortcut className="ml-2 text-sm border-bright-foreground/50">⌘⏎</KeyboardShortcut>
