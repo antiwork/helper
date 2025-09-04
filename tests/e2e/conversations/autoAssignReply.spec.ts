@@ -3,6 +3,7 @@ import {
   getConversationAssignedTo,
   getCurrentUserId,
   getExistingUnassignedConversation,
+  getTestUser,
   getUserAutoAssignPreference,
   sendReplyMessage,
   setConversationAssignment,
@@ -64,22 +65,25 @@ test.describe("Auto-Assign feature", () => {
     expect(finalAssignment).toBe(currentUserId);
   });
 
-  test("should keep assignment unchanged when replying to assigned conversation", async ({ page }) => {
+  test("should not reassign when conversation already belongs to someone else", async ({ page }) => {
     await setUserAutoAssignPreference(currentUserId, true);
 
-    await setConversationAssignment(testConversation.id, currentUserId);
+    const testUser = await getTestUser();
+
+    await setConversationAssignment(testConversation.id, testUser.id);
     await page.reload();
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByRole("button", { name: "support@gumroad.com" })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole("button", { name: "Test User" })).toBeVisible({ timeout: 5000 });
 
     const customerResponse =
       "I've tried the steps you suggested but I'm still experiencing the same issue. Could you please escalate this to your technical team?";
     await sendReplyMessage(page, customerResponse);
 
-    await expect(page.getByRole("button", { name: "support@gumroad.com" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Test User" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "support@gumroad.com" })).not.toBeVisible();
 
     const finalAssignment = await getConversationAssignedTo(testConversation.id);
-    expect(finalAssignment).toBe(currentUserId);
+    expect(finalAssignment).toBe(testUser.id);
   });
 });

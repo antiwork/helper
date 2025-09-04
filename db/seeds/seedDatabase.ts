@@ -94,6 +94,37 @@ export const seedDatabase = async () => {
       }),
     );
 
+    const testUserEmail = "testUser@gumroad.com";
+    const existingTestUser = existingUsers.find((user) => user.email === testUserEmail);
+
+    if (!existingTestUser) {
+      console.log(`Creating test user: ${testUserEmail}`);
+      const { data, error } = await supabase.auth.admin.createUser({
+        email: testUserEmail,
+        password: "password",
+        email_confirm: true,
+        user_metadata: {
+          display_name: "Test User",
+          permissions: "member",
+        },
+      });
+
+      if (error) throw error;
+      const testUser = assertDefined(data.user, `Failed to create test user: ${testUserEmail}`);
+
+      await db
+        .update(userProfiles)
+        .set({
+          displayName: "Test User",
+          permissions: "member",
+        })
+        .where(eq(userProfiles.id, testUser.id));
+
+      console.log(`Test user created with ID: ${testUser.id}`);
+    } else {
+      console.log(`Test user ${testUserEmail} already exists, skipping creation.`);
+    }
+
     await createSettingsPageRecords();
 
     await generateSeedsFromFixtures();

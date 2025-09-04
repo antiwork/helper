@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import { and, eq, isNull } from "drizzle-orm";
+import { assertDefined } from "../../../components/utils/assert";
 import { db } from "../../../db/client";
 import { conversations, userProfiles } from "../../../db/schema";
 import { authUsers } from "../../../db/supabaseSchema/auth";
@@ -71,6 +72,29 @@ export async function getConversationAssignedTo(conversationId: number): Promise
 
 export async function setConversationAssignment(conversationId: number, assignedToId: string | null): Promise<void> {
   await db.update(conversations).set({ assignedToId }).where(eq(conversations.id, conversationId));
+}
+
+export async function getTestUser(): Promise<{ id: string; email: string; displayName: string }> {
+  const testUserEmail = "testUser@gumroad.com";
+
+  const userProfile = await db
+    .select({
+      id: userProfiles.id,
+      displayName: userProfiles.displayName,
+    })
+    .from(userProfiles)
+    .where(eq(userProfiles.displayName, "Test User"))
+    .limit(1);
+
+  if (userProfile.length === 0) {
+    throw new Error(`Test user with display name "Test User" not found. Make sure the database is properly seeded.`);
+  }
+
+  return {
+    id: userProfile[0].id,
+    email: testUserEmail,
+    displayName: assertDefined(userProfile[0].displayName),
+  };
 }
 
 export async function sendReplyMessage(page: Page, message: string): Promise<void> {
