@@ -1,0 +1,3 @@
+COMMIT;--> statement-breakpoint
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "idx_messages_replied_by_filter" ON "messages" USING btree ("conversation_id","role","clerk_user_id","created_at") WHERE ("messages"."deleted_at" IS NULL AND "messages"."role" = 'staff');--> statement-breakpoint
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "idx_conversations_closed" ON "conversations_conversation" USING btree ("closed_at" DESC NULLS LAST) WHERE ("conversations_conversation"."status" = 'closed' AND "conversations_conversation"."merged_into_id" IS NULL);
