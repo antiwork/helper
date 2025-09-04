@@ -21,19 +21,3 @@ If you achieved your ultimate task, stop everything and use the done action in t
 Current URL: {{CURRENT_URL}}
 Current Page Title: {{CURRENT_PAGE_TITLE}}
 Current Elements: {{PAGE_DETAILS}}`;
-
-export const MOCKED_COMMON_ISSUES_SUGGESTIONS = [
-  {
-    title: "Outdated/Irrelevant Suggestions",
-    description: "Reports that AI code suggestions recommend deprecated APIs, incorrect patterns, or irrelevant code.",
-    reasoning:
-      "Suggestion quality directly impacts trust and productivity; issues like deprecated APIs are likely to recur across languages and versions.",
-  },
-  {
-    title: "Autocomplete Intrusiveness",
-    description:
-      "Complaints that auto-completion triggers too often, completes prematurely, or interrupts typing flow.",
-    reasoning:
-      "Overly aggressive behavior is a common friction point with AI assistants and tends to generate repeated requests to tune sensitivity.",
-  },
-];

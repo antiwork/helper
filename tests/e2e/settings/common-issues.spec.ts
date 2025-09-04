@@ -1,7 +1,22 @@
 import { expect, test } from "@playwright/test";
 import { db } from "../../../db/client";
 import { issueGroups } from "../../../db/schema";
-import { MOCKED_COMMON_ISSUES_SUGGESTIONS } from "../../../lib/ai/constants";
+
+const MOCKED_COMMON_ISSUES_SUGGESTIONS = [
+  {
+    title: "Outdated/Irrelevant Suggestions",
+    description: "Reports that AI code suggestions recommend deprecated APIs, incorrect patterns, or irrelevant code.",
+    reasoning:
+      "Suggestion quality directly impacts trust and productivity; issues like deprecated APIs are likely to recur across languages and versions.",
+  },
+  {
+    title: "Autocomplete Intrusiveness",
+    description:
+      "Complaints that auto-completion triggers too often, completes prematurely, or interrupts typing flow.",
+    reasoning:
+      "Overly aggressive behavior is a common friction point with AI assistants and tends to generate repeated requests to tune sensitivity.",
+  },
+];
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
