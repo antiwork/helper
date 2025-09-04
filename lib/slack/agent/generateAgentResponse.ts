@@ -37,7 +37,7 @@ const processPlaceholdersInSavedReply = async (
   content: string,
   conversation: Conversation,
   user: any,
-  mailbox: Mailbox,
+  _mailbox: Mailbox,
 ): Promise<string> => {
   const hasPlaceholders = /\b[A-Z]{2,}\b|\[.*?\]|\{.*?\}|TODO|REPLACE|FILL|INSERT|UPDATE/i.test(content);
   
