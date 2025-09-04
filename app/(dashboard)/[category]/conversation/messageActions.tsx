@@ -282,7 +282,7 @@ export const MessageActions = () => {
         ?.filter((m) => m.type === "message" && m.role === "user")
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
 
-      const shouldAutoAssign = user?.preferences?.autoAssignOnReply ?? false;
+      const shouldAutoAssign = (user?.preferences?.autoAssignOnReply && !conversation.assignedToId) ?? false;
 
       const { id: emailId } = await replyMutation.mutateAsync({
         conversationSlug,
