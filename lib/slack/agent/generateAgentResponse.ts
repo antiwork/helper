@@ -1,4 +1,4 @@
-import { CoreMessage, Tool, tool, generateText } from "ai";
+import { CoreMessage, generateText, Tool, tool } from "ai";
 import { and, desc, eq, ilike, inArray, isNull, notInArray, or, sql, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { getBaseUrl } from "@/components/constants";
@@ -9,8 +9,8 @@ import { conversationMessages, conversations, DRAFT_STATUSES, faqs, savedReplies
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
 import { runAIQuery } from "@/lib/ai";
-import openai from "@/lib/ai/openai";
 import { MINI_MODEL } from "@/lib/ai/core";
+import openai from "@/lib/ai/openai";
 import { getFullName } from "@/lib/auth/authUtils";
 import { Conversation, getConversationById, getConversationBySlug, updateConversation } from "@/lib/data/conversation";
 import { getAverageResponseTime } from "@/lib/data/conversation/responseTime";
@@ -40,7 +40,7 @@ const processPlaceholdersInSavedReply = async (
   _mailbox: Mailbox,
 ): Promise<string> => {
   const hasPlaceholders = /\b[A-Z]{2,}\b|\[.*?\]|\{.*?\}|TODO|REPLACE|FILL|INSERT|UPDATE/i.test(content);
-  
+
   if (!hasPlaceholders) {
     return content;
   }
@@ -68,12 +68,12 @@ Guidelines:
 Template: ${content}
 
 Conversation context:
-- Customer: ${conversation.emailFrom || 'Customer'}
-- Subject: ${conversation.subject || 'Support Request'}
+- Customer: ${conversation.emailFrom || "Customer"}
+- Subject: ${conversation.subject || "Support Request"}
 - Ticket ID: ${conversation.slug}
 - Current Date: ${new Date().toLocaleDateString()}
 - Current Time: ${new Date().toLocaleTimeString()}
-- Support Agent: ${user?.displayName || user?.email || 'Support Team'}
+- Support Agent: ${user?.displayName || user?.email || "Support Team"}
 
 Return the processed reply with all placeholders replaced and instructions followed:`,
       temperature: 0.1,
@@ -440,13 +440,16 @@ export const generateAgentResponse = async (
 
         const selectedReply = savedRepliesResults[0]!;
 
-        showStatus(`Processing saved reply content...`, { toolName: "replyWithSavedReply", parameters: { ticketId, title } });
+        showStatus(`Processing saved reply content...`, {
+          toolName: "replyWithSavedReply",
+          parameters: { ticketId, title },
+        });
         const user = slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null;
         const processedContent = await processPlaceholdersInSavedReply(
           selectedReply.content,
           conversation,
           user,
-          mailbox
+          mailbox,
         );
 
         await createReply({
