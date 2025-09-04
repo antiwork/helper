@@ -58,7 +58,7 @@ test.describe("Settings - User preferences", () => {
     const autoAssignSwitch = page.locator('[aria-label="Auto-assign on reply Switch"]');
 
     await expect(autoAssignSetting).toBeVisible();
-    
+
     const isEnabled = await autoAssignSwitch.isChecked();
 
     await autoAssignSwitch.click();
