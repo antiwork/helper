@@ -1,8 +1,9 @@
 import { faker } from "@faker-js/faker";
+import { eq } from "drizzle-orm";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { mailboxes } from "@/db/schema";
+import { mailboxes, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getBasicProfileById } from "@/lib/data/user";
 
@@ -23,11 +24,17 @@ export const userFactory = {
   createRootUser: async ({
     userOverrides = {},
     mailboxOverrides = {},
+    profileOverrides = {},
   }: {
     userOverrides?: Partial<typeof authUsers.$inferInsert>;
     mailboxOverrides?: Partial<typeof mailboxes.$inferInsert>;
+    profileOverrides?: Partial<typeof userProfiles.$inferInsert>;
   } = {}) => {
     const { user, profile } = await createUser(userOverrides);
+
+    if (Object.keys(profileOverrides).length > 0) {
+      await db.update(userProfiles).set(profileOverrides).where(eq(userProfiles.id, user.id));
+    }
 
     const mailboxName = `${faker.company.name()} Support`;
     const mailbox = await db
