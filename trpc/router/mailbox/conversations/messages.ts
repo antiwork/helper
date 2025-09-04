@@ -76,7 +76,6 @@ export const messagesRouter = {
         fileSlugs,
         cc,
         bcc,
-        shouldAutoAssign: ctx.user?.preferences?.autoAssignOnReply ?? true,
         close: shouldClose,
         responseToId,
       });
