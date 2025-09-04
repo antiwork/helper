@@ -31,11 +31,11 @@ export const getPlatformCustomer = async (email: string): Promise<PlatformCustom
 
 export const upsertPlatformCustomer = async ({
   email,
-  customerMetadata: customerInfo,
+  customerInfo,
 }: {
   email: string;
   // `links` is deprecated, use `actions` instead
-  customerMetadata: CustomerInfo & { links?: Record<string, string> | null };
+  customerInfo: CustomerInfo & { links?: Record<string, string> | null };
 }) => {
   if (!customerInfo) return;
 
