@@ -25,6 +25,7 @@ import { ReadPageToolConfig } from "@helperai/sdk";
 import { db } from "@/db/client";
 import { conversationMessages, files, MessageMetadata, ToolMetadata } from "@/db/schema";
 import { CHAT_MODEL, isWithinTokenLimit, MINI_MODEL } from "@/lib/ai/core";
+import { customerInfoPrompt } from "@/lib/ai/customerInfoPrompt";
 import openai from "@/lib/ai/openai";
 import { PromptInfo } from "@/lib/ai/promptInfo";
 import { CHAT_SYSTEM_PROMPT, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
@@ -41,7 +42,7 @@ import { createAndUploadFile, downloadFile, getFileUrl } from "@/lib/data/files"
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer, upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
-import { CustomerInfo, getMetadata } from "@/lib/metadataApiClient";
+import { CustomerInfo, fetchCustomerInfo } from "@/lib/metadataApiClient";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLog, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
 
@@ -143,19 +144,6 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
     });
 };
 
-const fetchCustomerInfo = async (customerInfoUrl: string, mailbox: Mailbox) => {
-  try {
-    const metadata = await getMetadata(
-      { url: customerInfoUrl, hmacSecret: mailbox.widgetHMACSecret },
-      { timestamp: Math.floor(Date.now() / 1000) },
-    );
-    return metadata?.customer ?? null;
-  } catch (error) {
-    captureExceptionAndLog(error);
-    return null;
-  }
-};
-
 const buildPromptMessages = async (
   mailbox: Mailbox,
   email: string | null,
@@ -170,7 +158,7 @@ const buildPromptMessages = async (
 }> => {
   const [{ knowledgeBank, websitePagesPrompt, websitePages }, customerInfo] = await Promise.all([
     fetchPromptRetrievalData(query, null),
-    customerInfoUrl ? fetchCustomerInfo(customerInfoUrl, mailbox) : null,
+    email && customerInfoUrl ? fetchCustomerInfo(email, customerInfoUrl, mailbox) : null,
   ]);
 
   const systemPrompt = [
@@ -190,17 +178,7 @@ const buildPromptMessages = async (
   if (websitePagesPrompt) {
     prompt += `\n${websitePagesPrompt}`;
   }
-  let userPrompt;
-  if (customerInfo) {
-    userPrompt = "Current user details:\n";
-    if (email) userPrompt += `- Email: ${email}\n`;
-    if (customerInfo.name) userPrompt += `- Name: ${customerInfo.name}\n`;
-    for (const [key, value] of Object.entries(customerInfo.metadata ?? {})) {
-      userPrompt += `- ${key}: ${typeof value === "string" ? value : JSON.stringify(value)}\n`;
-    }
-  } else {
-    userPrompt = email ? `\nCurrent user email: ${email}` : "Anonymous user";
-  }
+  const userPrompt = customerInfoPrompt(email, customerInfo);
   prompt += userPrompt;
 
   return {
