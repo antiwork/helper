@@ -22,7 +22,7 @@ describe("formatCustomerMetadata", () => {
     };
     const result = customerInfoPrompt("test@example.com", customerInfo);
     expect(result).toEqual(
-      ["Current user details:", "- Email: test@example.com", "", "- plan: premium", "- age: 25", "- active: true"].join(
+      ["Current user details:", "- Email: test@example.com", "- plan: premium", "- age: 25", "- active: true"].join(
         "\n",
       ),
     );
@@ -39,7 +39,6 @@ describe("formatCustomerMetadata", () => {
       [
         "Current user details:",
         "- Email: test@example.com",
-        "",
         "- tags: ",
         "  1. vip",
         "  2. enterprise",
@@ -65,7 +64,6 @@ describe("formatCustomerMetadata", () => {
       [
         "Current user details:",
         "- Email: test@example.com",
-        "",
         "- subscription: ",
         "  - plan: pro",
         "  - billing: ",
@@ -89,7 +87,6 @@ describe("formatCustomerMetadata", () => {
       [
         "Current user details:",
         "- Email: test@example.com",
-        "",
         "- orders: ",
         "  1. ",
         "    - id: 1",
@@ -110,7 +107,7 @@ describe("formatCustomerMetadata", () => {
     };
     const result = customerInfoPrompt("test@example.com", customerInfo);
     expect(result).toEqual(
-      ["Current user details:", "- Email: test@example.com", "", "- tags: ", "", "- settings: ", ""].join("\n"),
+      ["Current user details:", "- Email: test@example.com", "- tags: ", "", "- settings:"].join("\n"),
     );
   });
 });
@@ -119,6 +116,7 @@ describe("customerInfoPrompt", () => {
   it("formats complete customer info with email", () => {
     const customerInfo: CustomerInfo = {
       name: "John Doe",
+      value: 1000,
       metadata: {
         plan: "premium",
         value: 1000,
@@ -131,7 +129,7 @@ describe("customerInfoPrompt", () => {
         "Current user details:",
         "- Email: john@example.com",
         "- Name: John Doe",
-        "",
+        "- Customer Value: $10.00",
         "- plan: premium",
         "- value: 1000",
       ].join("\n"),
@@ -145,7 +143,7 @@ describe("customerInfoPrompt", () => {
     };
     const result = customerInfoPrompt(null, customerInfo);
 
-    expect(result).toEqual(["Current user details:", "- Name: Jane Smith", "", "- plan: basic"].join("\n"));
+    expect(result).toEqual(["Current user details:", "- Name: Jane Smith", "- plan: basic"].join("\n"));
   });
 
   it("formats customer info without name", () => {
@@ -155,7 +153,7 @@ describe("customerInfoPrompt", () => {
     };
     const result = customerInfoPrompt("test@example.com", customerInfo);
 
-    expect(result).toEqual(["Current user details:", "- Email: test@example.com", "", "- plan: basic"].join("\n"));
+    expect(result).toEqual(["Current user details:", "- Email: test@example.com", "- plan: basic"].join("\n"));
   });
 
   it("handles customer info with empty metadata", () => {
@@ -218,7 +216,6 @@ describe("customerInfoPrompt", () => {
         "Current user details:",
         "- Email: enterprise@company.com",
         "- Name: Enterprise User",
-        "",
         "- account: ",
         "  - type: enterprise",
         "  - features: ",
@@ -252,7 +249,13 @@ describe("customerInfoPrompt", () => {
     const result = customerInfoPrompt("full@example.com", customerInfo);
 
     expect(result).toEqual(
-      ["Current user details:", "- Email: full@example.com", "- Name: Full User", "", "- plan: premium"].join("\n"),
+      [
+        "Current user details:",
+        "- Email: full@example.com",
+        "- Name: Full User",
+        "- Customer Value: $25.00",
+        "- plan: premium",
+      ].join("\n"),
     );
     // Note: The function currently only uses name and metadata, not value or actions
   });

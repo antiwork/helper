@@ -22,7 +22,8 @@ export const customerInfoPrompt = (email: string | null, customerInfo?: Customer
     userPrompt = "Current user details:\n";
     if (email) userPrompt += `- Email: ${email}\n`;
     if (customerInfo.name) userPrompt += `- Name: ${customerInfo.name}\n`;
-    userPrompt += formatCustomerMetadata(customerInfo.metadata);
+    if (customerInfo.value != null) userPrompt += `- Customer Value: $${(customerInfo.value / 100).toFixed(2)}\n`;
+    userPrompt += formatCustomerMetadata(customerInfo.metadata).trim();
   } else {
     userPrompt = email ? `\nCurrent user email: ${email}` : "Anonymous user";
   }
