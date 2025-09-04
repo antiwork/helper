@@ -77,4 +77,27 @@ describe("messagesRouter", () => {
       ).rejects.toThrow("Message not found or not part of this conversation");
     });
   });
+
+  describe("reply", () => {
+    it("creates a reply message successfully", async () => {
+      const { user } = await userFactory.createRootUser();
+      const { conversation } = await conversationFactory.create();
+
+      const caller = createCaller(await createTestTRPCContext(user));
+      const result = await caller.mailbox.conversations.messages.reply({
+        conversationSlug: conversation.slug,
+        message: "Test reply message",
+        fileSlugs: ["file1.jpg"],
+        cc: ["cc@example.com"],
+        bcc: ["bcc@example.com"],
+        shouldClose: true,
+        responseToId: null,
+      });
+
+      expect(result.id).toBe(123);
+      expect(jobsMock.triggerEvent).toHaveBeenCalledWith("conversations/auto-response.create", {
+        messageId: 123,
+      });
+    });
+  });
 });

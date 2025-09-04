@@ -535,20 +535,6 @@ describe("createReply", () => {
     });
   });
 
-  it("assigns the conversation to the user when replying to an unassigned conversation", async () => {
-    const { profile } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create({ assignedToId: null });
-
-    await createReply({
-      conversationId: conversation.id,
-      message: "Test message",
-      user: profile,
-    });
-
-    const updatedConversation = await getConversationById(conversation.id);
-    expect(updatedConversation?.assignedToId).toBe(profile.id);
-  });
-
   it("does not change assignment when replying to an already assigned conversation", async () => {
     const { profile } = await userFactory.createRootUser();
     const { user: otherUser } = await userFactory.createRootUser();
@@ -644,6 +630,61 @@ describe("createReply", () => {
       where: and(eq(conversationMessages.conversationId, conversation.id), eq(conversationMessages.status, "draft")),
     });
     expect(remainingDrafts).toHaveLength(0);
+  });
+
+  it("should auto assign the conversation when the user preference autoAssignOnReply is enabled and the conversation is unassigned", async () => {
+    const { profile } = await userFactory.createRootUser({
+      profileOverrides: {
+        preferences: { autoAssignOnReply: true },
+      },
+    });
+    const { conversation } = await conversationFactory.create({ assignedToId: null });
+
+    await createReply({
+      conversationId: conversation.id,
+      message: "Test message",
+      user: profile,
+    });
+
+    const updatedConversation = await getConversationById(conversation.id);
+    expect(updatedConversation?.assignedToId).toBe(profile.id);
+  });
+
+  it("should not auto assign the conversation when the user preference autoAssignOnReply is disabled and the conversation is unassigned", async () => {
+    const { profile } = await userFactory.createRootUser({
+      profileOverrides: {
+        preferences: { autoAssignOnReply: false },
+      },
+    });
+    const { conversation } = await conversationFactory.create({ assignedToId: null });
+
+    await createReply({
+      conversationId: conversation.id,
+      message: "Test message",
+      user: profile,
+    });
+
+    const updatedConversation = await getConversationById(conversation.id);
+    expect(updatedConversation?.assignedToId).toBeNull();
+  });
+
+  it("should not auto assign the conversation when the user preference autoAssignOnReply is enabled and the conversation is assigned to another user", async () => {
+    const { profile } = await userFactory.createRootUser({
+      profileOverrides: {
+        preferences: { autoAssignOnReply: true },
+      },
+    });
+    const { user: otherUser } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create({ assignedToId: otherUser.id });
+
+    await createReply({
+      conversationId: conversation.id,
+      message: "Test message",
+      user: profile,
+    });
+
+    const updatedConversation = await getConversationById(conversation.id);
+    expect(updatedConversation?.assignedToId).toBe(otherUser.id);
   });
 });
 
