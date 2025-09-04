@@ -423,16 +423,13 @@ export const generateAgentResponse = async (
     }),
     execute: async ({ ticketId, title }) => {
       showStatus(`Searching for saved reply...`, { toolName: "replyWithSavedReply", parameters: { ticketId, title } });
-      
+
       try {
         const conversation = await findConversation(ticketId);
         if (!conversation) return { error: "Ticket not found" };
 
         const savedRepliesResults = await db.query.savedReplies.findMany({
-          where: and(
-            eq(savedReplies.isActive, true),
-            ilike(savedReplies.name, `%${title}%`)
-          ),
+          where: and(eq(savedReplies.isActive, true), ilike(savedReplies.name, `%${title}%`)),
           orderBy: [desc(savedReplies.usageCount), desc(savedReplies.updatedAt)],
           limit: 5,
         });
@@ -442,7 +439,7 @@ export const generateAgentResponse = async (
         }
 
         const selectedReply = savedRepliesResults[0]!;
-        
+
         showStatus(`Processing saved reply content...`, { toolName: "replyWithSavedReply", parameters: { ticketId, title } });
         const user = slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null;
         const processedContent = await processPlaceholdersInSavedReply(
@@ -451,7 +448,7 @@ export const generateAgentResponse = async (
           user,
           mailbox
         );
-        
+
         await createReply({
           conversationId: conversation.id,
           message: processedContent,
@@ -468,8 +465,8 @@ export const generateAgentResponse = async (
           })
           .where(eq(savedReplies.slug, selectedReply.slug));
 
-        return { 
-          message: `Reply sent using saved reply "${selectedReply.name}" (AI-processed for placeholders)${savedRepliesResults.length > 1 ? ` (${savedRepliesResults.length - 1} other matches found)` : ''}` 
+        return {
+          message: `Reply sent using saved reply "${selectedReply.name}" (AI-processed for placeholders)${savedRepliesResults.length > 1 ? ` (${savedRepliesResults.length - 1} other matches found)` : ""}`,
         };
       } catch (error) {
         captureExceptionAndLog(error);
