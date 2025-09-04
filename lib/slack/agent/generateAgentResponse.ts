@@ -1,4 +1,4 @@
-import { CoreMessage, Tool, tool } from "ai";
+import { CoreMessage, Tool, tool, generateText } from "ai";
 import { and, desc, eq, ilike, inArray, isNull, notInArray, or, sql, SQL } from "drizzle-orm";
 import { z } from "zod";
 import { getBaseUrl } from "@/components/constants";
@@ -9,6 +9,7 @@ import { conversationMessages, conversations, DRAFT_STATUSES, faqs, savedReplies
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
 import { runAIQuery } from "@/lib/ai";
+import openai from "@/lib/ai/openai";
 import { MINI_MODEL } from "@/lib/ai/core";
 import { getFullName } from "@/lib/auth/authUtils";
 import { Conversation, getConversationById, getConversationBySlug, updateConversation } from "@/lib/data/conversation";
@@ -31,6 +32,64 @@ const searchToolSchema = searchSchema.omit({
 // Define the schema for filters separately
 const _searchFiltersSchema = searchToolSchema.omit({ cursor: true, limit: true });
 type SearchFiltersInput = z.infer<typeof _searchFiltersSchema>;
+
+const processPlaceholdersInSavedReply = async (
+  content: string,
+  conversation: Conversation,
+  user: any,
+  mailbox: Mailbox,
+): Promise<string> => {
+  const hasPlaceholders = /\b[A-Z]{2,}\b|\[.*?\]|\{.*?\}|TODO|REPLACE|FILL|INSERT|UPDATE/i.test(content);
+  
+  if (!hasPlaceholders) {
+    return content;
+  }
+
+  try {
+    const { text } = await generateText({
+      model: openai(MINI_MODEL, { structuredOutputs: false }),
+      system: `You are processing a saved reply template for customer support. Your task is to:
+
+1. Identify placeholder text or instructions (typically in UPPERCASE, [brackets], {braces}, or words like TODO, REPLACE, FILL, INSERT, UPDATE)
+2. Replace placeholders with appropriate contextual information based on the conversation details
+3. Follow any instructions embedded in the template
+4. Return the processed reply ready to send to the customer
+
+Guidelines:
+- Replace CUSTOMER_NAME with the customer's name or email
+- Replace DATE/TIME placeholders with current date/time
+- Replace TICKET_ID with the conversation ID
+- Replace SUBJECT with the conversation subject
+- For unclear placeholders, use reasonable defaults or remove them
+- Maintain professional, helpful tone
+- Keep the original structure and formatting`,
+      prompt: `Process this saved reply template:
+
+Template: ${content}
+
+Conversation context:
+- Customer: ${conversation.emailFrom || 'Customer'}
+- Subject: ${conversation.subject || 'Support Request'}
+- Ticket ID: ${conversation.slug}
+- Current Date: ${new Date().toLocaleDateString()}
+- Current Time: ${new Date().toLocaleTimeString()}
+- Support Agent: ${user?.displayName || user?.email || 'Support Team'}
+
+Return the processed reply with all placeholders replaced and instructions followed:`,
+      temperature: 0.1,
+      maxTokens: 1000,
+      experimental_telemetry: {
+        isEnabled: true,
+        functionId: "process-saved-reply-placeholders",
+      },
+    });
+
+    return text.trim();
+  } catch (error) {
+    captureExceptionAndLog(error);
+    return content;
+  }
+};
 
 export const generateAgentResponse = async (
   messages: CoreMessage[],
@@ -384,10 +443,19 @@ export const generateAgentResponse = async (
 
         const selectedReply = savedRepliesResults[0]!;
         
+        showStatus(`Processing saved reply content...`, { toolName: "replyWithSavedReply", parameters: { ticketId, title } });
+        const user = slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null;
+        const processedContent = await processPlaceholdersInSavedReply(
+          selectedReply.content,
+          conversation,
+          user,
+          mailbox
+        );
+        
         await createReply({
           conversationId: conversation.id,
-          message: selectedReply.content,
-          user: slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null,
+          message: processedContent,
+          user,
           close: false,
           shouldAutoAssign: false,
         });
@@ -401,7 +469,7 @@ export const generateAgentResponse = async (
           .where(eq(savedReplies.slug, selectedReply.slug));
 
         return { 
-          message: `Reply sent using saved reply "${selectedReply.name}"${savedRepliesResults.length > 1 ? ` (${savedRepliesResults.length - 1} other matches found)` : ''}` 
+          message: `Reply sent using saved reply "${selectedReply.name}" (AI-processed for placeholders)${savedRepliesResults.length > 1 ? ` (${savedRepliesResults.length - 1} other matches found)` : ''}` 
         };
       } catch (error) {
         captureExceptionAndLog(error);
