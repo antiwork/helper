@@ -35,18 +35,11 @@ async function getOpenConversation() {
 }
 
 async function openCommandBar(page: any) {
-  const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
-  await composer.click({ force: true });
-  await composer.evaluate((el) => {
-    el.innerHTML = "";
-    el.textContent = "";
-  });
-  await composer.focus();
-  await page.keyboard.press("/");
+  await page.getByLabel("Command Bar Input").click();
 
   const commandBar = page.locator('[data-testid="command-bar"]');
   await expect(commandBar).toBeVisible();
-  await page.waitForTimeout(1000);
+  await commandBar.waitFor({ state: "visible" });
 }
 
 test.describe("Conversation Actions", () => {
@@ -237,6 +230,22 @@ test.describe("Conversation Actions", () => {
 
       const addButton = page.locator('button:has-text("Add internal note")');
       await addButton.click();
+    });
+
+    test("should open command bar with slash key", async ({ page }) => {
+      const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
+      await composer.click({ force: true });
+      await composer.evaluate((el) => {
+        el.innerHTML = "";
+        el.textContent = "";
+      });
+      await composer.focus();
+      await page.keyboard.press("/");
+
+      const commandBar = page.locator('[data-testid="command-bar"]');
+      await expect(commandBar).toBeVisible();
+
+      await commandBar.waitFor({ state: "visible" });
     });
   });
 
