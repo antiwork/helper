@@ -21,7 +21,7 @@ import {
 import { conversations } from "@/db/schema/conversations";
 import { triggerEvent } from "@/jobs/trigger";
 import { PromptInfo } from "@/lib/ai/promptInfo";
-import { getStaffName } from "@/lib/data/user";
+import { getProfile, getStaffName } from "@/lib/data/user";
 import { proxyExternalContent } from "@/lib/proxyExternalContent";
 import { getSlackPermalink } from "@/lib/slack/client";
 import { formatBytes } from "../files";
@@ -334,7 +334,6 @@ export const createReply = async (
     slack,
     role,
     responseToId = null,
-    shouldAutoAssign = true,
   }: {
     conversationId: number;
     message: string | null;
@@ -346,7 +345,6 @@ export const createReply = async (
     slack?: { channel: string; messageTs: string } | null;
     role?: "user" | "staff" | null;
     responseToId?: number | null;
-    shouldAutoAssign?: boolean;
   },
   tx0: Transaction | typeof db = db,
 ) => {
@@ -354,12 +352,18 @@ export const createReply = async (
   if (!conversation) throw new Error("Conversation not found");
 
   return tx0.transaction(async (tx) => {
-    if (shouldAutoAssign && user && !conversation.assignedToId) {
-      await updateConversation(
-        conversationId,
-        { set: { assignedToId: user.id, assignedToAI: false }, byUserId: null },
-        tx,
-      );
+    let shouldAutoAssign = false;
+    if (user && !conversation.assignedToId) {
+      const userProfile = await getProfile(user.id);
+      shouldAutoAssign = userProfile?.preferences?.autoAssignOnReply ?? false;
+
+      if (shouldAutoAssign) {
+        await updateConversation(
+          conversationId,
+          { set: { assignedToId: user.id, assignedToAI: false }, byUserId: null },
+          tx,
+        );
+      }
     }
 
     const createdMessage = await createConversationMessage(
