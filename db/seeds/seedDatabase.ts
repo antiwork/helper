@@ -259,7 +259,6 @@ const generateSeedsFromFixtures = async () => {
 const seedHelpArticles = async () => {
   console.log("Seeding help articles...");
 
-  // Create website entry for helper.ai/docs
   const helperDocsWebsite = await db
     .insert(websites)
     .values({
@@ -271,12 +270,11 @@ const seedHelpArticles = async () => {
     .returning()
     .then(takeUniqueOrThrow);
 
-  // Create a successful crawl for the website
   const crawl = await db
     .insert(websiteCrawls)
     .values({
       websiteId: helperDocsWebsite.id,
-      name: "Initial crawl for Helper AI Documentation",
+      name: "Placeholder crawl for Helper AI Documentation",
       status: "success",
       startedAt: subDays(new Date(), 1),
       completedAt: new Date(),
@@ -290,15 +288,14 @@ const seedHelpArticles = async () => {
     .returning()
     .then(takeUniqueOrThrow);
 
-  // Insert all help articles as website pages
   for (const article of helpArticlesData) {
     await db.insert(websitePages).values({
       websiteId: helperDocsWebsite.id,
       websiteCrawlId: crawl.id,
       url: article.url,
       pageTitle: article.title,
-      rawHtml: `<html><head><title>${article.title}</title></head><body><h1>${article.title}</h1><p>Documentation content for ${article.title}</p></body></html>`,
-      markdown: `# ${article.title}\n\nDocumentation content for ${article.title}`,
+      rawHtml: `<html><head><title>${article.title}</title></head><body><h1>${article.title}</h1><p>Placeholder documentation content for ${article.title}</p></body></html>`,
+      markdown: `# ${article.title}\n\nPlaceholder documentation content for ${article.title}`,
       metadata: {
         title: article.title,
         description: `Help article about ${article.title}`,
