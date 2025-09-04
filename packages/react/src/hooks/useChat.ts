@@ -68,7 +68,8 @@ export const useChat = ({
     if (enableRealtime === false) return;
 
     const unlisten = client.conversations.listen(conversation.slug, {
-      onReply: ({ aiMessage }) => {
+      onReply: ({ message, aiMessage }) => {
+        if (message.role === "assistant") return;
         setMessages((prev) => [...prev, aiMessage]);
       },
       onTyping: (isTyping: boolean) => {
