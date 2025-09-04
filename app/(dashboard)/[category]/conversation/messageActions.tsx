@@ -318,7 +318,8 @@ export const MessageActions = () => {
           });
           // Remove conversation from list and move to next
           removeConversation();
-          if (user?.preferences?.autoAssignOnReply && !conversation.assignedToId) shouldTriggerConfetti = true; // If the message is not assigned to anyone and auto assign is on then it will be assigned to the current user hence trigger confetti
+          const shouldAssignToCurrentUser = user?.preferences?.autoAssignOnReply && !conversation.assignedToId;
+          if (!shouldAssignToCurrentUser) shouldTriggerConfetti = true;
         } catch (error) {
           captureExceptionAndLog(error);
           toast.error("Message sent but failed to close conversation", {
