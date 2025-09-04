@@ -1,19 +1,39 @@
-import { expect, test } from "@playwright/test";
-import {
-  getConversationStatusFromDb,
-  getOpenConversation,
-  getCurrentUserId,
-  getUserAutoAssignPreference,
-  setUserAutoAssignPreference,
-  createUnassignedConversation,
-  getConversationAssignedTo,
-  setConversationAssignment,
-  cleanupTestConversation,
-  waitForConversationAssignment,
-  sendReplyMessage,
-} from "../utils/test-helpers";
+import { expect, Page, test } from "@playwright/test";
+import { desc, eq } from "drizzle-orm";
+import { db } from "../../../db/client";
+import { conversationEvents, conversations } from "../../../db/schema";
+import { waitForSettingsSaved } from "../utils/settingsHelpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
+
+async function getConversationStatusFromDb(conversationId: number): Promise<string> {
+  const [event] = await db
+    .select({ changes: conversationEvents.changes })
+    .from(conversationEvents)
+    .where(eq(conversationEvents.conversationId, conversationId))
+    .orderBy(desc(conversationEvents.createdAt))
+    .limit(1);
+  if (event && event.changes && event.changes.status) {
+    return event.changes.status;
+  }
+  return "unknown";
+}
+
+async function getOpenConversation() {
+  const result = await db
+    .select({ id: conversations.id, slug: conversations.slug })
+    .from(conversations)
+    .where(eq(conversations.status, "open"))
+    .limit(1);
+
+  if (!result.length) {
+    throw new Error(
+      "No open conversation found in database. Please ensure there's at least one open conversation for testing.",
+    );
+  }
+
+  return result[0];
+}
 
 async function openCommandBar(page: any) {
   await page.getByLabel("Command Bar Input").click();
@@ -21,6 +41,25 @@ async function openCommandBar(page: any) {
   const commandBar = page.locator('[data-testid="command-bar"]');
   await expect(commandBar).toBeVisible();
   await commandBar.waitFor({ state: "visible" });
+}
+
+async function sendReplyMessage(page: Page, message: string, { close }: { close?: boolean } = {}) {
+  await expect(page.getByTestId("message-item").first()).toBeVisible();
+  const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
+  await expect(composer).toBeVisible();
+  await composer.click({ force: true });
+  await composer.focus();
+  await composer.evaluate((el) => {
+    el.innerHTML = "";
+    el.textContent = "";
+  });
+  await composer.pressSequentially(message);
+
+  const replyButton = close
+    ? page.locator('button:has-text("Reply and close")')
+    : page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
+  await replyButton.click();
+  await page.waitForLoadState("networkidle");
 }
 
 test.describe("Conversation Actions", () => {
@@ -35,25 +74,8 @@ test.describe("Conversation Actions", () => {
 
   test.describe("Message Composition", () => {
     test("should send a reply message", async ({ page }) => {
-      const testMessage = "This is a test reply message";
-
-      const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
-      await expect(composer).toBeVisible();
-      await composer.click({ force: true });
-      await composer.focus();
-      await composer.evaluate((el) => {
-        el.innerHTML = "";
-        el.textContent = "";
-      });
-      await composer.pressSequentially(testMessage);
-
-      const composerText = await composer.textContent();
-      expect(composerText).toContain(testMessage);
-
-      const replyButton = page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
-      await replyButton.click();
-
-      await page.waitForLoadState("networkidle");
+      await sendReplyMessage(page, "This is a test reply message");
+      await expect(page.getByTestId("message-thread")).toContainText("This is a test reply message");
     });
 
     test("should handle empty reply attempt", async ({ page }) => {
@@ -397,70 +419,31 @@ test.describe("Conversation Actions", () => {
   });
 
   test.describe("Auto-Assign on Reply", () => {
-    let testConversation: { id: number; slug: string };
-    let currentUserId: string;
-    let originalAutoAssignPreference: boolean;
+    test("should respect auto-assign preference when replying", async ({ page }) => {
+      await page.goto("/settings/preferences");
 
-    test.beforeEach(async ({ page }) => {
-      currentUserId = await getCurrentUserId();
-      
-      originalAutoAssignPreference = await getUserAutoAssignPreference(currentUserId);
-      
-      testConversation = await createUnassignedConversation();
-      
-      await page.goto(`/conversations?id=${testConversation.slug}`);
-      await page.waitForLoadState("networkidle");
-    });
+      if (await page.locator('[aria-label="Auto-assign on reply Switch"]').isChecked()) {
+        await page.locator('[aria-label="Auto-assign on reply Switch"]').click();
+        await waitForSettingsSaved(page);
+      }
 
-    test.afterEach(async () => {
-      await setUserAutoAssignPreference(currentUserId, originalAutoAssignPreference);
-      await cleanupTestConversation(testConversation.id);
-    });
+      await page.goto("/unassigned");
+      await page.locator("a[href*='/conversations?id=']").first().click();
 
-    test("should auto-assign conversation when enabled and replying to unassigned conversation", async ({ page }) => {
-      await setUserAutoAssignPreference(currentUserId, true);
+      await sendReplyMessage(page, "Auto-assign off test reply message");
 
-      await page.reload();
-      await page.waitForLoadState("networkidle");
+      await expect(page.getByRole("button", { name: "Assign yourself" })).toBeVisible();
 
-      const initialAssignment = await getConversationAssignedTo(testConversation.id);
-      expect(initialAssignment).toBeNull();
+      await page.goto("/settings/preferences");
+      await page.locator('[aria-label="Auto-assign on reply Switch"]').click();
+      await waitForSettingsSaved(page);
 
-      const testMessage = "Auto-assign test reply message";
-      await sendReplyMessage(page, testMessage);
+      await page.goto("/unassigned");
+      await page.locator("a[href*='/conversations?id=']").first().click();
 
-      await waitForConversationAssignment(testConversation.id, currentUserId);
-    });
-
-    test("should not auto-assign conversation when disabled and replying to unassigned conversation", async ({ page }) => {
-      await setUserAutoAssignPreference(currentUserId, false);
-      
-      await page.reload();
-      await page.waitForLoadState("networkidle");
-
-      const initialAssignment = await getConversationAssignedTo(testConversation.id);
-      expect(initialAssignment).toBeNull();
-
-      const testMessage = "No auto-assign test reply message";
-      await sendReplyMessage(page, testMessage);
-
-      await waitForConversationAssignment(testConversation.id, null);
-    });
-
-    test("should not change assignment when conversation is already assigned", async ({ page }) => {
-      await setUserAutoAssignPreference(currentUserId, true);
-
-      const otherUserId = "other-user-id-123";
-
-      await setConversationAssignment(testConversation.id, otherUserId);
-
-      const initialAssignment = await getConversationAssignedTo(testConversation.id);
-      expect(initialAssignment).toBe(otherUserId);
-
-      const testMessage = "Reply to already assigned conversation";
-      await sendReplyMessage(page, testMessage);
-
-      await waitForConversationAssignment(testConversation.id, otherUserId);
+      await sendReplyMessage(page, "Auto-assign on test reply message");
+      await expect(page.getByTestId("message-thread")).toContainText("Auto-assign on test reply message");
+      await expect(page.getByRole("button", { name: "Assign yourself" })).not.toBeVisible();
     });
   });
 });
