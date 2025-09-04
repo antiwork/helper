@@ -125,10 +125,10 @@ test.describe("Help Article Search", () => {
     const count = await articleItems.count();
     expect(count).toBeGreaterThan(0);
 
-    // Verify first article contains "account"
+    // Verify first article contains "next.js integration"
     const firstArticle = articleItems.first().locator("span.font-medium");
     const text = await firstArticle.textContent();
-    expect(text?.toLowerCase()).toContain("account");
+    expect(text?.toLowerCase()).toContain("next.js integration");
   });
 
   test("should insert article link when selected", async ({ page }) => {
@@ -174,6 +174,8 @@ test.describe("Help Article Search", () => {
       has: page.locator("span", { hasText: "Search help center articles" }),
     });
     await expect(popover).toBeVisible({ timeout: 10000 });
+
+    await editor.focus();
 
     // Close popover with Escape key
     await page.keyboard.press("Escape");
