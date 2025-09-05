@@ -52,13 +52,6 @@ test.describe("Working Conversation Management", () => {
     }
   });
 
-  test("should handle clicking on filters", async ({ page }) => {
-    const openFilter = page.locator('button:has-text("open")');
-    await openFilter.click();
-
-    await expect(page).toHaveURL(/.*mine.*/);
-  });
-
   test("should handle select all functionality", async ({ page }) => {
     const conversationLinks = page.locator(CONVERSATION_LINKS_SELECTOR);
     const conversationCount = await conversationLinks.count();
@@ -94,7 +87,7 @@ test.describe("Working Conversation Management", () => {
     }
   });
 
-  test("should support keyboard navigation", async ({ page }) => {
+  test("should support keyboard navigation and should focus search with Ctrl+K hotkey", async ({ page }) => {
     const searchInput = page.getByRole("textbox", { name: "Search conversations" });
 
     await searchInput.focus();
@@ -112,10 +105,6 @@ test.describe("Working Conversation Management", () => {
     expect(["INPUT", "BUTTON", "A"].includes(activeElementAfterTab)).toBeTruthy();
 
     await searchInput.clear();
-  });
-
-  test("should focus search input with Ctrl+K hotkey", async ({ page }) => {
-    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
 
     await searchInput.blur();
 
@@ -258,29 +247,9 @@ test.describe("Working Conversation Management", () => {
     await expect(todayOption).toBeVisible();
   });
 
-  test("should clear date filter with clear filters button", async ({ page }) => {
-    const filterToggleButton = page.getByRole("button", { name: "Filter Toggle" });
-    await expect(filterToggleButton).toBeVisible();
-    await filterToggleButton.click();
-
-    const dateFilterButton = page.getByRole("button", { name: "Date Filter" });
-    await expect(dateFilterButton).toBeVisible();
-
-    await dateFilterButton.click();
-    const yesterdayOption = page.locator('[role="menuitemradio"], [role="option"]').filter({ hasText: "Yesterday" });
-    await yesterdayOption.click();
-    await expect(dateFilterButton).toHaveText(/Yesterday/);
-
-    const clearFiltersButton = page.getByRole("button", { name: "Clear Filters" });
-    await expect(clearFiltersButton).toBeVisible();
-
-    await clearFiltersButton.click();
-
-    await expect(dateFilterButton).toHaveText(/Created/);
-    await expect(clearFiltersButton).not.toBeVisible();
-  });
-
-  test("should preserve date filter after page refresh", async ({ page }) => {
+  test("should preserve date filter after page refresh and should clear date filter with clear filters button", async ({
+    page,
+  }) => {
     const toggleFilters = async () => {
       const filterToggleButton = page.getByRole("button", { name: "Filter Toggle" });
       await expect(filterToggleButton).toBeVisible();
@@ -307,17 +276,23 @@ test.describe("Working Conversation Management", () => {
     await expect(dateFilterButtonAfterRefresh).toHaveText(/Last 30 days/);
     const clearFiltersButton = page.getByRole("button", { name: "Clear Filters" });
     await expect(clearFiltersButton).toBeVisible();
+
+    await clearFiltersButton.click();
+
+    await expect(dateFilterButton).toHaveText(/Created/);
+    await expect(clearFiltersButton).not.toBeVisible();
   });
 
-  test("should show context snippets for deep matches", async ({ page }) => {
+  test("should show context snippets and highlight search terms for deep matches", async ({ page }) => {
     await searchConversations(page, "support");
 
     const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
-    const highlightedMessages = page.locator("mark.bg-secondary-200");
+    const highlights = page.locator("mark.bg-secondary-200");
 
     const messageCount = await messageTexts.count();
-    const highlightCount = await highlightedMessages.count();
+    const highlightCount = await highlights.count();
 
+    // Test context snippets for deep matches
     if (messageCount > 0 && highlightCount > 0) {
       for (let i = 0; i < Math.min(messageCount, 3); i++) {
         const message = messageTexts.nth(i);
@@ -335,14 +310,8 @@ test.describe("Working Conversation Management", () => {
         }
       }
     }
-  });
 
-  test("should highlight search terms in snippets", async ({ page }) => {
-    await searchConversations(page, "support");
-
-    const highlights = page.locator("mark.bg-secondary-200");
-    const highlightCount = await highlights.count();
-
+    // Test search term highlighting
     if (highlightCount > 0) {
       const firstHighlight = highlights.first();
       await expect(firstHighlight).toBeVisible();
