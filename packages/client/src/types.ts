@@ -127,13 +127,6 @@ export const sessionParamsSchema = z.object({
   email: z.string().nullish(),
   emailHash: z.string().nullish(),
   timestamp: z.number().nullish(),
-  customerMetadata: z
-    .object({
-      name: z.string().nullish(),
-      value: z.number().nullish(),
-      links: z.record(z.string(), z.string()).nullish(),
-    })
-    .nullish(),
   currentToken: z.string().nullish(),
 });
 export type SessionParams = z.infer<typeof sessionParamsSchema>;

@@ -18,7 +18,6 @@ import KnowledgeSetting from "../knowledge/knowledgeSetting";
 import MailboxSetting from "../preferences/mailboxSetting";
 import PreferencesSetting from "../preferences/preferencesSetting";
 import TeamSetting from "../team/teamSetting";
-import MetadataEndpointSetting from "../tools/metadataEndpointSetting";
 import ToolSetting from "../tools/toolSetting";
 
 export default function TabsPage() {
@@ -66,7 +65,6 @@ export default function TabsPage() {
       content: (
         <>
           <ToolSetting />
-          <MetadataEndpointSetting metadataEndpoint={mailbox.metadataEndpoint} />
           <SlackSetting mailbox={mailbox} />
           <GitHubSetting mailbox={mailbox} />
           <ConnectSupportEmail />

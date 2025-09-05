@@ -4,23 +4,15 @@ import { toolsFactory } from "@tests/support/factories/tools";
 import { generateText } from "ai";
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, MessageRole } from "@/db/schema/conversationMessages";
-import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
-import { fetchMetadata } from "@/lib/data/retrieval";
 import { buildAITools, callToolApi, generateSuggestedActions, ToolApiError } from "@/lib/tools/apiTool";
+import { platformCustomerFactory } from "@/tests/support/factories/platformCustomers";
 
 vi.mock("ai", () => ({
   generateEmbedding: vi.fn(),
   generateText: vi.fn(),
-}));
-
-vi.mock("@/lib/data/mailboxMetadataApi", () => ({
-  getMetadataApiByMailbox: vi.fn(),
-}));
-
-vi.mock("@/lib/data/retrieval", () => ({
-  fetchMetadata: vi.fn(),
 }));
 
 describe("apiTools", () => {
@@ -292,7 +284,6 @@ describe("apiTools", () => {
         body: "Test message",
       });
 
-      vi.mocked(getMetadataApiByMailbox).mockResolvedValueOnce(null);
       const { tool } = await toolsFactory.create({
         slug: "test-tool",
         parameters: [{ name: "param1", type: "string", required: true, in: "body" }],
@@ -319,18 +310,11 @@ describe("apiTools", () => {
         },
         prompt: "Test prompt",
       };
-
-      vi.mocked(getMetadataApiByMailbox).mockResolvedValueOnce({
-        id: 1,
-        url: "test",
-        isEnabled: true,
-        hmacSecret: "test",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        deletedAt: null,
-        unused_mailboxId: 1,
+      const { platformCustomer } = await platformCustomerFactory.create({
+        email: "test@example.com",
+        metadata: metadata.metadata,
       });
-      vi.mocked(fetchMetadata).mockResolvedValueOnce(metadata);
+
       vi.mocked(generateText).mockResolvedValueOnce({
         toolCalls: [{ toolName: "test-tool", args: { param1: "value1" } }],
       } as any);
@@ -344,7 +328,7 @@ describe("apiTools", () => {
 
       expect(generateText).toHaveBeenCalledWith(
         expect.objectContaining({
-          prompt: expect.stringContaining(JSON.stringify(metadata, null, 2)),
+          prompt: expect.stringContaining(assertDefined(platformCustomer.name)),
         }),
       );
     });
@@ -369,7 +353,6 @@ describe("apiTools", () => {
         });
       }
 
-      vi.mocked(getMetadataApiByMailbox).mockResolvedValueOnce(null);
       vi.mocked(generateText).mockResolvedValueOnce({
         toolCalls: [{ toolName: "test-tool", args: {} }],
       } as any);

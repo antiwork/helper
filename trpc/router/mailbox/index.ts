@@ -14,7 +14,6 @@ import { faqsRouter } from "./faqs";
 import { githubRouter } from "./github";
 import { issueGroupsRouter } from "./issueGroups";
 import { membersRouter } from "./members";
-import { metadataEndpointRouter } from "./metadataEndpoint";
 import { mailboxProcedure } from "./procedure";
 import { savedRepliesRouter } from "./savedReplies";
 import { slackRouter } from "./slack";
@@ -46,9 +45,7 @@ export const mailboxRouter = {
       unassigned: all - assigned,
     };
   }),
-  get: mailboxProcedure.query(async ({ ctx }) => {
-    return await getMailboxInfo(ctx.mailbox);
-  }),
+  get: mailboxProcedure.query(({ ctx }) => getMailboxInfo(ctx.mailbox)),
   update: mailboxProcedure
     .input(
       z.object({
@@ -113,7 +110,6 @@ export const mailboxRouter = {
   tools: toolsRouter,
   customers: customersRouter,
   websites: websitesRouter,
-  metadataEndpoint: metadataEndpointRouter,
   savedReplies: savedRepliesRouter,
   issueGroups: issueGroupsRouter,
 

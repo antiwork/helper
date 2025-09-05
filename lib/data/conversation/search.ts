@@ -22,7 +22,6 @@ import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
-import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import {
   CLOSED_BY_AGENT_MESSAGE,
   MARKED_AS_SPAM_BY_AGENT_MESSAGE,
@@ -179,8 +178,7 @@ export const searchConversations = async (
   const orderBy = isOpenTicketsOnly
     ? [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)]
     : [filters.sort === "oldest" ? asc(orderByField) : desc(orderByField)];
-  const metadataEnabled = !filters.search && !!(await getMetadataApiByMailbox());
-  if (metadataEnabled && (filters.sort === "highest_value" || !filters.sort) && isOpenTicketsOnly) {
+  if ((filters.sort === "highest_value" || !filters.sort) && isOpenTicketsOnly && !filters.search) {
     orderBy.unshift(sql`${platformCustomers.value} DESC NULLS LAST`);
   }
 
@@ -262,7 +260,6 @@ export const searchConversations = async (
       return list();
     },
     where,
-    metadataEnabled,
   };
 };
 

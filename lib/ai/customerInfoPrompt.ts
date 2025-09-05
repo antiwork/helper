@@ -16,13 +16,17 @@ const formatCustomerMetadata = (metadata: unknown, prefix = ""): string => {
   return `${metadata}`;
 };
 
-export const customerInfoPrompt = (email: string | null, customerInfo?: CustomerInfo | null): string => {
+export const customerInfoPrompt = (
+  email: string | null,
+  customerInfo?: (Omit<CustomerInfo, "value"> & { value?: string | number | null }) | null,
+): string => {
   let userPrompt;
   if (customerInfo) {
     userPrompt = "Current user details:\n";
     if (email) userPrompt += `- Email: ${email}\n`;
     if (customerInfo.name) userPrompt += `- Name: ${customerInfo.name}\n`;
-    if (customerInfo.value != null) userPrompt += `- Customer Value: $${(customerInfo.value / 100).toFixed(2)}\n`;
+    if (customerInfo.value != null && customerInfo.value !== "")
+      userPrompt += `- Customer Value: $${(Number(customerInfo.value) / 100).toFixed(2)}\n`;
     userPrompt += formatCustomerMetadata(customerInfo.metadata).trim();
   } else {
     userPrompt = email ? `\nCurrent user email: ${email}` : "Anonymous user";

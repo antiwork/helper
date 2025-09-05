@@ -98,7 +98,7 @@ const responseSchema = z.object({
     }, `Exceeded maximum length of ${METADATA_API_MAX_LENGTH} characters`)
     .optional(),
 });
-export type CustomerInfo = z.infer<typeof responseSchema>["customer"];
+export type CustomerInfo = NonNullable<z.infer<typeof responseSchema>["customer"]>;
 
 function validateResponse(data: any) {
   const parsedData = responseSchema.safeParse(data);
