@@ -153,84 +153,86 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 p-4 border-b border-border text-sm">
-        <h3>Customer</h3>
-        <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-          <Avatar fallback={conversation.emailFrom ?? "?"} size="md" />
-          <div className="flex items-center gap-2 min-w-0">
-            <span
-              className={cn(
-                "truncate",
-                conversation.customerInfo?.name || conversation.emailFrom
-                  ? "text-base font-medium"
-                  : "text-muted-foreground",
-              )}
-              title={conversation.customerInfo?.name || conversation.emailFrom || ""}
-            >
-              {conversation.customerInfo?.name || conversation.emailFrom || "Anonymous"}
-            </span>
-            {conversation.customerInfo?.isVip && <Badge variant="bright">VIP</Badge>}
-            {conversation.customerInfo?.value && conversation.customerInfo.value > 0 && (
-              <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-                <DollarSign className="h-4 w-4" />
-                {formatCurrency(conversation.customerInfo.value)}
-              </div>
-            )}
-          </div>
-          {conversation.emailFrom && (
-            <CopyToClipboard
-              text={conversation.emailFrom ?? ""}
-              onCopy={(_, success) => (success ? toast.success("Copied!") : toast.error("Failed to copy to clipboard"))}
-            >
-              <div className="col-start-2 text-primary flex cursor-pointer items-center gap-2 min-w-0">
-                <Mail className="h-4 w-4 flex-shrink-0" />
-                <a
-                  className="overflow-hidden text-ellipsis whitespace-nowrap hover:underline min-w-0 flex-1"
-                  title={conversation.emailFrom ?? ""}
-                >
-                  {conversation.emailFrom}
-                </a>
-              </div>
-            </CopyToClipboard>
-          )}
-
-          {Object.entries(conversation.customerInfo?.links ?? {}).map(([label, url], idx) => (
-            <a
-              key={idx}
-              className="col-start-2 mt-1 flex items-center gap-2 hover:underline"
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ExternalLink className="h-4 w-4" />
-              {label}
-            </a>
-          ))}
-
-          {conversation.customerInfo?.metadata && Object.keys(conversation.customerInfo.metadata).length > 0 && (
-            <>
-              <div className="col-start-2 mt-2">
-                <button
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => setMetadataExpanded(!metadataExpanded)}
-                >
-                  {metadataExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                  <span>Details</span>
-                </button>
-              </div>
-              {metadataExpanded && (
-                <div className="col-start-2 mt-2 text-xs text-muted-foreground border rounded p-2 overflow-x-auto">
-                  <div className="font-mono">
-                    <JsonView data={conversation.customerInfo.metadata} />
-                  </div>
+      <div className="flex-1 overflow-y-auto">
+        <div className="flex flex-col gap-3 p-4 border-b border-border text-sm">
+          <h3>Customer</h3>
+          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+            <Avatar fallback={conversation.emailFrom ?? "?"} size="md" />
+            <div className="flex items-center gap-2 min-w-0">
+              <span
+                className={cn(
+                  "truncate",
+                  conversation.customerInfo?.name || conversation.emailFrom
+                    ? "text-base font-medium"
+                    : "text-muted-foreground",
+                )}
+                title={conversation.customerInfo?.name || conversation.emailFrom || ""}
+              >
+                {conversation.customerInfo?.name || conversation.emailFrom || "Anonymous"}
+              </span>
+              {conversation.customerInfo?.isVip && <Badge variant="bright">VIP</Badge>}
+              {conversation.customerInfo?.value && conversation.customerInfo.value > 0 && (
+                <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+                  <DollarSign className="h-4 w-4" />
+                  {formatCurrency(conversation.customerInfo.value)}
                 </div>
               )}
-            </>
-          )}
-        </div>
-      </div>
+            </div>
+            {conversation.emailFrom && (
+              <CopyToClipboard
+                text={conversation.emailFrom ?? ""}
+                onCopy={(_, success) =>
+                  success ? toast.success("Copied!") : toast.error("Failed to copy to clipboard")
+                }
+              >
+                <div className="col-start-2 text-primary flex cursor-pointer items-center gap-2 min-w-0">
+                  <Mail className="h-4 w-4 flex-shrink-0" />
+                  <a
+                    className="overflow-hidden text-ellipsis whitespace-nowrap hover:underline min-w-0 flex-1"
+                    title={conversation.emailFrom ?? ""}
+                  >
+                    {conversation.emailFrom}
+                  </a>
+                </div>
+              </CopyToClipboard>
+            )}
 
-      <div className="flex-1 overflow-y-auto">
+            {Object.entries(conversation.customerInfo?.links ?? {}).map(([label, url], idx) => (
+              <a
+                key={idx}
+                className="col-start-2 mt-1 flex items-center gap-2 hover:underline"
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="h-4 w-4" />
+                {label}
+              </a>
+            ))}
+
+            {conversation.customerInfo?.metadata && Object.keys(conversation.customerInfo.metadata).length > 0 && (
+              <>
+                <div className="col-start-2 mt-2">
+                  <button
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => setMetadataExpanded(!metadataExpanded)}
+                  >
+                    {metadataExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                    <span>Details</span>
+                  </button>
+                </div>
+                {metadataExpanded && (
+                  <div className="col-start-2 mt-2 text-xs text-muted-foreground border rounded p-2 overflow-x-auto">
+                    <div className="font-mono">
+                      <JsonView data={conversation.customerInfo.metadata} />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
         <Accordion type="multiple" defaultValue={["previous"]}>
           <AccordionItem value="previous">
             <AccordionTrigger className="px-4" onClick={() => setPreviousExpanded(!previousExpanded)}>

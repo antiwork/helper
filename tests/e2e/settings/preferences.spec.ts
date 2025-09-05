@@ -52,4 +52,21 @@ test.describe("Settings - User preferences", () => {
     await waitForSettingsSaved(page);
     await expect(nextTicketPreviewSwitch).not.toBeChecked();
   });
+
+  test("should allow toggling auto-assign on/off reply setting", async ({ page }) => {
+    const autoAssignSetting = page.locator('section:has(h2:text("Auto-assign on reply"))');
+    const autoAssignSwitch = page.locator('[aria-label="Auto-assign on reply Switch"]');
+
+    await expect(autoAssignSetting).toBeVisible();
+
+    const isEnabled = await autoAssignSwitch.isChecked();
+
+    await autoAssignSwitch.click();
+    await waitForSettingsSaved(page);
+    await expect(autoAssignSwitch).toBeChecked({ checked: !isEnabled });
+
+    await autoAssignSwitch.click();
+    await waitForSettingsSaved(page);
+    await expect(autoAssignSwitch).toBeChecked({ checked: isEnabled });
+  });
 });

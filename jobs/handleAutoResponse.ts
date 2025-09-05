@@ -61,7 +61,7 @@ export const handleAutoResponse = async ({
       if (message.emailFrom) {
         await upsertPlatformCustomer({
           email: message.emailFrom,
-          customerMetadata: customerMetadata.metadata,
+          customerInfo: customerMetadata.metadata,
         });
       }
     }

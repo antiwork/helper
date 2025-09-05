@@ -39,7 +39,7 @@ const updateCustomerMetadata = async (email: string) => {
     if (customerMetadata) {
       await upsertPlatformCustomer({
         email,
-        customerMetadata,
+        customerInfo: customerMetadata,
       });
     }
   } catch (error) {
@@ -49,7 +49,13 @@ const updateCustomerMetadata = async (email: string) => {
   }
 };
 
-const requestHumanSupport = async (conversationId: number, email: string | null, reason: string, newEmail?: string) => {
+const requestHumanSupport = async (
+  conversationId: number,
+  email: string | null,
+  reason: string,
+  customerMetadataProvided: boolean,
+  newEmail?: string,
+) => {
   const conversation = assertDefined(await getConversationById(conversationId));
 
   if (newEmail) {
@@ -68,7 +74,7 @@ const requestHumanSupport = async (conversationId: number, email: string | null,
   });
 
   if (email) {
-    waitUntil(updateCustomerMetadata(email));
+    if (!customerMetadataProvided) waitUntil(updateCustomerMetadata(email));
 
     waitUntil(
       triggerEvent("conversations/human-support-requested", {
@@ -174,9 +180,9 @@ export const buildTools = async ({
           : z.string().email().describe("email address to contact you (required for anonymous users)"),
       }),
       execute: ({ reason, email: newEmail }) =>
-        reasoningMiddleware(requestHumanSupport(conversationId, email, reason, newEmail)).finally(() =>
-          logToolEvent("fetch_user_information", { reason, newEmail }),
-        ),
+        reasoningMiddleware(
+          requestHumanSupport(conversationId, email, reason, customerMetadataProvided, newEmail),
+        ).finally(() => logToolEvent("fetch_user_information", { reason, newEmail })),
     });
   }
 
