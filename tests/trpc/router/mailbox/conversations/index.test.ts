@@ -345,4 +345,93 @@ describe("conversationsRouter", () => {
       });
     });
   });
+
+  describe("bulkUpdate", () => {
+    it("handles non-existent conversation IDs gracefully", async () => {
+      const caller = createCaller(await createTestTRPCContext(user));
+
+      await expect(
+        caller.mailbox.conversations.bulkUpdate({
+          conversationFilter: [99999, 99998],
+          status: "closed",
+        }),
+      ).rejects.toThrow();
+    });
+
+    it("triggers job for more than 25 conversations", async () => {
+      const manyConversationIds = Array.from({ length: 26 }, (_, i) => i + 1);
+
+      const caller = createCaller(await createTestTRPCContext(user));
+      const result = await caller.mailbox.conversations.bulkUpdate({
+        conversationFilter: manyConversationIds,
+        status: "spam",
+      });
+
+      expect(result).toMatchObject({
+        updatedImmediately: false,
+      });
+
+      expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/bulk-update", {
+        userId: user.id,
+        conversationFilter: manyConversationIds,
+        status: "spam",
+        assignedToId: undefined,
+        assignedToAI: undefined,
+        message: undefined,
+      });
+    });
+
+    it("updates conversations immediately for ≤25 conversations", async () => {
+      const promises = Array.from({ length: 25 }, () => conversationFactory.create({ status: "open" }));
+      const manyConversations = await Promise.all(promises);
+      const manyConversationIds = manyConversations.map(({ conversation }) => conversation.id);
+
+      const caller = createCaller(await createTestTRPCContext(user));
+      const result = await caller.mailbox.conversations.bulkUpdate({
+        conversationFilter: manyConversationIds,
+        status: "closed",
+      });
+
+      expect(result).toMatchObject({
+        updatedImmediately: true,
+      });
+
+      const bulkUpdateCalls = vi
+        .mocked(mockTriggerEvent)
+        .mock.calls.filter(([eventName]) => eventName === "conversations/bulk-update");
+      expect(bulkUpdateCalls).toHaveLength(0);
+    });
+
+    it("uses search schema for job queue", async () => {
+      const caller = createCaller(await createTestTRPCContext(user));
+
+      const searchFilter = {
+        status: ["open"],
+        cursor: null,
+        limit: 25,
+        sort: null,
+        search: null,
+        category: null,
+      };
+
+      const result = await caller.mailbox.conversations.bulkUpdate({
+        conversationFilter: searchFilter,
+        status: "open",
+        assignedToAI: true,
+      });
+
+      expect(result).toMatchObject({
+        updatedImmediately: false,
+      });
+
+      expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/bulk-update", {
+        userId: user.id,
+        conversationFilter: searchFilter,
+        status: "open",
+        assignedToId: undefined,
+        assignedToAI: true,
+        message: undefined,
+      });
+    });
+  });
 });
