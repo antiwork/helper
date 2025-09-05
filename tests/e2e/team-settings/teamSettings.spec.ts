@@ -248,24 +248,14 @@ test.describe("Team Settings", () => {
     await takeDebugScreenshot(page, "admin-only-operations.png");
   });
 
-  test("should invite a new team member", async ({ page }) => {
-    const testEmail = generateTestEmail();
-
-    await inviteMember(page, testEmail);
-    await expectMemberInvited(page, testEmail);
-
-    await takeDebugScreenshot(page, "team-member-invited.png");
-    await cleanupTestMembers([testEmail]);
-  });
-
-  test("should show invited member in team list", async ({ page }) => {
+  test("should invite a new team member and show it in the team list", async ({ page }) => {
     const testEmail = generateTestEmail();
 
     await inviteMember(page, testEmail);
     await expectMemberInvited(page, testEmail);
     await expectMemberInList(page, testEmail);
 
-    await takeDebugScreenshot(page, "team-member-in-list.png");
+    await takeDebugScreenshot(page, "team-member-invited.png");
     await cleanupTestMembers([testEmail]);
   });
 
@@ -283,21 +273,7 @@ test.describe("Team Settings", () => {
     await cleanupTestMembers([testEmail]);
   });
 
-  test("should change member role from member to admin", async ({ page }) => {
-    const testEmail = generateTestEmail();
-
-    await inviteMember(page, testEmail);
-    await expectMemberInvited(page, testEmail);
-    await expectMemberInList(page, testEmail);
-
-    await changeRole(page, testEmail, "admin");
-    await expectMemberRole(page, testEmail, "admin");
-
-    await takeDebugScreenshot(page, "team-member-role-admin.png");
-    await cleanupTestMembers([testEmail]);
-  });
-
-  test("should change member role from admin to member", async ({ page }) => {
+  test("should allow admin to change member role", async ({ page }) => {
     const testEmail = generateTestEmail();
 
     await inviteMember(page, testEmail);
@@ -310,7 +286,7 @@ test.describe("Team Settings", () => {
     await changeRole(page, testEmail, "member");
     await expectMemberRole(page, testEmail, "member");
 
-    await takeDebugScreenshot(page, "team-member-role-member.png");
+    await takeDebugScreenshot(page, "team-member-role-admin.png");
     await cleanupTestMembers([testEmail]);
   });
 
