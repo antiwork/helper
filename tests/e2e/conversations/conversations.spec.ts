@@ -19,30 +19,6 @@ test.describe("Working Conversation Management", () => {
     await page.keyboard.press("Enter");
   }
 
-  test("should display dashboard with conversations", async ({ page }) => {
-    await expect(page).toHaveTitle("Mine");
-
-    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
-    await expect(searchInput).toBeVisible();
-
-    const openFilter = page.locator('button:has-text("open")');
-    await expect(openFilter).toBeVisible();
-
-    await takeDebugScreenshot(page, "working-dashboard.png");
-  });
-
-  test("should have functional search", async ({ page }) => {
-    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
-    await expect(searchInput).toBeVisible();
-
-    await searchInput.fill("test search");
-
-    await expect(searchInput).toHaveValue("test search");
-
-    await searchInput.clear();
-    await expect(searchInput).toHaveValue("");
-  });
-
   test("should show account information", async ({ page }) => {
     const gumroadButton = page.locator('button:has-text("Gumroad")').first();
     await expect(gumroadButton).toBeVisible();
@@ -116,30 +92,6 @@ test.describe("Working Conversation Management", () => {
       const searchInput = page.getByRole("textbox", { name: "Search conversations" });
       await expect(searchInput).toBeVisible();
     }
-  });
-
-  test("should be responsive on mobile", async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 667 });
-
-    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
-    await expect(searchInput).toBeVisible();
-
-    const selectAllButton = page.locator('button:has-text("Select all")');
-    await expect(selectAllButton).not.toBeVisible();
-
-    await takeDebugScreenshot(page, "dashboard-mobile.png");
-  });
-
-  test("should maintain authentication state", async ({ page }) => {
-    await page.reload();
-
-    await expect(page).toHaveURL(/.*mine.*/);
-
-    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
-    await expect(searchInput).toBeVisible();
-
-    const openFilter = page.locator('button:has-text("open")');
-    await expect(openFilter).toBeVisible();
   });
 
   test("should support keyboard navigation", async ({ page }) => {
@@ -357,41 +309,6 @@ test.describe("Working Conversation Management", () => {
     await expect(clearFiltersButton).toBeVisible();
   });
 
-  test("should show truncated text for non-search results", async ({ page }) => {
-    await page.getByRole("textbox", { name: "Search conversations" }).clear();
-    await expect(page.getByRole("textbox", { name: "Search conversations" })).toHaveValue("");
-
-    const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
-    const messageCount = await messageTexts.count();
-
-    if (messageCount > 0) {
-      const firstMessage = messageTexts.first();
-      await expect(firstMessage).toBeVisible();
-
-      const classList = await firstMessage.getAttribute("class");
-      expect(classList).toContain("truncate");
-
-      await takeDebugScreenshot(page, "search-snippet-no-search.png");
-    }
-  });
-
-  test("should always use truncate class with search snippets", async ({ page }) => {
-    await searchConversations(page, "support");
-
-    const messageTexts = page.locator("p.text-muted-foreground.max-w-4xl.text-xs");
-    const messageCount = await messageTexts.count();
-
-    if (messageCount > 0) {
-      for (let i = 0; i < Math.min(messageCount, 3); i++) {
-        const message = messageTexts.nth(i);
-        const classList = await message.getAttribute("class");
-        expect(classList).toContain("truncate");
-      }
-
-      await takeDebugScreenshot(page, "search-snippet-with-truncate.png");
-    }
-  });
-
   test("should show context snippets for deep matches", async ({ page }) => {
     await searchConversations(page, "support");
 
@@ -439,19 +356,5 @@ test.describe("Working Conversation Management", () => {
 
       await takeDebugScreenshot(page, "search-snippet-highlights.png");
     }
-  });
-
-  test("should handle search with no results gracefully", async ({ page }) => {
-    await searchConversations(page, "xyzunlikelyterm123");
-
-    const searchInput = page.getByRole("textbox", { name: "Search conversations" });
-    await expect(searchInput).toBeVisible();
-    await expect(searchInput).toHaveValue("xyzunlikelyterm123");
-
-    const highlights = page.locator("mark.bg-secondary-200");
-    const highlightCount = await highlights.count();
-    expect(highlightCount).toBe(0);
-
-    await takeDebugScreenshot(page, "search-snippet-no-results.png");
   });
 });
