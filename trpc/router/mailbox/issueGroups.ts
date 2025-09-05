@@ -297,4 +297,56 @@ export const issueGroupsRouter = {
 
     return { success: true };
   }),
+
+  generateSuggestions: mailboxProcedure.mutation(async ({ ctx }) => {
+    const { generateCommonIssuesSuggestions } = await import("@/lib/ai/generateCommonIssues");
+
+    const result = await generateCommonIssuesSuggestions(ctx.mailbox);
+
+    if (result.issues.length === 0) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "No common issues could be generated from existing conversations",
+      });
+    }
+
+    return result;
+  }),
+
+  bulkCreate: mailboxProcedure
+    .input(
+      z.object({
+        items: z.array(
+          z.object({
+            title: z.string(),
+            description: z.string().optional(),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const createdIssues = await Promise.all(
+        input.items.map((item) =>
+          db
+            .insert(issueGroups)
+            .values({
+              title: item.title,
+              description: item.description,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            })
+            .returning()
+            .then(takeUniqueOrThrow),
+        ),
+      );
+
+      return {
+        createdIssues: createdIssues.length,
+        issues: createdIssues.map((issue) => ({
+          id: issue.id,
+          title: issue.title,
+          description: issue.description,
+        })),
+      };
+    }),
 } satisfies TRPCRouterRecord;

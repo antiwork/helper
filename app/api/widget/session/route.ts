@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     if (customerMetadata) {
       await upsertPlatformCustomer({
         email,
-        customerMetadata,
+        customerInfo: customerMetadata,
       });
     }
 

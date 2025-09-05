@@ -34,7 +34,7 @@ describe("upsertPlatformCustomer", () => {
 
     await upsertPlatformCustomer({
       email: mockEmail,
-      customerMetadata: {
+      customerInfo: {
         name: "Test User",
         actions,
       },
@@ -56,7 +56,7 @@ describe("upsertPlatformCustomer", () => {
 
     await upsertPlatformCustomer({
       email: mockEmail,
-      customerMetadata: {
+      customerInfo: {
         name: "Test User",
         metadata,
       },
@@ -81,7 +81,7 @@ describe("upsertPlatformCustomer", () => {
 
     await upsertPlatformCustomer({
       email: mockEmail,
-      customerMetadata: {
+      customerInfo: {
         name: "Test User",
         value: 5000,
         actions,
@@ -117,7 +117,7 @@ describe("upsertPlatformCustomer", () => {
 
     await upsertPlatformCustomer({
       email: mockEmail,
-      customerMetadata: {
+      customerInfo: {
         actions: newActions,
         metadata: newMetadata,
       },
@@ -134,7 +134,7 @@ describe("upsertPlatformCustomer", () => {
 
     await upsertPlatformCustomer({
       email: mockEmail,
-      customerMetadata: {
+      customerInfo: {
         name: "Test User",
         actions: null,
         metadata: undefined,
@@ -152,7 +152,7 @@ describe("upsertPlatformCustomer", () => {
 
     await upsertPlatformCustomer({
       email: mockEmail,
-      customerMetadata: null as any,
+      customerInfo: null as any,
     });
 
     const result = await getPlatformCustomer(mockEmail);

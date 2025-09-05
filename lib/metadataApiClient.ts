@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { URLSearchParams } from "url";
 import { z } from "zod";
+import { Mailbox } from "@/lib/data/mailbox";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 const METADATA_API_TIMEOUT_SECONDS = 15;
@@ -109,3 +110,16 @@ function validateResponse(data: any) {
 
   return parsedData.data;
 }
+
+export const fetchCustomerInfo = async (email: string, customerInfoUrl: string, mailbox: Mailbox) => {
+  try {
+    const metadata = await getMetadata(
+      { url: customerInfoUrl, hmacSecret: mailbox.widgetHMACSecret },
+      { email, timestamp: Math.floor(Date.now() / 1000) },
+    );
+    return metadata?.customer ?? null;
+  } catch (error) {
+    captureExceptionAndLog(error);
+    return null;
+  }
+};
