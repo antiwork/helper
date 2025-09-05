@@ -33,7 +33,7 @@ We use Vitest for testing. Some key guidelines:
 1. Create a new branch for your feature/fix
 2. Write tests for new functionality
 3. Ensure all tests pass
-4. Include screenshots of your test suite passing locally
+4. Include screenshots of your test suite passing locally or from your fork's github action
 5. Use native-sounding English in all communication with no excessive capitalization (e.g HOW IS THIS GOING), multiple question marks (how's this going???), grammatical errors (how's dis going), or typos (thnx fr update).
    - ❌ Before: "is this still open ?? I am happy to work on it ??"
    - ✅ After: "Is this actively being worked on? I've started work on it here…"
