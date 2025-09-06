@@ -1,8 +1,9 @@
 import { expect, Page, test } from "@playwright/test";
 import { desc, eq } from "drizzle-orm";
 import { db } from "../../../db/client";
-import { conversationEvents, conversations } from "../../../db/schema";
-import { getOpenConversation, openCommandBar, waitForSettingsSaved } from "../utils/settingsHelpers";
+import { conversationEvents } from "../../../db/schema";
+import { getOpenConversation, openCommandBar } from "../utils/conversationHelpers";
+import { waitForSettingsSaved } from "../utils/settingsHelpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 

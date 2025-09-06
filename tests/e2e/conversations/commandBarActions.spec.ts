@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { getOpenConversation, openCommandBar } from "../utils/settingsHelpers";
+import { getOpenConversation, openCommandBar } from "../utils/conversationHelpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
