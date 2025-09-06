@@ -151,7 +151,7 @@ const messageToMarkdown = ({ text, blocks }: { text?: string; blocks?: Block[] }
   if (!content && text) {
     content = text;
   }
-  return content;
+  return content.replace(/\b!debug\b/g, "");
 };
 
 export const getThreadMessages = cache(

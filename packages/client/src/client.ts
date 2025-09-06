@@ -332,8 +332,7 @@ export class HelperClient {
             return;
           }
           const tool = tools[toolCall.toolName];
-          if (!tool) throw new Error(`Tool ${toolCall.toolName} not found`);
-          if ("execute" in tool) return tool.execute(toolCall.args);
+          if (tool && "execute" in tool) return tool.execute(toolCall.args);
         },
       };
     },
