@@ -3,7 +3,6 @@ import { bigint, boolean, index, integer, jsonb, pgTable, text, timestamp, uniqu
 import { withTimestamps } from "../lib/with-timestamps";
 import { faqs } from "./faqs";
 import { gmailSupportEmails } from "./gmailSupportEmails";
-import { mailboxesMetadataApi } from "./mailboxesMetadataApi";
 
 export const mailboxes = pgTable(
   "mailboxes_mailbox",
@@ -47,7 +46,6 @@ export const mailboxes = pgTable(
 ).enableRLS();
 
 export const mailboxesRelations = relations(mailboxes, ({ one, many }) => ({
-  mailboxesMetadataApi: one(mailboxesMetadataApi),
   gmailSupportEmail: one(gmailSupportEmails, {
     fields: [mailboxes.gmailSupportEmailId],
     references: [gmailSupportEmails.id],

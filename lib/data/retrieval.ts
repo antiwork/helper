@@ -6,9 +6,6 @@ import { websitePages, websites } from "@/db/schema/websites";
 import { generateEmbedding } from "@/lib/ai";
 import { knowledgeBankPrompt, PAST_CONVERSATIONS_PROMPT, websitePagesPrompt } from "@/lib/ai/prompts";
 import { cleanUpTextForAI } from "../ai/core";
-import { getMetadata, timestamp } from "../metadataApiClient";
-import { captureExceptionAndLog } from "../shared/sentry";
-import { getMetadataApi } from "./mailboxMetadataApi";
 
 const SIMILARITY_THRESHOLD = 0.4;
 const MAX_SIMILAR_CONVERSATIONS = 3;
@@ -138,20 +135,4 @@ export const fetchPromptRetrievalData = async (
     websitePagesPrompt: websitePages.length > 0 ? websitePagesPrompt(websitePages) : null,
     websitePages,
   };
-};
-
-export const fetchMetadata = async (email: string) => {
-  const { metadataApi } = await getMetadataApi();
-  if (!metadataApi) return null;
-
-  try {
-    const metadata = await getMetadata(metadataApi, {
-      email,
-      timestamp: timestamp(),
-    });
-    return metadata?.user_info ?? null;
-  } catch (error) {
-    captureExceptionAndLog(error);
-    return null;
-  }
 };

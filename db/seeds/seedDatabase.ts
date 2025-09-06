@@ -18,15 +18,7 @@ import { db } from "@/db/client";
 import { indexConversationMessage } from "@/jobs/indexConversation";
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/server";
-import {
-  conversationMessages,
-  conversations,
-  mailboxesMetadataApi,
-  userProfiles,
-  websiteCrawls,
-  websitePages,
-  websites,
-} from "../schema";
+import { conversationMessages, conversations, userProfiles, websiteCrawls, websitePages, websites } from "../schema";
 import { helpArticlesData } from "./helpArticlesData";
 
 const getTables = async () => {
@@ -354,18 +346,6 @@ const createSettingsPageRecords = async () => {
   await faqsFactory.create({
     content: "Deleting your account can be done from Settings > Account > Delete Account.",
   });
-
-  await db
-    .insert(mailboxesMetadataApi)
-    .values({
-      url: faker.internet.url(),
-      isEnabled: true,
-      hmacSecret: crypto.randomUUID().replace(/-/g, ""),
-      createdAt: faker.date.past(),
-      updatedAt: faker.date.recent(),
-    })
-    .returning()
-    .then(takeUniqueOrThrow);
 };
 
 if (env.NODE_ENV !== "development" && env.VERCEL_ENV !== "preview") {

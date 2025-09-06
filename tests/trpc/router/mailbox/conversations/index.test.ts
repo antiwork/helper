@@ -2,7 +2,6 @@ import { conversationFollowersFactory } from "@tests/support/factories/conversat
 import { conversationMessagesFactory } from "@tests/support/factories/conversationMessages";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { fileFactory } from "@tests/support/factories/files";
-import { mailboxMetadataApiFactory } from "@tests/support/factories/mailboxesMetadataApi";
 import { platformCustomerFactory } from "@tests/support/factories/platformCustomers";
 import { userFactory } from "@tests/support/factories/users";
 import { mockTriggerEvent } from "@tests/support/jobsUtils";
@@ -75,7 +74,6 @@ describe("conversationsRouter", () => {
     });
 
     it("sorts by platformCustomers.value with nulls last", async () => {
-      await mailboxMetadataApiFactory.create();
       await conversationFactory.create({
         emailFrom: "high@example.com",
       });

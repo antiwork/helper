@@ -3,7 +3,7 @@ import { bigint, boolean, index, pgTable, text, timestamp, unique } from "drizzl
 import { mailboxes } from "@/db/schema/mailboxes";
 import { withTimestamps } from "../lib/with-timestamps";
 
-export const mailboxesMetadataApi = pgTable(
+export const unused_mailboxesMetadataApi = pgTable(
   "mailboxes_metadataapi",
   {
     ...withTimestamps,
@@ -22,9 +22,9 @@ export const mailboxesMetadataApi = pgTable(
   ],
 ).enableRLS();
 
-export const mailboxesMetadataApiRelations = relations(mailboxesMetadataApi, ({ one }) => ({
+export const mailboxesMetadataApiRelations = relations(unused_mailboxesMetadataApi, ({ one }) => ({
   mailbox: one(mailboxes, {
-    fields: [mailboxesMetadataApi.unused_mailboxId],
+    fields: [unused_mailboxesMetadataApi.unused_mailboxId],
     references: [mailboxes.id],
   }),
 }));

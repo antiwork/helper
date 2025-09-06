@@ -7,55 +7,18 @@ import { GUIDE_USER_TOOL_NAME, REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/a
 import { getConversationById, updateConversation, updateOriginalConversation } from "@/lib/data/conversation";
 import { createToolEvent } from "@/lib/data/conversationMessage";
 import { Mailbox } from "@/lib/data/mailbox";
-import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
-import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
-import { fetchMetadata, getPastConversationsPrompt } from "@/lib/data/retrieval";
+import { getPastConversationsPrompt } from "@/lib/data/retrieval";
 import { getMailboxToolsForChat } from "@/lib/data/tools";
 import { createHmacDigest } from "@/lib/metadataApiClient";
-import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
 import { ToolRequestBody } from "@/packages/client/dist";
-
-const fetchUserInformation = async (email: string) => {
-  try {
-    const metadata = await fetchMetadata(email);
-    return metadata?.prompt;
-  } catch (error) {
-    captureExceptionAndLog(error, {
-      extra: { email },
-    });
-    return "Error fetching metadata";
-  }
-};
 
 const searchKnowledgeBase = async (query: string) => {
   const documents = await getPastConversationsPrompt(query);
   return documents ?? "No past conversations found";
 };
 
-const updateCustomerMetadata = async (email: string) => {
-  try {
-    const customerMetadata = (await fetchMetadata(email))?.metadata ?? null;
-    if (customerMetadata) {
-      await upsertPlatformCustomer({
-        email,
-        customerInfo: customerMetadata,
-      });
-    }
-  } catch (error) {
-    captureExceptionAndLog(error, {
-      extra: { email },
-    });
-  }
-};
-
-const requestHumanSupport = async (
-  conversationId: number,
-  email: string | null,
-  reason: string,
-  customerMetadataProvided: boolean,
-  newEmail?: string,
-) => {
+const requestHumanSupport = async (conversationId: number, email: string | null, reason: string, newEmail?: string) => {
   const conversation = assertDefined(await getConversationById(conversationId));
 
   if (newEmail) {
@@ -74,8 +37,6 @@ const requestHumanSupport = async (
   });
 
   if (email) {
-    if (!customerMetadataProvided) waitUntil(updateCustomerMetadata(email));
-
     waitUntil(
       triggerEvent("conversations/human-support-requested", {
         conversationId: conversation.id,
@@ -100,7 +61,6 @@ const setUserEmail = async (conversationId: number, email: string) => {
 export const buildTools = async ({
   conversationId,
   email,
-  customerMetadataProvided,
   includeHumanSupport = true,
   guideEnabled = false,
   includeMailboxTools = true,
@@ -108,14 +68,11 @@ export const buildTools = async ({
 }: {
   conversationId: number;
   email: string | null;
-  customerMetadataProvided: boolean;
   includeHumanSupport?: boolean;
   guideEnabled?: boolean;
   includeMailboxTools?: boolean;
   reasoningMiddlewarePrompt?: string;
 }): Promise<Record<string, Tool>> => {
-  const metadataApi = await getMetadataApiByMailbox();
-
   const reasoningMiddleware = async (result: Promise<string | undefined> | string | undefined) => {
     const resultString = await result;
     if (reasoningMiddlewarePrompt && resultString) {
@@ -180,21 +137,8 @@ export const buildTools = async ({
           : z.string().email().describe("email address to contact you (required for anonymous users)"),
       }),
       execute: ({ reason, email: newEmail }) =>
-        reasoningMiddleware(
-          requestHumanSupport(conversationId, email, reason, customerMetadataProvided, newEmail),
-        ).finally(() => logToolEvent("fetch_user_information", { reason, newEmail })),
-    });
-  }
-
-  if (!customerMetadataProvided && metadataApi && email) {
-    tools.fetch_user_information = tool({
-      description: "fetch user related information",
-      parameters: z.object({
-        reason: z.string().describe("reason for fetching user information"),
-      }),
-      execute: ({ reason }) =>
-        reasoningMiddleware(fetchUserInformation(email)).finally(() =>
-          logToolEvent("fetch_user_information", { reason }),
+        reasoningMiddleware(requestHumanSupport(conversationId, email, reason, newEmail)).finally(() =>
+          logToolEvent("fetch_user_information", { reason, newEmail }),
         ),
     });
   }

@@ -1,7 +1,7 @@
 import { CreateSessionResult, sessionParamsSchema } from "@helperai/client";
 import { db } from "@/db/client";
 import { fetchAndUpdateUnsentNotifications } from "@/lib/data/messageNotifications";
-import { getPlatformCustomer, upsertPlatformCustomer } from "@/lib/data/platformCustomer";
+import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { env } from "@/lib/env";
 import { createWidgetSession, getEmailHash } from "@/lib/widgetSession";
 import { corsOptions, corsResponse } from "../utils";
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     return corsResponse({ error: "Invalid request parameters" }, { status: 400 });
   }
 
-  const { email, emailHash, timestamp, customerMetadata, currentToken } = result.data;
+  const { email, emailHash, timestamp, currentToken } = result.data;
 
   const mailboxRecord = await db.query.mailboxes.findFirst({
     columns: {
@@ -57,13 +57,6 @@ export async function POST(request: Request) {
     const computedHmac = await getEmailHash(email, timestamp);
     if (!computedHmac || computedHmac !== emailHash) {
       return corsResponse({ valid: false, error: "Invalid HMAC signature" }, { status: 401 });
-    }
-
-    if (customerMetadata) {
-      await upsertPlatformCustomer({
-        email,
-        customerInfo: customerMetadata,
-      });
     }
 
     platformCustomer = await getPlatformCustomer(email);

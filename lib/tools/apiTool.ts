@@ -5,10 +5,11 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations, ToolMetadata } from "@/db/schema";
 import type { Tool } from "@/db/schema/tools";
+import { customerInfoPrompt } from "@/lib/ai/customerInfoPrompt";
 import openai from "@/lib/ai/openai";
 import { ConversationMessage, createToolEvent } from "@/lib/data/conversationMessage";
-import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
-import { fetchMetadata, findSimilarConversations } from "@/lib/data/retrieval";
+import { getPlatformCustomer } from "@/lib/data/platformCustomer";
+import { findSimilarConversations } from "@/lib/data/retrieval";
 import { cleanUpTextForAI, isWithinTokenLimit, MINI_MODEL } from "../ai/core";
 import type { Conversation } from "../data/conversation";
 
@@ -133,10 +134,9 @@ export const generateSuggestedActions = async (conversation: Conversation, mailb
   });
 
   let metadataPrompt = "";
-  const metadataApi = await getMetadataApiByMailbox();
-  if (conversation.emailFrom && metadataApi) {
-    const metadata = await fetchMetadata(conversation.emailFrom);
-    metadataPrompt = metadata ? `Metadata: ${JSON.stringify(metadata, null, 2)}` : "";
+  if (conversation.emailFrom) {
+    const platformCustomer = await getPlatformCustomer(conversation.emailFrom);
+    if (platformCustomer) metadataPrompt = customerInfoPrompt(conversation.emailFrom, platformCustomer);
   }
 
   const formattedMessages = messages.map(

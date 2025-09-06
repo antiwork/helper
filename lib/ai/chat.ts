@@ -376,7 +376,6 @@ export const generateAIResponse = async ({
   const tools = await buildTools({
     conversationId,
     email,
-    customerMetadataProvided: !!customerInfoUrl,
     includeHumanSupport: true,
     guideEnabled,
   });

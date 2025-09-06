@@ -1,9 +1,9 @@
 import "server-only";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { eq, isNull, sql } from "drizzle-orm";
 import { cache } from "react";
 import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
-import { mailboxes, mailboxesMetadataApi } from "@/db/schema";
+import { mailboxes } from "@/db/schema";
 import { env } from "@/lib/env";
 import { getGitHubInstallUrl } from "@/lib/github/client";
 import { uninstallSlackApp } from "@/lib/slack/client";
@@ -35,43 +35,29 @@ const getSlackConnectUrl = (): string | null => {
   return `https://slack.com/oauth/v2/authorize?${params.toString()}`;
 };
 
-export const getMailboxInfo = async (mailbox: typeof mailboxes.$inferSelect) => {
-  const metadataEndpoint = await db.query.mailboxesMetadataApi.findFirst({
-    where: and(isNull(mailboxesMetadataApi.deletedAt), eq(mailboxesMetadataApi.isEnabled, true)),
-    columns: {
-      isEnabled: true,
-      deletedAt: true,
-      url: true,
-      hmacSecret: true,
-    },
-  });
-
-  return {
-    id: mailbox.id,
-    name: mailbox.name,
-    slug: mailbox.slug,
-    preferences: mailbox.preferences,
-    hasMetadataEndpoint: !!metadataEndpoint,
-    metadataEndpoint: metadataEndpoint ?? null,
-    slackConnected: !!mailbox.slackBotToken,
-    slackConnectUrl: env.SLACK_CLIENT_ID ? getSlackConnectUrl() : null,
-    slackAlertChannel: mailbox.slackAlertChannel,
-    githubConnected: !!mailbox.githubInstallationId,
-    githubConnectUrl: env.GITHUB_APP_ID ? getGitHubInstallUrl() : null,
-    githubRepoOwner: mailbox.githubRepoOwner,
-    githubRepoName: mailbox.githubRepoName,
-    widgetHMACSecret: mailbox.widgetHMACSecret,
-    widgetDisplayMode: mailbox.widgetDisplayMode,
-    widgetDisplayMinValue: mailbox.widgetDisplayMinValue,
-    widgetHost: mailbox.widgetHost,
-    vipThreshold: mailbox.vipThreshold,
-    vipChannelId: mailbox.vipChannelId,
-    vipExpectedResponseHours: mailbox.vipExpectedResponseHours,
-    autoCloseEnabled: mailbox.autoCloseEnabled,
-    autoCloseDaysOfInactivity: mailbox.autoCloseDaysOfInactivity,
-    firecrawlEnabled: !!env.FIRECRAWL_API_KEY,
-  };
-};
+export const getMailboxInfo = (mailbox: typeof mailboxes.$inferSelect) => ({
+  id: mailbox.id,
+  name: mailbox.name,
+  slug: mailbox.slug,
+  preferences: mailbox.preferences,
+  slackConnected: !!mailbox.slackBotToken,
+  slackConnectUrl: env.SLACK_CLIENT_ID ? getSlackConnectUrl() : null,
+  slackAlertChannel: mailbox.slackAlertChannel,
+  githubConnected: !!mailbox.githubInstallationId,
+  githubConnectUrl: env.GITHUB_APP_ID ? getGitHubInstallUrl() : null,
+  githubRepoOwner: mailbox.githubRepoOwner,
+  githubRepoName: mailbox.githubRepoName,
+  widgetHMACSecret: mailbox.widgetHMACSecret,
+  widgetDisplayMode: mailbox.widgetDisplayMode,
+  widgetDisplayMinValue: mailbox.widgetDisplayMinValue,
+  widgetHost: mailbox.widgetHost,
+  vipThreshold: mailbox.vipThreshold,
+  vipChannelId: mailbox.vipChannelId,
+  vipExpectedResponseHours: mailbox.vipExpectedResponseHours,
+  autoCloseEnabled: mailbox.autoCloseEnabled,
+  autoCloseDaysOfInactivity: mailbox.autoCloseDaysOfInactivity,
+  firecrawlEnabled: !!env.FIRECRAWL_API_KEY,
+});
 
 export const disconnectSlack = async (mailboxId: number): Promise<void> => {
   const mailbox = assertDefined(

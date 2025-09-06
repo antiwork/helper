@@ -26,14 +26,17 @@ import { toolsRouter } from "./tools";
 
 export const conversationsRouter = {
   list: mailboxProcedure.input(searchSchema).query(async ({ input, ctx }) => {
-    const { list, metadataEnabled } = await searchConversations(ctx.mailbox, input, ctx.user.id);
+    const [{ list }, platformCustomer] = await Promise.all([
+      searchConversations(ctx.mailbox, input, ctx.user.id),
+      db.query.platformCustomers.findFirst({ columns: { id: true } }),
+    ]);
 
     const { results, nextCursor } = await list;
 
     return {
       conversations: results,
       defaultSort:
-        metadataEnabled && (!input.status || input.status.includes("open"))
+        !!platformCustomer && (!input.status || input.status.includes("open"))
           ? ("highest_value" as const)
           : ("newest" as const),
       onboardingState: {
