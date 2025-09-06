@@ -15,10 +15,11 @@ import { Conversation, getConversationById, getConversationBySlug, updateConvers
 import { getAverageResponseTime } from "@/lib/data/conversation/responseTime";
 import { countSearchResults, getSearchResultIds, searchConversations } from "@/lib/data/conversation/search";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
-import { createReply } from "@/lib/data/conversationMessage";
+import { createReply, generateCleanedUpText } from "@/lib/data/conversationMessage";
 import { Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer } from "@/lib/data/platformCustomer";
 import { findEnabledKnowledgeBankEntries, findSimilarWebsitePages } from "@/lib/data/retrieval";
+import { fuzzyFindSavedReply } from "@/lib/data/savedReplies";
 import { getMemberStats } from "@/lib/data/stats";
 import { findUserViaSlack } from "@/lib/data/user";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
@@ -379,6 +380,20 @@ export const generateAgentResponse = async (
       },
     });
   } else {
+    tools.readSavedReply = tool({
+      description: "Read a saved reply to get the message content when a saved reply should be used",
+      parameters: z.object({
+        savedReplyName: z
+          .string()
+          .describe("The name of the saved reply to read. Uses fuzzy search, so no need to match the exact name."),
+      }),
+      execute: async ({ savedReplyName }) => {
+        showStatus(`Reading saved reply...`, { toolName: "readSavedReply", parameters: { savedReplyName } });
+        const savedReply = await fuzzyFindSavedReply(savedReplyName);
+        if (!savedReply) return { error: "Saved reply not found" };
+        return { message: generateCleanedUpText(savedReply.content) };
+      },
+    });
     tools.confirmReplyText = tool({
       description: "Confirm the message to reply to a ticket with before sending the reply",
       parameters: z.object({
