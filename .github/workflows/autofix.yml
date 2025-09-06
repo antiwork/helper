@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   autofix:
-    runs-on: ubicloud-standard-4
+    runs-on: ${{ github.repository == 'antiwork/helper' && 'ubicloud-standard-4' || 'ubuntu-latest' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -39,10 +39,6 @@ jobs:
 
       - name: Typecheck
         shell: bash
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
         run: |
           export NODE_OPTIONS="--max_old_space_size=4096"
           cp .env.local.sample .env.local
