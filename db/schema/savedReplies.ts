@@ -27,6 +27,8 @@ export const savedReplies = pgTable(
   ],
 ).enableRLS();
 
+export type SavedReply = typeof savedReplies.$inferSelect;
+
 export const savedRepliesRelations = relations(savedReplies, ({ one }) => ({
   mailbox: one(mailboxes, {
     fields: [savedReplies.unused_mailboxId],

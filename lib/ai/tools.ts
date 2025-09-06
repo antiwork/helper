@@ -5,11 +5,12 @@ import { assertDefined } from "@/components/utils/assert";
 import { triggerEvent } from "@/jobs/trigger";
 import { GUIDE_USER_TOOL_NAME, REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
 import { getConversationById, updateConversation, updateOriginalConversation } from "@/lib/data/conversation";
-import { createToolEvent } from "@/lib/data/conversationMessage";
+import { createToolEvent, generateCleanedUpText } from "@/lib/data/conversationMessage";
 import { Mailbox } from "@/lib/data/mailbox";
 import { getMetadataApiByMailbox } from "@/lib/data/mailboxMetadataApi";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchMetadata, getPastConversationsPrompt } from "@/lib/data/retrieval";
+import { fuzzyFindSavedReply } from "@/lib/data/savedReplies";
 import { getMailboxToolsForChat } from "@/lib/data/tools";
 import { createHmacDigest } from "@/lib/metadataApiClient";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
@@ -39,7 +40,7 @@ const updateCustomerMetadata = async (email: string) => {
     if (customerMetadata) {
       await upsertPlatformCustomer({
         email,
-        customerMetadata,
+        customerInfo: customerMetadata,
       });
     }
   } catch (error) {
@@ -49,7 +50,13 @@ const updateCustomerMetadata = async (email: string) => {
   }
 };
 
-const requestHumanSupport = async (conversationId: number, email: string | null, reason: string, newEmail?: string) => {
+const requestHumanSupport = async (
+  conversationId: number,
+  email: string | null,
+  reason: string,
+  customerMetadataProvided: boolean,
+  newEmail?: string,
+) => {
   const conversation = assertDefined(await getConversationById(conversationId));
 
   if (newEmail) {
@@ -68,7 +75,7 @@ const requestHumanSupport = async (conversationId: number, email: string | null,
   });
 
   if (email) {
-    waitUntil(updateCustomerMetadata(email));
+    if (!customerMetadataProvided) waitUntil(updateCustomerMetadata(email));
 
     waitUntil(
       triggerEvent("conversations/human-support-requested", {
@@ -135,6 +142,26 @@ export const buildTools = async ({
       execute: ({ query }) =>
         reasoningMiddleware(searchKnowledgeBase(query)).finally(() => logToolEvent("search_knowledge_base", { query })),
     }),
+    read_saved_reply: tool({
+      description: "read a saved reply, to get the message content when a saved reply should be used",
+      parameters: z.object({
+        replyName: z.string().describe("name of the saved reply to read"),
+      }),
+      execute: async ({ replyName }) => {
+        try {
+          const savedReply = await fuzzyFindSavedReply(replyName);
+          if (!savedReply)
+            return {
+              error: "Saved reply not found - ignore saved reply instructions and generate a response from scratch.",
+            };
+          return {
+            content: generateCleanedUpText(savedReply.content),
+          };
+        } finally {
+          logToolEvent("read_saved_reply", { replyName });
+        }
+      },
+    }),
   };
 
   if (guideEnabled) {
@@ -174,9 +201,9 @@ export const buildTools = async ({
           : z.string().email().describe("email address to contact you (required for anonymous users)"),
       }),
       execute: ({ reason, email: newEmail }) =>
-        reasoningMiddleware(requestHumanSupport(conversationId, email, reason, newEmail)).finally(() =>
-          logToolEvent("fetch_user_information", { reason, newEmail }),
-        ),
+        reasoningMiddleware(
+          requestHumanSupport(conversationId, email, reason, customerMetadataProvided, newEmail),
+        ).finally(() => logToolEvent("fetch_user_information", { reason, newEmail })),
     });
   }
 

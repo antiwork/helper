@@ -5,32 +5,23 @@ import {
   ArrowRight,
   Banknote,
   BookOpen,
-  BookOpen as BookOpenIcon,
+  CheckCircle,
   Clock,
   FileCode,
+  Globe,
+  Mail,
   MessageSquare,
   Monitor,
-  MousePointer,
-  PlayCircle,
-  Sparkles,
-  Star,
   Trash2,
-  TriangleAlert,
 } from "lucide-react";
-import { motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { getBaseUrl } from "@/lib/utils";
 import { Button } from "../components/ui/button";
-import AnimatedTyping from "./animatedTyping";
-import CitationsDemo from "./citationsDemo";
 import ComparisonHistogram from "./comparisonHistogram";
-import LogoIconAmber from "./logoIconAmber.svg";
+import { ContactModal } from "./contactModal";
 import { MarketingHeader } from "./marketingHeader";
-import RefundDemo from "./refundDemo";
 import SlackInterface from "./slackInterface";
-import SlackNotification from "./slackNotification";
-import ToolsDemo from "./toolsDemo";
 
 export default function Home() {
   const [customerQuestions] = useState([
@@ -51,6 +42,14 @@ export default function Home() {
   const helperMessageRef = useRef<HTMLDivElement>(null);
 
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("web");
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const handleContactSuccess = (message: string) => {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   useEffect(() => {
     const questionInterval = setInterval(() => {
@@ -87,9 +86,11 @@ export default function Home() {
   }, [helperTypingComplete]);
 
   const scrollToFeatures = () => {
-    const smarterSupportSection = document.getElementById("smarter-support");
-    if (smarterSupportSection) {
-      const rect = smarterSupportSection.getBoundingClientRect();
+    // Scroll to the knowledge section (first section after hero)
+    const sections = document.querySelectorAll("section");
+    if (sections.length > 1) {
+      const targetSection = sections[1];
+      const rect = targetSection.getBoundingClientRect();
       const targetScrollY = window.scrollY + rect.top - 40;
       window.scrollTo({
         top: targetScrollY,
@@ -121,164 +122,104 @@ export default function Home() {
       <MarketingHeader bgColor="#2B0808" />
 
       <div className="flex-grow">
-        <section className="flex items-center justify-center h-dvh pt-20">
+        <section className="flex items-center justify-center min-h-screen pt-16">
           <div className="container mx-auto px-4">
-            <h1 className="text-5xl sm:text-6xl font-bold mb-12 sm:mb-24 text-center text-secondary dark:text-foreground">
-              Helper helps customers help themselves.
+            <h1 className="text-4xl md:text-5xl sm:text-4xl font-bold mb-2 sm:mb-3 text-center text-secondary dark:text-foreground pt-4">
+              Deliver stellar support experiences.
             </h1>
+            <p className="text-base text-sm md:text-lg text-center text-secondary dark:text-foreground mb-4">
+              A native, end-to-end support center with custom UI, zero margin on model costs, and data that always stays
+              on your servers.{" "}
+            </p>
 
-            <div className="max-w-lg mx-auto">
-              {showCustomerMessage && (
-                <motion.div
-                  className="flex justify-end mb-4 sm:mb-8"
-                  initial={{ opacity: 0, y: 20, height: 0 }}
-                  animate={{ opacity: 1, y: 0, height: "auto" }}
-                  transition={{ duration: 0.5, height: { duration: 0.6, ease: "easeOut" } }}
-                  style={{ overflow: "hidden" }}
-                  layout
-                >
-                  <div className="max-w-md w-full">
-                    <motion.div
-                      className="bg-[rgba(99,72,71,0.3)] rounded-t-2xl rounded-bl-2xl p-6 shadow-md min-h-[80px] flex items-center"
-                      initial={{ height: 0 }}
-                      animate={{ height: "auto" }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                      style={{ overflow: "hidden" }}
-                    >
-                      {customerQuestions[currentQuestionIndex] && (
-                        <AnimatedTyping
-                          text={customerQuestions[currentQuestionIndex]}
-                          speed={30}
-                          onComplete={handleCustomerTypingComplete}
-                        />
-                      )}
-                    </motion.div>
-                    <div className="flex justify-end mt-2"></div>
-                  </div>
-                </motion.div>
-              )}
+            <div className="w-full max-w-4xl mx-auto pt-2">
+              {/* Tab Navigation */}
+              <div className="flex justify-center mb-6">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setActiveTab("web")}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
+                      activeTab === "web"
+                        ? "bg-[#2B0808] border-2 border-[#459EFD] text-[#FFE6B0]"
+                        : "bg-[#3B1B1B] text-[#FFE6B0] hover:bg-[#4B2B2B]"
+                    }`}
+                  >
+                    <Globe className="w-4 h-4" style={{ color: activeTab === "web" ? "#459EFD" : "#FFE6B0" }} />
+                    Web
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("inbox")}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
+                      activeTab === "inbox"
+                        ? "bg-[#2B0808] border-2 border-[#FF90E8] text-[#FFE6B0]"
+                        : "bg-[#3B1B1B] text-[#FFE6B0] hover:bg-[#4B2B2B]"
+                    }`}
+                  >
+                    <Mail className="w-4 h-4" style={{ color: activeTab === "inbox" ? "#FF90E8" : "#FFE6B0" }} />
+                    Inbox
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("slack")}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
+                      activeTab === "slack"
+                        ? "bg-[#2B0808] border-2 border-[#FF4343] text-[#FFE6B0]"
+                        : "bg-[#3B1B1B] text-[#FFE6B0] hover:bg-[#4B2B2B]"
+                    }`}
+                  >
+                    <img src="slack-logo-icon.png" alt="Slack" className="w-4 h-4" />
+                    Slack
+                  </button>
+                </div>
+              </div>
 
-              {showHelperMessage && (
-                <motion.div
-                  className="flex mb-8"
-                  initial={{ opacity: 0, y: 20, height: 0 }}
-                  animate={{ opacity: 1, y: 0, height: "auto" }}
-                  transition={{ duration: 0.5, height: { duration: 0.6, ease: "easeOut" } }}
-                  style={{ overflow: "hidden" }}
-                  layout
-                >
-                  <div className="w-96">
-                    <motion.div
-                      ref={helperMessageRef}
-                      className="bg-[rgba(99,72,71,0.3)] rounded-t-2xl rounded-br-2xl p-6 shadow-md"
-                      initial={{ height: 0 }}
-                      animate={{ height: "auto" }}
-                      transition={{ duration: 0.6, ease: "easeOut" }}
-                      style={{ overflow: "hidden" }}
-                    >
-                      <AnimatedTyping
-                        text="Let me show you how I can help..."
-                        speed={50}
-                        onComplete={handleHelperTypingComplete}
+              {/* Tab Content */}
+              <div className="rounded-2xl shadow-2xl overflow-hidden h-[60vh]">
+                {activeTab === "web" && (
+                  <iframe
+                    style={{ zoom: 0.8 }}
+                    src="https://gumroad.com/help"
+                    className="w-full h-full border-16 border-[#3B1B1B] dark:border-[#3B1B1B]"
+                    title="Gumroad Help Center"
+                    allow="fullscreen"
+                  />
+                )}
+                {activeTab === "inbox" && (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="w-full h-full flex items-center justify-center">
+                      <img
+                        src="Helper-inbox-desktop.png"
+                        alt="Helper Inbox Desktop"
+                        className="hidden md:block w-full h-full object-contain"
                       />
-                      {showHelperButton && (
-                        <motion.div
-                          className="mt-4"
-                          initial={{ opacity: 0, y: 10, height: 0 }}
-                          animate={{ opacity: 1, y: 0, height: "auto" }}
-                          transition={{ duration: 0.3, delay: 0.2, height: { duration: 0.4, ease: "easeOut" } }}
-                          style={{ overflow: "hidden" }}
-                        >
-                          <Button
-                            ref={showMeButtonRef}
-                            onClick={scrollToFeatures}
-                            className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
-                          >
-                            Take the tour
-                          </Button>
-                        </motion.div>
-                      )}
-                    </motion.div>
-                    <motion.div
-                      className="flex justify-start mt-2"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      transition={{ duration: 0.4, delay: 0.3, height: { duration: 0.4, ease: "easeOut" } }}
-                      style={{ overflow: "hidden" }}
-                    >
-                      <div className="w-8 h-8">
-                        <LogoIconAmber />
-                      </div>
-                    </motion.div>
+                      <img
+                        src="Helper-inbox-mobile.png"
+                        alt="Helper Inbox Mobile"
+                        className="block md:hidden w-full h-full object-contain"
+                      />
+                    </div>
                   </div>
-                </motion.div>
-              )}
+                )}
+                {activeTab === "slack" && (
+                  <div className="h-full flex items-center justify-center p-4">
+                    <SlackInterface />
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </section>
 
-        <section id="smarter-support" className="py-12 md:py-20">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-16 gap-0 items-start">
-              <div className="lg:sticky lg:top-20">
-                <h2 className="text-4xl md:text-5xl font-bold mb-8 text-secondary dark:text-foreground text-left">
-                  Helper guides users and resolves issues before they become tickets.
-                </h2>
-                <div className="space-y-6 mb-12 mt-8">
-                  <div className="flex items-start gap-4 md:items-center">
-                    <MousePointer className="w-6 h-6 text-amber-400" />
-                    <span>
-                      <span className="font-bold text-bright">Helping hand</span>
-                      <span className="text-secondary dark:text-foreground">
-                        {" "}
-                        shows your customers how, instead of telling them.
-                      </span>
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-4 md:items-center">
-                    <BookOpenIcon className="w-6 h-6" style={{ color: "#459EFD" }} />
-                    <span>
-                      <span className="font-bold" style={{ color: "#459EFD" }}>
-                        Citations
-                      </span>
-                      <span className="text-secondary dark:text-foreground">
-                        {" "}
-                        back Helper's answers with real help doc snippets.
-                      </span>
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-4 md:items-center">
-                    <PlayCircle className="w-6 h-6" style={{ color: "#FF90E8" }} />
-                    <span>
-                      <span className="font-bold" style={{ color: "#FF90E8" }}>
-                        Tools
-                      </span>
-                      <span className="text-secondary dark:text-foreground">
-                        {" "}
-                        handle common requests automatically. No agent needed.
-                      </span>
-                    </span>
-                  </div>
-                </div>
-                <Button
-                  className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
-                  asChild
-                >
-                  <Link href="https://github.com/antiwork/helper">Get started</Link>
-                </Button>
-              </div>
-
-              <div className="order-1 md:order-2">
-                <div className="flex flex-col gap-24">
-                  <RefundDemo />
-                  <div className="hidden lg:block">
-                    <CitationsDemo />
-                  </div>
-                  <div className="hidden lg:block">
-                    <ToolsDemo />
-                  </div>
-                </div>
-              </div>
+            <div className="flex justify-center gap-4 mt-6">
+              <Button
+                onClick={scrollToFeatures}
+                className="bg-[#3B1B1B] dark:bg-[#3B1B1B] hover:bg-[#4B2B2B] text-[#FFE6B0] dark:text-[#FFE6B0] hover:text-[#FFE6B0] font-medium px-6 py-3 rounded-lg text-base transition-colors duration-200"
+              >
+                Learn more
+              </Button>
+              <Button
+                onClick={() => setShowContactModal(true)}
+                className="bg-bright hover:bg-[#FFE6B0] text-[#2B0808] hover:text-[#2B0808] font-medium px-6 py-3 rounded-lg text-base transition-colors duration-200"
+              >
+                Contact sales
+              </Button>
             </div>
           </div>
         </section>
@@ -432,99 +373,6 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="py-12 md:py-20">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-1 xl:grid-cols-2 xl:gap-16 gap-0 items-start">
-              <div className="md:static xl:sticky xl:top-20">
-                <h2 className="text-4xl md:text-5xl font-bold mb-8 text-secondary dark:text-foreground text-left">
-                  Helper steps back when humans need to step in.
-                </h2>
-                <p className="text-lg text-secondary dark:text-foreground mb-8 text-left">
-                  Get notified in Slack when complex or high-priority issues arise, use @helper to quickly surface
-                  context, and easily return tickets to Helper once your team has resolved the issue.
-                </p>
-                <div className="space-y-6 mb-12">
-                  <div className="flex items-start gap-4 md:items-center">
-                    <TriangleAlert className="w-6 h-6" style={{ color: "#FF4343" }} />
-                    <span>
-                      <span className="font-bold" style={{ color: "#FF4343" }}>
-                        Smart escalation
-                      </span>
-                      <span className="text-secondary dark:text-foreground"> to human agents for complex issues.</span>
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-4 md:items-center">
-                    <Sparkles className="w-6 h-6" style={{ color: "#C2D44B" }} />
-                    <span>
-                      <span className="font-bold" style={{ color: "#C2D44B" }}>
-                        @helper
-                      </span>
-                      <span className="text-secondary dark:text-foreground">
-                        {" "}
-                        commands for quick information retrieval.
-                      </span>
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-4 md:items-center">
-                    <Star className="w-6 h-6" style={{ color: "#FEB81D" }} />
-                    <span>
-                      <span className="font-bold" style={{ color: "#FEB81D" }}>
-                        Priority notifications
-                      </span>
-                      <span className="text-secondary dark:text-foreground"> for VIP customers.</span>
-                    </span>
-                  </div>
-                </div>
-                <Button
-                  className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
-                  asChild
-                >
-                  <Link href="https://github.com/antiwork/helper">Get started</Link>
-                </Button>
-              </div>
-              <div className="space-y-12">
-                <div id="slackInterface" className="hidden xl:block">
-                  <SlackInterface />
-                </div>
-                <div id="slackNotification" className="hidden xl:block">
-                  <SlackNotification />
-                </div>
-                <div className="xl:hidden mt-12">
-                  <div className="relative">
-                    <div className="overflow-hidden">
-                      <div
-                        className="flex transition-transform duration-300 ease-in-out"
-                        style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-                      >
-                        <div className="w-full flex-shrink-0">
-                          <SlackInterface />
-                        </div>
-                        <div className="w-full flex-shrink-0">
-                          <SlackNotification />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex justify-center gap-2 mt-4">
-                      <button
-                        onClick={() => setCurrentSlide(0)}
-                        className={`w-2 h-2 rounded-full ${currentSlide === 0 ? "bg-[#FEB81D]" : "bg-[#FEB81D]/30"}`}
-                        aria-label="Show Slack interface slide"
-                        aria-pressed={currentSlide === 0}
-                      />
-                      <button
-                        onClick={() => setCurrentSlide(1)}
-                        className={`w-2 h-2 rounded-full ${currentSlide === 1 ? "bg-[#FEB81D]" : "bg-[#FEB81D]/30"}`}
-                        aria-label="Show Slack notification slide"
-                        aria-pressed={currentSlide === 1}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section className="py-20">
           <div className="container mx-auto px-4">
             <div className="mb-24 text-left  max-w-5xl mx-auto">
@@ -565,10 +413,10 @@ export default function Home() {
             </div>
             <div className="flex justify-center mt-12">
               <Button
-                className="bg-bright hover:bg-[#FFEDC2] text-black hover:text-black font-medium px-8 py-6 rounded-md text-lg transition-colors duration-200"
-                asChild
+                onClick={() => setShowContactModal(true)}
+                className="bg-bright hover:bg-[#FFE6B0] text-[#2B0808] hover:text-[#2B0808] font-medium px-6 py-3 rounded-lg text-base transition-colors duration-200"
               >
-                <Link href="https://github.com/antiwork/helper">Get started</Link>
+                Contact sales
               </Button>
             </div>
           </div>
@@ -666,6 +514,82 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <section className="py-20">
+          <div className="container mx-auto px-4">
+            <h2 className="text-4xl font-bold mb-12 text-center text-secondary dark:text-foreground">Pricing</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+              <div className="bg-gradient-to-br from-bright to-[#FFD34E] rounded-2xl p-16 relative overflow-hidden flex flex-col h-full min-h-[500px]">
+                <div className="text-[#2B0808] flex flex-col h-full">
+                  <div className="text-5xl font-bold mb-8">$10,000+</div>
+                  <p className="text-md mb-4">
+                    One-time, white-glove installation fee including custom features to build an exceptional customer
+                    support experience.
+                  </p>
+                  <ul className="space-y-3 mb-8 flex-grow">
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-[#2B0808] mr-3" />
+                      Native, in-app support center
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-[#2B0808] mr-3" />
+                      Data stays on your servers
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-[#2B0808] mr-3" />
+                      Zero markup on model costs
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-[#2B0808] mr-3" />
+                      Custom UI tailored to your business needs
+                    </li>
+                  </ul>
+                  <Button
+                    onClick={() => setShowContactModal(true)}
+                    className="w-full bg-[#2B0808] dark:bg-[#2B0808] hover:bg-[#3B1B1B] text-white dark:text-white font-medium px-6 py-3 rounded-lg transition-colors mt-auto cursor-pointer"
+                  >
+                    Contact sales
+                  </Button>
+                </div>
+              </div>
+
+              <div className="bg-[#3B1B1B] rounded-2xl p-16 flex flex-col h-full min-h-[500px]">
+                <div className="text-[#FFE6B0] flex flex-col h-full">
+                  <div className="text-5xl font-bold mb-8">$0</div>
+                  <p className="text-md mb-4">
+                    Leverage our open-source code to set up your own customer support solution.
+                  </p>
+                  <ul className="space-y-3 mb-8 flex-grow">
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-[#FFE6B0] mr-3" />
+                      Extend and customize as needed
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-[#FFE6B0] mr-3" />
+                      Backed by an active community
+                    </li>
+                    <li className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-[#FFE6B0] mr-3" />
+                      Built with modern tooling
+                    </li>
+                  </ul>
+                  <Button
+                    asChild
+                    className="w-full bg-[#2B0808] dark:bg-[#2B0808] hover:bg-[#4B2B2B] text-white dark:text-white hover:text-white font-medium px-6 py-3 rounded-lg transition-colors mt-auto cursor-pointer"
+                  >
+                    <Link href="https://github.com/antiwork/helper" className="flex items-center justify-center">
+                      <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                      </svg>
+                      Get started
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <footer className="bottom-0 left-0 right-0 w-full h-24 pl-5 pb-5" style={{ backgroundColor: "#2B0808" }}>
           <div className="flex items-center">
             <a href="https://antiwork.com/" target="_blank" rel="noopener noreferrer">
@@ -677,6 +601,21 @@ export default function Home() {
           </div>
         </footer>
       </div>
+
+      {toastMessage && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-in fade-in duration-300">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-5 h-5" />
+            <span>{toastMessage}</span>
+          </div>
+        </div>
+      )}
+
+      <ContactModal
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
+        onSuccess={handleContactSuccess}
+      />
     </main>
   );
 }

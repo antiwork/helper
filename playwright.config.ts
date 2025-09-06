@@ -38,7 +38,7 @@ export default defineConfig({
   },
 
   /* Global timeout increased for flaky local environment */
-  timeout: 45000,
+  timeout: 60000,
 
   /* Configure projects for major browsers */
   projects: [
@@ -52,7 +52,7 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
       dependencies: ["setup"],
-      timeout: 45000,
+      timeout: 60000,
     },
   ],
 

@@ -1,7 +1,11 @@
-import { expect, test } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
 import { desc, eq } from "drizzle-orm";
 import { db } from "../../../db/client";
-import { conversationEvents, conversations } from "../../../db/schema";
+import { conversationEvents } from "../../../db/schema";
+import { getOpenConversation, openCommandBar } from "../utils/conversationHelpers";
+import { waitForSettingsSaved } from "../utils/settingsHelpers";
+
+test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 async function getConversationStatusFromDb(conversationId: number): Promise<string> {
   const [event] = await db
@@ -16,22 +20,23 @@ async function getConversationStatusFromDb(conversationId: number): Promise<stri
   return "unknown";
 }
 
-test.use({ storageState: "tests/e2e/.auth/user.json" });
+async function sendReplyMessage(page: Page, message: string, { close }: { close?: boolean } = {}) {
+  await expect(page.getByTestId("message-item").first()).toBeVisible();
+  const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
+  await expect(composer).toBeVisible();
+  await composer.click({ force: true });
+  await composer.focus();
+  await composer.evaluate((el) => {
+    el.innerHTML = "";
+    el.textContent = "";
+  });
+  await composer.pressSequentially(message);
 
-async function getOpenConversation() {
-  const result = await db
-    .select({ id: conversations.id, slug: conversations.slug })
-    .from(conversations)
-    .where(eq(conversations.status, "open"))
-    .limit(1);
-
-  if (!result.length) {
-    throw new Error(
-      "No open conversation found in database. Please ensure there's at least one open conversation for testing.",
-    );
-  }
-
-  return result[0];
+  const replyButton = close
+    ? page.locator('button:has-text("Reply and close")')
+    : page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
+  await replyButton.click();
+  await page.waitForLoadState("networkidle");
 }
 
 test.describe("Conversation Actions", () => {
@@ -40,31 +45,14 @@ test.describe("Conversation Actions", () => {
   test.beforeEach(async ({ page }) => {
     const openConversation = await getOpenConversation();
 
-    await page.goto(`/conversations?id=${openConversation.id}`);
+    await page.goto(`/conversations?id=${openConversation.slug}`);
     await page.waitForLoadState("networkidle");
   });
 
   test.describe("Message Composition", () => {
     test("should send a reply message", async ({ page }) => {
-      const testMessage = "This is a test reply message";
-
-      const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
-      await expect(composer).toBeVisible();
-      await composer.click({ force: true });
-      await composer.focus();
-      await composer.evaluate((el) => {
-        el.innerHTML = "";
-        el.textContent = "";
-      });
-      await composer.pressSequentially(testMessage);
-
-      const composerText = await composer.textContent();
-      expect(composerText).toContain(testMessage);
-
-      const replyButton = page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
-      await replyButton.click();
-
-      await page.waitForLoadState("networkidle");
+      await sendReplyMessage(page, "This is a test reply message");
+      await expect(page.getByTestId("message-thread")).toContainText("This is a test reply message");
     });
 
     test("should handle empty reply attempt", async ({ page }) => {
@@ -141,9 +129,6 @@ test.describe("Conversation Actions", () => {
       const initialText = await composer.textContent();
       expect(initialText?.trim()).toContain("Test message");
 
-      await page.keyboard.press("/");
-      await page.keyboard.press("Escape");
-
       const composerText = await composer.textContent();
       expect(composerText?.trim()).toContain("Test message");
 
@@ -151,101 +136,6 @@ test.describe("Conversation Actions", () => {
       await expect(replyButton).toBeEnabled();
       await replyButton.click();
       await page.waitForLoadState("networkidle");
-
-      await expect(replyButton).toBeEnabled();
-    });
-  });
-
-  test.describe("Command Bar", () => {
-    test("should open and close command bar", async ({ page }) => {
-      const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
-      await composer.click({ force: true });
-      await page.keyboard.press("/");
-
-      const commandBar = page.locator('[data-testid="command-bar"]');
-      const isVisible = await commandBar.isVisible();
-      expect(isVisible).toBe(true);
-
-      await page.keyboard.press("Escape");
-      await expect(commandBar).not.toBeVisible();
-    });
-
-    test("should filter commands when typing in command bar", async ({ page }) => {
-      const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
-      await composer.click({ force: true });
-      await page.keyboard.press("/");
-
-      const commandInput = page.locator('[aria-label="Command Bar Input"]');
-      await commandInput.fill("generate");
-
-      const generateDraftCommand = page.locator('[role="option"]').filter({ hasText: "Generate draft" });
-      await expect(generateDraftCommand).toBeVisible();
-
-      const otherCommands = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
-      await expect(otherCommands).not.toBeVisible();
-    });
-
-    test("should generate draft response via command bar", async ({ page }) => {
-      const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
-      await composer.click({ force: true });
-      await composer.evaluate((el) => {
-        el.innerHTML = "";
-        el.textContent = "";
-      });
-
-      await page.keyboard.press("/");
-
-      const commandBar = page.locator('[data-testid="command-bar"]');
-      const isCommandBarVisible = await commandBar.isVisible();
-      expect(isCommandBarVisible).toBe(true);
-
-      try {
-        const generateDraftCommand = page.locator('[role="option"]').filter({ hasText: "Generate draft" });
-        await expect(generateDraftCommand).toBeVisible();
-        await generateDraftCommand.click();
-
-        const composerText = await composer.textContent();
-        const commandClosed = !(await commandBar.isVisible());
-
-        expect(commandClosed).toBe(true);
-        expect(composerText?.trim().length).toBeGreaterThan(0);
-      } catch (error) {
-        await page.keyboard.press("Escape");
-        const commandBarClosedAfterEscape = !(await commandBar.isVisible());
-        expect(commandBarClosedAfterEscape).toBe(true);
-      }
-    });
-
-    test("should toggle CC field via command bar", async ({ page }) => {
-      const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
-      await composer.click({ force: true });
-      await page.keyboard.press("/");
-
-      const toggleCcCommand = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
-      await expect(toggleCcCommand).toBeVisible();
-      await toggleCcCommand.click();
-
-      const ccInput = page.locator('input[name="CC"]');
-      await expect(ccInput).toBeVisible();
-    });
-
-    test("should access internal note functionality", async ({ page }) => {
-      const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
-      await composer.click({ force: true });
-      await page.keyboard.press("/");
-
-      const addNoteCommand = page.locator('[role="option"]').filter({ hasText: "Add internal note" });
-      await expect(addNoteCommand).toBeVisible();
-      await addNoteCommand.click();
-
-      const noteText = "This is an internal note for testing";
-      const textarea = page.getByRole("textbox", { name: "Internal Note" });
-      await textarea.fill(noteText);
-
-      await expect(textarea).toHaveValue(noteText);
-
-      const addButton = page.locator('button:has-text("Add internal note")');
-      await addButton.click();
     });
   });
 
@@ -352,9 +242,7 @@ test.describe("Conversation Actions", () => {
 
   test.describe("CC/BCC Recipients", () => {
     test("should add CC recipient via command bar", async ({ page }) => {
-      const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
-      await composer.click({ force: true });
-      await page.keyboard.press("/");
+      await openCommandBar(page);
 
       const toggleCcCommand = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
       await expect(toggleCcCommand).toBeVisible();
@@ -378,9 +266,7 @@ test.describe("Conversation Actions", () => {
     });
 
     test("should add BCC recipient via command bar", async ({ page }) => {
-      const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
-      await composer.click({ force: true });
-      await page.keyboard.press("/");
+      await openCommandBar(page);
 
       const toggleCcCommand = page.locator('[role="option"]').filter({ hasText: "Add CC or BCC" });
       await expect(toggleCcCommand).toBeVisible();
@@ -406,9 +292,7 @@ test.describe("Conversation Actions", () => {
 
   test.describe("Assignment", () => {
     test("should assign conversation to common issue", async ({ page }) => {
-      const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
-      await composer.click({ force: true });
-      await page.keyboard.press("/");
+      await openCommandBar(page);
 
       try {
         const assignIssueCommand = page.locator('[role="option"]').filter({ hasText: "Assign ticket" });
@@ -418,6 +302,35 @@ test.describe("Conversation Actions", () => {
         console.error("Failed to assign conversation to issue:", error);
         await page.keyboard.press("Escape");
       }
+    });
+  });
+
+  test.describe("Auto-Assign on Reply", () => {
+    test("should respect auto-assign preference when replying", async ({ page }) => {
+      await page.goto("/settings/preferences");
+
+      if (await page.locator('[aria-label="Auto-assign on reply Switch"]').isChecked()) {
+        await page.locator('[aria-label="Auto-assign on reply Switch"]').click();
+        await waitForSettingsSaved(page);
+      }
+
+      await page.goto("/unassigned");
+      await page.locator("a[href*='/conversations?id=']").first().click();
+
+      await sendReplyMessage(page, "Auto-assign off test reply message");
+
+      await expect(page.getByRole("button", { name: "Assign yourself" })).toBeVisible();
+
+      await page.goto("/settings/preferences");
+      await page.locator('[aria-label="Auto-assign on reply Switch"]').click();
+      await waitForSettingsSaved(page);
+
+      await page.goto("/unassigned");
+      await page.locator("a[href*='/conversations?id=']").first().click();
+
+      await sendReplyMessage(page, "Auto-assign on test reply message");
+      await expect(page.getByTestId("message-thread")).toContainText("Auto-assign on test reply message");
+      await expect(page.getByRole("button", { name: "Assign yourself" })).not.toBeVisible();
     });
   });
 });

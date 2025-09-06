@@ -371,12 +371,7 @@ export const generateAIResponse = async ({
     customerInfo,
   } = await buildPromptMessages(mailbox, email, query, guideEnabled, customerInfoUrl);
 
-  if (email && customerInfo?.metadata) {
-    await upsertPlatformCustomer({
-      email,
-      customerMetadata: customerInfo.metadata,
-    });
-  }
+  if (email && customerInfo) await upsertPlatformCustomer({ email, customerInfo });
 
   const tools = await buildTools({
     conversationId,

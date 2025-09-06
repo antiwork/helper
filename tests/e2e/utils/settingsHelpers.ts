@@ -1,7 +1,7 @@
 import { Page } from "@playwright/test";
 
 export async function waitForSettingsSaved(page: Page) {
-  const saving = page.getByText("Saving", { exact: true });
+  const saving = page.getByText("Saving");
   const saved = page.getByText("Saved", { exact: true });
   const error = page.getByText("Error", { exact: true });
 
