@@ -50,8 +50,8 @@ export const searchConversations = async (
     filters.isAssigned = true;
   }
 
-  // Filters on conversations and messages that we can pass to searchEmailsByKeywords
-  let where: Record<string, SQL> = {
+  // Build a lightweight subset of filters (conversation-level only) for keyword search
+  const lightweightWhere: Record<string, SQL> = {
     notMerged: isNull(conversations.mergedIntoId),
     ...(filters.status?.length ? { status: inArray(conversations.status, filters.status) } : {}),
     ...(filters.isAssigned === true ? { assignee: isNotNull(conversations.assignedToId) } : {}),
@@ -60,6 +60,18 @@ export const searchConversations = async (
     ...(filters.isPrompt !== undefined ? { isPrompt: eq(conversations.isPrompt, filters.isPrompt) } : {}),
     ...(filters.createdAfter ? { createdAfter: gt(conversations.createdAt, new Date(filters.createdAfter)) } : {}),
     ...(filters.createdBefore ? { createdBefore: lt(conversations.createdAt, new Date(filters.createdBefore)) } : {}),
+    ...(filters.customer?.length ? { customer: inArray(conversations.emailFrom, filters.customer) } : {}),
+    ...(filters.anonymousSessionId
+      ? { anonymousSessionId: eq(conversations.anonymousSessionId, filters.anonymousSessionId) }
+      : {}),
+    ...(filters.issueGroupId ? { issueGroup: eq(conversations.issueGroupId, filters.issueGroupId) } : {}),
+  };
+
+  const matches = filters.search ? await searchEmailsByKeywords(filters.search, Object.values(lightweightWhere)) : [];
+
+  // Full filter set used for the main query (includes heavier message/event filters)
+  let where: Record<string, SQL> = {
+    ...lightweightWhere,
     ...(filters.repliedBy?.length || filters.repliedAfter || filters.repliedBefore
       ? {
           reply: exists(
@@ -79,10 +91,6 @@ export const searchConversations = async (
               ),
           ),
         }
-      : {}),
-    ...(filters.customer?.length ? { customer: inArray(conversations.emailFrom, filters.customer) } : {}),
-    ...(filters.anonymousSessionId
-      ? { anonymousSessionId: eq(conversations.anonymousSessionId, filters.anonymousSessionId) }
       : {}),
     ...(filters.reactionType
       ? {
@@ -114,11 +122,6 @@ export const searchConversations = async (
     ...(filters.markedAsSpam
       ? { markedAsSpam: hasStatusChangeEvent("spam", filters.markedAsSpam, MARKED_AS_SPAM_BY_AGENT_MESSAGE) }
       : {}),
-    ...(filters.issueGroupId
-      ? {
-          issueGroup: eq(conversations.issueGroupId, filters.issueGroupId),
-        }
-      : {}),
     ...(filters.hasUnreadMessages
       ? {
           hasUnreadMessages: and(
@@ -143,8 +146,6 @@ export const searchConversations = async (
         }
       : {}),
   };
-
-  const matches = filters.search ? await searchEmailsByKeywords(filters.search, Object.values(where)) : [];
 
   // Additional filters we can't pass to searchEmailsByKeywords
   where = {

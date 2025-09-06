@@ -855,6 +855,13 @@
       "when": 1756896140804,
       "tag": "0121_windy_vulture",
       "breakpoints": true
+    },
+    {
+      "idx": 122,
+      "version": "7",
+      "when": 1756983891005,
+      "tag": "0122_eager_deathstrike",
+      "breakpoints": true
     }
   ]
 }

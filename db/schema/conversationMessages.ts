@@ -1,4 +1,4 @@
-import { and, inArray, isNull, relations, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, relations, sql } from "drizzle-orm";
 import { bigint, boolean, index, jsonb, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { assertDefined } from "@/components/utils/assert";
 import { PromptInfo } from "@/lib/ai/promptInfo";
@@ -89,6 +89,11 @@ export const conversationMessages = pgTable(
     index("messages_conversation_created_at_desc_idx")
       .on(table.conversationId, table.createdAt.desc())
       .where(assertDefined(and(isNull(table.deletedAt), inArray(table.role, ["user", "staff"])))),
+    // Optimized composite index for "replied by" filter
+    index("idx_messages_replied_by_filter")
+      .on(table.conversationId, table.role, table.userId, table.createdAt)
+      .where(assertDefined(and(isNull(table.deletedAt), eq(table.role, "staff"))))
+      .concurrently(),
   ],
 ).enableRLS();
 
