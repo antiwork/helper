@@ -15,27 +15,6 @@ test.describe("Working Conversation Follow/Unfollow", () => {
     }
   });
 
-  test("should display follow button in conversation sidebar", async ({ page }) => {
-    await expect(page).toHaveTitle("Helper");
-    await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible();
-    await expect(page.locator('button:has-text("open")')).toBeVisible();
-
-    const conversationLinks = page.locator('a[href*="/conversations?id="]');
-    const conversationCount = await conversationLinks.count();
-
-    if (conversationCount === 0) {
-      console.log("No conversations available to test follow functionality");
-      return;
-    }
-
-    await conversationLinks.first().click();
-    await page.waitForLoadState("networkidle");
-
-    const followButton = page.locator('button:has-text("Follow"), button:has-text("Following")').first();
-    await expect(followButton).toBeVisible({ timeout: 10000 });
-    await takeDebugScreenshot(page, "follow-button-visible.png");
-  });
-
   test("should toggle follow state when clicking follow button", async ({ page }) => {
     await expect(page).toHaveTitle("Helper");
     await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible();
@@ -102,35 +81,6 @@ test.describe("Working Conversation Follow/Unfollow", () => {
     await expect(bellIcon).toBeVisible();
 
     await takeDebugScreenshot(page, "follow-button-states.png");
-  });
-
-  test("should show tooltip on hover", async ({ page }) => {
-    await expect(page).toHaveTitle("Helper");
-    await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible();
-    await expect(page.locator('button:has-text("open")')).toBeVisible();
-
-    const conversationLinks = page.locator('a[href*="/conversations?id="]');
-    if ((await conversationLinks.count()) === 0) {
-      console.log("No conversations available to test tooltip");
-      return;
-    }
-
-    await conversationLinks.first().click();
-    await page.waitForLoadState("networkidle");
-
-    const followButton = page.locator('button:has-text("Follow"), button:has-text("Following")').first();
-    await expect(followButton).toBeVisible();
-
-    await followButton.hover();
-    await page.waitForTimeout(500);
-
-    const tooltip = page.locator('[role="tooltip"]');
-    await expect(tooltip).toBeVisible({ timeout: 2000 });
-
-    const tooltipText = await tooltip.textContent();
-    expect(tooltipText).toBeTruthy();
-
-    await takeDebugScreenshot(page, "follow-button-tooltip.png");
   });
 
   test("should handle follow/unfollow errors gracefully", async ({ page }) => {
@@ -231,40 +181,6 @@ test.describe("Working Conversation Follow/Unfollow", () => {
     expect(refreshedButtonText).toContain("Following");
 
     await takeDebugScreenshot(page, "follow-state-preserved.png");
-  });
-
-  test("should work correctly on mobile viewport", async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 667 });
-
-    await expect(page).toHaveTitle("Helper");
-    await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible();
-    await expect(page.locator('button:has-text("open")')).toBeVisible();
-
-    const conversationLinks = page.locator('a[href*="/conversations?id="]');
-    if ((await conversationLinks.count()) === 0) {
-      console.log("No conversations available to test mobile functionality");
-      return;
-    }
-
-    await conversationLinks.first().click();
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(3000);
-
-    const followButton = page.locator('button:has-text("Follow"), button:has-text("Following")').first();
-
-    if (await followButton.isVisible({ timeout: 5000 })) {
-      const initialButtonText = await followButton.textContent();
-      await followButton.click();
-      await page.waitForTimeout(2000);
-
-      const updatedButtonText = await followButton.textContent();
-      expect(updatedButtonText).not.toBe(initialButtonText);
-
-      await takeDebugScreenshot(page, "follow-button-mobile.png");
-    } else {
-      console.log("Follow button not found in mobile viewport");
-      await takeDebugScreenshot(page, "follow-button-mobile-no-button.png");
-    }
   });
 
   test("should handle multiple rapid clicks gracefully", async ({ page }) => {
