@@ -51,7 +51,7 @@ export const searchConversations = async (
   }
 
   // Build a lightweight subset of filters (conversation-level only) for keyword search
-  const lightweightWhere: Record<string, SQL> = {
+  const conversationWhere: Record<string, SQL> = {
     notMerged: isNull(conversations.mergedIntoId),
     ...(filters.status?.length ? { status: inArray(conversations.status, filters.status) } : {}),
     ...(filters.isAssigned === true ? { assignee: isNotNull(conversations.assignedToId) } : {}),
@@ -67,11 +67,11 @@ export const searchConversations = async (
     ...(filters.issueGroupId ? { issueGroup: eq(conversations.issueGroupId, filters.issueGroupId) } : {}),
   };
 
-  const matches = filters.search ? await searchEmailsByKeywords(filters.search, Object.values(lightweightWhere)) : [];
+  const matches = filters.search ? await searchEmailsByKeywords(filters.search, Object.values(conversationWhere)) : [];
 
   // Full filter set used for the main query (includes heavier message/event filters)
-  let where: Record<string, SQL> = {
-    ...lightweightWhere,
+  const where: Record<string, SQL> = {
+    ...conversationWhere,
     ...(filters.repliedBy?.length || filters.repliedAfter || filters.repliedBefore
       ? {
           reply: exists(
@@ -145,11 +145,6 @@ export const searchConversations = async (
           ),
         }
       : {}),
-  };
-
-  // Additional filters we can't pass to searchEmailsByKeywords
-  where = {
-    ...where,
     ...(filters.isVip && mailbox.vipThreshold != null
       ? { isVip: sql`${platformCustomers.value} >= ${mailbox.vipThreshold * 100}` }
       : {}),
