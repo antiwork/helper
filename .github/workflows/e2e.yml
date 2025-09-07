@@ -59,12 +59,7 @@ jobs:
       - name: Setup E2E test environment
         run: ./scripts/setup-e2e-tests.sh
 
-      - name: Run fail-fast on changed Playwright tests
-        if: github.event_name == 'pull_request'
-        run: ./scripts/e2e.sh playwright test --only-changed=origin/${{ github.base_ref }} --shard=${{ matrix.shardIndex }}/4
-
       - name: Run full Playwright suite
-        if: github.event_name == 'push'
         run: ./scripts/e2e.sh playwright test --shard=${{ matrix.shardIndex }}/4
 
       - name: Upload Playwright HTML report
