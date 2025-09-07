@@ -17,11 +17,10 @@ jobs:
   e2e:
     runs-on: ${{ github.repository == 'antiwork/helper' && 'ubicloud-standard-2' || 'ubuntu-latest' }}
     timeout-minutes: 60
-    name: E2E (${{ matrix.shard }}/${{ strategy.job-total }})
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shardIndex: [1, 2, 3, 4]
     env:
       CI: true
       OPENAI_API_KEY: test-openai-api-key
@@ -60,13 +59,18 @@ jobs:
       - name: Setup E2E test environment
         run: ./scripts/setup-e2e-tests.sh
 
-      - name: Run full Playwright suite
-        run: ./scripts/e2e.sh playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+      - name: Run fail-fast on changed Playwright tests
+        if: github.event_name == 'pull_request'
+        run: ./scripts/e2e.sh playwright test --only-changed=origin/${{ github.base_ref }} --shard=${{ matrix.shardIndex }}/4
 
-      - name: Upload Test Results
+      - name: Run full Playwright suite
+        if: github.event_name == 'push'
+        run: ./scripts/e2e.sh playwright test --shard=${{ matrix.shardIndex }}/4
+
+      - name: Upload Playwright HTML report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: blob-report-${{ matrix.shard }}
-          path: blob-report
+          name: playwright-report-shard-${{ matrix.shardIndex }}-of-4
+          path: playwright-report/
           retention-days: 30

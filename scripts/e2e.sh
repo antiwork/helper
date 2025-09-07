@@ -55,6 +55,12 @@ if [ -z "$PLAYWRIGHT_COMMAND" ]; then
     PLAYWRIGHT_COMMAND="pnpm playwright test"
 fi
 
+# Ensure direct 'playwright' invocations go through the pnpm script wrapper
+# which sets necessary Node conditions (e.g., react-server)
+if [[ "$PLAYWRIGHT_COMMAND" =~ ^[[:space:]]*playwright[[:space:]] ]]; then
+    PLAYWRIGHT_COMMAND="pnpm $PLAYWRIGHT_COMMAND"
+fi
+
 echo "🚀 Starting E2E test run..."
 
 # Run the e2e tests
