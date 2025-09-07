@@ -17,7 +17,7 @@ test.describe("Unread Messages Filter", () => {
 
   test("should toggle unread filter on and off", async ({ page }) => {
     const filterButton = page.locator('button:has-text("Unread")');
-    
+
     await filterButton.click();
     await expect(filterButton).toHaveClass(/bright/);
     await expect(page).toHaveURL(/hasUnreadMessages=true/);
@@ -32,7 +32,7 @@ test.describe("Unread Messages Filter", () => {
     }
 
     await takeDebugScreenshot(page, "unread-filter-active.png");
-    
+
     await filterButton.click();
     await expect(filterButton).not.toHaveClass(/bright/);
     await expect(page).not.toHaveURL(/hasUnreadMessages=true/);
@@ -91,7 +91,7 @@ test.describe("Unread Messages Filter", () => {
 
     const unreadFilterInAll = page.locator('button:has-text("Unread")');
     await expect(unreadFilterInAll).toHaveCount(0);
-    
+
     const indicatorsInAll = page.locator('[data-testid="unread-indicator"]');
     await expect(indicatorsInAll).toHaveCount(0);
 
@@ -104,7 +104,7 @@ test.describe("Unread Messages Filter", () => {
 
     const unreadFilterInAssigned = page.locator('button:has-text("Unread")');
     await expect(unreadFilterInAssigned).toBeVisible();
-    
+
     await expect(page).toHaveURL(/\/assigned/);
   });
 
