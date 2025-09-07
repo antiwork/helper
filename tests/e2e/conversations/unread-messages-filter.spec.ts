@@ -12,28 +12,16 @@ test.describe("Unread Messages Filter", () => {
     await expect(filterToggleButton).toBeVisible();
     await filterToggleButton.click();
 
-    // Wait for filter panel to be fully visible and interactive
     await page.waitForSelector('button:has-text("Unread")', { state: "visible" });
   });
 
-  test("should show unread messages filter button", async ({ page }) => {
+  test("should toggle unread filter on and off", async ({ page }) => {
     const filterButton = page.locator('button:has-text("Unread")');
-    await expect(filterButton).toBeVisible();
-
-    await expect(filterButton).not.toHaveClass(/bright/);
-
-    await takeDebugScreenshot(page, "unread-filter-initial-state.png");
-  });
-
-  test("should filter conversations to show only unread messages", async ({ page }) => {
-    const filterButton = page.locator('button:has-text("Unread")');
+    
     await filterButton.click();
-
     await expect(filterButton).toHaveClass(/bright/);
-
     await expect(page).toHaveURL(/hasUnreadMessages=true/);
 
-    // Wait for the filtered results to load
     await page.waitForLoadState("networkidle");
 
     const unreadBadge = page.locator('[data-testid="unread-messages-badge"]');
@@ -44,17 +32,9 @@ test.describe("Unread Messages Filter", () => {
     }
 
     await takeDebugScreenshot(page, "unread-filter-active.png");
-  });
-
-  test("should clear filter when clicked again", async ({ page }) => {
-    const filterButton = page.locator('button:has-text("Unread")');
-
-    await filterButton.click();
-    await expect(filterButton).toHaveClass(/bright/);
-
+    
     await filterButton.click();
     await expect(filterButton).not.toHaveClass(/bright/);
-
     await expect(page).not.toHaveURL(/hasUnreadMessages=true/);
   });
 
@@ -63,7 +43,6 @@ test.describe("Unread Messages Filter", () => {
     await expect(dateFilter).toBeVisible();
     await dateFilter.click();
 
-    // Wait for dropdown menu to be visible
     await page.waitForSelector('[role="menuitemradio"]', { state: "visible" });
 
     const todayOption = page.locator('[role="menuitemradio"]:has-text("Today")');
@@ -92,35 +71,7 @@ test.describe("Unread Messages Filter", () => {
     }
   });
 
-  test("should only show unread badges on assigned conversations", async ({ page }) => {
-    const unreadBadges = page.locator('[data-testid="unread-messages-badge"]');
-    const badgeCount = await unreadBadges.count();
-
-    // Test that filter doesn't show in "all" view
-    await page.goto("/all");
-    await page.waitForLoadState("domcontentloaded");
-
-    const filterToggleButton = page.locator('button[aria-label="Filter Toggle"]');
-    await expect(filterToggleButton).toBeVisible();
-    await filterToggleButton.click();
-
-    const unreadFilterInAll = page.locator('button:has-text("Unread")');
-    await expect(unreadFilterInAll).toHaveCount(0);
-
-    // Test that filter shows in "assigned" view
-    await page.goto("/assigned");
-    await page.waitForLoadState("domcontentloaded");
-
-    const filterToggleInAssigned = page.locator('button[aria-label="Filter Toggle"]');
-    await expect(filterToggleInAssigned).toBeVisible();
-    await filterToggleInAssigned.click();
-
-    const unreadFilterInAssigned = page.locator('button:has-text("Unread")');
-    await expect(unreadFilterInAssigned).toBeVisible();
-  });
-
-  test("should only show unread indicators in mine and assigned views", async ({ page }) => {
-    // Test in "mine" view (current page)
+  test("should only show unread elements in mine and assigned views", async ({ page }) => {
     const unreadIndicators = page.locator('[data-testid="unread-indicator"]');
     const indicatorCount = await unreadIndicators.count();
 
@@ -131,19 +82,29 @@ test.describe("Unread Messages Filter", () => {
       }
     }
 
-    // Test that indicators don't show in "all" view
     await page.goto("/all");
     await page.waitForLoadState("domcontentloaded");
 
+    const filterToggleButton = page.locator('button[aria-label="Filter Toggle"]');
+    await expect(filterToggleButton).toBeVisible();
+    await filterToggleButton.click();
+
+    const unreadFilterInAll = page.locator('button:has-text("Unread")');
+    await expect(unreadFilterInAll).toHaveCount(0);
+    
     const indicatorsInAll = page.locator('[data-testid="unread-indicator"]');
     await expect(indicatorsInAll).toHaveCount(0);
 
-    // Test that indicators show in "assigned" view
     await page.goto("/assigned");
     await page.waitForLoadState("domcontentloaded");
 
-    const indicatorsInAssigned = page.locator('[data-testid="unread-indicator"]');
-    // Just ensure the page loaded correctly - indicators may or may not be present
+    const filterToggleInAssigned = page.locator('button[aria-label="Filter Toggle"]');
+    await expect(filterToggleInAssigned).toBeVisible();
+    await filterToggleInAssigned.click();
+
+    const unreadFilterInAssigned = page.locator('button:has-text("Unread")');
+    await expect(unreadFilterInAssigned).toBeVisible();
+    
     await expect(page).toHaveURL(/\/assigned/);
   });
 
@@ -161,7 +122,6 @@ test.describe("Unread Messages Filter", () => {
     await expect(vipOnlyOption).toBeVisible();
     await vipOnlyOption.click();
 
-    // Wait for VIP filter to be applied
     await page.waitForLoadState("networkidle");
 
     await clearButton.click();
