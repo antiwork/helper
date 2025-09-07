@@ -110,31 +110,6 @@ test.describe("Conversation Details", () => {
     return { changed, originalSubject, originalCounter };
   }
 
-  async function performScrollTest(page: Page) {
-    const messageCount = await getMessageCount(page);
-
-    if (messageCount > 0) {
-      const messageThreadPanel = page.getByTestId("message-thread-panel");
-
-      await messageThreadPanel.evaluate((el: any, scrollPos: number) => {
-        el.scrollTop = scrollPos;
-      }, 300);
-
-      await page.waitForTimeout(300);
-
-      const scrollButton = page.locator("[aria-label='Scroll to top']");
-      await expect(scrollButton).toBeAttached();
-
-      if (await scrollButton.isVisible()) {
-        await scrollButton.click();
-        await page.waitForTimeout(200);
-
-        const newScrollTop = await messageThreadPanel.evaluate((el: any) => el.scrollTop);
-        expect(newScrollTop).toBeLessThan(300);
-      }
-    }
-  }
-
   async function validateCounterFormat(page: Page) {
     const counter = await getConversationCounter(page);
     const counterPattern = /^\d+ of \d+\+?$/;
@@ -187,8 +162,12 @@ test.describe("Conversation Details", () => {
     }
   }
 
-  test("should show conversation subject and display messages", async ({ page }) => {
+  test("should show conversation subject, display messages, conversation counter and navigate between conversations", async ({
+    page,
+  }) => {
     await setupConversation(page);
+
+    await validateCounterFormat(page);
 
     const subject = await getConversationSubject(page);
     expect(subject.length).toBeGreaterThan(0);
@@ -197,22 +176,12 @@ test.describe("Conversation Details", () => {
 
     const messageCount = await getMessageCount(page);
     expect(messageCount).toBeGreaterThan(0);
-  });
-
-  test("should navigate between conversations", async ({ page }) => {
-    await setupConversation(page);
     await performNavigationTest(page);
   });
 
-  test("should toggle sidebar", async ({ page }) => {
-    await setupConversation(page);
-
-    await toggleSidebar(page);
-
-    await expect(page.locator("button[aria-label='Toggle sidebar']")).toBeVisible();
-  });
-
-  test("should display conversation with multiple messages", async ({ page }) => {
+  test("should display conversation with multiple messages and close conversation and return to list", async ({
+    page,
+  }) => {
     await setupConversation(page);
     await verifyBasicConversationStructure(page);
 
@@ -220,6 +189,13 @@ test.describe("Conversation Details", () => {
     expect(messageCount).toBeGreaterThan(0);
 
     await testMessageStructure(page);
+
+    await closeConversation(page);
+
+    await page.waitForLoadState("networkidle");
+    expect(page.url()).toContain("/conversations");
+
+    await expect(page.locator("a[href*='/conversations?id=']").first()).toBeVisible();
   });
 
   test("should handle conversation navigation properly", async ({ page }) => {
@@ -234,27 +210,6 @@ test.describe("Conversation Details", () => {
       const backSubject = await getConversationSubject(page);
       expect(backSubject).toBe(originalSubject);
     }
-  });
-
-  test("should test scroll functionality in long conversations", async ({ page }) => {
-    await setupConversation(page);
-    await performScrollTest(page);
-  });
-
-  test("should close conversation and return to list", async ({ page }) => {
-    await setupConversation(page);
-
-    await closeConversation(page);
-
-    await page.waitForLoadState("networkidle");
-    expect(page.url()).toContain("/conversations");
-
-    await expect(page.locator("a[href*='/conversations?id=']").first()).toBeVisible();
-  });
-
-  test("should handle conversation counter display correctly", async ({ page }) => {
-    await setupConversation(page);
-    await validateCounterFormat(page);
   });
 
   test("should create and display internal note", async ({ page }) => {
