@@ -1,3 +1,4 @@
+import "server-only";
 import { type Message } from "ai";
 import { and, asc, desc, eq, inArray, isNull, not, SQLWrapper } from "drizzle-orm";
 import { cache } from "react";

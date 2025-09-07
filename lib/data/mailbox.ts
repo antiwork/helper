@@ -1,3 +1,4 @@
+import "server-only";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { cache } from "react";
 import { assertDefined } from "@/components/utils/assert";

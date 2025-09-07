@@ -18,7 +18,6 @@ import {
   sql,
 } from "drizzle-orm";
 import { memoize } from "lodash-es";
-import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
@@ -29,6 +28,8 @@ import {
   MARKED_AS_SPAM_BY_AGENT_MESSAGE,
   REOPENED_BY_AGENT_MESSAGE,
 } from "@/lib/slack/constants";
+import "server-only";
+import { z } from "zod";
 import { searchEmailsByKeywords } from "../../emailSearchService/searchEmailsByKeywords";
 
 export const searchConversations = async (

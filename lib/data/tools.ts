@@ -1,3 +1,4 @@
+import "server-only";
 import { and, eq } from "drizzle-orm";
 import { db, Transaction } from "@/db/client";
 import { tools as toolsTable } from "@/db/schema";
