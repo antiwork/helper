@@ -1,9 +1,8 @@
 import { eq } from "drizzle-orm";
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db, Transaction } from "@/db/client";
 import { gmailSupportEmails, mailboxes } from "@/db/schema";
-import "server-only";
-import { takeUniqueOrThrow } from "@/components/utils/arrays";
 
 export const getGmailSupportEmail = async (
   mailbox: typeof mailboxes.$inferSelect,

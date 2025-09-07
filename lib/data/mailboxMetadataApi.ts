@@ -1,4 +1,3 @@
-import "server-only";
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { mailboxesMetadataApi } from "@/db/schema";

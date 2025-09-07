@@ -1,4 +1,3 @@
-import "server-only";
 import { count, eq } from "drizzle-orm";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db, type Transaction } from "@/db/client";
