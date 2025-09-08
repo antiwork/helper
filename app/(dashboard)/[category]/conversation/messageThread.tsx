@@ -1,4 +1,4 @@
-import { HelpCircle, MessagesSquare } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import { EventItem } from "@/app/(dashboard)/[category]/conversation/eventItem";
 import MessageItem from "@/app/(dashboard)/[category]/conversation/messageItem";
 import type { Message } from "@/app/types/global";
@@ -52,8 +52,7 @@ export const MessageThread = ({
           <div className="mx-auto flex max-w-2xl flex-col">
             <Accordion type="single" collapsible>
               <AccordionItem value="summary" className="border-none">
-                <AccordionTrigger className="flex items-center gap-1 text-base text-muted-foreground hover:no-underline py-2">
-                  <MessagesSquare className="h-4 w-4 shrink-0" />
+                <AccordionTrigger className="flex items-center gap-1 text-base text-muted-foreground hover:no-underline px-4 py-2 mx-auto mb-4 border rounded flex-none">
                   Conversation summary
                 </AccordionTrigger>
                 <AccordionContent className="pt-0">
