@@ -15,6 +15,10 @@ if [ "$CI" != "true" ] && [ -f ".env.test.local" ]; then
 fi
 set +o allexport
 
+if [ "$CI" = "true" ]; then
+  export PLAYWRIGHT_USE_PREBUILT=1
+fi
+
 echo "🔍 Checking Supabase test environment setup..."
 
 # Check if Supabase containers are running
@@ -62,6 +66,11 @@ if [[ "$PLAYWRIGHT_COMMAND" =~ ^[[:space:]]*playwright[[:space:]] ]]; then
 fi
 
 echo "🚀 Starting E2E test run..."
+if [ "$PLAYWRIGHT_USE_PREBUILT" = "1" ]; then 
+  echo "📦 Mode: Production build (pnpm with-test-env next start -p 3020)"
+  else 
+  echo "⚡ Mode: Development server (pnpm with-test-env next dev -p 3020 --turbopack)"
+fi
 
 # Run the e2e tests
 echo "🧪 Running Playwright e2e tests..."

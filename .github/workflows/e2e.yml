@@ -15,11 +15,10 @@ concurrency:
 
 jobs:
   e2e:
-    runs-on: ${{ github.repository == 'antiwork/helper' && 'ubicloud-standard-2' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'antiwork/helper' && 'ubicloud-standard-4' || 'ubuntu-latest' }}
     timeout-minutes: 60
     env:
       CI: true
-      PLAYWRIGHT_USE_PREBUILT: 1
       OPENAI_API_KEY: test-openai-api-key
       FIRECRAWL_API_KEY: test-firecrawl-api-key
     steps:
