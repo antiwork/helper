@@ -56,7 +56,7 @@ export default defineConfig({
   /* Run your local server before starting the tests */
   // Make sure your port matches the one in your `.env.test.local` file
   webServer: {
-    command: "scripts/e2e-test-server.sh",
+    command: "pnpm run with-test-env next dev --port 3020 --turbopack",
     url: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3020",
     reuseExistingServer: true,
     ignoreHTTPSErrors: true,
