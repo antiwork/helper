@@ -36,8 +36,8 @@ enabled = true
 
 [auth]
 enabled = true
-site_url = "http://localhost"
-additional_redirect_urls = ["http://localhost"]
+site_url = "http://localhost:3020"
+additional_redirect_urls = ["http://localhost:3020"]
 enable_signup = false
 enable_anonymous_sign_ins = false
 
