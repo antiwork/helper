@@ -55,7 +55,7 @@ jobs:
             playwright-browsers-${{ runner.os }}-
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Cache Next.js build cache
         uses: actions/cache@v4
@@ -63,9 +63,9 @@ jobs:
           path: |
             .next/cache
             node_modules/.cache
-          key: next-cache-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.[jt]s?(x)') }}
+          key: next-cache-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            next-cache-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            next-cache-${{ runner.os }}-
 
       - name: Install Playwright Browsers
         run: pnpm playwright install --with-deps chromium
