@@ -22,6 +22,7 @@ jobs:
       OPENAI_API_KEY: test-openai-api-key
       FIRECRAWL_API_KEY: test-firecrawl-api-key
       NODE_OPTIONS: --max_old_space_size=8192
+      PNPM_STORE_PATH: ~/.pnpm-store
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -35,7 +36,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: ".node-version"
-          cache: "pnpm"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
 
       - name: Cache Playwright browsers
         id: playwright-cache
@@ -48,6 +56,16 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Cache Next.js build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next/cache
+            node_modules/.cache
+          key: next-cache-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.[jt]s?(x)') }}
+          restore-keys: |
+            next-cache-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
       - name: Install Playwright Browsers
         run: pnpm playwright install --with-deps chromium
