@@ -29,9 +29,6 @@ const client = new HelperClient({
   host: "https://your-helper-instance.com",
   email: "john@example.com",
   emailHash: "<generated-hmac-hash>",
-  customerMetadata: {
-    name: "John Doe",
-  },
 });
 ```
 
@@ -286,7 +283,10 @@ unlisten();
 
 Creates a chat handler for use with AI SDK compatible libraries.
 
-Optionally you can pass a `tools` object to allow the AI agent to perform actions on the customer's behalf.
+Optionally you can pass:
+
+- A `tools` object to allow the AI agent to perform actions on the customer's behalf.
+- A `customerInfoUrl` to fetch the customer's information for the prompt and UI.
 
 **Parameters:**
 
@@ -294,6 +294,7 @@ Optionally you can pass a `tools` object to allow the AI agent to perform action
 interface ChatHandlerOptions {
   conversation: ConversationDetails;
   tools?: Record<string, HelperTool>;
+  customerInfoUrl?: string | null;
 }
 
 interface HelperTool<Args = any, Result = any> {

@@ -311,7 +311,7 @@ describe("apiTools", () => {
         prompt: "Test prompt",
       };
       const { platformCustomer } = await platformCustomerFactory.create({
-        email: "test@example.com",
+        email: conversation.emailFrom,
         metadata: metadata.metadata,
       });
 

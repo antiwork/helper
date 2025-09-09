@@ -241,6 +241,7 @@ Provides a complete chat interface with real-time messaging, typing indicators, 
 interface UseChatProps {
   conversation: ConversationDetails;
   tools?: Record<string, HelperTool>;
+  customerInfoUrl?: string | null;
   enableRealtime?: boolean;
   ai?: Parameters<typeof useChat>[0]; // AI SDK options
 }

@@ -19,16 +19,12 @@ Creates a new session and returns a token that can be used for authentication in
 
 ### Request Parameters
 
-| Parameter                | Type   | Required    | Description                                                                       |
-| ------------------------ | ------ | ----------- | --------------------------------------------------------------------------------- |
-| `email`                  | string | Optional    | Email address of the user. If not provided, an anonymous session will be created. |
-| `emailHash`              | string | Conditional | HMAC hash of the email and timestamp. Required if email is provided.              |
-| `timestamp`              | number | Conditional | Current timestamp in milliseconds. Required if email is provided.                 |
-| `customerMetadata`       | object | No          | Additional metadata about the customer.                                           |
-| `customerMetadata.value` | number | No          | Numeric value representing the customer's worth/revenue.                          |
-| `customerMetadata.name`  | string | No          | Name of the customer.                                                             |
-| `customerMetadata.links` | object | No          | Key-value pairs of links related to the customer.                                 |
-| `currentURL`             | string | Yes         | The current URL where the chat is being initiated.                                |
+| Parameter      | Type   | Required    | Description                                                                                                                        |
+| -------------- | ------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `email`        | string | Optional    | Email address of the user. If not provided, an anonymous session will be created.                                                  |
+| `emailHash`    | string | Conditional | HMAC hash of the email and timestamp. Required if email is provided.                                                               |
+| `timestamp`    | number | Conditional | Current timestamp in milliseconds. Required if email is provided.                                                                  |
+| `currentToken` | string | Optional    | The previously used token for an anonymous session. If provided, conversation history will persist between the anonymous sessions. |
 
 ### Example Request Body
 

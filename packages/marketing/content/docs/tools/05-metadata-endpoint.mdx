@@ -1,11 +1,11 @@
 ---
 title: Metadata Endpoint
-description: Helper can retrieve additional information about your customers when an email is received through a metadata endpoint you configure.
+description: Helper can retrieve additional information about your customers through a metadata endpoint passed in the client SDK.
 ---
 
 ## How It Works
 
-When Helper receives an email from a customer, it will make a GET request to your configured endpoint with the customer's email and timestamp. You can return metadata to improve AI responses and enable more features in the mailbox.
+When `customerInfoUrl` is provided to the chat or create message API, Helper will make a GET request to the endpoint with the customer's email and timestamp. You can return metadata to improve AI responses and enable more features in the mailbox.
 
 ## Request Example
 
@@ -27,34 +27,30 @@ Your server must return a JSON response in this format:
 ```json
 {
   "success": true,
-  "user_info": {
-    "prompt": "Customer information to share with AI",
+  "customer": {
+    // All fields are optional
+    "name": "Customer Name",
+    "value": 1000, // Numeric value for sorting/prioritization
+    "actions": {
+      // Key-value pairs of links to display in the sidebar, for agents to quickly access other backend apps.
+      "Profile": "https://example.com/profile",
+      "Orders": "https://example.com/orders"
+    },
     "metadata": {
-      "name": "Customer Name", // Optional: Customer's name
-      "value": 1000, // Optional: Numeric value for sorting/prioritization
-      "links": {
-        // Optional: Links to show alongside conversations
-        "Profile": "https://example.com/profile",
-        "Orders": "https://example.com/orders"
-      }
+      // Arbitrary metadata to include in prompts. This will also be shown in the conversation sidebar.
+      "Department": "Engineering",
+      "Role": "Senior Developer",
+      "Join Date": "2023-01-15"
     }
   }
 }
 ```
 
-| Parameter                  | Type    | Required | Description                                                                                                     |
-| -------------------------- | ------- | -------- | --------------------------------------------------------------------------------------------------------------- |
-| `success`                  | boolean | Yes      | Must be `true` for Helper to process the response.                                                              |
-| `user_info.prompt`         | string  | No       | Additional context about the customer that will be provided to the AI.                                          |
-| `user_info.metadata.name`  | string  | No       | Name of the customer.                                                                                           |
-| `user_info.metadata.value` | number  | No       | Numeric value representing the customer's worth/revenue. Enables sorting conversations by the customer's value. |
-| `user_info.metadata.links` | object  | No       | Key-value pairs of links to display in the sidebar, for agents to quickly access other backend apps.            |
-
-## Optional: HMAC Authentication
+## HMAC Authentication
 
 Helper authenticates requests to your endpoint using HMAC-SHA256.
 
-We recommend you verify the request is legitimate by generating the same HMAC signature on your server and checking it matches the header. Without this verification, if a malicious actor discovers your metadata endpoint they could continuously make requests with different emails to try and scrape customer data.
+We strongly recommend you verify the request is legitimate by generating the same HMAC signature on your server and checking it matches the header. Without this verification, if a malicious actor discovers your metadata endpoint they could continuously make requests with different emails to try and scrape customer data.
 
 The signature is generated from the query string (`?email=...&timestamp=...`) and the HMAC secret shown in your settings.
 
