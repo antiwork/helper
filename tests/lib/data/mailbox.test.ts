@@ -24,8 +24,6 @@ test("getMailboxInfo", async () => {
     name: mailbox.name,
     slug: mailbox.slug,
     preferences: {},
-    hasMetadataEndpoint: false,
-    metadataEndpoint: null,
     slackConnected: false,
     slackConnectUrl: expect.any(String),
     slackAlertChannel: null,
