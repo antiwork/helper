@@ -88,7 +88,7 @@ describe("mailboxRouter", () => {
 
       const caller = createCaller(await createTestTRPCContext(user));
 
-      expect(await caller.mailbox.get()).toEqual(await getMailboxInfo(mailbox));
+      expect(await caller.mailbox.get()).toEqual(getMailboxInfo(mailbox));
     });
   });
 });

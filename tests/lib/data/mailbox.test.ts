@@ -18,7 +18,7 @@ beforeEach(() => {
 
 test("getMailboxInfo", async () => {
   const { mailbox } = await userFactory.createRootUser();
-  const info = await getMailboxInfo(mailbox);
+  const info = getMailboxInfo(mailbox);
   expect(info).toEqual({
     id: mailbox.id,
     name: mailbox.name,
