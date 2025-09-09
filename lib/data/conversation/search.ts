@@ -172,13 +172,27 @@ export const searchConversations = async (
       ? conversations.closedAt
       : sql`COALESCE(${conversations.lastMessageAt}, ${conversations.createdAt})`;
   const isOpenTicketsOnly = filters.status?.length === 1 && filters.status[0] === "open";
+  const primaryOrderDesc = isOpenTicketsOnly ? filters.sort !== "oldest" : filters.sort !== "oldest";
   const orderBy = isOpenTicketsOnly
-    ? [filters.sort === "newest" ? desc(orderByField) : asc(orderByField)]
+    ? [primaryOrderDesc ? desc(orderByField) : asc(orderByField)]
     : [filters.sort === "oldest" ? asc(orderByField) : desc(orderByField)];
   const metadataEnabled = !filters.search && !!(await getMetadataApiByMailbox());
   if (metadataEnabled && (filters.sort === "highest_value" || !filters.sort) && isOpenTicketsOnly) {
     orderBy.unshift(sql`${platformCustomers.value} DESC NULLS LAST`);
   }
+
+  // Always add a deterministic tie-breaker on id for stable ordering
+  orderBy.push(primaryOrderDesc ? desc(conversations.id) : asc(conversations.id));
+
+  // Helper to decode and encode cursors for keyset pagination
+  const encodeCursor = (payload: Record<string, unknown>) => Buffer.from(JSON.stringify(payload)).toString("base64");
+  const decodeCursor = (cursor: string): Record<string, unknown> | null => {
+    try {
+      return JSON.parse(Buffer.from(cursor, "base64").toString("utf8"));
+    } catch {
+      return null;
+    }
+  };
 
   const list = memoize(() =>
     db
@@ -200,6 +214,7 @@ export const searchConversations = async (
           WHERE ${and(
             eq(conversationMessages.conversationId, conversations.id),
             inArray(conversationMessages.role, ["user", "staff"]),
+            isNull(conversationMessages.deletedAt),
           )}
           ORDER BY ${desc(conversationMessages.createdAt)}
           LIMIT 1
@@ -225,32 +240,79 @@ export const searchConversations = async (
         ) as unread_messages`,
         sql`true`,
       )
-      .where(and(...Object.values(where)))
+      .where(
+        and(
+          ...Object.values(where),
+          // Keyset pagination cursor filter
+          filters.cursor
+            ? (() => {
+                // Determine which cursor shape to use
+                if (metadataEnabled && (filters.sort === "highest_value" || !filters.sort) && isOpenTicketsOnly) {
+                  // Cursor with value + timestamp + id
+                  const decoded = decodeCursor(filters.cursor) as {
+                    value: string | null;
+                    ts: string | null;
+                    id: number;
+                  } | null;
+                  if (!decoded) return sql`true`;
+                  const { value, ts, id } = decoded;
+                  const orderExpr = orderByField;
+                  if (primaryOrderDesc) {
+                    return sql`${platformCustomers.value} < ${value} OR (${platformCustomers.value} = ${value} AND (${orderExpr}) < ${ts}::timestamptz) OR (${platformCustomers.value} = ${value} AND (${orderExpr}) = ${ts}::timestamptz AND ${conversations.id} < ${id})`;
+                  }
+                  return sql`${platformCustomers.value} > ${value} OR (${platformCustomers.value} = ${value} AND (${orderExpr}) > ${ts}::timestamptz) OR (${platformCustomers.value} = ${value} AND (${orderExpr}) = ${ts}::timestamptz AND ${conversations.id} > ${id})`;
+                }
+                // Cursor with timestamp + id
+                const decoded = decodeCursor(filters.cursor) as { ts: string | null; id: number } | null;
+                if (!decoded) return sql`true`;
+                const { ts, id } = decoded;
+                const orderExpr = orderByField;
+                if (primaryOrderDesc) {
+                  return sql`(${orderExpr}) < ${ts}::timestamptz OR ((${orderExpr}) = ${ts}::timestamptz AND ${conversations.id} < ${id})`;
+                }
+                return sql`(${orderExpr}) > ${ts}::timestamptz OR ((${orderExpr}) = ${ts}::timestamptz AND ${conversations.id} > ${id})`;
+              })()
+            : sql`true`,
+        ),
+      )
       .orderBy(...orderBy)
       .limit(filters.limit + 1) // Get one extra to determine if there's a next page
-      .offset(filters.cursor ? parseInt(filters.cursor) : 0)
-      .then((results) => ({
-        results: results
-          .slice(0, filters.limit)
-          .map(
-            ({
-              conversations_conversation,
-              mailboxes_platformcustomer,
-              recent_message_cleanedUpText,
-              recent_message_createdAt,
-              has_unread_messages,
-            }) => ({
-              ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
-              matchedMessageText:
-                matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
-              recentMessageText: recent_message_cleanedUpText || null,
-              recentMessageAt: recent_message_createdAt ? new Date(recent_message_createdAt) : null,
-              unreadMessageCount: has_unread_messages ? 1 : undefined,
-            }),
-          ),
-        nextCursor:
-          results.length > filters.limit ? (parseInt(filters.cursor ?? "0") + filters.limit).toString() : null,
-      })),
+      .then((raw) => {
+        const rows = raw.slice(0, filters.limit);
+        const results = rows.map(
+          ({
+            conversations_conversation,
+            mailboxes_platformcustomer,
+            recent_message_cleanedUpText,
+            recent_message_createdAt,
+            has_unread_messages,
+          }) => ({
+            ...serializeConversation(mailbox, conversations_conversation, mailboxes_platformcustomer),
+            matchedMessageText:
+              matches.find((m) => m.conversationId === conversations_conversation.id)?.cleanedUpText ?? null,
+            recentMessageText: recent_message_cleanedUpText || null,
+            recentMessageAt: recent_message_createdAt ? new Date(recent_message_createdAt) : null,
+            unreadMessageCount: has_unread_messages ? 1 : undefined,
+          }),
+        );
+
+        // Compute next cursor from the last visible row
+        let nextCursor: string | null = null;
+        if (raw.length > rows.length && rows.length > 0) {
+          const last = rows.at(-1)!;
+          const conv = last.conversations_conversation;
+          const ts = conv.lastMessageAt ?? conv.createdAt ?? conv.closedAt ?? null;
+
+          if (metadataEnabled && (filters.sort === "highest_value" || !filters.sort) && isOpenTicketsOnly) {
+            const value = last.mailboxes_platformcustomer?.value ?? null;
+            nextCursor = encodeCursor({ value, ts: ts ? ts.toISOString() : null, id: conv.id });
+          } else {
+            nextCursor = encodeCursor({ ts: ts ? ts.toISOString() : null, id: conv.id });
+          }
+        }
+
+        return { results, nextCursor };
+      }),
   );
 
   return {
