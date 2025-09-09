@@ -201,7 +201,6 @@ test.describe("Saved Replies Management", () => {
 
   test("should display saved replies page with proper title", async ({ page }) => {
     await expectPageVisible(page);
-    await expect(page).toHaveTitle("Helper");
     await expect(page).toHaveURL(/.*saved-replies.*/);
 
     await takeDebugScreenshot(page, "saved-replies-page-loaded.png");

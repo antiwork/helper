@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 
 export async function waitForSettingsSaved(page: Page) {
   const saving = page.getByText("Saving");
@@ -6,9 +6,9 @@ export async function waitForSettingsSaved(page: Page) {
   const error = page.getByText("Error", { exact: true });
 
   try {
-    await saving.waitFor({ state: "visible", timeout: 5000 });
-    await saved.waitFor({ state: "visible" });
-  } catch (e) {
+    await expect(saving).toBeVisible();
+    await expect(saved).toBeVisible();
+  } catch (_e) {
     if (await error.isVisible().catch(() => false)) {
       throw new Error("Save failed: Error indicator visible");
     }

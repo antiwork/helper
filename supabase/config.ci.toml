@@ -1,0 +1,52 @@
+# Supabase config optimized for CI: disable nonessential services
+project_id = "env(SUPABASE_PROJECT_ID)"
+
+[api]
+enabled = true
+port = "env(LOCAL_SUPABASE_API_PORT)"
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+
+[api.tls]
+enabled = false
+
+[db]
+port = "env(LOCAL_SUPABASE_DB_PORT)"
+shadow_port = "env(LOCAL_SUPABASE_DB_SHADOW_PORT)"
+major_version = 15
+
+[db.pooler]
+enabled = false
+
+[db.seed]
+enabled = false
+sql_paths = []
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = false
+
+[inbucket]
+enabled = false
+
+[storage]
+enabled = true
+
+[auth]
+enabled = true
+site_url = "http://localhost:3020"
+additional_redirect_urls = ["http://localhost:3020"]
+enable_signup = false
+enable_anonymous_sign_ins = false
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false
+
+[experimental]
+orioledb_version = ""
+

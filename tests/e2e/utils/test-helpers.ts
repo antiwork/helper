@@ -63,3 +63,11 @@ export async function loadWidget(
 
   return { widgetFrame };
 }
+
+export function throttleNetworkRequest(page: Page, url: string | RegExp | ((url: URL) => boolean)): Promise<void> {
+  return page.route(url, async (route) => {
+    // Add delay to slow down network call for loading state checks
+    await page.waitForTimeout(500);
+    await route.continue();
+  });
+}

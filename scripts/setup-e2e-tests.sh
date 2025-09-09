@@ -62,6 +62,10 @@ else
 fi
 
 echo "🎉 Starting Supabase services..."
+if [ "$CI" = "true" ]; then
+  echo "🪄 Using slim Supabase config for CI"
+  export SUPABASE_CONFIG_PATH="./supabase/config.ci.toml"
+fi
 pnpm run with-test-env pnpm supabase start
 
 echo "⏳ Waiting for Auth service to initialize..."
@@ -73,22 +77,32 @@ pnpm run with-test-env pnpm supabase db reset
 echo "📦 Applying database migrations..."
 pnpm run with-test-env drizzle-kit migrate --config ./db/drizzle.config.ts
 
+if [ "$CI" != "true" ]; then
 echo "📦 Building packages..."
 pnpm run-on-packages build
+else
+echo "⏭️  Skipping package builds in CI (built during pnpm install postinstall)"
+fi
 
 echo "🌱 Seeding the database..."
 pnpm run with-test-env pnpm tsx --conditions=react-server ./db/seeds/seedDatabase.ts
 
+if [ "$CI" != "true" ]; then
 echo "📦 Installing Playwright and dependencies..."
 pnpm install
 
 echo "🎭 Installing Playwright browsers..."
 pnpm run with-test-env playwright install --with-deps chromium
+else
+echo "⏭️  Skipping pnpm install and Playwright browser install in CI (handled by workflow)"
+fi
 
 echo ""
 echo "🎉 E2E Testing Environment Setup Complete!"
 echo ""
 echo "📋 Next Steps:"
+echo "   (optional) set PLAYWRIGHT_USE_PREBUILT=1 in .env.test.local to run e2e on production build"
+echo ""
 echo "   1. Run your tests using:"
 echo "      ./scripts/e2e.sh                   # Run all tests"
 echo "      ./scripts/e2e.sh playwright test tests/e2e/widget/widget-screenshot.spec.ts  # Interactive test runner"

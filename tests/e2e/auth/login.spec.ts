@@ -46,12 +46,8 @@ test.describe("Working Authentication", () => {
     await page.goto("/login");
     await expect(page).toHaveTitle(/Helper/);
 
-    await page.click('button[type="submit"]');
-
     await expect(page.locator("#email")).toBeVisible();
-
-    const emailInput = page.locator("#email");
-    await expect(emailInput).toBeVisible();
+    await expect(page.locator('button[type="submit"]')).toBeDisabled();
   });
 
   test("should be responsive on mobile", async ({ page }) => {

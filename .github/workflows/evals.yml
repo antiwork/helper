@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   evals:
-    runs-on: ubicloud-standard-2
+    runs-on: ${{ github.repository == 'antiwork/helper' && 'ubicloud-standard-2' || 'ubuntu-latest' }}
 
     steps:
       - name: Check out repository code

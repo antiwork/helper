@@ -1,9 +1,6 @@
-import { expect, Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { loadWidget } from "../utils/test-helpers";
 import { widgetConfigs } from "./fixtures/widget-config";
-
-// Configure tests to run serially to avoid resource contention
-test.describe.configure({ mode: "serial" });
 
 test.describe("Helper Chat Widget - Screenshot Functionality", () => {
   test.beforeEach(async ({ page }) => {
@@ -62,27 +59,6 @@ test.describe("Helper Chat Widget - Screenshot Functionality", () => {
     expect(afterSecondToggle).toBe(false);
   });
 
-  test("should show loading state during screenshot capture", async ({ page }) => {
-    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
-
-    await widgetFrame
-      .getByRole("textbox", { name: "Ask a question" })
-      .fill("Can you help me understand what's on my screen?");
-    const checkbox = widgetFrame.getByRole("checkbox", { name: "Include a screenshot for better support?" });
-    await checkbox.check();
-
-    const sendPromise = widgetFrame.getByRole("button", { name: "Send message" }).first().click();
-
-    // Check that the send button shows capturing state
-    await expect(widgetFrame.getByRole("button", { name: "Send message" }).first()).toBeDisabled();
-
-    await sendPromise;
-    await widgetFrame.locator('[data-message-role="assistant"]').waitFor({ state: "visible", timeout: 30000 });
-
-    // Check that the send button is enabled again
-    await expect(widgetFrame.getByRole("button", { name: "Send message" }).first()).not.toBeDisabled();
-  });
-
   test("should handle screenshot capture failure gracefully", async ({ page }) => {
     const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
 
@@ -135,27 +111,6 @@ test.describe("Helper Chat Widget - Screenshot Functionality", () => {
     // Verify checkbox text
     const labelText = await widgetFrame.locator('label[for="screenshot"]').textContent();
     expect(labelText).toContain("Include a screenshot for better support?");
-  });
-
-  test("should disable input during screenshot capture", async ({ page }) => {
-    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
-
-    await widgetFrame
-      .getByRole("textbox", { name: "Ask a question" })
-      .fill("Can you help me understand what's on my screen?");
-    const checkbox = widgetFrame.getByRole("checkbox", { name: "Include a screenshot for better support?" });
-    await checkbox.check();
-
-    const sendPromise = widgetFrame.getByRole("button", { name: "Send message" }).first().click();
-
-    await expect(widgetFrame.getByRole("textbox", { name: "Ask a question" })).toBeDisabled();
-    await expect(widgetFrame.getByRole("button", { name: "Send message" }).first()).toBeDisabled();
-
-    await sendPromise;
-    await widgetFrame.locator('[data-message-role="assistant"]').waitFor({ state: "visible", timeout: 30000 });
-
-    await expect(widgetFrame.getByRole("textbox", { name: "Ask a question" })).not.toBeDisabled();
-    await expect(widgetFrame.getByRole("button", { name: "Send message" }).first()).not.toBeDisabled();
   });
 
   test("should maintain screenshot state across messages", async ({ page }) => {

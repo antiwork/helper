@@ -20,8 +20,7 @@ const MOCKED_COMMON_ISSUES_SUGGESTIONS = [
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
-test.describe("Common Issues Settings", () => {
-  test.describe.configure({ mode: "serial" });
+test.describe("Settings - Common Issues", () => {
   test.beforeEach(async ({ page }) => {
     await db.delete(issueGroups);
 
@@ -42,108 +41,45 @@ test.describe("Common Issues Settings", () => {
     });
   });
 
-  test("generate button works with existing conversations", async ({ page }) => {
-    await page.goto("/settings/common-issues");
+  test.afterAll(async () => {
+    // Clean database state
+    await db.delete(issueGroups);
+  });
 
+  test("generate issues dialog actions and submit", async ({ page }) => {
+    await page.goto("/settings/common-issues");
     await expect(page.getByText("No common issues created yet.")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Generate common issues" })).toBeVisible();
-
     const generateButton = page.getByRole("button", { name: "Generate common issues" });
     await generateButton.click();
 
-    await expect(page.getByText("Review generated common issues")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Create 2 issues" })).toBeVisible();
-  });
-
-  test("shows approval dialog when issues are generated", async ({ page }) => {
-    await page.goto("/settings/common-issues");
-
-    const generateButton = page.getByRole("button", { name: "Generate common issues" });
-    await generateButton.click();
+    // 1. Check UI visibility
+    await expect(page.getByText("No common issues created yet.")).toBeVisible();
 
     await expect(page.getByText("Review generated common issues")).toBeVisible();
-    await expect(page.getByRole("button", { name: /Create \d+ issue/ })).toBeVisible();
     await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
-
     await expect(page.getByText("AI reasoning:").first()).toBeVisible();
-    await expect(page.getByText(/Suggestion quality directly impacts trust/)).toBeVisible();
-  });
+    await expect(page.getByText("Suggestion quality directly impacts trust")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Create 2 issues" })).toBeVisible();
 
-  test("can edit generated issue titles and descriptions", async ({ page }) => {
-    await page.goto("/settings/common-issues");
-
-    const generateButton = page.getByRole("button", { name: "Generate common issues" });
-    await generateButton.click();
-
-    await expect(page.getByText("Review generated common issues")).toBeVisible();
-
-    const editButton = page.getByLabel("Edit").first();
-    await editButton.click();
-
-    const titleInput = page.getByPlaceholder("Issue title");
-    await titleInput.fill("Custom Issue Title");
-
-    const descriptionTextarea = page.getByPlaceholder("Issue description (optional)");
-    await descriptionTextarea.fill("Custom description for this issue");
-
-    await page.getByRole("button", { name: "Save" }).click();
-
-    await expect(page.getByText("Custom Issue Title")).toBeVisible();
-    await expect(page.getByText("Custom description for this issue")).toBeVisible();
-
-    await expect(page.getByText(/Suggestion quality directly impacts trust/)).toBeVisible();
-  });
-
-  test("can delete generated issues from approval dialog", async ({ page }) => {
-    await page.goto("/settings/common-issues");
-
-    const generateButton = page.getByRole("button", { name: "Generate common issues" });
-    await generateButton.click();
-
-    await expect(page.getByText("Review generated common issues")).toBeVisible();
-
-    const initialCreateButton = page.getByRole("button", { name: /Create \d+ issue/ });
-    const initialText = await initialCreateButton.textContent();
-    const initialCount = parseInt(initialText?.match(/\d+/)?.[0] || "0");
-
-    const deleteButton = page.getByLabel("Delete").first();
-    await deleteButton.click();
-
-    const updatedCreateButton = page.getByRole("button", { name: /Create \d+ issue/ });
-    const updatedText = await updatedCreateButton.textContent();
-    const updatedCount = parseInt(updatedText?.match(/\d+/)?.[0] || "0");
-
-    expect(updatedCount).toBe(initialCount - 1);
-  });
-
-  test("creates issues when approved", async ({ page }) => {
-    await page.goto("/settings/common-issues");
-
-    const generateButton = page.getByRole("button", { name: "Generate common issues" });
-    await generateButton.click();
-
-    await expect(page.getByText("Review generated common issues")).toBeVisible();
-
-    const createButton = page.getByRole("button", { name: /Create \d+ issue/ });
-    await createButton.click();
-
-    await expect(page.getByText(/Created \d+ common issues/)).toBeVisible();
-
-    const issuesInDb = await db.select().from(issueGroups);
-    expect(issuesInDb.length).toBe(2);
-  });
-
-  test("can cancel approval dialog", async ({ page }) => {
-    await page.goto("/settings/common-issues");
-
-    const generateButton = page.getByRole("button", { name: "Generate common issues" });
-    await generateButton.click();
-
-    await expect(page.getByText("Review generated common issues")).toBeVisible();
+    // 2. Remove generated item from the dialog
+    await page.getByRole("button", { name: "Delete" }).first().click();
+    await expect(page.getByRole("button", { name: "Create 1 issue" })).toBeVisible();
 
     await page.getByRole("button", { name: "Cancel" }).click();
-
     await expect(page.getByText("Review generated common issues")).not.toBeVisible();
-    await expect(page.getByText("No common issues created yet.")).toBeVisible();
+
+    await generateButton.click();
+
+    // 3.  Edit item from the dialog
+    await page.getByLabel("Edit").first().click();
+    await page.getByPlaceholder("Issue title").fill("Custom Issue Title");
+    await page.getByPlaceholder("Issue description (optional)").fill("Custom description for this issue");
+    await page.getByRole("button", { name: "Save" }).click();
+
+    await page.getByRole("button", { name: "Create 2 issues" }).click();
+
+    await expect(page.getByText("Created 2 common issues from your conversations")).toBeVisible();
+    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await expect(page.getByText("Custom description for this issue")).toBeVisible();
   });
 });

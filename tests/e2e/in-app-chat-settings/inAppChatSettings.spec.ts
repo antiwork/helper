@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { waitForSettingsSaved } from "../utils/settingsHelpers";
+import { throttleNetworkRequest } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
@@ -62,8 +63,9 @@ test.describe("In-App Chat Settings", () => {
     });
   });
 
-  test.describe("Chat Icon Visibility Settings", () => {
+  test.describe("Edge Cases and Validation", () => {
     test("should configure chat icon visibility settings", async ({ page }) => {
+      await throttleNetworkRequest(page, "/api/trpc/lambda/mailbox.update");
       const chatIconSwitch = page.locator('[role="switch"]').first();
       const chatIconSelect = page.getByText("Show chat icon for").locator("..").locator('[role="combobox"]');
       const allCustomersOption = page.getByRole("option", { name: "All customers" });
@@ -101,87 +103,6 @@ test.describe("In-App Chat Settings", () => {
 
       await waitForSettingsSaved(page);
     });
-
-    test("should persist visibility settings across page reloads", async ({ page }) => {
-      const chatIconSwitch = page.locator('[role="switch"]').first();
-      const chatIconSelect = page.getByText("Show chat icon for").locator("..").locator('[role="combobox"]');
-      const revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
-      const minCustomerValueInput = page.locator("#min-value");
-
-      const isChecked = await chatIconSwitch.isChecked();
-      if (!isChecked) {
-        await chatIconSwitch.click();
-      }
-
-      await expect(chatIconSelect).toBeVisible();
-      await chatIconSelect.click();
-      await revenueBasedOption.click();
-      await minCustomerValueInput.fill("1000");
-      await expect(minCustomerValueInput).toHaveValue("1000");
-      await waitForSettingsSaved(page);
-
-      await page.reload();
-      await page.waitForLoadState("networkidle");
-      await expect(page.getByRole("heading", { name: "In-App Chat" })).toBeVisible();
-
-      await expect(chatIconSwitch).toBeChecked();
-      await expect(minCustomerValueInput).toBeVisible();
-      await expect(minCustomerValueInput).toHaveValue("1000");
-    });
-  });
-
-  test.describe("Host URL and Email Response Configuration", () => {
-    test("should configure host URL and email response settings", async ({ page }) => {
-      const testUrl = "https://example.com";
-      const hostUrlInput = page.getByLabel("Host URL");
-      const emailResponseTabs = page
-        .locator('[role="tablist"]')
-        .filter({ has: page.getByRole("tab", { name: "Off" }) });
-      const offTab = emailResponseTabs.getByRole("tab", { name: "Off" });
-      const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
-      const replyTab = emailResponseTabs.getByRole("tab", { name: "Reply" });
-
-      await hostUrlInput.fill(testUrl);
-      await expect(hostUrlInput).toHaveValue(testUrl);
-
-      await hostUrlInput.clear();
-      await expect(hostUrlInput).toHaveValue("");
-
-      await offTab.click();
-      await expect(offTab).toHaveAttribute("data-state", "active");
-
-      await draftTab.click();
-      await expect(draftTab).toHaveAttribute("data-state", "active");
-
-      await replyTab.click();
-      await expect(replyTab).toHaveAttribute("data-state", "active");
-
-      await waitForSettingsSaved(page);
-    });
-
-    test("should persist host URL and email settings across page reloads", async ({ page }) => {
-      const testUrl = "https://my-app.com";
-      const hostUrlInput = page.getByLabel("Host URL");
-      const emailResponseTabs = page
-        .locator('[role="tablist"]')
-        .filter({ has: page.getByRole("tab", { name: "Off" }) });
-      const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
-
-      await hostUrlInput.fill(testUrl);
-      await expect(hostUrlInput).toHaveValue(testUrl);
-
-      await draftTab.click();
-      await expect(draftTab).toHaveAttribute("data-state", "active");
-      await waitForSettingsSaved(page);
-
-      await page.reload();
-      await page.waitForLoadState("networkidle");
-      await expect(page.getByRole("heading", { name: "In-App Chat" })).toBeVisible();
-
-      await expect(hostUrlInput).toHaveValue(testUrl);
-      await expect(draftTab).toHaveAttribute("data-state", "active");
-    });
-
     test("should validate URL format", async ({ page }) => {
       const hostUrlInput = page.getByLabel("Host URL");
 
@@ -192,48 +113,39 @@ test.describe("In-App Chat Settings", () => {
       await hostUrlInput.fill("https://valid-url.com");
       await expect(hostUrlInput).toHaveValue("https://valid-url.com");
     });
-  });
 
-  test.describe("Form Validation and Complete Workflow", () => {
-    test("should handle numeric validation and show saving indicators", async ({ page }) => {
+    test("should handle numeric validation for customer values", async ({ page }) => {
       const chatIconSwitch = page.locator('[role="switch"]').first();
       const chatIconSelect = page.getByText("Show chat icon for").locator("..").locator('[role="combobox"]');
       const revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
       const minCustomerValueInput = page.locator("#min-value");
-      const hostUrlInput = page.getByLabel("Host URL");
-      const emailResponseTabs = page
-        .locator('[role="tablist"]')
-        .filter({ has: page.getByRole("tab", { name: "Off" }) });
-      const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
 
       const isChecked = await chatIconSwitch.isChecked();
       if (!isChecked) {
         await chatIconSwitch.click();
       }
 
-      await expect(chatIconSelect).toBeVisible();
       await chatIconSelect.click();
       await revenueBasedOption.click();
 
+      // Test decimal values
       await minCustomerValueInput.fill("99.99");
       await expect(minCustomerValueInput).toHaveValue("99.99");
 
+      // Test negative values
       await minCustomerValueInput.fill("-50");
       await expect(minCustomerValueInput).toHaveValue("-50");
 
+      // Test positive integer
       await minCustomerValueInput.fill("100");
       await expect(minCustomerValueInput).toHaveValue("100");
-
-      await hostUrlInput.fill("https://test.com");
-      await expect(hostUrlInput).toHaveValue("https://test.com");
-
-      await draftTab.click();
-      await expect(draftTab).toHaveAttribute("data-state", "active");
-
-      await waitForSettingsSaved(page);
     });
+  });
 
-    test("should configure all settings in a typical workflow", async ({ page }) => {
+  test.describe("Complete Workflow", () => {
+    test("should configure all settings and persist across reloads", async ({ page }) => {
+      await throttleNetworkRequest(page, "/api/trpc/lambda/mailbox.update");
+
       const chatIconSwitch = page.locator('[role="switch"]').first();
       const chatIconSelect = page.getByText("Show chat icon for").locator("..").locator('[role="combobox"]');
       const revenueBasedOption = page.getByRole("option", { name: "Customers with value greater than" });
@@ -242,41 +154,56 @@ test.describe("In-App Chat Settings", () => {
       const emailResponseTabs = page
         .locator('[role="tablist"]')
         .filter({ has: page.getByRole("tab", { name: "Off" }) });
+      const offTab = emailResponseTabs.getByRole("tab", { name: "Off" });
       const draftTab = emailResponseTabs.getByRole("tab", { name: "Draft" });
-      const widgetPreviewIndicator = page.getByText("Try it out →");
+      const replyTab = emailResponseTabs.getByRole("tab", { name: "Reply" });
 
+      // Step 1: Configure chat icon visibility
       const isChecked = await chatIconSwitch.isChecked();
-      if (!isChecked) {
+      if (isChecked) {
+        // Quick Reset
+        await chatIconSwitch.click();
         await chatIconSwitch.click();
       }
 
-      await expect(chatIconSelect).toBeVisible();
       await chatIconSelect.click();
       await revenueBasedOption.click();
+      await expect(minCustomerValueInput).toBeVisible();
       await minCustomerValueInput.fill("250");
-      await expect(minCustomerValueInput).toHaveValue("250");
 
       await waitForSettingsSaved(page);
+      await expect(page.getByText("Saved")).not.toBeVisible();
 
-      await hostUrlInput.fill("https://mycompany.com");
-      await expect(hostUrlInput).toHaveValue("https://mycompany.com");
+      // Step 2: Configure host URL
+      const hostURL = `https://mycompany.com-${Date.now()}`;
+      await hostUrlInput.fill(hostURL);
 
       await waitForSettingsSaved(page);
+      await expect(page.getByText("Saved")).not.toBeVisible();
+
+      // Step 3: Configure email response settings
+      await offTab.click();
+      await expect(offTab).toHaveAttribute("data-state", "active");
+
+      await draftTab.click();
+      await expect(draftTab).toHaveAttribute("data-state", "active");
+
+      await replyTab.click();
+      await expect(replyTab).toHaveAttribute("data-state", "active");
 
       await draftTab.click();
       await expect(draftTab).toHaveAttribute("data-state", "active");
 
       await waitForSettingsSaved(page);
 
-      await expect(widgetPreviewIndicator).toBeVisible();
-
+      // Step 4: Verify persistence across page reload
       await page.reload();
-      await page.waitForLoadState("networkidle");
       await expect(page.getByRole("heading", { name: "In-App Chat" })).toBeVisible();
 
       await expect(chatIconSwitch).toBeChecked();
+      await expect(minCustomerValueInput).toBeVisible();
       await expect(minCustomerValueInput).toHaveValue("250");
-      await expect(hostUrlInput).toHaveValue("https://mycompany.com");
+      await expect(hostUrlInput).toHaveValue(hostURL);
       await expect(draftTab).toHaveAttribute("data-state", "active");
     });
   });

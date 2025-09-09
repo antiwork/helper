@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { waitForSettingsSaved } from "../utils/settingsHelpers";
+import { throttleNetworkRequest } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
@@ -16,6 +17,8 @@ test.describe("Settings - Mailbox", () => {
   });
 
   test("should display mailbox name setting and allow editing", async ({ page }) => {
+    await throttleNetworkRequest(page, "/api/chat");
+
     const mailboxNameSetting = page.locator('section:has(h2:text("Mailbox name"))');
     const mailboxNameInput = page.locator('input[placeholder="Enter mailbox name"]');
 

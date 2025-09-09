@@ -14,6 +14,8 @@ import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createAdminClient } from "@/lib/supabase/server";
 import { protectedProcedure, publicProcedure } from "../trpc";
 
+const safeToSendBackOTP = !env.VERCEL && env.AUTH_URL === "https://helperai.dev";
+
 export const userRouter = {
   startSignIn: publicProcedure.input(z.object({ email: z.string() })).mutation(async ({ input }) => {
     const [user] = await db
@@ -76,7 +78,7 @@ export const userRouter = {
       `);
       dashboardUrl = `https://supabase.com/dashboard/project/${projectId}/editor/${cacheTable?.id}?filter=key:eq:otp:${user.id}`;
     }
-    return { email: false, dashboardUrl, otp: env.NODE_ENV === "development" ? data.properties.email_otp : undefined };
+    return { email: false, dashboardUrl, otp: safeToSendBackOTP ? data.properties.email_otp : undefined };
   }),
   createUser: publicProcedure
     .input(

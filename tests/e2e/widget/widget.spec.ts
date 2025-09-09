@@ -1,22 +1,10 @@
-import { expect, Page, test } from "@playwright/test";
-import { loadWidget } from "../utils/test-helpers";
+import { expect, test } from "@playwright/test";
+import { loadWidget, throttleNetworkRequest } from "../utils/test-helpers";
 import { widgetConfigs } from "./fixtures/widget-config";
 
 test.describe("Helper Chat Widget - Basic Functionality", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/widget/test/vanilla");
-  });
-
-  test("should load widget and initialize session", async ({ page }) => {
-    const response = await page.waitForResponse(
-      (res) => res.url().includes("/api/widget/session") && res.request().method() === "POST",
-    );
-
-    const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
-    expect(response.ok()).toBe(true);
-
-    const inputVisible = await widgetFrame.getByRole("textbox", { name: "Ask a question" }).isVisible();
-    expect(inputVisible).toBe(true);
   });
 
   test("should send message and receive AI response", async ({ page }) => {
@@ -41,18 +29,18 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
   });
 
   test("should handle authenticated user data", async ({ page }) => {
-    const response = await page.waitForResponse(
-      (res) => res.url().includes("/api/widget/session") && res.request().method() === "POST",
-    );
-    const { widgetFrame } = await loadWidget(page, widgetConfigs.authenticated);
+    const [_, { widgetFrame }] = await Promise.all([
+      page.waitForResponse((res) => res.url().includes("/api/widget/session") && res.status() === 200),
+      loadWidget(page, widgetConfigs.authenticated),
+    ]);
 
     const inputVisible = await widgetFrame.getByRole("textbox", { name: "Ask a question" }).isVisible();
     expect(inputVisible).toBe(true);
-
-    expect(response.ok()).toBe(true);
   });
 
   test("should show loading state during message sending", async ({ page }) => {
+    await throttleNetworkRequest(page, "/api/chat");
+
     const { widgetFrame } = await loadWidget(page, widgetConfigs.anonymous);
 
     await widgetFrame.getByRole("textbox", { name: "Ask a question" }).fill("What is the weather today?");

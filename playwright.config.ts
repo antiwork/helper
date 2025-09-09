@@ -11,8 +11,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 1,
-  /* Opt out of parallel tests on CI for better stability */
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? "100%" : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [["html", { open: process.env.CI ? "never" : "on-failure" }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -34,11 +33,9 @@ export default defineConfig({
 
     /* Extended timeouts for local SSL setup */
     actionTimeout: 15000,
-    navigationTimeout: 45000,
+    navigationTimeout: process.env.CI ? 15000 : 45000,
   },
-
-  /* Global timeout increased for flaky local environment */
-  timeout: 60000,
+  timeout: process.env.CI ? 30000 : 60000,
 
   /* Configure projects for major browsers */
   projects: [
@@ -56,10 +53,10 @@ export default defineConfig({
     },
   ],
 
-  /* Run your local dev server before starting the tests */
+  /* Run your local server before starting the tests */
   // Make sure your port matches the one in your `.env.test.local` file
   webServer: {
-    command: "pnpm run with-test-env next dev --port 3020 --turbopack",
+    command: "scripts/e2e-test-server.sh",
     url: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3020",
     reuseExistingServer: true,
     ignoreHTTPSErrors: true,

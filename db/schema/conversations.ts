@@ -1,5 +1,6 @@
-import { isNull, relations } from "drizzle-orm";
+import { and, eq, isNull, relations } from "drizzle-orm";
 import { bigint, boolean, index, integer, jsonb, pgTable, text, timestamp, unique, vector } from "drizzle-orm/pg-core";
+import { assertDefined } from "@/components/utils/assert";
 import { mailboxes } from "@/db/schema/mailboxes";
 import { randomSlugField } from "../lib/random-slug-field";
 import { withTimestamps } from "../lib/with-timestamps";
@@ -72,6 +73,10 @@ export const conversations = pgTable(
     index("conversations_merged_into_id_idx").on(table.mergedIntoId),
     index("conversations_issue_group_id_idx").on(table.issueGroupId),
     index("conversations_last_message_at_idx").on(table.lastMessageAt),
+    // Optimized index for closed tickets ordering/filtering
+    index("idx_conversations_closed")
+      .on(table.closedAt.desc().nullsLast())
+      .where(assertDefined(and(eq(table.status, "closed"), isNull(table.mergedIntoId)))),
     index("conversations_conversation_status_last_user_email_created_at_idx")
       .on(table.status, table.lastUserEmailCreatedAt.desc().nullsLast())
       .where(isNull(table.mergedIntoId)),
