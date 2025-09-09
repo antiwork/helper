@@ -1,7 +1,8 @@
-import { HelpCircle, MessagesSquare } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import { EventItem } from "@/app/(dashboard)/[category]/conversation/eventItem";
 import MessageItem from "@/app/(dashboard)/[category]/conversation/messageItem";
 import type { Message } from "@/app/types/global";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ToolMetadata } from "@/db/schema";
 import { ConversationWithNewMessages } from "./conversation";
 import GuideSessionItem from "./guideSessionItem";
@@ -48,25 +49,30 @@ export const MessageThread = ({
           ),
         )}
         {conversation.summary && conversation.summary.length > 0 && (
-          <div className="mx-auto flex max-w-2xl flex-col gap-2">
-            <div className="flex items-center gap-1 text-base text-muted-foreground">
-              <MessagesSquare className="h-4 w-4 shrink-0" />
-              Conversation summary
-            </div>
-            <div className="flex flex-col">
-              {conversation.summary.map((point, index) => (
-                <div key={index} className="flex gap-3 text-base relative">
-                  <div className="flex h-full flex-col items-center">
-                    <div className={`absolute top-0 h-3 w-px bg-border ${index === 0 ? "opacity-0" : ""}`}></div>
-                    <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-border"></div>
-                    <div
-                      className={`absolute top-4 bottom-0 w-px bg-border ${conversation.summary && index === conversation.summary.length - 1 ? "opacity-0" : ""}`}
-                    ></div>
+          <div className="mx-auto flex max-w-2xl flex-col">
+            <Accordion type="single" collapsible>
+              <AccordionItem value="summary" className="border-none">
+                <AccordionTrigger className="flex items-center gap-1 text-base text-muted-foreground hover:no-underline px-4 py-2 mx-auto mb-4 border rounded flex-none">
+                  Conversation summary
+                </AccordionTrigger>
+                <AccordionContent className="pt-0">
+                  <div className="flex flex-col">
+                    {conversation.summary.map((point, index) => (
+                      <div key={index} className="flex gap-3 text-base relative">
+                        <div className="flex h-full flex-col items-center">
+                          <div className={`absolute top-0 h-3 w-px bg-border ${index === 0 ? "opacity-0" : ""}`}></div>
+                          <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-border"></div>
+                          <div
+                            className={`absolute top-4 bottom-0 w-px bg-border ${conversation.summary && index === conversation.summary.length - 1 ? "opacity-0" : ""}`}
+                          ></div>
+                        </div>
+                        <div className="pb-4">{point}</div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="pb-4">{point}</div>
-                </div>
-              ))}
-            </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         )}
       </div>
