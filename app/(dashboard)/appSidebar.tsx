@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BarChart,
   Bookmark,
   BookOpen,
   ChevronLeft,
@@ -227,6 +228,14 @@ export function AppSidebar() {
             <div className="mt-auto">
               <SidebarGroup>
                 <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={pathname === `/stats`} tooltip="Stats">
+                      <Link href={`/stats`} onClick={handleItemClick}>
+                        <BarChart className="size-4" />
+                        <span className="group-data-[collapsible=icon]:hidden">Stats</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild

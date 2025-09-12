@@ -2,6 +2,7 @@
 
 import { Calendar, ChevronDown } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/trpc/react";
@@ -28,7 +29,9 @@ export default function StatsPage() {
     <div className="min-h-screen bg-[hsl(0_58%_10%)] text-white -m-8 p-8 relative">
       {/* Helper Logo in top left corner */}
       <div className="absolute top-8 left-8 z-10">
-        <Image src="/logo-white.svg" alt="Helper" width={120} height={32} />
+        <Link href="/mine">
+          <Image src="/logo-white.svg" alt="Helper" width={120} height={32} className="cursor-pointer" />
+        </Link>
       </div>
 
       <main className="space-y-8 max-w-screen-lg mx-auto" data-testid="stats-main-content">
