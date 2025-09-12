@@ -158,9 +158,7 @@ export const buildTools = async ({
           : z.string().email().describe("email address to contact you (required for anonymous users)"),
       }),
       execute: ({ reason, email: newEmail }) =>
-        reasoningMiddleware(requestHumanSupport(conversationId, email, reason, newEmail)).finally(() =>
-          logToolEvent("fetch_user_information", { reason, newEmail }),
-        ),
+        reasoningMiddleware(requestHumanSupport(conversationId, email, reason, newEmail)),
     });
   }
 
