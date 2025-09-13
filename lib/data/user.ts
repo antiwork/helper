@@ -37,7 +37,12 @@ export const getProfile = cache(
 
 export const getBasicProfileById = cache(async (userId: string) => {
   const [user] = await db
-    .select({ id: userProfiles.id, displayName: userProfiles.displayName, email: authUsers.email })
+    .select({
+      id: userProfiles.id,
+      displayName: userProfiles.displayName,
+      email: authUsers.email,
+      preferences: userProfiles.preferences,
+    })
     .from(userProfiles)
     .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
     .where(eq(userProfiles.id, userId));
@@ -46,7 +51,12 @@ export const getBasicProfileById = cache(async (userId: string) => {
 
 export const getBasicProfileByEmail = cache(async (email: string) => {
   const [user] = await db
-    .select({ id: userProfiles.id, displayName: userProfiles.displayName, email: authUsers.email })
+    .select({
+      id: userProfiles.id,
+      displayName: userProfiles.displayName,
+      email: authUsers.email,
+      preferences: userProfiles.preferences,
+    })
     .from(userProfiles)
     .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
     .where(eq(authUsers.email, email));
