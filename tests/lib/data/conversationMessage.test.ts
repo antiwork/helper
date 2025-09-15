@@ -11,7 +11,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { assert } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, files } from "@/db/schema";
+import { conversationMessages, files, userProfiles } from "@/db/schema";
 import { getConversationById } from "@/lib/data/conversation";
 import {
   createConversationMessage,
@@ -644,6 +644,51 @@ describe("createReply", () => {
       where: and(eq(conversationMessages.conversationId, conversation.id), eq(conversationMessages.status, "draft")),
     });
     expect(remainingDrafts).toHaveLength(0);
+  });
+
+  it("auto-assigns when user has preference enabled", async () => {
+    const { profile } = await userFactory.createRootUser();
+    const { conversation } = await conversationFactory.create({ assignedToId: null });
+    await db
+      .update(userProfiles)
+      .set({
+        preferences: { autoAssignOnReply: true },
+      })
+      .where(eq(userProfiles.id, profile.id));
+    await createReply({
+      conversationId: conversation.id,
+      message: "Test message",
+      user: profile,
+      shouldAutoAssign: true,
+    });
+    const updatedConversation = await getConversationById(conversation.id);
+    expect(updatedConversation?.assignedToId).toBe(profile.id);
+  });
+
+  it("does not auto-assign regardless of user auto-assignment setting", async () => {
+    const { profile } = await userFactory.createRootUser();
+    const { conversation: c1 } = await conversationFactory.create({ assignedToId: null });
+    const { conversation: c2 } = await conversationFactory.create({ assignedToId: null });
+    await createReply({
+      conversationId: c1.id,
+      message: "Test message",
+      user: profile,
+      shouldAutoAssign: false,
+    });
+    await db
+      .update(userProfiles)
+      .set({
+        preferences: { autoAssignOnReply: true },
+      })
+      .where(eq(userProfiles.id, profile.id));
+    await createReply({
+      conversationId: c2.id,
+      message: "Test message",
+      user: profile,
+      shouldAutoAssign: false,
+    });
+    expect((await getConversationById(c1.id))?.assignedToId).toBeNull();
+    expect((await getConversationById(c2.id))?.assignedToId).toBeNull();
   });
 });
 

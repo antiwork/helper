@@ -369,12 +369,18 @@ export const generateAgentResponse = async (
         showStatus(`Sending reply...`, { toolName: "sendReply", parameters: { ticketId } });
         const conversation = await findConversation(ticketId);
         if (!conversation) return { error: "Ticket not found" };
+
+        const slackUser = slackUserId
+          ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId)
+          : null;
+        const shouldAutoAssign = slackUser?.preferences?.autoAssignOnReply && !conversation.assignedToId;
+
         await createReply({
           conversationId: conversation.id,
           message: confirmedReplyText,
-          user: slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null,
+          user: slackUser,
           close: false,
-          shouldAutoAssign: false,
+          shouldAutoAssign,
         });
         return { message: "Reply sent" };
       },

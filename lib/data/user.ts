@@ -1,8 +1,8 @@
-import { eq, isNull } from "drizzle-orm";
+import { eq, getTableColumns, isNull } from "drizzle-orm";
 import { cache } from "react";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { BasicUserProfile, userProfiles } from "@/db/schema/userProfiles";
+import { FullUserProfile, userProfiles } from "@/db/schema/userProfiles";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getFirstName, getFullName } from "../auth/authUtils";
@@ -47,6 +47,24 @@ export const getBasicProfileById = cache(async (userId: string) => {
 export const getBasicProfileByEmail = cache(async (email: string) => {
   const [user] = await db
     .select({ id: userProfiles.id, displayName: userProfiles.displayName, email: authUsers.email })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+    .where(eq(authUsers.email, email));
+  return user ?? null;
+});
+
+export const getFullProfileById = cache(async (userId: string): Promise<FullUserProfile | null> => {
+  const [user] = await db
+    .select({ ...getTableColumns(userProfiles), email: authUsers.email })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+    .where(eq(userProfiles.id, userId));
+  return user ?? null;
+});
+
+export const getFullProfileByEmail = cache(async (email: string): Promise<FullUserProfile | null> => {
+  const [user] = await db
+    .select({ ...getTableColumns(userProfiles), email: authUsers.email })
     .from(userProfiles)
     .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
     .where(eq(authUsers.email, email));
@@ -156,9 +174,9 @@ export const updateUserMailboxData = async (
   };
 };
 
-export const findUserViaSlack = cache(async (token: string, slackUserId: string): Promise<BasicUserProfile | null> => {
+export const findUserViaSlack = cache(async (token: string, slackUserId: string): Promise<FullUserProfile | null> => {
   const slackUser = await getSlackUser(token, slackUserId);
-  const user = await getBasicProfileByEmail(slackUser?.profile?.email ?? "");
+  const user = await getFullProfileByEmail(slackUser?.profile?.email ?? "");
   return user ?? null;
 });
 

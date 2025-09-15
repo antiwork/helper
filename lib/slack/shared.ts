@@ -106,13 +106,14 @@ export const handleMessageSlackAction = async (message: SlackMessage, payload: a
       await db.transaction(async (tx) => {
         await updateConversation(
           conversation.id,
-          { set: { status: "closed" }, byUserId: user?.id ?? null, message: "Resolved via Slack" },
+          { set: { status: "closed" }, byUserId: user.id, message: "Resolved via Slack" },
           tx,
         );
       });
     }
   } else if (payload.type === "view_submission") {
     const user = await findUserViaSlack(mailbox.slackBotToken, payload.user.id);
+    const shouldAutoAssign = user?.preferences?.autoAssignOnReply && !conversation?.assignedToId;
 
     if (payload.view.callback_id === "assign_conversation") {
       const selectedUserId = payload.view.state.values.assign_to.user.selected_option.value;
@@ -147,6 +148,7 @@ export const handleMessageSlackAction = async (message: SlackMessage, payload: a
           user,
           close: sendingMethod === "email_and_close",
           slack: { channel: message.slackChannel, messageTs: message.slackMessageTs },
+          shouldAutoAssign,
         });
       } else if (sendingMethod === "note") {
         await addNote({

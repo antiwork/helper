@@ -4,7 +4,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { mailboxes } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
-import { getBasicProfileById } from "@/lib/data/user";
+import { getFullProfileById } from "@/lib/data/user";
 
 const createUser = async (overrides: Partial<typeof authUsers.$inferInsert> = {}) => {
   const user = await db
@@ -15,7 +15,7 @@ const createUser = async (overrides: Partial<typeof authUsers.$inferInsert> = {}
 
   return {
     user,
-    profile: assertDefined(await getBasicProfileById(user.id)),
+    profile: assertDefined(await getFullProfileById(user.id)),
   };
 };
 
