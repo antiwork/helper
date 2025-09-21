@@ -132,7 +132,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     reasoningEnabled: false,
     isHelperUser,
     tools,
-    customerInfoUrl,
+    customerInfoUrl: mailbox.customerSpecificInfoUrl ? null : customerInfoUrl,
     onResponse: ({ messages, isPromptConversation, isFirstMessage, humanSupportRequested }) => {
       if (
         (!isPromptConversation && conversation.subject === CHAT_CONVERSATION_SUBJECT) ||

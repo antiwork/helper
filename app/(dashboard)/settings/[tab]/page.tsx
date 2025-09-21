@@ -12,7 +12,6 @@ import CommonIssuesSetting from "../common-issues/commonIssuesSetting";
 import AutoCloseSetting from "../customers/autoCloseSetting";
 import CustomerSetting from "../customers/customerSetting";
 import ConnectSupportEmail from "../integrations/connectSupportEmail";
-import CustomerInfoUrlSetting from "../integrations/customerInfoUrlSetting";
 import GitHubSetting from "../integrations/githubSetting";
 import SlackSetting from "../integrations/slackSetting";
 import KnowledgeSetting from "../knowledge/knowledgeSetting";
@@ -66,7 +65,6 @@ export default function TabsPage() {
       content: (
         <>
           <ToolSetting />
-          <CustomerInfoUrlSetting mailbox={mailbox} />
           <SlackSetting mailbox={mailbox} />
           <GitHubSetting mailbox={mailbox} />
           <ConnectSupportEmail />

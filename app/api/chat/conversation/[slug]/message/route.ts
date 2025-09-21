@@ -7,6 +7,7 @@ import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { createUserMessage } from "@/lib/ai/chat";
+import { getMailbox } from "@/lib/data/mailbox";
 import { storeTools } from "@/lib/data/storedTool";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
 
@@ -80,10 +81,15 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
 
   const userMessage = await createUserMessage(conversation.id, userEmail, content, attachmentData);
 
+  const mailbox = await getMailbox();
+  if (!mailbox) {
+    return corsResponse({ error: "Mailbox not found" }, { status: 500 });
+  }
+
   await triggerEvent("conversations/auto-response.create", {
     messageId: userMessage.id,
     tools,
-    customerInfoUrl,
+    customerInfoUrl: mailbox.customerSpecificInfoUrl ? null : customerInfoUrl,
   });
 
   return corsResponse({
