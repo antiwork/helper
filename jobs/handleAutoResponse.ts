@@ -13,11 +13,9 @@ import { createMessageNotification } from "@/lib/data/messageNotifications";
 export const handleAutoResponse = async ({
   messageId,
   tools,
-  customerInfoUrl,
 }: {
   messageId: number;
   tools?: Record<string, ToolRequestBody>;
-  customerInfoUrl?: string | null;
 }) => {
   const message = await db.query.conversationMessages
     .findFirst({
@@ -69,7 +67,7 @@ export const handleAutoResponse = async ({
     conversation,
     mailbox,
     tools,
-    customerInfoUrl,
+    customerInfoUrl: mailbox.customerInfoUrl,
     userEmail: message.emailFrom,
     message: {
       id: message.id.toString(),

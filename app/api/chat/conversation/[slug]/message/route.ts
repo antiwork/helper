@@ -4,7 +4,7 @@ import { createMessageBodySchema } from "@helperai/client";
 import { getCustomerFilter } from "@/app/api/chat/customerFilter";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
-import { conversations } from "@/db/schema";
+import { conversations, mailboxes } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { createUserMessage } from "@/lib/ai/chat";
 import { getMailbox } from "@/lib/data/mailbox";
@@ -23,6 +23,7 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
     tools,
     customerSpecificTools,
     customerInfoUrl,
+    customerSpecificInfoUrl,
   } = createMessageBodySchema.parse(await request.json());
 
   if (!content || content.trim().length === 0) {
@@ -79,17 +80,18 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
     waitUntil(storeTools(customerEmail, tools));
   }
 
-  const userMessage = await createUserMessage(conversation.id, userEmail, content, attachmentData);
-
-  const mailbox = await getMailbox();
-  if (!mailbox) {
-    return corsResponse({ error: "Mailbox not found" }, { status: 500 });
+  if (customerSpecificInfoUrl && customerInfoUrl) {
+    const mailbox = await getMailbox();
+    if (mailbox) {
+      await db.update(mailboxes).set({ customerInfoUrl }).where(eq(mailboxes.id, mailbox.id));
+    }
   }
+
+  const userMessage = await createUserMessage(conversation.id, userEmail, content, attachmentData);
 
   await triggerEvent("conversations/auto-response.create", {
     messageId: userMessage.id,
     tools,
-    customerInfoUrl: mailbox.customerSpecificInfoUrl ? null : customerInfoUrl,
   });
 
   return corsResponse({
