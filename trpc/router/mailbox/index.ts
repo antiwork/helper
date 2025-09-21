@@ -55,6 +55,7 @@ export const mailboxRouter = {
         widgetDisplayMode: z.enum(["off", "always", "revenue_based"]).optional(),
         widgetDisplayMinValue: z.number().nullable().optional(),
         widgetHost: z.string().nullable().optional(),
+        customerInfoUrl: z.string().nullable().optional(),
         vipThreshold: z.number().nullable().optional(),
         vipChannelId: z.string().nullable().optional(),
         vipExpectedResponseHours: z.number().nullable().optional(),

@@ -24,6 +24,7 @@ export const mailboxes = pgTable(
     widgetDisplayMode: text().$type<"always" | "revenue_based" | "off">().notNull().default("always"),
     widgetDisplayMinValue: bigint({ mode: "number" }),
     widgetHost: text(),
+    customerInfoUrl: text(),
     vipThreshold: bigint({ mode: "number" }),
     vipChannelId: text(),
     vipExpectedResponseHours: integer(),
