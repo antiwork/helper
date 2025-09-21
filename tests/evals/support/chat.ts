@@ -109,6 +109,7 @@ const parseMessagesWithMocks = (input: string) => {
     widgetDisplayMode: "off",
     widgetDisplayMinValue: null,
     widgetHost: null,
+    customerInfoUrl: null,
     vipThreshold: null,
     vipChannelId: null,
     vipExpectedResponseHours: null,
