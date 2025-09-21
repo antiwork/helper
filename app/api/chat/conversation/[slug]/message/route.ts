@@ -92,6 +92,7 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
   await triggerEvent("conversations/auto-response.create", {
     messageId: userMessage.id,
     tools,
+    customerInfoUrl,
   });
 
   return corsResponse({

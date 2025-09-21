@@ -1,5 +1,5 @@
 {
-  "id": "324e7a08-28cd-4dd2-846d-168237a442b0",
+  "id": "cd878fcb-dc95-4f11-9a6e-ab493a699040",
   "prevId": "bc8c17b7-3395-4ac3-bc6d-79f7bbb1f42f",
   "version": "7",
   "dialect": "postgresql",
@@ -2592,13 +2592,6 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
-        },
-        "customer_specific_info_url": {
-          "name": "customer_specific_info_url",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
         },
         "vip_threshold": {
           "name": "vip_threshold",

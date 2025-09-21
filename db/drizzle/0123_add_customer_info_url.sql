@@ -1,1 +1,0 @@
-ALTER TABLE "mailboxes_mailbox" ADD COLUMN "customer_info_url" text;
