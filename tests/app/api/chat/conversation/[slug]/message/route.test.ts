@@ -311,7 +311,6 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     expect(triggerEvent).toHaveBeenCalledWith("conversations/auto-response.create", {
       messageId: "msg123",
       tools,
-      customerInfoUrl,
     });
   });
 });
