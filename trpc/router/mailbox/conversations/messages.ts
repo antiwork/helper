@@ -81,9 +81,6 @@ export const messagesRouter = {
         close: shouldClose,
         responseToId,
       });
-      await triggerEvent("conversations/auto-response.create", {
-        messageId: id,
-      });
       return { id };
     }),
   flagAsBad: conversationProcedure

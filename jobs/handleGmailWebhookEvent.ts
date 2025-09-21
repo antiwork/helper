@@ -354,7 +354,10 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
       }
 
       if (!shouldIgnore) {
-        await triggerEvent("conversations/auto-response.create", { messageId: newEmail.id });
+        await triggerEvent("conversations/auto-response.create", {
+          messageId: newEmail.id,
+          customerInfoUrl: mailbox.customerInfoUrl,
+        });
       }
 
       results.push({

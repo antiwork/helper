@@ -127,7 +127,11 @@ export const updateConversation = async (
       orderBy: desc(conversationMessages.createdAt),
     });
     if (message?.role === "user") {
-      await triggerEvent("conversations/auto-response.create", { messageId: message.id });
+      const mailbox = assertDefined(await getMailbox());
+      await triggerEvent("conversations/auto-response.create", {
+        messageId: message.id,
+        customerInfoUrl: mailbox.customerInfoUrl,
+      });
     }
   }
 
