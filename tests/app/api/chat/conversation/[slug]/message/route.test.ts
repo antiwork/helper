@@ -1,7 +1,10 @@
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { mailboxFactory } from "@tests/support/factories/mailboxes";
+import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/chat/conversation/[slug]/message/route";
+import { db } from "@/db/client";
+import { mailboxes } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { createUserMessage } from "@/lib/ai/chat";
 
@@ -311,6 +314,104 @@ describe("POST /api/chat/conversation/[slug]/message", () => {
     expect(triggerEvent).toHaveBeenCalledWith("conversations/auto-response.create", {
       messageId: "msg123",
       tools,
+      customerInfoUrl,
     });
+  });
+
+  it("should save customerInfoUrl to mailbox when customerSpecificInfoUrl is false", async () => {
+    const { mailbox } = await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create({
+      emailFrom: "test@example.com",
+    });
+
+    mockSession = { isAnonymous: false, email: "test@example.com" };
+    mockMailbox = mailbox;
+
+    const customerInfoUrl = "https://example.com/customer-info";
+
+    const request = new Request("https://example.com/api", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: "Hello world",
+        customerInfoUrl,
+        customerSpecificInfoUrl: false,
+      }),
+    });
+
+    const response = await POST(request, {
+      params: Promise.resolve({ slug: conversation.slug }),
+    });
+
+    expect(response.status).toBe(200);
+
+    const updatedMailbox = await db.query.mailboxes.findFirst({
+      where: eq(mailboxes.id, mailbox.id),
+    });
+    expect(updatedMailbox?.customerInfoUrl).toBe(customerInfoUrl);
+  });
+
+  it("does not save customerInfoUrl to mailbox when customerSpecificInfoUrl is true", async () => {
+    const { mailbox } = await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create({
+      emailFrom: "test@example.com",
+    });
+
+    mockSession = { isAnonymous: false, email: "test@example.com" };
+    mockMailbox = mailbox;
+
+    const customerInfoUrl = "https://example.com/customer-info";
+
+    const request = new Request("https://example.com/api", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: "Hello world",
+        customerInfoUrl,
+        customerSpecificInfoUrl: true,
+      }),
+    });
+
+    const response = await POST(request, {
+      params: Promise.resolve({ slug: conversation.slug }),
+    });
+
+    expect(response.status).toBe(200);
+
+    const updatedMailbox = await db.query.mailboxes.findFirst({
+      where: eq(mailboxes.id, mailbox.id),
+    });
+    expect(updatedMailbox?.customerInfoUrl).toBeNull();
+  });
+
+  it("does not save customerInfoUrl to mailbox when customerInfoUrl is not provided", async () => {
+    const { mailbox } = await mailboxFactory.create({
+      customerInfoUrl: "https://example.com/customer-info",
+    });
+    const { conversation } = await conversationFactory.create({
+      emailFrom: "test@example.com",
+    });
+
+    mockSession = { isAnonymous: false, email: "test@example.com" };
+    mockMailbox = mailbox;
+
+    const request = new Request("https://example.com/api", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: "Hello world",
+      }),
+    });
+
+    const response = await POST(request, {
+      params: Promise.resolve({ slug: conversation.slug }),
+    });
+
+    expect(response.status).toBe(200);
+
+    const updatedMailbox = await db.query.mailboxes.findFirst({
+      where: eq(mailboxes.id, mailbox.id),
+    });
+    expect(updatedMailbox?.customerInfoUrl).toBe("https://example.com/customer-info");
   });
 });

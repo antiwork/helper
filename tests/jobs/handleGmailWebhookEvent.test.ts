@@ -7,7 +7,7 @@ import { raw as MULTIPLE_TO_EMAILS_RAW } from "@tests/support/fixtures/gmail/mul
 import { raw as NEW_CONVERSATION_RAW } from "@tests/support/fixtures/gmail/newConversationWithAttachments";
 import { raw as WEIRD_ATTACHMENT_RAW } from "@tests/support/fixtures/gmail/weirdAttachment";
 import { raw as WEIRD_EMAIL_FROM_RAW } from "@tests/support/fixtures/gmail/weirdEmailFrom";
-import { mockJobs } from "@tests/support/jobsUtils";
+import { mockJobs, mockTriggerEvent } from "@tests/support/jobsUtils";
 import { count, eq } from "drizzle-orm";
 import { OAuth2Client } from "google-auth-library";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -82,13 +82,16 @@ const mockMessage = (data: Partial<Awaited<ReturnType<typeof getMessageById>>["d
   } as any);
 };
 
-const setupGmailSupportEmail = async () => {
+const setupGmailSupportEmail = async (customerInfoUrl?: string) => {
   const { gmailSupportEmail } = await gmailSupportEmailFactory.create({
     email: GMAIL_SUPPORT_EMAIL_ADDRESS,
     historyId: 1000,
   });
   const { mailbox } = await userFactory.createRootUser({
-    mailboxOverrides: { gmailSupportEmailId: gmailSupportEmail.id },
+    mailboxOverrides: {
+      gmailSupportEmailId: gmailSupportEmail.id,
+      customerInfoUrl: customerInfoUrl || "https://example.com/customer-info",
+    },
   });
 
   return { gmailSupportEmail, mailbox };
@@ -276,7 +279,8 @@ describe("handleGmailWebhookEvent", () => {
 
   describe("happy paths", () => {
     it("creates a conversation and email record for the first email in a Gmail thread", async () => {
-      const { gmailSupportEmail } = await setupGmailSupportEmail();
+      const testCustomerInfoUrl = "https://test-customer-info.com/customers";
+      const { gmailSupportEmail } = await setupGmailSupportEmail(testCustomerInfoUrl);
       mockHistories([
         {
           message: {
@@ -324,6 +328,11 @@ describe("handleGmailWebhookEvent", () => {
         where: (g, { eq }) => eq(g.id, gmailSupportEmail.id),
       });
       expect(updatedGmailSupportEmail?.historyId).toBe(DATA_HISTORY_ID);
+
+      expect(mockTriggerEvent).toHaveBeenCalledWith("conversations/auto-response.create", {
+        messageId: message!.id,
+        customerInfoUrl: testCustomerInfoUrl,
+      });
     });
 
     it("creates a conversation and email record even if the email is not the first in the Gmail thread", async () => {

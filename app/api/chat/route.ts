@@ -68,7 +68,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     customerSpecificInfoUrl,
   }: ChatRequestBody = await request.json();
 
-  if (customerSpecificInfoUrl && customerInfoUrl) {
+  if (customerInfoUrl && !customerSpecificInfoUrl) {
     await db.update(mailboxes).set({ customerInfoUrl }).where(eq(mailboxes.id, mailbox.id));
   }
 

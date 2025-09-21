@@ -161,6 +161,23 @@ describe("updateConversation", () => {
 
     expect(jobsMock.triggerEvent).not.toHaveBeenCalled();
   });
+
+  it("sends auto-response event with customerInfoUrl when conversation is assigned to AI", async () => {
+    const customerInfoUrl = "https://example.com/customer-info";
+    await mailboxFactory.create({ customerInfoUrl });
+    const { conversation } = await conversationFactory.create({ status: "open" });
+    const { message } = await conversationMessagesFactory.create(conversation.id, {
+      role: "user",
+      body: "I need help with my account",
+    });
+
+    await updateConversation(conversation.id, { set: { assignedToAI: true } });
+
+    expect(jobsMock.triggerEvent).toHaveBeenCalledWith("conversations/auto-response.create", {
+      messageId: message.id,
+      customerInfoUrl,
+    });
+  });
 });
 
 describe("getConversationBySlug", () => {

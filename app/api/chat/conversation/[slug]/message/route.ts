@@ -80,7 +80,7 @@ export const POST = withWidgetAuth<{ slug: string }>(async ({ request, context: 
     waitUntil(storeTools(customerEmail, tools));
   }
 
-  if (customerSpecificInfoUrl && customerInfoUrl) {
+  if (customerInfoUrl && !customerSpecificInfoUrl) {
     const mailbox = await getMailbox();
     if (mailbox) {
       await db.update(mailboxes).set({ customerInfoUrl }).where(eq(mailboxes.id, mailbox.id));
