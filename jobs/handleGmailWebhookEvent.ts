@@ -69,7 +69,6 @@ const isThankYouOrAutoResponse = async (
   }
 };
 
-
 export const createMessageAndProcessAttachments = async (
   parsedEmail: ParsedMail,
   parsedEmailFrom: ParsedMailbox,
@@ -112,7 +111,6 @@ export const createMessageAndProcessAttachments = async (
   });
 
   await finishFileUpload({ fileSlugs, messageId: newEmail.id });
-
 
   try {
     await processGmailAttachments(conversation.slug, newEmail.id, parsedEmail.attachments);

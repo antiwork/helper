@@ -740,5 +740,4 @@ describe("handleGmailWebhookEvent", () => {
       expect(uploadFile).not.toHaveBeenCalled();
     });
   });
-
 });
