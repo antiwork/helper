@@ -69,28 +69,6 @@ const isThankYouOrAutoResponse = async (
   }
 };
 
-const assignBasedOnCc = async (
-  conversationId: number,
-  emailCc: string,
-  gmailSupportEmail: typeof gmailSupportEmails.$inferSelect,
-) => {
-  const ccAddresses = extractAddresses(emailCc).filter(
-    (address) => address.toLowerCase() !== gmailSupportEmail.email.toLowerCase(),
-  );
-
-  for (const ccAddress of ccAddresses) {
-    const ccStaffUser = await getBasicProfileByEmail(ccAddress);
-
-    if (ccStaffUser) {
-      await updateConversation(conversationId, {
-        set: { assignedToId: ccStaffUser.id, assignedToAI: false },
-        message: "Auto-assigned based on CC",
-        skipRealtimeEvents: true,
-      });
-      break;
-    }
-  }
-};
 
 export const createMessageAndProcessAttachments = async (
   gmailSupportEmail: typeof gmailSupportEmails.$inferSelect,
@@ -136,18 +114,6 @@ export const createMessageAndProcessAttachments = async (
 
   await finishFileUpload({ fileSlugs, messageId: newEmail.id });
 
-  if (emailCc && !staffUser) {
-    const conversationRecord = await db.query.conversations.findFirst({
-      where: eq(conversations.id, conversation.id),
-      columns: {
-        assignedToId: true,
-      },
-    });
-
-    if (!conversationRecord?.assignedToId) {
-      await assignBasedOnCc(conversation.id, emailCc, gmailSupportEmail);
-    }
-  }
 
   try {
     await processGmailAttachments(conversation.slug, newEmail.id, parsedEmail.attachments);
