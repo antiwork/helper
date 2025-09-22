@@ -124,7 +124,6 @@ export const processGmailThreadWithClient = async (
     const staffUser = await getBasicProfileByEmail(parsedEmailFrom.address);
 
     await createMessageAndProcessAttachments(
-      gmailSupportEmail,
       parsedEmail,
       parsedEmailFrom,
       processedHtml,

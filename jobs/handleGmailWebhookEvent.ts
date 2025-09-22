@@ -71,7 +71,6 @@ const isThankYouOrAutoResponse = async (
 
 
 export const createMessageAndProcessAttachments = async (
-  gmailSupportEmail: typeof gmailSupportEmails.$inferSelect,
   parsedEmail: ParsedMail,
   parsedEmailFrom: ParsedMailbox,
   processedHtml: string,
@@ -300,7 +299,6 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
       }
 
       const newEmail = await createMessageAndProcessAttachments(
-        gmailSupportEmail,
         parsedEmail,
         parsedEmailFrom,
         processedHtml,
