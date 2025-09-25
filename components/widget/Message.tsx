@@ -85,10 +85,7 @@ export default function Message({
 
   return (
     <div
-      className={cx("flex flex-col gap-2", {
-        "ml-9 items-end": message.role === USER_ROLE,
-        "mr-9 items-start": message.role !== USER_ROLE,
-      })}
+      className="flex flex-col gap-2"
       data-testid="message"
       data-message-role={message.role}
     >

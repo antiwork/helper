@@ -392,7 +392,7 @@ export default function HelpingHand({
 
 const MessageWrapper = ({ children, status }: { children: React.ReactNode; status: Status }) => {
   return (
-    <div className="flex flex-col gap-2 mr-9 items-start w-full">
+    <div className="flex flex-col gap-2 w-full">
       <div
         className={cx("rounded-lg max-w-full border border-black bg-background text-foreground", {
           "border-green-900": status === "done",

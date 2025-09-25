@@ -91,7 +91,6 @@ const MessageItem = ({
   onViewDraftedReply?: () => void;
 }) => {
   const userMessage = message.role === "user";
-  const rightAlignedMessage = !userMessage || message.type === "note";
   const isAIMessage = message.type === "message" && message.role === "ai_assistant";
   const hasReasoning = isAIMessage && hasReasoningMetadata(message.metadata);
   const router = useRouter();
@@ -259,8 +258,8 @@ const MessageItem = ({
       className="responsive-break-words grid"
       data-testid="message-item"
     >
-      <div className={`flex ${rightAlignedMessage ? "justify-end" : ""}`}>
-        <div className={`flex flex-col gap-2 ${rightAlignedMessage ? "items-end" : ""}`}>
+      <div className="flex">
+        <div className="flex flex-col gap-2">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             {addSeparator(messageLabels, "·")}
           </div>
@@ -270,9 +269,7 @@ const MessageItem = ({
                 "inline-block rounded-lg p-4",
                 message.type === "note"
                   ? "border border-bright/50"
-                  : rightAlignedMessage
-                    ? "border md:bg-muted md:border-none"
-                    : "bg-muted",
+                  : "border md:bg-muted md:border-none",
               )}
             >
               {message.type === "note" ? (
@@ -356,9 +353,7 @@ const MessageItem = ({
             )}
             <div className="flex flex-1 items-center gap-2">
               <div
-                className={cx("flex flex-1 items-center gap-2", {
-                  "justify-end": rightAlignedMessage,
-                })}
+                className="flex flex-1 items-center gap-2"
               >
                 <HumanizedTime time={message.createdAt} />
                 {message.type === "message" && message.slackUrl && (
@@ -429,7 +424,7 @@ const MessageItem = ({
           </div>
           {message.files.length ? (
             <div
-              className={`flex flex-wrap gap-2 overflow-x-auto pb-2 ${rightAlignedMessage ? "flex-row-reverse" : ""}`}
+              className="flex flex-wrap gap-2 overflow-x-auto pb-2"
             >
               {message.files.map((file, idx) => (
                 <a
