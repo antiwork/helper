@@ -84,14 +84,7 @@ export default function Message({
   }
 
   return (
-    <div
-      className={cx("flex flex-col gap-2", {
-        "ml-9 items-end": message.role === USER_ROLE,
-        "mr-9 items-start": message.role !== USER_ROLE,
-      })}
-      data-testid="message"
-      data-message-role={message.role}
-    >
+    <div className="flex flex-col gap-2" data-testid="message" data-message-role={message.role}>
       <div
         className={cx("rounded-lg max-w-full", {
           "bg-primary text-primary-foreground": message.role === USER_ROLE,

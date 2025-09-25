@@ -1,6 +1,5 @@
 "use client";
 
-import cx from "classnames";
 import { ChevronDown, ChevronRight, Hand } from "lucide-react";
 import { useState } from "react";
 import type { GuideSession as GuideSessionType } from "@/app/types/global";
@@ -9,8 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 export const GuideSessionItem = ({ guideSession }: { guideSession: GuideSessionType }) => {
   const [showInstructions, setShowInstructions] = useState(false);
-  const rightAlignedMessage = true; // Guide sessions are like AI assistant messages
-
   return (
     <div
       data-message-item
@@ -19,8 +16,8 @@ export const GuideSessionItem = ({ guideSession }: { guideSession: GuideSessionT
       className="responsive-break-words grid"
       data-testid="guide-session-item"
     >
-      <div className={`flex ${rightAlignedMessage ? "justify-end" : ""}`}>
-        <div className={`flex flex-col gap-2 ${rightAlignedMessage ? "items-end" : ""}`}>
+      <div className="flex">
+        <div className="flex flex-col gap-2">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Hand className="h-3 w-3" />
@@ -28,12 +25,7 @@ export const GuideSessionItem = ({ guideSession }: { guideSession: GuideSessionT
             </span>
           </div>
           <div className="flex items-start gap-2">
-            <div
-              className={cx(
-                "inline-block rounded-lg p-4",
-                rightAlignedMessage ? "border md:bg-muted md:border-none" : "bg-muted",
-              )}
-            >
+            <div className="inline-block rounded-lg p-4 border md:bg-muted md:border-none">
               <div className="flex flex-col">
                 <div className="flex items-center gap-2 mb-2">
                   <button
@@ -66,11 +58,7 @@ export const GuideSessionItem = ({ guideSession }: { guideSession: GuideSessionT
             </div>
           </div>
           <div className="flex w-full items-center gap-3 text-sm text-muted-foreground">
-            <div
-              className={cx("flex flex-1 items-center gap-2", {
-                "justify-end": rightAlignedMessage,
-              })}
-            >
+            <div className="flex flex-1 items-center gap-2">
               <HumanizedTime time={guideSession.createdAt} />
             </div>
           </div>
