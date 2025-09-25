@@ -1,6 +1,5 @@
 "use client";
 
-import cx from "classnames";
 import { ChevronDown, ChevronRight, Hand } from "lucide-react";
 import { useState } from "react";
 import type { GuideSession as GuideSessionType } from "@/app/types/global";
