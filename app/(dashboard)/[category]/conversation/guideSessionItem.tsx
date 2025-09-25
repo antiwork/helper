@@ -25,9 +25,7 @@ export const GuideSessionItem = ({ guideSession }: { guideSession: GuideSessionT
             </span>
           </div>
           <div className="flex items-start gap-2">
-            <div
-              className="inline-block rounded-lg p-4 border md:bg-muted md:border-none"
-            >
+            <div className="inline-block rounded-lg p-4 border md:bg-muted md:border-none">
               <div className="flex flex-col">
                 <div className="flex items-center gap-2 mb-2">
                   <button
@@ -60,9 +58,7 @@ export const GuideSessionItem = ({ guideSession }: { guideSession: GuideSessionT
             </div>
           </div>
           <div className="flex w-full items-center gap-3 text-sm text-muted-foreground">
-            <div
-              className="flex flex-1 items-center gap-2"
-            >
+            <div className="flex flex-1 items-center gap-2">
               <HumanizedTime time={guideSession.createdAt} />
             </div>
           </div>
