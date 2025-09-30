@@ -1,6 +1,6 @@
 import { env } from "@/lib/env";
 
-export const EMAIL_UNDO_COUNTDOWN_SECONDS = 15;
+export const EMAIL_UNDO_COUNTDOWN_SECONDS = 60;
 
 export const DEFAULT_CONVERSATIONS_PER_PAGE = 25;
 

@@ -41,6 +41,10 @@ export const postEmailToGmail = async ({ messageId: emailId }: { messageId: numb
     return await markFailed(emailId, email.conversationId, "Conversation not found.");
   }
 
+  if (conversation.lastReadAt && email.createdAt && conversation.lastReadAt > email.createdAt) {
+    return await markSent(emailId);
+  }
+
   const mailbox = await getMailbox();
   const gmailSupportEmail = mailbox?.gmailSupportEmailId
     ? await db.query.gmailSupportEmails.findFirst({

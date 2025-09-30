@@ -378,9 +378,9 @@ const MessageItem = ({
                 )}
               </div>
               {message.type === "message" && message.status === "failed" && (
-                <div className="align-center flex items-center justify-center gap-0.5 text-sm text-destructive">
+                <div className="align-center flex items-center justify-center gap-0.5 text-sm text-amber-600">
                   <XCircle className="h-4 w-4" />
-                  <span>Message failed to send</span>
+                  <span>Email failed to send</span>
                 </div>
               )}
               {message.type === "message" && message.role === "ai_assistant" && (

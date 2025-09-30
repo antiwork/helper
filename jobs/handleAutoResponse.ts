@@ -50,6 +50,8 @@ export const handleAutoResponse = async ({
   const mailbox = await getMailbox();
   if (!mailbox) return { message: "Skipped - mailbox not found" };
 
+  if (!conversation.emailFrom) return { message: "Skipped - anonymous conversation" };
+
   if (!conversation.assignedToAI) return { message: "Skipped - not assigned to AI" };
 
   if (mailbox?.preferences?.autoRespondEmailToChat === "draft") {
