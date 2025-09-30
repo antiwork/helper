@@ -117,34 +117,29 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
           </div>
           <span className="text-muted-foreground">Assignee</span>
           <div className="min-w-0">
-            {!conversation.assignedToId && !conversation.assignedToAI ? (
-              <div className="flex items-center gap-1">
-                <AssignPopoverButton
-                  initialAssignedToId={conversation.assignedToId}
-                  assignedToAI={conversation.assignedToAI}
-                />
-                <span className="text-muted-foreground">-</span>
-                {currentUser && (
-                  <button
-                    className="text-primary hover:underline text-sm"
-                    onClick={() => {
-                      const selfAssignee = {
-                        id: currentUser.id,
-                        displayName: getFullName(currentUser),
-                      };
-                      assignTicket(selfAssignee, null);
-                    }}
-                  >
-                    Assign yourself
-                  </button>
-                )}
-              </div>
-            ) : (
+            <div className="flex items-center gap-1">
               <AssignPopoverButton
                 initialAssignedToId={conversation.assignedToId}
                 assignedToAI={conversation.assignedToAI}
               />
-            )}
+              {!conversation.assignedToId && !conversation.assignedToAI && (
+                <span className="text-muted-foreground">-</span>
+              )}
+              {currentUser && (
+                <button
+                  className="text-primary hover:underline text-sm"
+                  onClick={() => {
+                    const selfAssignee = {
+                      id: currentUser.id,
+                      displayName: getFullName(currentUser),
+                    };
+                    assignTicket(selfAssignee, null);
+                  }}
+                >
+                  Assign yourself
+                </button>
+              )}
+            </div>
           </div>
           <span className="text-muted-foreground">Issue</span>
           <div className="min-w-0">
