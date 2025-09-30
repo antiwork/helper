@@ -42,12 +42,14 @@ const getConversation = async (conversationSlug: string, session: WidgetSessionP
     throw new Error("Conversation not found");
   }
 
-  // For anonymous sessions, only allow access if the conversation has no emailFrom
-  // For authenticated sessions, only allow access if the emailFrom matches
-  const isAnonymousUnauthorized = session.isAnonymous && conversation.emailFrom !== null;
-  const isAuthenticatedUnauthorized = session.email && conversation.emailFrom !== session.email;
+  // Allow access if either:
+  // 1. The session has a matching anonymousSessionId (for anonymous sessions)
+  // 2. The session has a matching email address (for authenticated sessions)
+  const hasAnonymousAccess =
+    session.isAnonymous && session.anonymousSessionId && conversation.anonymousSessionId === session.anonymousSessionId;
+  const hasEmailAccess = !session.isAnonymous && session.email && conversation.emailFrom === session.email;
 
-  if (isAnonymousUnauthorized || isAuthenticatedUnauthorized) {
+  if (!hasAnonymousAccess && !hasEmailAccess) {
     throw new Error("Unauthorized");
   }
 

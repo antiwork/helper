@@ -33,6 +33,7 @@ export const POST = withWidgetAuth<Params>(async ({ request, context: { params }
       metadata: conversationMessages.metadata,
       conversation: {
         emailFrom: conversations.emailFrom,
+        anonymousSessionId: conversations.anonymousSessionId,
       },
     })
     .from(conversationMessages)
@@ -41,7 +42,13 @@ export const POST = withWidgetAuth<Params>(async ({ request, context: { params }
     .limit(1)
     .then(takeUniqueOrThrow);
 
-  if (!message || (message.conversation.emailFrom && message.conversation.emailFrom !== session.email)) {
+  const hasAnonymousAccess =
+    session.isAnonymous &&
+    session.anonymousSessionId &&
+    message.conversation.anonymousSessionId === session.anonymousSessionId;
+  const hasEmailAccess = !session.isAnonymous && session.email && message.conversation.emailFrom === session.email;
+
+  if (!message || (!hasAnonymousAccess && !hasEmailAccess)) {
     return Response.json({ error: "Message not found" }, { status: 404 });
   }
 
