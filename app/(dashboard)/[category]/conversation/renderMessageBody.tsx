@@ -42,7 +42,7 @@ export const renderMessageBody = ({
 }) => {
   if (isMarkdown) {
     return {
-      mainContent: <MessageMarkdown className={cn(className, "prose")}>{body}</MessageMarkdown>,
+      mainContent: <MessageMarkdown className={cn(className, "prose max-w-none")}>{body}</MessageMarkdown>,
       quotedContext: null,
     };
   }
@@ -53,7 +53,9 @@ export const renderMessageBody = ({
     const adjustedQuoted = parsedQuoted ? adjustAttributes(parsedQuoted) : "";
 
     return {
-      mainContent: <div className={cn(className, "prose")} dangerouslySetInnerHTML={{ __html: adjustedMain }} />,
+      mainContent: (
+        <div className={cn(className, "prose max-w-none")} dangerouslySetInnerHTML={{ __html: adjustedMain }} />
+      ),
       quotedContext: adjustedQuoted ? (
         <div className={className} dangerouslySetInnerHTML={{ __html: adjustedQuoted }} />
       ) : null,
@@ -62,7 +64,7 @@ export const renderMessageBody = ({
 
   return {
     mainContent: (
-      <div className={cn(className, "prose")}>
+      <div className={cn(className, "prose max-w-none")}>
         {!body ? <span className="text-muted-foreground">(no content)</span> : <PlaintextContent text={body} />}
       </div>
     ),
