@@ -2,11 +2,12 @@ import { waitUntil } from "@vercel/functions";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { reactMessageBodySchema, ReactMessageResult } from "@helperai/client";
+import { getConversation } from "@/app/api/chat/getConversation";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
-import { conversationMessages, conversations } from "@/db/schema";
+import { conversationMessages } from "@/db/schema";
 import { createReactionEventPayload } from "@/lib/data/dashboardEvent";
 import { getMailbox } from "@/lib/data/mailbox";
 import { dashboardChannelId } from "@/lib/realtime/channels";
@@ -26,22 +27,20 @@ export const POST = withWidgetAuth<Params>(async ({ request, context: { params }
     return Response.json({ error: "Invalid message ID" }, { status: 400 });
   }
 
+  const conversation = await getConversation(slug, session);
+
   const message = await db
     .select({
       reactionType: conversationMessages.reactionType,
       reactionFeedback: conversationMessages.reactionFeedback,
       metadata: conversationMessages.metadata,
-      conversation: {
-        emailFrom: conversations.emailFrom,
-      },
     })
     .from(conversationMessages)
-    .innerJoin(conversations, eq(conversationMessages.conversationId, conversations.id))
-    .where(and(eq(conversationMessages.id, messageId), eq(conversations.slug, slug)))
+    .where(and(eq(conversationMessages.id, messageId), eq(conversationMessages.conversationId, conversation.id)))
     .limit(1)
     .then(takeUniqueOrThrow);
 
-  if (!message || (message.conversation.emailFrom && message.conversation.emailFrom !== session.email)) {
+  if (!message) {
     return Response.json({ error: "Message not found" }, { status: 404 });
   }
 

@@ -1,9 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
+import { getConversation } from "@/app/api/chat/getConversation";
 import { withWidgetAuth } from "@/app/api/widget/utils";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
-import { conversationEvents, conversationMessages, conversations } from "@/db/schema";
+import { conversationEvents, conversationMessages } from "@/db/schema";
 
 const EventPayloadSchema = z.object({
   type: z.literal("reasoning_toggled"),
@@ -22,21 +23,16 @@ export const POST = withWidgetAuth<Params>(async ({ request, context: { params }
     return Response.json({ error: "Invalid message ID" }, { status: 400 });
   }
 
+  const conversation = await getConversation(slug, session);
+
   const message = await db
-    .select({
-      id: conversationMessages.id,
-      conversation: {
-        id: conversations.id,
-        emailFrom: conversations.emailFrom,
-      },
-    })
+    .select({ id: conversationMessages.id })
     .from(conversationMessages)
-    .innerJoin(conversations, eq(conversationMessages.conversationId, conversations.id))
-    .where(and(eq(conversationMessages.id, messageId), eq(conversations.slug, slug)))
+    .where(and(eq(conversationMessages.id, messageId), eq(conversationMessages.conversationId, conversation.id)))
     .limit(1)
     .then(takeUniqueOrThrow);
 
-  if (!message || (message.conversation.emailFrom && message.conversation.emailFrom !== session.email)) {
+  if (!message) {
     return Response.json({ error: "Message not found" }, { status: 404 });
   }
 
@@ -55,7 +51,7 @@ export const POST = withWidgetAuth<Params>(async ({ request, context: { params }
   const event = eventResult.data;
 
   await db.insert(conversationEvents).values({
-    conversationId: message.conversation.id,
+    conversationId: conversation.id,
     type: event.type,
     changes: event.changes,
   });
