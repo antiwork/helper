@@ -3,21 +3,17 @@ import { waitUntil } from "@vercel/functions";
 import { type Message } from "ai";
 import { eq } from "drizzle-orm";
 import { ReadPageToolConfig } from "@helperai/sdk";
+import { getConversation } from "@/app/api/chat/getConversation";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
 import { db } from "@/db/client";
 import { conversations, mailboxes } from "@/db/schema";
 import { createUserMessage, respondWithAI } from "@/lib/ai/chat";
-import {
-  CHAT_CONVERSATION_SUBJECT,
-  generateConversationSubject,
-  getConversationBySlugAndMailbox,
-} from "@/lib/data/conversation";
+import { CHAT_CONVERSATION_SUBJECT, generateConversationSubject } from "@/lib/data/conversation";
 import { storeTools } from "@/lib/data/storedTool";
 import { publicConversationChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
 import { createClient } from "@/lib/supabase/server";
-import { WidgetSessionPayload } from "@/lib/widgetSession";
 import { ToolRequestBody } from "@/packages/client/dist";
 
 export const maxDuration = 60;
@@ -34,27 +30,6 @@ interface ChatRequestBody {
   customerInfoUrl?: string | null;
   customerSpecificInfoUrl?: boolean;
 }
-
-const getConversation = async (conversationSlug: string, session: WidgetSessionPayload) => {
-  const conversation = await getConversationBySlugAndMailbox(conversationSlug);
-
-  if (!conversation) {
-    throw new Error("Conversation not found");
-  }
-
-  // Allow access if either:
-  // 1. The session has a matching anonymousSessionId (for anonymous sessions)
-  // 2. The session has a matching email address (for authenticated sessions)
-  const hasAnonymousAccess =
-    session.isAnonymous && session.anonymousSessionId && conversation.anonymousSessionId === session.anonymousSessionId;
-  const hasEmailAccess = !session.isAnonymous && session.email && conversation.emailFrom === session.email;
-
-  if (!hasAnonymousAccess && !hasEmailAccess) {
-    throw new Error("Unauthorized");
-  }
-
-  return conversation;
-};
 
 export const OPTIONS = () => corsOptions("POST");
 
