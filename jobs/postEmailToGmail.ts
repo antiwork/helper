@@ -73,7 +73,7 @@ export const postEmailToGmail = async ({ messageId: emailId }: { messageId: numb
     }
 
     if (!conversation.emailFrom) {
-      return await markFailed(emailId, email.conversationId, "The conversation emailFrom is missing.");
+      return await markSent(emailId);
     }
 
     const rawEmail = await convertConversationMessageToRaw(
