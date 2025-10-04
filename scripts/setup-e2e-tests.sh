@@ -105,7 +105,6 @@ echo "   (optional) set PLAYWRIGHT_USE_PREBUILT=1 in .env.test.local to run e2e 
 echo ""
 echo "   1. Run your tests using:"
 echo "      ./scripts/e2e.sh                   # Run all tests"
-echo "      ./scripts/e2e.sh playwright test tests/e2e/widget/widget-screenshot.spec.ts  # Interactive test runner"
 echo ""
 echo "   2. Or use pnpm commands directly:"
 echo "      pnpm test:e2e                      # Run all tests"

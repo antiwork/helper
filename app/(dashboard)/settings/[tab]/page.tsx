@@ -7,7 +7,6 @@ import { PageHeader } from "@/components/pageHeader";
 import { Alert } from "@/components/ui/alert";
 import { useDocumentTitle } from "@/components/useDocumentTitle";
 import { api } from "@/trpc/react";
-import ChatWidgetSetting from "../chat/chatWidgetSetting";
 import CommonIssuesSetting from "../common-issues/commonIssuesSetting";
 import AutoCloseSetting from "../customers/autoCloseSetting";
 import CustomerSetting from "../customers/customerSetting";
@@ -53,11 +52,6 @@ export default function TabsPage() {
           <AutoCloseSetting mailbox={mailbox} />
         </>
       ),
-    },
-    {
-      label: "In-App Chat",
-      id: "in-app-chat",
-      content: <ChatWidgetSetting mailbox={mailbox} />,
     },
     {
       label: "Integrations",

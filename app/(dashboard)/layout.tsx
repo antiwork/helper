@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
 import { AppSidebar } from "@/app/(dashboard)/appSidebar";
-import InboxClientLayout from "@/app/(dashboard)/clientLayout";
 import { StandaloneDisplayIntegration } from "@/app/(dashboard)/standaloneDisplayIntegration";
 import { SentryContext } from "@/components/sentryContext";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -44,14 +43,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <HydrateClient>
             <SentryContext />
             <SidebarProvider>
-              <InboxClientLayout>
-                <div className="flex h-svh w-full">
-                  <Suspense>
-                    <AppSidebar />
-                  </Suspense>
-                  <main className="flex-1 min-w-0">{children}</main>
-                </div>
-              </InboxClientLayout>
+              <div className="flex h-svh w-full">
+                <Suspense>
+                  <AppSidebar />
+                </Suspense>
+                <main className="flex-1 min-w-0">{children}</main>
+              </div>
             </SidebarProvider>
           </HydrateClient>
         </SessionProvider>

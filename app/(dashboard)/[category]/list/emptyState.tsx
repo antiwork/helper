@@ -11,8 +11,7 @@ export const NoConversations = ({ filtered }: { filtered?: boolean }) => {
   const { conversationListData } = useConversationListContext();
 
   const onboardingState = conversationListData?.onboardingState;
-  const isOnboarding =
-    !onboardingState?.hasResend || !onboardingState?.hasWidgetHost || !onboardingState?.hasGmailSupportEmail;
+  const isOnboarding = !onboardingState?.hasResend || !onboardingState?.hasGmailSupportEmail;
 
   const shouldShowNoTickets = !input.status?.length || input.status?.[0] === "open";
 
@@ -31,22 +30,6 @@ export const NoConversations = ({ filtered }: { filtered?: boolean }) => {
         <HandHello className="w-36 h-36 -mb-10" />
         <h2 className="text-xl text-center font-semibold text-foreground">Welcome! Let's complete your setup.</h2>
         <div className="grid gap-2">
-          <Link
-            href={`/settings/in-app-chat`}
-            className="border transition-colors hover:border-foreground rounded-lg p-4"
-          >
-            <div className="flex items-center gap-2">
-              {onboardingState?.hasWidgetHost ? <Check className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
-              <p className={cn(onboardingState?.hasWidgetHost && "line-through")}>
-                Add the chat widget to your website
-              </p>
-            </div>
-            {!onboardingState?.hasWidgetHost && (
-              <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
-                Learn how <ArrowRight className="w-4 h-4" />
-              </div>
-            )}
-          </Link>
           <Link
             href="https://helper.ai/docs/integrations#resend"
             target="_blank"
