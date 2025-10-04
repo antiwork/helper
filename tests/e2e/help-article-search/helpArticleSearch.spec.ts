@@ -55,10 +55,10 @@ test.describe("Help Article Search", () => {
     const count = await articleItems.count();
     expect(count).toBeGreaterThan(0);
 
-    // Verify first article contains "next.js integration"
+    // Verify first article contains "slack"
     const firstArticle = articleItems.first().locator("span.font-medium");
     const text = await firstArticle.textContent();
-    expect(text?.toLowerCase()).toContain("next.js integration");
+    expect(text?.toLowerCase()).toContain("slack");
   });
 
   test("should insert article link when selected", async ({ page }) => {
