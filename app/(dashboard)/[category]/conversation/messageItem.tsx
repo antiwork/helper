@@ -260,26 +260,24 @@ const MessageItem = ({
     >
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-1 text-xs text-muted-foreground">{addSeparator(messageLabels, "·")}</div>
-        <div className="flex items-start gap-2">
-          <div
-            className={cx(
-              "inline-block rounded-lg p-4",
-              message.type === "note" ? "border border-bright/50" : message.role === "user" ? "bg-muted" : "border",
-            )}
-          >
-            {message.type === "note" ? (
-              <NoteEditor
-                conversation={conversation}
-                note={message}
-                isEditing={isEditingNote}
-                onCancelEdit={() => setIsEditingNote(false)}
-              >
-                <MessageContent mainContent={mainContent} quotedContext={quotedContext} />
-              </NoteEditor>
-            ) : (
+        <div
+          className={cx(
+            "rounded-lg p-4",
+            message.type === "note" ? "border border-bright/50" : message.role === "user" ? "bg-muted" : "border",
+          )}
+        >
+          {message.type === "note" ? (
+            <NoteEditor
+              conversation={conversation}
+              note={message}
+              isEditing={isEditingNote}
+              onCancelEdit={() => setIsEditingNote(false)}
+            >
               <MessageContent mainContent={mainContent} quotedContext={quotedContext} />
-            )}
-          </div>
+            </NoteEditor>
+          ) : (
+            <MessageContent mainContent={mainContent} quotedContext={quotedContext} />
+          )}
         </div>
         <div className="flex w-full items-center gap-3 text-sm text-muted-foreground">
           {message.type === "message" && message.isMerged && (
