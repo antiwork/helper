@@ -19,7 +19,7 @@ Playwright e2e tests for the Helper application.
 ./scripts/e2e.sh
 
 # Specific test
-./scripts/e2e.sh playwright test tests/e2e/widget/widget-screenshot.spec.ts
+./scripts/e2e.sh playwright test path/to/specific/test.spec.ts
 
 # Debug mode
 ./scripts/e2e.sh playwright test --debug

@@ -77,7 +77,7 @@ useEffect(() => {
 ## 7. Final steps
 
 - Tell me the route of the conversation list page you created
-- Tell me how to add the Helper HMAC secret configuration (note: the secret itself is available at ${host}/settings/in-app-chat under "Authenticate your users")
+- Tell me how to add the Helper HMAC secret configuration (note: the secret itself is available at ${host}/settings/mailbox under "Widget HMAC Secret")
 `.trimStart();
 };
 
@@ -151,7 +151,7 @@ Create the \`SupportPortal\` component. It should include state management for \
 ## 6. Final steps
 
 - Tell me the route of the page you created (e.g., /support)
-- Tell me how to add the Helper HMAC secret configuration (note: the secret itself is available at ${host}/settings/in-app-chat under "Authenticate your users")
+- Tell me how to add the Helper HMAC secret configuration (note: the secret itself is available at ${host}/settings/mailbox under "Widget HMAC Secret")
 `.trimStart();
 };
 
