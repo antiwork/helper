@@ -10,6 +10,7 @@ import {
   Bot,
   Download,
   Frown,
+  Info,
   Mail,
   MessageSquare,
   MoreHorizontal,
@@ -21,7 +22,6 @@ import {
   ThumbsUp,
   Trash2,
   User,
-  XCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -260,24 +260,26 @@ const MessageItem = ({
     >
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-1 text-xs text-muted-foreground">{addSeparator(messageLabels, "·")}</div>
-        <div
-          className={cx(
-            "rounded-lg p-4",
-            message.type === "note" ? "border border-bright/50" : message.role === "user" ? "bg-muted" : "border",
-          )}
-        >
-          {message.type === "note" ? (
-            <NoteEditor
-              conversation={conversation}
-              note={message}
-              isEditing={isEditingNote}
-              onCancelEdit={() => setIsEditingNote(false)}
-            >
+        <div className="flex items-start gap-2">
+          <div
+            className={cx(
+              "inline-block rounded-lg p-4",
+              message.type === "note" ? "border border-bright/50" : message.role === "user" ? "bg-muted" : "border",
+            )}
+          >
+            {message.type === "note" ? (
+              <NoteEditor
+                conversation={conversation}
+                note={message}
+                isEditing={isEditingNote}
+                onCancelEdit={() => setIsEditingNote(false)}
+              >
+                <MessageContent mainContent={mainContent} quotedContext={quotedContext} />
+              </NoteEditor>
+            ) : (
               <MessageContent mainContent={mainContent} quotedContext={quotedContext} />
-            </NoteEditor>
-          ) : (
-            <MessageContent mainContent={mainContent} quotedContext={quotedContext} />
-          )}
+            )}
+          </div>
         </div>
         <div className="flex w-full items-center gap-3 text-sm text-muted-foreground">
           {message.type === "message" && message.isMerged && (
@@ -364,9 +366,9 @@ const MessageItem = ({
               )}
             </div>
             {message.type === "message" && message.status === "failed" && (
-              <div className="align-center flex items-center justify-center gap-0.5 text-sm text-destructive">
-                <XCircle className="h-4 w-4" />
-                <span>Message failed to send</span>
+              <div className="align-center flex items-center justify-center gap-0.5 text-sm text-muted">
+                <Info className="h-4 w-4" />
+                <span>Email failed to send</span>
               </div>
             )}
             {message.type === "message" && message.role === "ai_assistant" && (

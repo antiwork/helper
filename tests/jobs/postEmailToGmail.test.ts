@@ -199,7 +199,7 @@ describe("postEmailToGmail", () => {
       });
     });
 
-    it("marks the email as failed when the conversation emailFrom is missing", async () => {
+    it("marks the email as sent without posting to Gmail when the conversation emailFrom is missing", async () => {
       const { conversation } = await setupConversationForGmailSending();
       const updatedConversation = await db
         .update(conversations)
@@ -211,8 +211,28 @@ describe("postEmailToGmail", () => {
       const { message } = await conversationMessagesFactory.createEnqueued(updatedConversation.id, {
         body: "Content",
       });
-      expect(await postEmailToGmail({ messageId: message.id })).toEqual("The conversation emailFrom is missing.");
-      await assertMarkFailed(message.id);
+      expect(await postEmailToGmail({ messageId: message.id })).toBeNull();
+      expect(convertConversationMessageToRaw).not.toHaveBeenCalled();
+      expect(sendGmailEmail).not.toHaveBeenCalled();
+      await assertMarkSent(message.id);
+    });
+
+    it("marks the email as sent without posting to Gmail when conversation was read after message creation", async () => {
+      const { conversation } = await setupConversationForGmailSending();
+
+      const messageCreatedAt = new Date("2025-01-01T12:00:00Z");
+      const { message } = await conversationMessagesFactory.createEnqueued(conversation.id, {
+        body: "Content",
+        createdAt: messageCreatedAt,
+      });
+
+      const lastReadAt = new Date("2025-01-01T13:00:00Z");
+      await db.update(conversations).set({ lastReadAt }).where(eq(conversations.id, conversation.id));
+
+      expect(await postEmailToGmail({ messageId: message.id })).toBeNull();
+      expect(convertConversationMessageToRaw).not.toHaveBeenCalled();
+      expect(sendGmailEmail).not.toHaveBeenCalled();
+      await assertMarkSent(message.id);
     });
 
     it("marks the email as failed when the mailbox does not have a connected Gmail account", async () => {
