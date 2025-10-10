@@ -1,4 +1,14 @@
-import { ChevronDown, ChevronRight, CornerUpLeft, DollarSign, ExternalLink, Mail } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  CornerUpLeft,
+  DollarSign,
+  ExternalLink,
+  Mail,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { toast } from "sonner";
@@ -16,6 +26,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "@/components/useSession";
 import { formatCurrency } from "@/components/utils/currency";
 import { getFullName } from "@/lib/auth/authUtils";
@@ -84,6 +95,126 @@ const ConversationItem = ({
     {summary && <div className="text-muted-foreground text-xs line-clamp-2 mb-2">{summary}</div>}
   </div>
 );
+
+interface CustomerNotesProps {
+  email: string;
+}
+
+const CustomerNotes = ({ email }: CustomerNotesProps) => {
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [noteText, setNoteText] = useState("");
+  const utils = api.useUtils();
+
+  const { data: notes = [] } = api.mailbox.customers.notes.list.useQuery({ email }, { enabled: !!email });
+
+  const addNote = api.mailbox.customers.notes.add.useMutation({
+    onSuccess: () => {
+      setNoteText("");
+      setIsAdding(false);
+      utils.mailbox.customers.notes.list.invalidate({ email });
+      toast.success("Note added");
+    },
+  });
+
+  const updateNote = api.mailbox.customers.notes.update.useMutation({
+    onSuccess: () => {
+      setNoteText("");
+      setEditingId(null);
+      utils.mailbox.customers.notes.list.invalidate({ email });
+      toast.success("Note updated");
+    },
+  });
+
+  const deleteNote = api.mailbox.customers.notes.delete.useMutation({
+    onSuccess: () => {
+      utils.mailbox.customers.notes.list.invalidate({ email });
+      toast.success("Note deleted");
+    },
+  });
+
+  const handleSave = () => {
+    if (!noteText.trim()) return;
+
+    if (editingId) {
+      updateNote.mutate({ noteId: editingId, message: noteText.trim() });
+    } else {
+      addNote.mutate({ email, message: noteText.trim() });
+    }
+  };
+
+  const handleEdit = (note: (typeof notes)[0]) => {
+    setEditingId(note.id);
+    setNoteText(note.body);
+    setIsAdding(true);
+  };
+
+  const handleCancel = () => {
+    setIsAdding(false);
+    setEditingId(null);
+    setNoteText("");
+  };
+
+  return (
+    <div className="space-y-2">
+      {notes.map((note) => (
+        <div key={note.id} className="text-sm bg-muted/50 rounded p-2 group relative">
+          <div className="whitespace-pre-wrap pr-12">{note.body}</div>
+          <div className="text-xs text-muted-foreground mt-1">
+            <HumanizedTime time={note.createdAt} />
+          </div>
+          <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="sm" iconOnly className="h-6 w-6" onClick={() => handleEdit(note)}>
+              <Pencil className="h-3 w-3" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              iconOnly
+              className="h-6 w-6"
+              onClick={() => {
+                if (confirm("Delete this note?")) {
+                  deleteNote.mutate({ noteId: note.id });
+                }
+              }}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      ))}
+
+      {isAdding ? (
+        <div className="space-y-2">
+          <Textarea
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            placeholder="Add a note about this customer..."
+            className="min-h-20"
+            autoFocus
+          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={!noteText.trim() || addNote.isPending || updateNote.isPending}
+            >
+              Save
+            </Button>
+            <Button size="sm" variant="ghost" onClick={handleCancel}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button size="sm" variant="ghost" className="w-full justify-start" onClick={() => setIsAdding(true)}>
+          <Plus className="h-4 w-4 mr-1" />
+          Add note
+        </Button>
+      )}
+    </div>
+  );
+};
 
 const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
   const { navigateToConversation } = useConversationListContext();
@@ -224,6 +355,13 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
                   </div>
                 )}
               </>
+            )}
+
+            {conversation.emailFrom && (
+              <div className="col-span-2 mt-3 pt-3 border-t border-border">
+                <h4 className="text-xs font-medium mb-2">Notes</h4>
+                <CustomerNotes email={conversation.emailFrom} />
+              </div>
             )}
           </div>
         </div>

@@ -9,6 +9,7 @@ export * from "./faqs";
 export * from "./platformCustomers";
 export * from "./files";
 export * from "./notes";
+export * from "./customerNotes";
 export * from "./aiUsageEvents";
 export * from "./messageNotifications";
 export * from "./websites";
