@@ -1,0 +1,373 @@
+name: Playwright E2E Tests (Optimized)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  # Job 1: Install dependencies (required by everything else)
+  install-deps:
+    runs-on: ${{ github.repository == 'antiwork/helper' && 'ubicloud-standard-4' || 'ubuntu-latest' }}
+    timeout-minutes: 10
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+
+      # Get pnpm store path for caching
+      - name: Get pnpm store directory
+        id: pnpm-store
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      # Cache both pnpm store and node_modules for maximum speed
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.pnpm-store.outputs.STORE_PATH }}
+            node_modules
+            packages/*/node_modules
+            packages/*/dist
+            packages/*/build
+          key: deps-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            deps-${{ runner.os }}-
+
+      # Only install if cache miss
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      # Upload node_modules as artifact for other jobs
+      - name: Upload dependencies
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-modules
+          path: |
+            node_modules
+            packages/*/node_modules
+            packages/*/dist
+            packages/*/build
+            package.json
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
+          retention-days: 1
+          compression-level: 1 # Fastest compression
+
+  # Job 2: Build and Setup run in parallel after deps are installed
+  build:
+    needs: install-deps
+    runs-on: ${{ github.repository == 'antiwork/helper' && 'ubicloud-standard-4' || 'ubuntu-latest' }}
+    timeout-minutes: 10
+    env:
+      CI: true
+      NODE_OPTIONS: --max_old_space_size=8192
+      OPENAI_API_KEY: test-openai-api-key
+      FIRECRAWL_API_KEY: test-firecrawl-api-key
+    outputs:
+      cache-hit: ${{ steps.build-cache.outputs.cache-hit }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+
+      # Download dependencies from previous job
+      - name: Download dependencies
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+
+      # Cache the build output
+      - name: Cache build
+        id: build-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next
+            .next/cache
+            node_modules/.cache
+          key: build-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml', 'src/**', 'app/**', 'components/**', 'lib/**', 'pages/**', '*.config.*', '*.json') }}
+          restore-keys: |
+            build-${{ runner.os }}-
+
+      # Build only if cache miss
+      - name: Build application
+        if: steps.build-cache.outputs.cache-hit != 'true'
+        run: pnpm with-test-env next build
+
+      # Upload build artifacts for e2e job
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            .next
+            node_modules/.cache
+          retention-days: 1
+          compression-level: 1
+
+  setup-e2e:
+    needs: install-deps
+    runs-on: ${{ github.repository == 'antiwork/helper' && 'ubicloud-standard-4' || 'ubuntu-latest' }}
+    timeout-minutes: 10
+    env:
+      CI: true
+      SUPABASE_PROJECT_ID: helper
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+
+      # Download dependencies from previous job
+      - name: Download dependencies
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+
+      # Cache Docker images for Supabase
+      - name: Cache Docker images
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/docker-cache
+          key: docker-${{ runner.os }}-supabase-v2
+          restore-keys: |
+            docker-${{ runner.os }}-
+
+      # Load cached Docker images if they exist
+      - name: Load Docker cache
+        run: |
+          if [ -d ~/docker-cache ]; then
+            for image in ~/docker-cache/*.tar; do
+              [ -f "$image" ] && docker load -i "$image" || true
+            done
+          fi
+
+      # Cache database migrations and seeds result
+      - name: Cache E2E setup state
+        id: e2e-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/e2e-setup
+          key: e2e-setup-${{ runner.os }}-${{ hashFiles('supabase/**', 'db/**', 'scripts/setup-e2e-tests.sh', '.env.test') }}
+          restore-keys: |
+            e2e-setup-${{ runner.os }}-
+
+      # Run setup script
+      - name: Setup E2E test environment
+        run: |
+          # Create cache marker file if setup completes
+          ./scripts/setup-e2e-tests.sh
+          mkdir -p ~/.cache/e2e-setup
+          echo "setup-complete" > ~/.cache/e2e-setup/marker
+
+      # Save Docker images to cache for next run
+      - name: Save Docker images
+        if: always()
+        run: |
+          mkdir -p ~/docker-cache
+          docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "(supabase|postgres)" | while read image; do
+            filename=$(echo "$image" | tr '/:' '--')
+            docker save "$image" -o ~/docker-cache/"$filename".tar || true
+          done
+
+      # Keep containers running and create a marker file
+      - name: Create setup marker
+        run: |
+          echo "E2E setup completed" > /tmp/e2e-setup-complete
+          # Export container info for the e2e job
+          docker ps --filter "name=${SUPABASE_PROJECT_ID}" --format "{{.Names}}" > /tmp/supabase-containers
+
+      - name: Upload setup marker
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-setup-marker
+          path: |
+            /tmp/e2e-setup-complete
+            /tmp/supabase-containers
+            .env.test
+          retention-days: 1
+
+  # Job 3: Run E2E tests in parallel shards
+  e2e:
+    needs: [build, setup-e2e]
+    runs-on: ${{ github.repository == 'antiwork/helper' && 'ubicloud-standard-4' || 'ubuntu-latest' }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    env:
+      CI: true
+      OPENAI_API_KEY: test-openai-api-key
+      FIRECRAWL_API_KEY: test-firecrawl-api-key
+      NODE_OPTIONS: --max_old_space_size=8192
+      PLAYWRIGHT_USE_PREBUILT: 1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+
+      # Download all artifacts
+      - name: Download dependencies
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Download E2E setup marker
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-setup-marker
+          path: /tmp
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/package.json') }}-v2
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm playwright install --with-deps chromium
+
+      # Ensure Playwright browsers are available
+      - name: Validate Playwright installation
+        run: pnpm playwright --version
+
+      # Run tests in this shard
+      - name: Run E2E tests (shard ${{ matrix.shard }}/4)
+        run: |
+          # Source the test environment
+          set -o allexport
+          source .env.test
+          set +o allexport
+
+          # Run playwright tests for this shard
+          pnpm playwright test --shard=${{ matrix.shard }}/4
+
+      # Upload test results
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-shard-${{ matrix.shard }}
+          path: playwright-report/
+          retention-days: 7
+
+  # Job 4: Merge test reports
+  report:
+    needs: e2e
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download all test reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: playwright-report-shard-*
+          path: all-reports
+
+      - name: Merge HTML reports
+        run: |
+          mkdir -p playwright-report
+          # Copy all shard reports into the final report directory
+          for dir in all-reports/*/; do
+            if [ -d "$dir" ]; then
+              cp -r "$dir"* playwright-report/ 2>/dev/null || true
+            fi
+          done
+
+      - name: Upload merged report
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+  # Optional: cleanup job to stop containers
+  cleanup:
+    needs: [e2e]
+    if: always()
+    runs-on: ${{ github.repository == 'antiwork/helper' && 'ubicloud-standard-4' || 'ubuntu-latest' }}
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Download dependencies
+        uses: actions/download-artifact@v4
+        with:
+          name: node-modules
+        continue-on-error: true
+
+      - name: Stop Supabase containers
+        run: |
+          if command -v pnpm &> /dev/null; then
+            pnpm supabase stop --no-backup || true
+          fi
+          # Also try to stop any orphaned containers
+          docker ps -q --filter "name=supabase" | xargs -r docker stop || true
+          docker ps -aq --filter "name=supabase" | xargs -r docker rm || true
