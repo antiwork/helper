@@ -1,0 +1,136 @@
+name: E2E Tests (Fastest with Pre-built Image)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    # Use pre-built container with all tools installed
+    container:
+      image: ghcr.io/${{ github.repository }}-ci:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      options: --privileged --network host
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+    env:
+      CI: true
+      OPENAI_API_KEY: test-openai-api-key
+      FIRECRAWL_API_KEY: test-firecrawl-api-key
+      NODE_OPTIONS: --max_old_space_size=8192
+      PLAYWRIGHT_USE_PREBUILT: 1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Since we're using a pre-built image, dependencies are already installed
+      # Just need to install project-specific packages
+      - name: Install project dependencies
+        run: |
+          # Link to pre-installed global packages to save time
+          pnpm install --frozen-lockfile --prefer-offline
+
+      # Cache the Next.js build
+      - name: Cache Next.js build
+        id: build-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next
+            .next/cache
+          key: build-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml', 'src/**', 'app/**', 'components/**', 'lib/**', '*.config.*') }}-v3
+          restore-keys: |
+            build-${{ runner.os }}-
+
+      # Cache database setup state
+      - name: Cache database state
+        id: db-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /tmp/db-setup-complete
+            ~/.cache/supabase-data
+          key: db-${{ runner.os }}-${{ hashFiles('supabase/**', 'db/**/*.sql', 'db/**/*.ts', '.env.test') }}-v3
+          restore-keys: |
+            db-${{ runner.os }}-
+
+      # Setup Supabase and database (with smart caching)
+      - name: Setup E2E test environment
+        run: |
+          # Check if database setup can be skipped
+          if [ -f /tmp/db-setup-complete ] && [ "${{ steps.db-cache.outputs.cache-hit }}" == "true" ]; then
+            echo "📦 Using cached database setup"
+            # Just start Supabase with existing data
+            pnpm run with-test-env pnpm supabase start --no-migrations
+          else
+            echo "🔧 Running full database setup"
+            # Run the full setup script
+            ./scripts/setup-e2e-tests.sh
+            # Mark as complete for caching
+            touch /tmp/db-setup-complete
+          fi
+
+      # Build Next.js (only if not cached)
+      - name: Build application
+        if: steps.build-cache.outputs.cache-hit != 'true'
+        run: pnpm with-test-env next build
+
+      # Run tests for this shard
+      - name: Run Playwright tests (shard ${{ matrix.shard }}/4)
+        run: pnpm playwright test --shard=${{ matrix.shard }}/4
+
+      # Upload test results
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-shard-${{ matrix.shard }}
+          path: playwright-report/
+          retention-days: 7
+
+  # Merge test reports
+  report:
+    needs: e2e
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download all test reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: playwright-report-shard-*
+          path: all-reports
+
+      - name: Merge reports
+        run: |
+          mkdir -p playwright-report
+          for dir in all-reports/*/; do
+            [ -d "$dir" ] && cp -r "$dir"* playwright-report/ 2>/dev/null || true
+          done
+
+      - name: Upload final report
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30

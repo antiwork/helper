@@ -1,0 +1,140 @@
+name: E2E Tests (Docker + Fallback)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    env:
+      CI: true
+      OPENAI_API_KEY: test-openai-api-key
+      FIRECRAWL_API_KEY: test-firecrawl-api-key
+      NODE_OPTIONS: --max_old_space_size=8192
+      PLAYWRIGHT_USE_PREBUILT: 1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Try to use Docker image if available
+      - name: Check for Docker image
+        id: docker-check
+        continue-on-error: true
+        run: |
+          # Calculate current deps hash
+          DEPS_HASH=$(sha256sum pnpm-lock.yaml | cut -d' ' -f1)
+          echo "deps_hash=$DEPS_HASH" >> $GITHUB_OUTPUT
+
+          # Check if matching Docker image exists
+          if docker pull ghcr.io/${{ github.repository }}/ci:deps-$DEPS_HASH 2>/dev/null; then
+            echo "docker_available=true" >> $GITHUB_OUTPUT
+            echo "✅ Found Docker image with matching dependencies"
+          else
+            echo "docker_available=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No Docker image found for current dependencies"
+          fi
+
+      # FAST PATH: Use Docker image if available
+      - name: Run with Docker image
+        if: steps.docker-check.outputs.docker_available == 'true'
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspace \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -e CI=true \
+            -e OPENAI_API_KEY=${{ env.OPENAI_API_KEY }} \
+            -e FIRECRAWL_API_KEY=${{ env.FIRECRAWL_API_KEY }} \
+            --network host \
+            ghcr.io/${{ github.repository }}/ci:deps-${{ steps.docker-check.outputs.deps_hash }} \
+            bash -c "
+              cd /workspace
+              # Dependencies are pre-installed in image
+              ./scripts/setup-e2e-tests.sh
+              pnpm with-test-env next build
+              pnpm playwright test --shard=${{ matrix.shard }}/4
+            "
+
+      # FALLBACK: Traditional setup if no Docker image
+      - name: Setup without Docker
+        if: steps.docker-check.outputs.docker_available != 'true'
+        run: |
+          echo "📦 Falling back to traditional setup (Docker image not available)"
+
+      - name: Set up pnpm
+        if: steps.docker-check.outputs.docker_available != 'true'
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        if: steps.docker-check.outputs.docker_available != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        if: steps.docker-check.outputs.docker_available != 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright
+        if: steps.docker-check.outputs.docker_available != 'true'
+        run: pnpm playwright install --with-deps chromium
+
+      - name: Setup E2E environment
+        if: steps.docker-check.outputs.docker_available != 'true'
+        run: ./scripts/setup-e2e-tests.sh
+
+      - name: Build Next.js
+        if: steps.docker-check.outputs.docker_available != 'true'
+        run: pnpm with-test-env next build
+
+      - name: Run tests
+        if: steps.docker-check.outputs.docker_available != 'true'
+        run: pnpm playwright test --shard=${{ matrix.shard }}/4
+
+      # Upload results (always)
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-shard-${{ matrix.shard }}
+          path: playwright-report/
+          retention-days: 7
+
+  # Trigger Docker rebuild if needed
+  trigger-docker-rebuild:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check if Docker image needs update
+        run: |
+          DEPS_HASH=$(sha256sum pnpm-lock.yaml | cut -d' ' -f1)
+
+          # Try to pull image with current deps hash
+          if ! docker pull ghcr.io/${{ github.repository }}/ci:deps-$DEPS_HASH 2>/dev/null; then
+            echo "::warning::Docker image needs to be rebuilt for new dependencies"
+            # Trigger the Docker build workflow
+            gh workflow run docker-image-ci.yml --ref ${{ github.ref }}
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

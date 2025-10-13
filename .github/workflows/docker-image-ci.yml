@@ -1,0 +1,140 @@
+name: Build and Maintain CI Docker Image
+
+on:
+  # Trigger on dependency changes
+  push:
+    branches:
+      - main
+    paths:
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '**/package.json'  # Workspace packages
+      - '.github/docker/Dockerfile.ci*'
+      - '.github/workflows/docker-image-ci.yml'
+
+  # Test image changes in PRs
+  pull_request:
+    paths:
+      - 'pnpm-lock.yaml'
+      - '.github/docker/Dockerfile.ci*'
+
+  # Manual rebuild option
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild even if no changes'
+        required: false
+        type: boolean
+        default: false
+
+  # Scheduled rebuild for security updates
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/ci
+
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      needs_rebuild: ${{ steps.check.outputs.rebuild }}
+      dependencies_changed: ${{ steps.check.outputs.deps_changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need previous commit for comparison
+
+      - name: Check if rebuild needed
+        id: check
+        run: |
+          # Force rebuild if requested
+          if [ "${{ github.event.inputs.force_rebuild }}" == "true" ]; then
+            echo "rebuild=true" >> $GITHUB_OUTPUT
+            echo "deps_changed=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check if dependencies changed
+          if git diff HEAD^ HEAD --name-only | grep -E "(package\.json|pnpm-lock\.yaml)"; then
+            echo "Dependencies changed, rebuild needed"
+            echo "rebuild=true" >> $GITHUB_OUTPUT
+            echo "deps_changed=true" >> $GITHUB_OUTPUT
+          else
+            # On schedule or Dockerfile changes, rebuild anyway
+            if [ "${{ github.event_name }}" == "schedule" ] || git diff HEAD^ HEAD --name-only | grep -E "Dockerfile\.ci"; then
+              echo "rebuild=true" >> $GITHUB_OUTPUT
+              echo "deps_changed=false" >> $GITHUB_OUTPUT
+            else
+              echo "rebuild=false" >> $GITHUB_OUTPUT
+              echo "deps_changed=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  build-image:
+    needs: check-changes
+    if: needs.check-changes.outputs.needs_rebuild == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate cache key for dependencies
+        id: cache-key
+        run: |
+          # Create a hash of dependencies for cache busting
+          echo "deps_hash=$(sha256sum pnpm-lock.yaml | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+          echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=deps-${{ steps.cache-key.outputs.deps_hash }}
+            type=raw,value=daily-${{ steps.cache-key.outputs.date }}
+            type=sha,prefix={{branch}}-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: .github/docker/Dockerfile.ci-simple
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            DEPS_HASH=${{ steps.cache-key.outputs.deps_hash }}
+            BUILD_DATE=${{ steps.cache-key.outputs.date }}
+
+  # Notify if image is outdated
+  check-image-freshness:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Check image age
+        run: |
+          # This is a simple check - enhance as needed
+          echo "::notice title=Docker Image Status::The CI Docker image may need updating if dependencies changed in this PR"

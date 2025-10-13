@@ -1,0 +1,45 @@
+# CI Docker image with pre-installed tools
+# Dependencies still need to be installed at runtime since they change frequently
+FROM node:20-slim
+
+# Install system dependencies and tools in one layer
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    ca-certificates \
+    python3 \
+    build-essential \
+    docker.io \
+    # Playwright dependencies
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libdbus-1-3 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install global tools
+RUN npm install -g pnpm@10.8.0 && \
+    npx -y playwright@latest install --with-deps chromium
+
+# Install Supabase CLI
+RUN wget -qO- https://github.com/supabase/cli/releases/download/v1.223.5/supabase_linux_amd64.tar.gz | tar xvz && \
+    mv supabase /usr/local/bin/supabase && \
+    chmod +x /usr/local/bin/supabase
+
+# Set up environment
+ENV PNPM_STORE_PATH=/pnpm-store
+ENV CI=true
+WORKDIR /workspace
+
+CMD ["/bin/bash"]

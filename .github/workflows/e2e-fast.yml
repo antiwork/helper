@@ -1,0 +1,362 @@
+name: Fast E2E Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      rebuild_docker:
+        description: 'Rebuild Docker image'
+        type: boolean
+        default: false
+  schedule:
+    # Weekly rebuild for security updates (Sundays at 2 AM UTC)
+    - cron: '0 2 * * 0'
+
+permissions:
+  contents: read
+  packages: write  # For Docker image push/pull
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  # Check if Docker image needs rebuild
+  check-docker:
+    runs-on: ubuntu-latest
+    outputs:
+      needs_rebuild: ${{ steps.check.outputs.rebuild }}
+      image_exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need previous commit for comparison
+
+      - name: Check if rebuild needed
+        id: check
+        run: |
+          # Force rebuild if manually triggered
+          if [ "${{ github.event.inputs.rebuild_docker }}" == "true" ]; then
+            echo "rebuild=true" >> $GITHUB_OUTPUT
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Manual rebuild requested"
+            exit 0
+          fi
+
+          # Check if Dockerfile changed
+          if git diff HEAD^ HEAD --name-only 2>/dev/null | grep -q "Dockerfile.ci"; then
+            echo "rebuild=true" >> $GITHUB_OUTPUT
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Dockerfile changed, rebuild needed"
+            exit 0
+          fi
+
+          # Only rebuild Docker on main branch when Dockerfile changes
+          # Dependencies changing should NOT trigger rebuild since they're installed at runtime
+          # This way the same image works for all branches
+
+          # Weekly rebuild for security updates
+          if [ "${{ github.event_name }}" == "schedule" ]; then
+            echo "rebuild=true" >> $GITHUB_OUTPUT
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Scheduled weekly rebuild"
+            exit 0
+          fi
+
+          # Check if image exists
+          if docker manifest inspect ghcr.io/${{ github.repository }}/ci:latest >/dev/null 2>&1; then
+            echo "rebuild=false" >> $GITHUB_OUTPUT
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Docker image exists and no rebuild needed"
+          else
+            echo "rebuild=true" >> $GITHUB_OUTPUT
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Docker image doesn't exist, rebuild needed"
+          fi
+
+  # Build Docker image when needed
+  docker-build:
+    needs: check-docker
+    if: needs.check-docker.outputs.needs_rebuild == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.ci
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/ci:latest
+            ghcr.io/${{ github.repository }}/ci:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  e2e:
+    needs: [check-docker]  # Wait for docker check to complete
+    # Only depend on docker-build if it's actually running
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    env:
+      CI: true
+      OPENAI_API_KEY: test-openai-api-key
+      FIRECRAWL_API_KEY: test-firecrawl-api-key
+      NODE_OPTIONS: --max_old_space_size=8192
+      PLAYWRIGHT_USE_PREBUILT: 1
+      PNPM_STORE_PATH: ~/.pnpm-store
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Try to use Docker container if available
+      - name: Check Docker image availability
+        id: docker-check
+        continue-on-error: true
+        run: |
+          # Wait for docker build if it's running (max 5 minutes)
+          if [ "${{ needs.check-docker.outputs.needs_rebuild }}" == "true" ]; then
+            echo "⏳ Waiting for Docker image to build..."
+            for i in {1..30}; do
+              if docker pull ghcr.io/${{ github.repository }}/ci:latest 2>/dev/null; then
+                echo "docker_available=true" >> $GITHUB_OUTPUT
+                echo "✅ Docker image ready after wait"
+                exit 0
+              fi
+              echo "Waiting... ($i/30)"
+              sleep 10
+            done
+          fi
+
+          # Try to pull the Docker image
+          if docker pull ghcr.io/${{ github.repository }}/ci:latest 2>/dev/null; then
+            echo "docker_available=true" >> $GITHUB_OUTPUT
+            echo "✅ Docker image found"
+          else
+            echo "docker_available=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Docker image not available, using standard setup"
+          fi
+
+      # Setup Node/pnpm if not using Docker or if Docker pull failed
+      - name: Set up pnpm
+        if: steps.docker-check.outputs.docker_available != 'true'
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        if: steps.docker-check.outputs.docker_available != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+          cache: 'pnpm'
+
+      # Get pnpm store path
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          if command -v pnpm &> /dev/null; then
+            echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+          else
+            echo "STORE_PATH=~/.pnpm-store" >> $GITHUB_OUTPUT
+          fi
+
+      # Cache dependencies
+      - name: Cache dependencies
+        id: deps-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+            node_modules
+            packages/*/node_modules
+            packages/*/dist
+            packages/*/build
+          key: deps-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-v4
+          restore-keys: |
+            deps-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            deps-${{ runner.os }}-
+
+      # Install dependencies (always needed, even with Docker)
+      - name: Install dependencies
+        if: steps.deps-cache.outputs.cache-hit != 'true'
+        run: |
+          if [ "${{ steps.docker-check.outputs.docker_available }}" == "true" ]; then
+            # Run inside Docker container
+            docker run --rm \
+              -v ${{ github.workspace }}:/workspace \
+              -v ${{ steps.pnpm-cache.outputs.STORE_PATH }}:/pnpm-store \
+              -w /workspace \
+              ghcr.io/${{ github.repository }}/ci:latest \
+              bash -c "pnpm install --frozen-lockfile --prefer-offline"
+          else
+            # Run directly
+            pnpm install --frozen-lockfile --prefer-offline
+          fi
+
+      # Cache Playwright browsers
+      - name: Cache Playwright browsers
+        if: steps.docker-check.outputs.docker_available != 'true'
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/package.json') }}-v4
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        if: steps.docker-check.outputs.docker_available != 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm playwright install --with-deps chromium
+
+      # Cache Next.js build
+      - name: Cache Next.js build
+        id: build-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next
+            .next/cache
+            node_modules/.cache
+          key: build-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml', 'src/**', 'app/**', 'components/**', 'lib/**', '*.config.*') }}-v4
+          restore-keys: |
+            build-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            build-${{ runner.os }}-
+
+      # Cache Docker images for Supabase
+      - name: Cache Docker images
+        uses: actions/cache@v4
+        with:
+          path: ~/docker-cache
+          key: docker-supabase-${{ runner.os }}-${{ hashFiles('supabase/config.ci.toml') }}-v4
+          restore-keys: |
+            docker-supabase-${{ runner.os }}-
+
+      - name: Load cached Docker images
+        continue-on-error: true
+        run: |
+          if [ -d ~/docker-cache ] && [ "$(ls -A ~/docker-cache 2>/dev/null)" ]; then
+            echo "Loading cached Docker images..."
+            for image in ~/docker-cache/*.tar; do
+              [ -f "$image" ] && docker load -i "$image" || true
+            done
+          fi
+
+      # Run the actual tests
+      - name: Run E2E tests with Docker
+        if: steps.docker-check.outputs.docker_available == 'true'
+        run: |
+          docker run --rm \
+            --network host \
+            --privileged \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v ${{ github.workspace }}:/workspace \
+            -v ${{ steps.pnpm-cache.outputs.STORE_PATH }}:/pnpm-store \
+            -w /workspace \
+            -e CI=true \
+            -e OPENAI_API_KEY=${{ env.OPENAI_API_KEY }} \
+            -e FIRECRAWL_API_KEY=${{ env.FIRECRAWL_API_KEY }} \
+            -e PLAYWRIGHT_USE_PREBUILT=1 \
+            ghcr.io/${{ github.repository }}/ci:latest \
+            bash -c "
+              # Dependencies are already installed and cached on host
+              # Just link them inside container
+              if [ ! -d node_modules ]; then
+                echo 'ERROR: node_modules not found! Dependencies should be installed first.'
+                exit 1
+              fi
+
+              ./scripts/setup-e2e-tests.sh
+
+              # Build if not cached
+              if [ ! -d .next ]; then
+                pnpm with-test-env next build
+              fi
+
+              pnpm playwright test --shard=${{ matrix.shard }}/4
+            "
+
+      - name: Run E2E tests without Docker
+        if: steps.docker-check.outputs.docker_available != 'true'
+        run: |
+          ./scripts/setup-e2e-tests.sh
+
+          # Build Next.js if not cached
+          if [ "${{ steps.build-cache.outputs.cache-hit }}" != "true" ]; then
+            pnpm with-test-env next build
+          fi
+
+          pnpm playwright test --shard=${{ matrix.shard }}/4
+
+      # Save Docker images for next run (only on main)
+      - name: Save Docker images
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        run: |
+          mkdir -p ~/docker-cache
+          docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "(supabase|postgres)" | head -5 | while read img; do
+            if [ -n "$img" ]; then
+              filename=$(echo "$img" | tr '/:' '--')
+              docker save "$img" -o ~/docker-cache/"$filename".tar || true
+            fi
+          done
+
+      # Upload test results
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-shard-${{ matrix.shard }}
+          path: playwright-report/
+          retention-days: 7
+
+  # Merge reports from all shards
+  report:
+    needs: e2e
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download all test reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: playwright-report-shard-*
+          path: all-reports
+
+      - name: Merge reports
+        run: |
+          mkdir -p playwright-report
+          for dir in all-reports/*/; do
+            if [ -d "$dir" ]; then
+              cp -r "$dir"* playwright-report/ 2>/dev/null || true
+            fi
+          done
+
+      - name: Upload merged report
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
