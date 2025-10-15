@@ -49,7 +49,7 @@
     "nginx:stop": "docker stop helperai-nginx",
     "ensure-ssl-certificates": "bash scripts/ensure-ssl-certificates.sh",
     "generate-ssl-certificates": "bash scripts/generate-ssl-certificates.sh",
-    "run-on-packages": "pnpm run --filter=!helperai --if-present --workspace-concurrency=1",
+    "run-on-packages": "pnpm run --filter=!helperai --if-present --workspace-concurrency=4",
     "with-dev-env": "dotenv -e ./.env.development -e ./.env.development.local -e ./.env.local --",
     "with-test-env": "dotenv -e ./.env.test -e ./.env.test.local --"
   },
