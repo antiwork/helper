@@ -38,6 +38,17 @@ jobs:
           node-version-file: ".node-version"
           cache: "pnpm"
 
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Cache Playwright browsers
         id: playwright-cache
         uses: actions/cache@v4
