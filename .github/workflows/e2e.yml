@@ -17,24 +17,6 @@ jobs:
   e2e:
     runs-on: ${{ github.repository == 'antiwork/helper' && 'ubicloud-standard-4' || 'ubuntu-latest' }}
     timeout-minutes: 60
-    strategy:
-      matrix:
-        test-group: 
-          - auth
-          - conversations
-          - widget
-          - settings
-          - knowledge-bank
-          - saved-replies
-          - stats
-          - team-settings
-          - customer-settings
-          - common-issues
-          - conversation-details
-          - help-article-search
-          - image-attachments
-          - in-app-chat-settings
-          - website-learning
     env:
       CI: true
       OPENAI_API_KEY: test-openai-api-key
@@ -54,14 +36,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: ".node-version"
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
+          cache: "pnpm"
 
       - name: Cache Playwright browsers
         id: playwright-cache
@@ -71,9 +46,6 @@ jobs:
           key: playwright-browsers-${{ runner.os }}-v1
           restore-keys: |
             playwright-browsers-${{ runner.os }}-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
 
       - name: Cache Next.js build cache
         uses: actions/cache@v4
@@ -95,8 +67,8 @@ jobs:
       - name: Build next
         run: pnpm with-test-env next build
 
-      - name: Run ${{ matrix.test-group }} tests
-        run: ./scripts/e2e.sh playwright test tests/e2e/${{ matrix.test-group }}/
+      - name: Run full Playwright suite
+        run: ./scripts/e2e.sh
 
       - name: Upload Playwright HTML report
         if: always()

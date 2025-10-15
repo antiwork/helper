@@ -85,7 +85,45 @@ echo "⏭️  Skipping package builds in CI (built during pnpm install postinsta
 fi
 
 echo "🌱 Seeding the database..."
-pnpm run with-test-env pnpm tsx --conditions=react-server ./db/seeds/seedDatabase.ts
+if [ "$CI" = "true" ]; then
+  echo "Creating minimal test data for CI..."
+  pnpm run with-test-env pnpm tsx --conditions=react-server -e "
+    import { db } from './db/client';
+    import { mailboxes } from './db/schema';
+    import { addDays } from 'date-fns';
+    import { createAdminClient } from './lib/supabase/server';
+    
+    // Create minimal mailbox for tests
+    await db.insert(mailboxes).values({
+      name: 'Test Mailbox',
+      slug: 'test',
+      promptUpdatedAt: addDays(new Date(), 1),
+      widgetHMACSecret: 'test-widget-token',
+    });
+    
+    // Create support@gumroad.com user for tests
+    const supabase = createAdminClient();
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: 'support@gumroad.com',
+      password: 'password',
+      email_confirm: true,
+      user_metadata: {
+        permissions: 'admin',
+      },
+    });
+    
+    if (error) {
+      console.log('User support@gumroad.com already exists or error:', error.message);
+    } else {
+      console.log('Created user support@gumroad.com');
+    }
+    
+    console.log('Minimal seeding completed');
+  "
+else
+  echo "Creating full test data for local development..."
+  pnpm run with-test-env pnpm tsx --conditions=react-server ./db/seeds/seedDatabase.ts
+fi
 
 if [ "$CI" != "true" ]; then
 echo "📦 Installing Playwright and dependencies..."
