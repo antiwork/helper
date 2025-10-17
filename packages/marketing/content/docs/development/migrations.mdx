@@ -13,7 +13,7 @@ When you need to make changes to the database schema:
 
 Update the TypeScript schema definitions in the `db/schema/` directory. Each domain entity has its own schema file (e.g., `mailboxes.ts`, `conversations.ts`, `userProfiles.ts`).
 
-```typescript
+```typescript title="mailboxes.ts"
 // Example: Adding a new column to db/schema/mailboxes.ts
 export const mailboxes = pgTable("mailboxes", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -28,7 +28,7 @@ export const mailboxes = pgTable("mailboxes", {
 
 Run the generate command to create migration files based on your schema changes:
 
-```sh
+```bash title="terminal"
 pnpm db:generate
 ```
 
@@ -38,7 +38,7 @@ This command will generate SQL migration files in `db/drizzle/` to adjust the sc
 
 Apply the generated migration to your local database:
 
-```sh
+```bash title="terminal"
 pnpm db:migrate
 ```
 
@@ -48,7 +48,7 @@ This command will update your local database to match the new schema definitions
 
 Add and commit all generated files, including the JSON metadata that Drizzle creates:
 
-```sh
+```bash title="terminal"
 git add db/drizzle/ db/schema/
 git commit -m "Add new_field to mailboxes table"
 ```
@@ -66,7 +66,7 @@ You may encounter merge conflicts with migration files. Here's how to resolve th
 
 Remove the migration(s) and JSON snapshot(s) in your PR from the `db/drizzle/` directory:
 
-```sh
+```bash title="terminal"
 rm db/drizzle/0XXX_your_migration_name.sql
 rm db/drizzle/meta/0XXX_snapshot.json
 ```
@@ -75,7 +75,7 @@ rm db/drizzle/meta/0XXX_snapshot.json
 
 Reset the `db/drizzle/meta/_journal.json` file to match the main branch:
 
-```sh
+```bash title="terminal"
 git checkout main -- db/drizzle/meta/_journal.json
 ```
 
@@ -83,7 +83,7 @@ git checkout main -- db/drizzle/meta/_journal.json
 
 Clear and reseed your local database to ensure a clean state:
 
-```sh
+```bash title="terminal"
 pnpm db:reset
 ```
 

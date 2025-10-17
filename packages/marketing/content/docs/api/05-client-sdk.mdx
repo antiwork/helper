@@ -12,17 +12,29 @@ The Helper Client SDK provides a comprehensive JavaScript/TypeScript library for
 
 ## Installation
 
-<Tabs items={["npm", "yarn", "pnpm"]}>
-  <Tab value="npm">```bash npm install @helper/client ```</Tab>
-  <Tab value="yarn">```bash yarn add @helper/client ```</Tab>
-  <Tab value="pnpm">```bash pnpm add @helper/client ```</Tab>
+<Tabs groupId="install" items={["npm", "yarn", "pnpm"]} persist>
+  <Tab value="npm">
+  ```bash
+  npm install @helper/client 
+  ```
+  </Tab>
+  <Tab value="yarn">
+  ```bash
+  yarn add @helper/client
+  ```
+  </Tab>
+  <Tab value="pnpm">
+  ```bash
+  pnpm add @helper/client
+  ```
+  </Tab>
 </Tabs>
 
 ## Setup
 
 ### Basic Setup
 
-```typescript
+```ts title="helper-client.ts"
 import { HelperClient } from "@helper/client";
 
 const client = new HelperClient({
@@ -75,7 +87,7 @@ The host URL of the Helper instance.
 
 Returns the email address associated with the current session, or `null` if no email was provided.
 
-```typescript
+```ts title="example.ts"
 const userEmail = client.email;
 ```
 
@@ -87,7 +99,7 @@ Retrieves all conversations for the current session.
 
 **Returns:**
 
-```typescript
+```ts title="conversations-result.ts"
 interface ConversationsResult {
   conversations: Array<{
     slug: string;
@@ -103,7 +115,7 @@ interface ConversationsResult {
 
 **Example:**
 
-```typescript
+```ts title="example.ts"
 const { conversations, nextCursor } = await client.conversations.list();
 ```
 
@@ -113,7 +125,7 @@ Retrieves the count of unread conversations for the current session.
 
 **Returns:**
 
-```typescript
+```ts title="unread-conversations-count-result.ts"
 interface UnreadConversationsCountResult {
   count: number;
 }
@@ -121,7 +133,7 @@ interface UnreadConversationsCountResult {
 
 **Example:**
 
-```typescript
+```ts title="example.ts"
 const { count } = await client.conversations.unread();
 ```
 
@@ -137,7 +149,7 @@ Retrieves a specific conversation by its slug.
 
 **Returns:**
 
-```typescript
+```ts title="conversation-details.ts"
 interface ConversationDetails {
   slug: string;
   subject: string | null;
@@ -173,7 +185,7 @@ interface ConversationDetails {
 
 **Example:**
 
-```typescript
+```ts title="example.ts"
 const conversation = await client.conversations.get("conv-abc123");
 const conversationWithoutRead = await client.conversations.get("conv-abc123", { markRead: false });
 ```
@@ -184,7 +196,7 @@ Creates a new conversation.
 
 **Parameters:**
 
-```typescript
+```ts title="create-conversation-params.ts"
 interface CreateConversationParams {
   isPrompt?: boolean | null;
   subject?: string | null;
@@ -193,7 +205,7 @@ interface CreateConversationParams {
 
 **Returns:**
 
-```typescript
+```ts title="create-conversation-result.ts"
 interface CreateConversationResult {
   conversationSlug: string;
 }
@@ -201,7 +213,7 @@ interface CreateConversationResult {
 
 **Example:**
 
-```typescript
+```ts title="example.ts"
 const { conversationSlug } = await client.conversations.create({
   subject: "Support Request",
   isPrompt: false,
@@ -217,7 +229,7 @@ Updates an existing conversation.
 - `slug` (string): The conversation identifier
 - `params` (UpdateConversationParams): Update parameters
 
-```typescript
+```ts title="update-conversation-params.ts"
 interface UpdateConversationParams {
   markRead: true;
 }
@@ -225,7 +237,7 @@ interface UpdateConversationParams {
 
 **Returns:**
 
-```typescript
+```ts title="update-conversation-result.ts"
 interface UpdateConversationResult {
   success: true;
 }
@@ -233,7 +245,7 @@ interface UpdateConversationResult {
 
 **Example:**
 
-```typescript
+```ts title="example.ts"
 const result = await client.conversations.update("conv-abc123", {
   markRead: true,
 });
@@ -248,7 +260,7 @@ Sets up real-time listeners for conversation events.
 - `conversationSlug` (string): The conversation to listen to
 - `callbacks` (object): Event callback functions
 
-```typescript
+```ts title="chat-listen-callbacks.ts"
 interface ChatListenCallbacks {
   onReply?: ({ message, aiMessage }: { message: Message; aiMessage: AIMessageCompat }) => void;
   onTyping?: (isTyping: boolean) => void;
@@ -260,7 +272,7 @@ interface ChatListenCallbacks {
 
 **Example:**
 
-```typescript
+```ts title="example.ts"
 const unlisten = client.conversations.listen("conv-abc123", {
   onReply: ({ message, aiMessage }) => {
     console.log("New message:", message);
@@ -290,7 +302,7 @@ Optionally you can pass:
 
 **Parameters:**
 
-```typescript
+```ts title="chat-handler-options.ts"
 interface ChatHandlerOptions {
   conversation: ConversationDetails;
   tools?: Record<string, HelperTool>;
@@ -318,7 +330,7 @@ interface HelperTool<Args = any, Result = any> {
 
 **Example:**
 
-```typescript
+```ts title="example.ts"
 import { useChat } from "ai/react";
 
 const conversation = await client.conversations.get("conv-abc123");
@@ -356,7 +368,7 @@ Converts an AI SDK compatible message to Helper's message format.
 
 **Example:**
 
-```typescript
+```ts title="example.ts"
 const helperMessage = client.chat.message(aiMessage);
 ```
 
@@ -372,7 +384,7 @@ Converts an array of AI SDK compatible messages to Helper's message format.
 
 **Example:**
 
-```typescript
+```ts title="example.ts"
 const helperMessages = client.chat.messages(aiMessages);
 ```
 
@@ -384,7 +396,7 @@ Tools allow the AI agent to perform actions on behalf of the customer. There are
 
 Tools with an `execute()` function run on the client side:
 
-```typescript
+```ts title="client-side-tools.ts"
 const tools = {
   getCurrentTime: {
     description: "Get the current time",
@@ -398,7 +410,7 @@ const tools = {
 
 Tools with a `url` property trigger HTTP POST requests to your endpoint:
 
-```typescript
+```ts title="server-side-tools.ts"
 const tools = {
   createTicket: {
     description: "Create a support ticket",
@@ -412,7 +424,7 @@ const tools = {
 
 For server-side tools, Helper sends the parameters, customer email and request timestamp (for HMAC verification) as a JSON body
 
-```typescript
+```ts title="tool-request.ts"
 interface ToolRequest {
   email: string;
   parameters: Record<string, any>;
@@ -430,7 +442,7 @@ If you are using the `@helperai/client` package, you can import `verifyHmac` fro
 
 Your endpoint should then return a JSON object with a `success` property and any additional information you want to return to the AI agent.
 
-```typescript
+```ts title="tool-response.ts"
 interface ToolResponse {
   success: boolean;
   [key: string]: any;
@@ -450,7 +462,7 @@ Creates a new session and returns authentication credentials.
 
 **Parameters:**
 
-```typescript
+```ts title="session-params.ts"
 interface SessionParams {
   email?: string | null;
   emailHash?: string | null;
@@ -466,7 +478,7 @@ interface SessionParams {
 
 **Returns:**
 
-```typescript
+```ts title="create-session-result.ts"
 interface CreateSessionResult {
   token: string;
   supabaseUrl: string;
@@ -476,7 +488,7 @@ interface CreateSessionResult {
 
 **Example:**
 
-```typescript
+```ts title="example.ts"
 const session = await client.sessions.create({
   email: "jane@example.com",
   customerMetadata: {
@@ -491,7 +503,7 @@ const session = await client.sessions.create({
 
 The Helper Client SDK is written in TypeScript and provides full type safety. All interfaces and types are exported for your use:
 
-```typescript
+```ts title="example.ts"
 import {
   ConversationDetails,
   CreateConversationParams,

@@ -12,10 +12,22 @@ The Helper React package provides a collection of React hooks and components tha
 
 ## Installation
 
-<Tabs items={["npm", "yarn", "pnpm"]}>
-  <Tab value="npm">```bash npm install @helper/react @ai-sdk/react```</Tab>
-  <Tab value="yarn">```bash yarn add @helper/react @ai-sdk/react```</Tab>
-  <Tab value="pnpm">```bash pnpm add @helper/react @ai-sdk/react```</Tab>
+<Tabs groupId="install" items={["npm", "yarn", "pnpm"]} persist>
+  <Tab value="npm">
+  ```bash
+  npm install @helper/react @ai-sdk/react
+  ```
+  </Tab>
+  <Tab value="yarn">
+  ```bash
+  yarn add @helper/react @ai-sdk/react
+  ```
+  </Tab>
+  <Tab value="pnpm">
+  ```bash
+  pnpm add @helper/react @ai-sdk/react
+  ```
+  </Tab>
 </Tabs>
 
 ## Setup
@@ -24,7 +36,7 @@ The Helper React package provides a collection of React hooks and components tha
 
 Wrap your application (or just your support portal) with the `HelperClientProvider` to provide the Helper client to all child components:
 
-```tsx
+```tsx title="helper-client-provider.tsx"
 "use server";
 
 import { HelperClientProvider } from "@helper/react";
@@ -63,7 +75,7 @@ Retrieves all conversations for the current session with automatic caching and b
 
 **Parameters:**
 
-```typescript
+```ts title="use-conversations.ts"
 useConversations(queryOptions?: Partial<UseQueryOptions<ConversationsResult>>)
 ```
 
@@ -71,7 +83,7 @@ useConversations(queryOptions?: Partial<UseQueryOptions<ConversationsResult>>)
 
 **Example:**
 
-```tsx
+```tsx title="example.tsx"
 import { useConversations } from "@helper/react";
 
 function ConversationsList() {
@@ -109,7 +121,7 @@ Retrieves a specific conversation with real-time updates and automatic read mark
 
 **Example:**
 
-```tsx
+```tsx title="example.tsx"
 import { useConversation } from "@helper/react";
 
 function ConversationView({ slug }: { slug: string }) {
@@ -139,7 +151,7 @@ Retrieves the count of unread conversations with automatic updates.
 
 **Parameters:**
 
-```typescript
+```ts title="use-unread-conversations-count.ts"
 useUnreadConversationsCount(queryOptions?: Partial<UseQueryOptions<UnreadConversationsCountResult>>)
 ```
 
@@ -147,7 +159,7 @@ useUnreadConversationsCount(queryOptions?: Partial<UseQueryOptions<UnreadConvers
 
 **Example:**
 
-```tsx
+```tsx title="example.tsx"
 import { useUnreadConversationsCount } from "@helper/react";
 
 function UnreadBadge() {
@@ -165,7 +177,7 @@ Mutation hook for creating new conversations.
 
 **Parameters:**
 
-```typescript
+```ts title="use-create-conversation.ts"
 useCreateConversation(mutationOptions?: Partial<UseMutationOptions<any, Error, CreateConversationParams>>)
 ```
 
@@ -173,7 +185,7 @@ useCreateConversation(mutationOptions?: Partial<UseMutationOptions<any, Error, C
 
 **Example:**
 
-```tsx
+```tsx title="example.tsx"
 import { useCreateConversation } from "@helper/react";
 
 function NewConversationButton() {
@@ -204,7 +216,7 @@ Mutation hook for updating existing conversations.
 
 **Parameters:**
 
-```typescript
+```ts title="use-update-conversation.ts"
 useUpdateConversation(mutationOptions?: Partial<UseMutationOptions<any, Error, { slug: string; params: UpdateConversationParams }>>)
 ```
 
@@ -212,7 +224,7 @@ useUpdateConversation(mutationOptions?: Partial<UseMutationOptions<any, Error, {
 
 **Example:**
 
-```tsx
+```tsx title="example.tsx"
 import { useUpdateConversation } from "@helper/react";
 
 function MarkReadButton({ slug }: { slug: string }) {
@@ -237,7 +249,7 @@ Provides a complete chat interface with real-time messaging, typing indicators, 
 
 **Parameters:**
 
-```typescript
+```ts title="use-chat-props.ts"
 interface UseChatProps {
   conversation: ConversationDetails;
   tools?: Record<string, HelperTool>;
@@ -249,7 +261,7 @@ interface UseChatProps {
 
 **Returns:**
 
-```typescript
+```ts title="return-type.ts"
 {
   messages: Message[];
   setMessages: (messages: Message[]) => void;
@@ -264,7 +276,7 @@ interface UseChatProps {
 
 **Example:**
 
-```tsx
+```tsx title="example.tsx"
 import { useChat, useConversation } from "@helper/react";
 
 function ChatInterface({ conversationSlug }: { conversationSlug: string }) {
@@ -318,7 +330,7 @@ Mutation hook for creating new sessions (rarely needed as the provider handles t
 
 **Parameters:**
 
-```typescript
+```ts title="use-create-session.ts"
 useCreateSession(mutationOptions?: Partial<UseMutationOptions<any, Error, SessionParams>>)
 ```
 
@@ -326,7 +338,7 @@ useCreateSession(mutationOptions?: Partial<UseMutationOptions<any, Error, Sessio
 
 **Example:**
 
-```tsx
+```tsx title="example.tsx"
 import { useCreateSession } from "@helper/react";
 
 function SessionManager() {
@@ -366,7 +378,7 @@ The React hooks automatically handle real-time updates when `enableRealtime` is 
 
 All hooks return standard React Query error states:
 
-```tsx
+```tsx title="my-component.tsx"
 function MyComponent() {
   const { data, error, isLoading, isError } = useConversations();
 
@@ -381,7 +393,7 @@ function MyComponent() {
 
 All hooks are fully typed with TypeScript. Import types as needed:
 
-```typescript
+```ts title="example.ts"
 import type {
   ConversationDetails,
   CreateConversationParams,
