@@ -17,13 +17,13 @@ If you're using [Turbo](https://turbo.hotwired.dev/) with Rails or other framewo
 
 1. Add the `data-delay-init` attribute to the widget script tag:
 
-```html
+```html title="index.html" 
 <script src="https://<your-helper-host>/widget/sdk.js" data-delay-init></script>
 ```
 
 2. Handle page navigation events to properly initialize and destroy the widget:
 
-```javascript
+```ts title="metadata.ts" 
 const config = {
   // ... your configurations
 };
