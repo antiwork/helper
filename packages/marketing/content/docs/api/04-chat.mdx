@@ -9,7 +9,7 @@ The Chat API allows you to send messages to Helper and receive AI-generated resp
 
 ## Send Message
 
-```
+```sh title="terminal"
 POST /api/chat
 ```
 
@@ -41,7 +41,7 @@ The message object should have the following structure:
 
 ### Example Request Body
 
-```json
+```sh title="terminal"
 {
   "message": {
     "role": "user",
@@ -81,7 +81,7 @@ For detailed information about the data stream protocol, refer to the [Vercel AI
 
 The response is a stream of server-sent events (SSE), with each event containing a part of the response:
 
-```
+```sh title="terminal"
 data: {"type":"text","value":"Hello! I'd be happy to help you update your shipping address. "}
 data: {"type":"text","value":"You can change your shipping address by following these steps:"}
 data: {"type":"text","value":"\n\n1. Log into your account\n2. Go to 'Account Settings'\n3. Select 'Addresses'\n4. Click 'Edit' next to your existing address or 'Add New Address'\n5. Update the information and save your changes"}
@@ -95,7 +95,7 @@ You can use the Vercel AI SDK or manually handle the streams:
 
 **Using Vercel AI SDK (recommended)**
 
-```javascript
+```js title="chat.js"
 import { useChat } from "ai/react";
 
 function ChatComponent() {
@@ -115,7 +115,7 @@ function ChatComponent() {
 
 **Manual Stream Handling**
 
-```javascript
+```js title="send-message.js"
 async function sendMessage(content) {
   const response = await fetch("https://helper.ai/api/chat", {
     method: "POST",
@@ -166,7 +166,7 @@ The chat API can utilize tools that you've configured in your Helper mailbox. Wh
 
 Here's a complete example of how to use the Chat API in a simple web application:
 
-```javascript
+```js title="example.js"
 // First, create a session
 async function createSession(email) {
   const timestamp = Date.now();

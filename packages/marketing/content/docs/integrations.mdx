@@ -85,7 +85,7 @@ Enables various features including messaging channels when tickets are received,
 
 1. Go to [api.slack.com/apps](https://api.slack.com/apps) and create a new app. Select "From a manifest" and paste the following manifest, substituting `<your-helper-domain>` with your Helper domain:
 
-```json
+```json title="manifest.json"
 {
   "display_information": {
     "name": "Helper",
@@ -206,9 +206,9 @@ Enables passing email assets through an intermediate server to increase security
 1. Set up a proxy server with HMAC authentication.
 
 <details>
-<summary>Example CloudFlare Worker script</summary>
+<summary>Click Here to See Example CloudFlare Worker script</summary>
 
-```js
+```js title="example.js"
 const SECRET_KEY = "<secret key>";
 const EXPIRY_TIME = 300; // Signature expiry time in seconds (5 minutes)
 

@@ -19,7 +19,7 @@ The theming system is built on CSS custom properties (variables) and supports:
 
 The application defines CSS variables in `app/globals.css` for both light and dark modes:
 
-```css
+```postcss title="globals.css"
 :root,
 .light {
   --background: #ffffff;
@@ -70,7 +70,7 @@ The application defines CSS variables in `app/globals.css` for both light and da
 
 To create a custom theme, add a new CSS class in `globals.css`:
 
-```css
+```css title="globals.css"
 .theme-custom {
   --background: #f5f8fa;
   --foreground: #1a2332;
@@ -97,19 +97,19 @@ To update themes using AI, modify the CSS variables in `app/globals.css`:
 
 **Design System Compliance:**
 
-```text
+```md title="design-system-prompt.md"
 Based on docs/THEMING.md, update the :root/.light and .dark theme sections in app/globals.css to comply with the Department of Veterans Affairs Web Design System. Use HEX format with proper contrast ratios: background #ffffff, foreground #212121, primary #0f2a44, accent #f1f8ff, sidebar background #0f2a44. Ensure 4.5:1 contrast for normal text and test in both light and dark modes. Apply theme class to root element.
 ```
 
 **Brand-Specific Theming:**
 
-```text
+```md title="brand-specific-prompt.md"
 Based on docs/THEMING.md, create a new .github-theme class in app/globals.css using HEX format and following all variable categories: background #ffffff, foreground #24292f, primary #0969da, accent #f6f8fa, sidebar background #f6f8fa. Include all layout, interactive, sidebar, and chart colors. Maintain sufficient contrast ratios and test in both light and dark modes before applying to components.
 ```
 
 **Accessibility-First Approach:**
 
-```text
+```md title="accessibility-first-prompt.md"
 Based on docs/THEMING.md, add a new .high-contrast class in app/globals.css following the theming architecture. Use HEX format for all variable categories: background #000000, foreground #ffffff, primary #0099ff, accent #262626, sidebar background #0d0d0d. Ensure all combinations exceed 7:1 contrast ratio, include proper focus ring colors, and test accessibility for users with visual impairments. Apply class to root element when needed.
 ```
 
@@ -124,7 +124,7 @@ Based on docs/THEMING.md, add a new .high-contrast class in app/globals.css foll
 
 The theme variables are automatically available in Tailwind CSS classes:
 
-```jsx
+```tsx title="button.tsx"
 <div className="bg-background text-foreground">
   <button className="bg-primary text-primary-foreground">Primary Button</button>
 </div>
