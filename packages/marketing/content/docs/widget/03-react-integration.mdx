@@ -15,7 +15,7 @@ The [`@helperai/react`](https://www.npmjs.com/package/@helperai/react) package p
 
 Install the package using npm:
 
-```bash
+```sh title="terminal"
 npm install @helperai/react
 ```
 
@@ -26,8 +26,7 @@ npm install @helperai/react
 
 Add the `HelperProvider` to your root layout:
 
-```tsx
-// app/layout.tsx or similar
+```tsx title="app/layout.tsx"
 import { HelperWidgetScript } from "@helperai/react";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -49,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 Customize the widget by adding props to the `HelperProvider`:
 
-```tsx
+```tsx title="app/layout.tsx"
 <HelperProvider host="YOUR_HELPER_HOST" title="My Helper Widget" iconColor="#ff0000" showToggleButton>
   {children}
 </HelperProvider>
@@ -68,7 +67,7 @@ The `HelperProvider` accepts the following props:
 
 Use the `useHelper` hook to add contextual help buttons:
 
-```tsx
+```tsx title="useHelper.ts"
 import { useHelper } from "@helperai/react";
 
 export function SupportButton() {
@@ -103,7 +102,7 @@ export function SupportButton() {
 
 Add your Helper authentication credentials to your environment variables:
 
-```bash
+```sh title=".env.local"
 HELPER_HMAC_SECRET=your_hmac_secret
 ```
 
@@ -116,8 +115,7 @@ For local development, add these to your environment file (e.g., `.env.local`), 
 
 Call `generateHelperAuth` in your root layout and pass the result to the `HelperProvider`:
 
-```tsx
-// app/layout.tsx or similar
+```tsx title="app/layout.tsx"
 import { generateHelperAuth, HelperProvider } from "@helperai/react";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
