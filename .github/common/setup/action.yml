@@ -1,0 +1,15 @@
+name: Install Dependencies
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: ".node-version"
+
+    - uses: pnpm/action-setup@v4
+      with:
+        cache: true
+
+    - run: pnpm install --ignore-scripts
+      shell: bash

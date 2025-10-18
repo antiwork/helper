@@ -1,0 +1,40 @@
+name: Build Packages
+
+runs:
+  using: "composite"
+  steps:
+    - name: Cache SDK build and dependencies
+      id: sdk-cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          packages/sdk/node_modules
+          packages/sdk/dist
+          public/sdk*.js
+          public/sdk*.js.LICENSE.txt
+        key: sdk-${{ runner.os }}-${{ hashFiles('packages/sdk/**', '!packages/sdk/node_modules/**', '!packages/sdk/dist/**') }}
+        restore-keys: |
+          sdk-${{ runner.os }}-
+    - name: Cache package builds
+      id: packages-cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          packages/client/dist
+          packages/react/dist
+        key: packages-${{ runner.os }}-${{ hashFiles('packages/client/**', 'packages/react/**', '!packages/*/node_modules/**', '!packages/*/dist/**') }}
+        restore-keys: |
+          packages-${{ runner.os }}-
+    - name: Build SDK if needed
+      run: |
+        pnpm --filter="@helperai/sdk" install
+        pnpm --filter="@helperai/sdk" build
+      if: steps.sdk-cache.outputs.cache-hit != 'true'
+      shell: bash
+
+    - name: Build essential packages
+      run: |
+        pnpm --filter="@helperai/client" build
+        pnpm --filter="@helperai/react" build
+      if: steps.packages-cache.outputs.cache-hit != 'true'
+      shell: bash
