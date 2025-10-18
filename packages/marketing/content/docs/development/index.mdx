@@ -25,13 +25,13 @@ The app uses Docker to run the following services locally:
 
 Seed the database with sample data:
 
-```sh
+```bash title="terminal"
 pnpm db:reset
 ```
 
 Generate/run database migrations:
 
-```sh
+```bash title="terminal"
 # Generate a migration to bring the database schema in sync with the definitions in db/schema
 pnpm db:generate
 
@@ -43,7 +43,7 @@ Note that `pnpm dev` will automatically run migrations, but won't generate them.
 
 ## Testing
 
-```sh
+```bash title="terminal"
 # Run all tests
 npm test
 
@@ -61,6 +61,6 @@ The app uses a local Certificate Authority (CA) to generate SSL certificates for
 
 The certificates will be automatically generated when you run `pnpm dev` or `pnpm db:reset`, for the first time. If you need to regenerate them you can use:
 
-```sh
+```bash title="terminal"
 pnpm generate-ssl-certificates
 ```

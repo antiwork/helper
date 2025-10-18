@@ -9,7 +9,7 @@ When `customerInfoUrl` is provided to the chat or create message API, Helper wil
 
 ## Request Example
 
-```
+```sh title="terminal"
 GET https://your-endpoint.com/customer?email=customer@example.com&timestamp=1684234567
 Authorization: Bearer dGhpcyBpcyBhbiBlbmNvZGVkIGhtYWMgc2lnbmF0dXJl
 ```
@@ -24,7 +24,7 @@ Authorization: Bearer dGhpcyBpcyBhbiBlbmNvZGVkIGhtYWMgc2lnbmF0dXJl
 
 Your server must return a JSON response in this format:
 
-```json
+```sh title="terminal"
 {
   "success": true,
   "customer": {
@@ -56,7 +56,7 @@ The signature is generated from the query string (`?email=...&timestamp=...`) an
 
 ### HMAC Validation (Node.js Example)
 
-```javascript
+```js title="index.js"
 import crypto from "crypto";
 
 // Validate incoming request from Helper

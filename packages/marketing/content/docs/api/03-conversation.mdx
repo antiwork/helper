@@ -11,7 +11,7 @@ For detailed API reference, see [Create Conversation API Reference](/docs/api/ap
 
 ## Create Conversation
 
-```
+```sh title="terminal"
 POST /api/chat/conversation
 ```
 
@@ -31,7 +31,7 @@ Creates a new conversation and returns a conversation slug that can be used in s
 
 ### Example Request Body
 
-```json
+```sh title="terminal"
 {
   "isPrompt": true
 }
@@ -45,7 +45,7 @@ Creates a new conversation and returns a conversation slug that can be used in s
 
 ### Example Response
 
-```json
+```sh title="terminal"
 {
   "conversationSlug": "abc123def456"
 }
@@ -76,7 +76,7 @@ By default, conversations start with a generic subject. Helper will automaticall
 
 ### Creating a Simple Conversation
 
-```javascript
+```js title="index.js"
 // After obtaining a session token
 const response = await fetch("https://helper.ai/api/chat/conversation", {
   method: "POST",
@@ -94,7 +94,7 @@ const { conversationSlug } = await response.json();
 
 You can create a conversation and immediately add context by creating the conversation first, then using the Chat API to send an initial message:
 
-```javascript
+```js title="index.js"
 // Create the conversation
 const convResponse = await fetch("https://helper.ai/api/chat/conversation", {
   method: "POST",

@@ -11,7 +11,7 @@ The Session API allows you to create authentication sessions that can be used fo
 
 ## Create Session
 
-```
+```sh title="terminal"
 POST /api/widget/session
 ```
 
@@ -28,7 +28,7 @@ Creates a new session and returns a token that can be used for authentication in
 
 ### Example Request Body
 
-```json
+```sh title="terminal"
 {
   "email": "customer@example.com",
   "emailHash": "a1b2c3d4e5f6...",
@@ -56,7 +56,7 @@ Creates a new session and returns a token that can be used for authentication in
 
 ### Example Response
 
-```json
+```sh title="terminal"
 {
   "valid": true,
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -115,7 +115,7 @@ Here's how to generate the hash in different languages:
 
 **Node.js**
 
-```javascript
+```js title="hash.js"
 const crypto = require("crypto");
 
 const email = "customer@example.com";
@@ -127,7 +127,7 @@ const hmac = crypto.createHmac("sha256", hmacSecret).update(`${email}:${timestam
 
 **Python**
 
-```python
+```py title="hash.py"
 import hmac
 import hashlib
 import time

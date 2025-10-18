@@ -24,7 +24,7 @@ Your OpenAPI specification should include:
 
 Each endpoint should have a unique `operationId` that clearly describes the action:
 
-```yaml
+```yaml title="example.yaml"
 paths:
   /users/{userId}:
     get:
@@ -43,7 +43,7 @@ Include descriptions for:
 - Request bodies
 - Response schemas
 
-```yaml
+```yaml title="example.yaml"
 paths:
   /orders/{orderId}:
     get:
@@ -69,7 +69,7 @@ Clearly define all parameters, including:
 - Whether they're required
 - Default values (when applicable)
 
-```yaml
+```yaml title="example.yaml"
 parameters:
   - name: limit
     in: query
@@ -86,7 +86,7 @@ parameters:
 
 Define response schemas to help Helper understand the data structure returned by each endpoint:
 
-```yaml
+```yaml title="example.yaml"
 responses:
   200:
     description: "Successful operation"
@@ -106,7 +106,7 @@ responses:
 
 If your API requires authentication, specify it in the OpenAPI document:
 
-```yaml
+```yaml title="example.yaml"
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -149,7 +149,7 @@ For optimal integration with Helper:
 
 Here's a simplified example of a well-structured OpenAPI specification:
 
-```yaml
+```yaml title="spec.yaml"
 openapi: 3.0.0
 info:
   title: E-commerce API

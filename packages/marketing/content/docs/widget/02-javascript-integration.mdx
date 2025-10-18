@@ -15,7 +15,7 @@ If you use React, please refer to the [React integration guide](/widget/03-react
 
 Add the following script to your HTML, replacing `<your-helper-host>` with the URL of your Helper instance:
 
-```html
+```html title="index.html"
 <script src="https://<your-helper-host>/widget/sdk.js" async></script>
 ```
 
@@ -27,7 +27,7 @@ This is the simplest way to add the widget to your site. The widget will appear 
 
 You can customize the widget by adding a `helperWidgetConfig` object above the widget script tag:
 
-```html
+```html title="index.html"
 <script>
   window.helperWidgetConfig = {
     title: "My Helper Widget",
@@ -59,7 +59,7 @@ The `helperWidgetConfig` object accepts the following options:
 
 You can add context-specific help buttons using HTML data attributes:
 
-```html
+```html title="index.html"
 <!-- Open the chat with a specific prompt -->
 <button data-helper-prompt="How do I change my plan?">Get help with plans</button>
 
@@ -77,7 +77,7 @@ To authenticate your users, you'll need to set up both backend and frontend comp
 
 First, generate an HMAC hash on your server using the HMAC secret from your Helper dashboard. Node.js example:
 
-```javascript
+```js title="index.js"
 const crypto = require("crypto");
 
 const hmacSecret = "YOUR_HMAC_SECRET"; // This is the HMAC secret from your Helper dashboard
@@ -94,7 +94,7 @@ const hmac = crypto.createHmac("sha256", hmacSecret).update(`${email}:${timestam
 
 Add the generated HMAC hash, customer email, and timestamp to your widget config:
 
-```html
+```html title="index.html"
 <script>
   window.helperWidgetConfig = {
     // ... any existing config ...
@@ -109,7 +109,7 @@ Add the generated HMAC hash, customer email, and timestamp to your widget config
 
 Optionally, you can add metadata to give Helper more context about the customer:
 
-```html
+```html title="index.html"
 <script>
   window.helperWidgetConfig = {
     // ... existing config ...
