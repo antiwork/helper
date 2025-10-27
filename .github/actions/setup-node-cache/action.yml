@@ -1,29 +1,16 @@
 name: Setup Node.js with PNPM and Cache
 description: Install Node.js, setup PNPM, and configure caching for faster CI builds
 
-inputs:
-  node-version:
-    description: 'Node.js version to use (defaults to .node-version file)'
-    required: false
-    default: ''
-  pnpm-version:
-    description: 'PNPM version to use (defaults to packageManager in package.json)'
-    required: false
-    default: ''
-
 runs:
   using: composite
   steps:
     - name: Set up pnpm
       uses: pnpm/action-setup@v4
-      with:
-        version: ${{ inputs.pnpm-version || '10.8.0' }}
 
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ inputs.node-version || '22.14.0' }}
-        node-version-file: ${{ inputs.node-version == '' && '.node-version' || '' }}
+        node-version-file: '.node-version'
         cache: 'pnpm'
 
     - name: Get pnpm store directory
