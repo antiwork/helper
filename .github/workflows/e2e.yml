@@ -22,54 +22,26 @@ jobs:
       OPENAI_API_KEY: test-openai-api-key
       FIRECRAWL_API_KEY: test-firecrawl-api-key
       NODE_OPTIONS: --max_old_space_size=8192
-      PNPM_STORE_PATH: ~/.pnpm-store
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".node-version"
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-store-${{ runner.os }}-
+      - name: Setup Node.js and PNPM with caching
+        uses: ./.github/actions/setup-node-cache
 
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@v4
+        uses: ./.github/actions/cache-playwright
         with:
-          path: ~/.cache/ms-playwright
-          key: playwright-browsers-${{ runner.os }}-v1
-          restore-keys: |
-            playwright-browsers-${{ runner.os }}-
+          browsers: '--with-deps chromium'
+
+      - name: Cache Next.js build
+        uses: ./.github/actions/cache-next-build
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Cache Next.js build cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .next/cache
-            node_modules/.cache
-          key: next-cache-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            next-cache-${{ runner.os }}-
-
-      - name: Install Playwright Browsers
-        run: pnpm playwright install --with-deps chromium
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
 
       - name: Setup E2E test environment
         run: ./scripts/setup-e2e-tests.sh

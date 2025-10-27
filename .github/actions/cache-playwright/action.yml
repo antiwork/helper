@@ -1,0 +1,46 @@
+name: Cache Playwright Browsers
+description: Cache Playwright browser binaries to avoid repeated downloads
+
+inputs:
+  playwright-version:
+    description: 'Playwright version (used for cache key)'
+    required: false
+    default: ''
+  browsers:
+    description: 'Browsers to install if cache misses (e.g., chromium, firefox, webkit, or --with-deps chromium)'
+    required: false
+    default: '--with-deps chromium'
+
+outputs:
+  cache-hit:
+    description: 'Whether the cache was hit'
+    value: ${{ steps.playwright-cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - name: Get Playwright version
+      id: playwright-version
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.playwright-version }}" ]; then
+          echo "version=${{ inputs.playwright-version }}" >> $GITHUB_OUTPUT
+        else
+          VERSION=$(node -p "require('./package.json').devDependencies['@playwright/test']")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-browsers-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-${{ inputs.browsers }}
+        restore-keys: |
+          playwright-browsers-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-
+          playwright-browsers-${{ runner.os }}-
+
+    - name: Install Playwright browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: pnpm playwright install ${{ inputs.browsers }}

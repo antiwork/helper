@@ -1,0 +1,57 @@
+name: Cache Supabase Docker Volumes
+description: Cache Supabase Docker volumes for faster E2E test setup
+
+inputs:
+  cache-key-prefix:
+    description: 'Prefix for cache key'
+    required: false
+    default: 'supabase-volumes'
+  project-id:
+    description: 'Supabase project ID (used in cache key)'
+    required: false
+    default: 'helper'
+
+outputs:
+  cache-hit:
+    description: 'Whether the cache was hit'
+    value: ${{ steps.supabase-cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - name: Get Supabase volume paths
+      id: supabase-paths
+      shell: bash
+      run: |
+        # Supabase uses named volumes, we'll cache the docker volume data
+        # This typically includes postgres data, storage, etc.
+        VOLUME_PATH="${HOME}/.cache/supabase-volumes"
+        mkdir -p "${VOLUME_PATH}"
+        echo "path=${VOLUME_PATH}" >> $GITHUB_OUTPUT
+
+    - name: Get Supabase config hash
+      id: supabase-config
+      shell: bash
+      run: |
+        if [ -f "supabase/config.toml" ]; then
+          HASH=$(sha256sum supabase/config.toml | cut -d' ' -f1)
+          echo "hash=${HASH}" >> $GITHUB_OUTPUT
+        else
+          echo "hash=no-config" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Cache Supabase volumes
+      id: supabase-cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.supabase-paths.outputs.path }}
+        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ inputs.project-id }}-${{ steps.supabase-config.outputs.hash }}
+        restore-keys: |
+          ${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ inputs.project-id }}-
+
+    - name: Export Docker volumes (on cache miss)
+      if: steps.supabase-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "Cache miss - volumes will be created fresh by Supabase setup"
+        echo "After Supabase starts, volumes can be exported for future caching"

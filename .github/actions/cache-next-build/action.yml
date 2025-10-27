@@ -1,0 +1,29 @@
+name: Cache Next.js Build
+description: Cache Next.js build output and static files for faster subsequent builds
+
+inputs:
+  cache-key-prefix:
+    description: 'Prefix for cache key'
+    required: false
+    default: 'next-cache'
+
+outputs:
+  cache-hit:
+    description: 'Whether the cache was hit'
+    value: ${{ steps.next-cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - name: Cache Next.js build
+      id: next-cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          .next/cache
+          .next/static
+          node_modules/.cache
+        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx', '!node_modules/**') }}
+        restore-keys: |
+          ${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
+          ${{ inputs.cache-key-prefix }}-${{ runner.os }}-
