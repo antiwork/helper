@@ -31,17 +31,17 @@ jobs:
       - name: Setup Node.js and PNPM with caching
         uses: ./.github/actions/setup-node-cache
 
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: ./.github/actions/cache-playwright
-        with:
-          browsers: '--with-deps chromium'
-
       - name: Cache Next.js build
         uses: ./.github/actions/cache-next-build
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: ./.github/actions/cache-playwright
+        with:
+          browsers: '--with-deps chromium'
 
       - name: Setup E2E test environment
         run: ./scripts/setup-e2e-tests.sh
