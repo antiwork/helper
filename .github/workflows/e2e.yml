@@ -33,6 +33,7 @@ jobs:
         uses: ./.github/actions/setup-node-cache
 
       - name: Cache Next.js build
+        id: next-cache
         uses: ./.github/actions/cache-next-build
 
       - name: Install dependencies
@@ -43,6 +44,11 @@ jobs:
         uses: ./.github/actions/cache-playwright
         with:
           browsers: "--with-deps chromium"
+
+      - name: Log cache status
+        run: |
+          echo "Next.js cache hit: ${{ steps.next-cache.outputs.cache-hit }}"
+          echo "Playwright cache hit: ${{ steps.playwright-cache.outputs.cache-hit }}"
 
       - name: Setup E2E test environment
         run: ./scripts/setup-e2e-tests.sh

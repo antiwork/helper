@@ -21,9 +21,7 @@ runs:
       with:
         path: |
           .next/cache
-          .next/static
-          node_modules/.cache
-        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx', '!node_modules/**') }}
+        key: ${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/package.json') }}
         restore-keys: |
           ${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
           ${{ inputs.cache-key-prefix }}-${{ runner.os }}-
