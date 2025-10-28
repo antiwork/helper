@@ -3,17 +3,17 @@ description: Cache Playwright browser binaries to avoid repeated downloads
 
 inputs:
   playwright-version:
-    description: 'Playwright version (used for cache key)'
+    description: "Playwright version (used for cache key)"
     required: false
-    default: ''
+    default: ""
   browsers:
-    description: 'Browsers to install if cache misses (e.g., chromium, firefox, webkit, or --with-deps chromium)'
+    description: "Browsers to install if cache misses (e.g., chromium, firefox, webkit, or --with-deps chromium)"
     required: false
-    default: '--with-deps chromium'
+    default: "--with-deps chromium"
 
 outputs:
   cache-hit:
-    description: 'Whether the cache was hit'
+    description: "Whether the cache was hit"
     value: ${{ steps.playwright-cache.outputs.cache-hit }}
 
 runs:

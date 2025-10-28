@@ -16,12 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".node-version"
-          cache: "pnpm"
+      - name: Setup Node.js and PNPM with caching
+        uses: ./.github/actions/setup-node-cache
 
       - run: pnpm install --no-frozen-lockfile
 
@@ -35,6 +31,10 @@ jobs:
 
       - name: Format
         run: pnpm run format --write
+        shell: bash
+
+      - name: Reset .github directory changes
+        run: git checkout .github/
         shell: bash
 
       - name: Typecheck

@@ -3,17 +3,17 @@ description: Cache Supabase Docker volumes for faster E2E test setup
 
 inputs:
   cache-key-prefix:
-    description: 'Prefix for cache key'
+    description: "Prefix for cache key"
     required: false
-    default: 'supabase-volumes'
+    default: "supabase-volumes"
   project-id:
-    description: 'Supabase project ID (used in cache key)'
+    description: "Supabase project ID (used in cache key)"
     required: false
-    default: 'helper'
+    default: "helper"
 
 outputs:
   cache-hit:
-    description: 'Whether the cache was hit'
+    description: "Whether the cache was hit"
     value: ${{ steps.supabase-cache.outputs.cache-hit }}
 
 runs:

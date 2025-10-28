@@ -3,13 +3,13 @@ description: Cache Next.js build output and static files for faster subsequent b
 
 inputs:
   cache-key-prefix:
-    description: 'Prefix for cache key'
+    description: "Prefix for cache key"
     required: false
-    default: 'next-cache'
+    default: "next-cache"
 
 outputs:
   cache-hit:
-    description: 'Whether the cache was hit'
+    description: "Whether the cache was hit"
     value: ${{ steps.next-cache.outputs.cache-hit }}
 
 runs:

@@ -28,6 +28,7 @@ jobs:
         with:
           fetch-depth: 0
 
+      # First run: ~14min (cold cache), subsequent runs: ~5min (warm cache)
       - name: Setup Node.js and PNPM with caching
         uses: ./.github/actions/setup-node-cache
 
@@ -41,13 +42,16 @@ jobs:
         id: playwright-cache
         uses: ./.github/actions/cache-playwright
         with:
-          browsers: '--with-deps chromium'
+          browsers: "--with-deps chromium"
 
       - name: Setup E2E test environment
         run: ./scripts/setup-e2e-tests.sh
 
       - name: Build next
         run: pnpm with-test-env next build
+        env:
+          # Optimize Next.js build for CI
+          NEXT_TELEMETRY_DISABLED: 1
 
       - name: Run full Playwright suite
         run: ./scripts/e2e.sh

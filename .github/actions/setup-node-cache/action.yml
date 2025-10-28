@@ -10,8 +10,8 @@ runs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version-file: '.node-version'
-        cache: 'pnpm'
+        node-version-file: ".node-version"
+        cache: "pnpm"
 
     - name: Get pnpm store directory
       id: pnpm-cache
