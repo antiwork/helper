@@ -1,11 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
-import { generateRandomString } from "../utils/test-helpers";
+import { generateRandomString, debugWait } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 async function navigate(page: Page) {
-  await page.goto("/settings/knowledge");
-  await page.waitForLoadState("networkidle");
+  await page.goto("/settings/knowledge", { waitUntil: "domcontentloaded" });
+  // Wait for the page heading to be visible
+  await expect(page.getByRole("heading", { name: "Knowledge Bank" })).toBeVisible({ timeout: 10000 });
 }
 
 async function waitForPageLoad(page: Page) {
@@ -13,13 +14,17 @@ async function waitForPageLoad(page: Page) {
 }
 
 async function searchKnowledge(page: Page, query: string) {
-  await page.getByPlaceholder("Search knowledge bank...").fill(query);
-  await page.waitForTimeout(500);
+  const searchInput = page.getByPlaceholder("Search knowledge bank...");
+  await searchInput.fill(query);
+  // Wait for search results to update
+  await debugWait(page, 200);
 }
 
 async function clearSearch(page: Page) {
-  await page.getByPlaceholder("Search knowledge bank...").clear();
-  await page.waitForTimeout(500);
+  const searchInput = page.getByPlaceholder("Search knowledge bank...");
+  await searchInput.clear();
+  // Wait for all results to show again
+  await debugWait(page, 200);
 }
 
 async function clickAddKnowledge(page: Page) {
@@ -34,8 +39,10 @@ async function fillKnowledgeContent(page: Page, content: string) {
 }
 
 async function saveKnowledge(page: Page) {
-  await page.getByRole("button", { name: "Save" }).click();
-  await page.waitForLoadState("networkidle");
+  const saveButton = page.getByRole("button", { name: "Save" });
+  await saveButton.click();
+  // Wait for the modal to close
+  await expect(page.locator("#knowledge-content-textarea")).not.toBeVisible({ timeout: 5000 });
 }
 
 async function addKnowledge(page: Page, content: string) {
@@ -72,15 +79,20 @@ async function toggleKnowledgeEnabled(page: Page, content: string) {
   const knowledgeItem = await getKnowledgeItemByContent(page, content);
   const toggleSwitch = knowledgeItem.getByRole("switch", { name: "Enable Knowledge" });
   await toggleSwitch.click();
-  await page.waitForLoadState("networkidle");
+  // Wait for toggle animation to complete
+  await debugWait(page, 200);
 }
 
 async function deleteKnowledge(page: Page, content: string) {
   const knowledgeItem = await getKnowledgeItemByContent(page, content);
   const deleteButton = knowledgeItem.getByRole("button", { name: "Delete" });
   await deleteButton.click();
-  await page.getByRole("button", { name: "Yes, delete" }).click();
-  await page.waitForLoadState("networkidle");
+  
+  const confirmButton = page.getByRole("button", { name: "Yes, delete" });
+  await confirmButton.click();
+  
+  // Wait for the item to be removed from the list
+  await expect(knowledgeItem).not.toBeVisible({ timeout: 5000 });
 }
 
 async function expectKnowledgeExists(page: Page, content: string) {

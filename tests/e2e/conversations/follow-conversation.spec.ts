@@ -3,19 +3,20 @@ import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../../../db/client";
 import { conversationFollowers, conversations } from "../../../db/schema";
 import { authUsers } from "../../../db/supabaseSchema/auth";
-import { takeDebugScreenshot } from "../utils/test-helpers";
+import { takeDebugScreenshot, debugWait } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 test.describe("Working Conversation Follow/Unfollow", () => {
   test.beforeEach(async ({ page }) => {
     try {
-      await page.goto("/mine", { timeout: 30000 });
-      await page.waitForLoadState("networkidle", { timeout: 10000 });
+      await page.goto("/mine", { timeout: 30000, waitUntil: "domcontentloaded" });
+      // Wait for the conversation list to be visible instead of networkidle
+      await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible({ timeout: 10000 });
     } catch (error) {
       console.log("Initial navigation failed, retrying...", error);
-      await page.goto("/mine", { timeout: 30000 });
-      await page.waitForLoadState("domcontentloaded", { timeout: 10000 });
+      await page.goto("/mine", { timeout: 30000, waitUntil: "domcontentloaded" });
+      await expect(page.locator('input[placeholder="Search conversations"]')).toBeVisible({ timeout: 10000 });
     }
   });
 
@@ -30,25 +31,24 @@ test.describe("Working Conversation Follow/Unfollow", () => {
     }
 
     await conversationLinks.first().click();
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
-
+    
+    // Wait for conversation detail page to load by checking for follow button
     const followButton = page.locator('button:has-text("Follow"), button:has-text("Following")').first();
     await expect(followButton).toBeVisible({ timeout: 15000 });
-    await expect(followButton).not.toHaveAttribute("disabled");
+    await expect(followButton).toBeEnabled({ timeout: 5000 });
 
     const initialButtonText = await followButton.textContent();
 
     await followButton.click();
 
-    // Wait for the state change with retry logic
-    let attempts = 0;
-    let finalButtonText = initialButtonText;
-    while (attempts < 5 && finalButtonText === initialButtonText) {
-      await page.waitForTimeout(1000);
-      finalButtonText = await followButton.textContent();
-      attempts++;
+    // Wait for the button text to change deterministically
+    if (initialButtonText?.includes("Following")) {
+      await expect(followButton).toHaveText(/^Follow$/, { timeout: 5000 });
+    } else {
+      await expect(followButton).toHaveText(/Following/, { timeout: 5000 });
     }
+    
+    const finalButtonText = await followButton.textContent();
 
     if (initialButtonText?.includes("Following")) {
       expect(finalButtonText).toContain("Follow");
@@ -71,10 +71,10 @@ test.describe("Working Conversation Follow/Unfollow", () => {
     }
 
     await conversationLinks.first().click();
-    await page.waitForLoadState("networkidle");
 
+    // Wait for the follow button to appear
     const followButton = page.locator('button:has-text("Follow"), button:has-text("Following")').first();
-    await expect(followButton).toBeVisible();
+    await expect(followButton).toBeVisible({ timeout: 10000 });
 
     const buttonText = await followButton.textContent();
     expect(buttonText?.includes("Follow")).toBeTruthy();
@@ -96,11 +96,11 @@ test.describe("Working Conversation Follow/Unfollow", () => {
     }
 
     await conversationLinks.first().click();
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
 
+    // Wait for conversation page to load and follow button to appear
     const followButton = page.locator('button:has-text("Follow"), button:has-text("Following")').first();
     await expect(followButton).toBeVisible({ timeout: 15000 });
+    await expect(followButton).toBeEnabled({ timeout: 5000 });
 
     await page.route("**/api/trpc/**", (route) => {
       const url = route.request().url();
@@ -116,7 +116,9 @@ test.describe("Working Conversation Follow/Unfollow", () => {
     });
 
     await followButton.click();
-    await page.waitForTimeout(3000);
+    
+    // Wait for potential error toast or button state change
+    await debugWait(page, 500);
 
     await takeDebugScreenshot(page, "follow-button-error.png");
   });
@@ -167,26 +169,27 @@ test.describe("Working Conversation Follow/Unfollow", () => {
     }
 
     await conversationLinks.first().click();
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
 
+    // Wait for conversation page and follow button to be ready
     const followButton = page.locator('button:has-text("Follow"), button:has-text("Following")').first();
     await expect(followButton).toBeVisible({ timeout: 15000 });
-    await expect(followButton).not.toHaveAttribute("disabled");
+    await expect(followButton).toBeEnabled({ timeout: 5000 });
 
     const initialButtonText = await followButton.textContent();
 
     await followButton.click();
 
-    await expect(followButton).not.toHaveAttribute("disabled", { timeout: 10000 });
+    // Wait for button to become enabled again (operation complete)
+    await expect(followButton).toBeEnabled({ timeout: 10000 });
 
+    // Dismiss any toasts
     await page
       .locator("[data-sonner-toast]")
       .first()
       .press("Escape")
       .catch(() => {});
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(1000);
+    await debugWait(page, 300);
 
     const afterFirstClickText = await followButton.textContent();
     expect(afterFirstClickText).not.toBe(initialButtonText);
@@ -196,12 +199,12 @@ test.describe("Working Conversation Follow/Unfollow", () => {
 
     if (isButtonEnabled && !hasBlockingToast) {
       await followButton.click({ timeout: 5000 });
-      await expect(followButton).not.toHaveAttribute("disabled", { timeout: 5000 });
+      await expect(followButton).toBeEnabled({ timeout: 5000 });
     } else {
       console.log("Skipping second click - button disabled or toast blocking");
     }
 
-    await page.waitForTimeout(2000);
+    await debugWait(page, 300);
     const finalButtonText = await followButton.textContent();
     expect(finalButtonText).toBeTruthy();
     expect(finalButtonText).toMatch(/^(Follow|Following)$/);

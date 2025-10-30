@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { loadWidget, throttleNetworkRequest } from "../utils/test-helpers";
+import { loadWidget, throttleNetworkRequest, debugWait } from "../utils/test-helpers";
 import { widgetConfigs } from "./fixtures/widget-config";
 
 test.describe("Helper Chat Widget - Basic Functionality", () => {
@@ -129,13 +129,8 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
     await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
     await widgetFrame.locator('[data-message-role="assistant"]').waitFor({ state: "visible", timeout: 30000 });
 
-    await page.waitForFunction(
-      async () => {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        return true;
-      },
-      { timeout: 1000 },
-    );
+    // Short wait for message rendering
+    await debugWait(page, 100);
 
     const countAfterFirst = await widgetFrame.getByTestId("message").count();
     expect(countAfterFirst).toBeGreaterThanOrEqual(2);
@@ -145,10 +140,11 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
     await widgetFrame.getByRole("button", { name: "Send message" }).first().click();
     await widgetFrame.locator('[data-message-role="assistant"]').waitFor({ state: "visible", timeout: 30000 });
 
+    // Wait for final message count to stabilize
     let finalCount = await widgetFrame.getByTestId("message").count();
     let attempts = 0;
     while (finalCount < 4 && attempts < 10) {
-      await page.waitForTimeout(500);
+      await debugWait(page, 300);
       finalCount = await widgetFrame.getByTestId("message").count();
       attempts++;
     }
@@ -166,7 +162,7 @@ test.describe("Helper Chat Widget - Basic Functionality", () => {
         let roles = await getRoles();
 
         if (!roles[0] || !roles[1] || !roles[2] || !roles[3]) {
-          await page.waitForTimeout(1000);
+          await debugWait(page, 500);
           roles = await getRoles();
         }
 

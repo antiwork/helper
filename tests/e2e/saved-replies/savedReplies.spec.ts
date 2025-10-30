@@ -10,6 +10,7 @@ import {
 } from "../utils/replyHelpers";
 import { debugWait, generateRandomString, takeDebugScreenshot } from "../utils/test-helpers";
 import { waitForToast } from "../utils/toastHelpers";
+import { waitForEditorReady, waitForPageTitle, waitForSaveComplete } from "../utils/wait-helpers";
 
 // Use the working authentication and grant clipboard permissions
 test.use({
@@ -20,7 +21,8 @@ test.use({
 // Helper functions
 async function navigateToSavedReplies(page: Page) {
   await page.goto("/saved-replies");
-  await page.waitForLoadState("networkidle");
+  // Wait for a deterministic page indicator instead of networkidle
+  await expect(page.locator('h1:has-text("Saved replies")')).toBeVisible({ timeout: 10000 });
 }
 
 async function expectPageVisible(page: Page) {
@@ -74,27 +76,22 @@ async function expectDeleteDialogVisible(page: Page) {
 async function searchSavedReplies(page: Page, searchTerm: string) {
   const searchInput = page.locator('input[placeholder="Search saved replies..."]').first();
   await searchInput.fill(searchTerm);
-  await page.waitForTimeout(500);
-
+  // Small pauses are only needed locally; in CI they are no-ops via debugWait
+  await debugWait(page, 500);
   try {
-    await page.waitForLoadState("networkidle", { timeout: 3000 });
-  } catch {
-    // Continue if networkidle times out
-  }
-
-  await page.waitForTimeout(200);
+    await page.waitForLoadState("networkidle", { timeout: 3000 }).catch(() => {});
+  } catch {}
+  await debugWait(page, 200);
 }
 
 async function clearSearch(page: Page) {
   const searchInput = page.locator('input[placeholder="Search saved replies..."]').first();
   await searchInput.clear();
-  await page.waitForTimeout(500);
+  await debugWait(page, 500);
   try {
-    await page.waitForLoadState("networkidle", { timeout: 3000 });
-  } catch {
-    // Continue if networkidle times out
-  }
-  await page.waitForTimeout(200);
+    await page.waitForLoadState("networkidle", { timeout: 3000 }).catch(() => {});
+  } catch {}
+  await debugWait(page, 200);
 }
 
 async function clickCancelButton(page: Page) {
@@ -185,18 +182,8 @@ async function expectClipboardContent(page: Page) {
 
 test.describe("Saved Replies Management", () => {
   test.beforeEach(async ({ page }) => {
-    // Add delay to reduce database contention between tests
-    await page.waitForTimeout(1000);
-
-    // Navigate with retry logic for improved reliability
-    try {
-      await navigateToSavedReplies(page);
-      await page.waitForLoadState("networkidle", { timeout: 10000 });
-    } catch (error) {
-      console.log("Initial navigation failed, retrying...", error);
-      await navigateToSavedReplies(page);
-      await page.waitForLoadState("domcontentloaded", { timeout: 10000 });
-    }
+    // Navigate to saved replies and wait for deterministic page readiness
+    await navigateToSavedReplies(page);
   });
 
   test("should display saved replies page with proper title", async ({ page }) => {
@@ -270,8 +257,8 @@ test.describe("Saved Replies Management", () => {
 
       await createSavedReply(page, testName, testContent);
 
-      // Wait for UI to update
-      await page.waitForTimeout(1000);
+      // Verify UI updated by checking for the created reply
+      await expectSavedRepliesVisible(page);
 
       // Use the title-based helper function to verify the reply exists
       const createdReply = await findSavedReplyByTitle(page, testName);
@@ -325,8 +312,8 @@ test.describe("Saved Replies Management", () => {
       // Type more slowly to avoid overwhelming React re-renders
       await searchInput.type("test", { delay: 100 });
 
-      // Wait for any debounced operations to complete
-      await page.waitForTimeout(400);
+      // Wait for any debounced operations to complete (no-op in CI)
+      await debugWait(page, 400);
 
       // Verify focus is maintained - use more reliable check
       await expect(searchInput).toBeFocused();
@@ -346,12 +333,9 @@ test.describe("Saved Replies Management", () => {
 
     await createSavedReply(page, testName, testContent);
 
-    await page.waitForTimeout(2000);
     await expectSavedRepliesVisible(page);
 
     await editSavedReplyByTitle(page, testName, updatedTitle, updatedContent);
-
-    await page.waitForTimeout(1000);
 
     const updatedReply = await findSavedReplyByTitle(page, updatedTitle);
     await expect(updatedReply).toBeVisible({ timeout: 5000 });
@@ -373,7 +357,7 @@ test.describe("Saved Replies Management", () => {
       testName = `Copy Target ${generateRandomString()}`;
       const testContent = `Copy content ${generateRandomString()}`;
       await createSavedReply(page, testName, testContent);
-      await page.waitForTimeout(1000);
+      await expectSavedRepliesVisible(page);
     } else {
       // Use the first existing reply's title
       testName = await getSavedReplyTitle(page, 0);
@@ -395,7 +379,7 @@ test.describe("Saved Replies Management", () => {
     await createSavedReply(page, testName, testContent);
 
     // Wait for creation to complete
-    await page.waitForTimeout(1000);
+    await expectSavedRepliesVisible(page);
 
     const initialCount = await getSavedReplyCount(page);
     expect(initialCount).toBeGreaterThan(0);
@@ -420,8 +404,8 @@ test.describe("Saved Replies Management", () => {
     if (foundTargetReply && replyIndex >= 0) {
       await deleteSavedReply(page, replyIndex);
 
-      // Wait for deletion to complete
-      await page.waitForTimeout(1000);
+      // Wait for deletion to complete by observing the toast
+      await waitForToast(page, "Saved reply deleted successfully");
 
       // Verify the specific reply was deleted by checking it's no longer findable
       const newCount = await getSavedReplyCount(page);
@@ -470,7 +454,6 @@ test.describe("Saved Replies Management", () => {
 
     // Loading skeletons might be visible briefly
     // This test ensures the page loads correctly
-    await page.waitForLoadState("networkidle");
     await expectPageVisible(page);
 
     // Ensure no loading skeletons remain visible
@@ -487,11 +470,11 @@ test.describe("Saved Replies Management", () => {
 
     // Test navigation away and back to verify auth persists
     await page.goto("/mine");
-    await page.waitForLoadState("networkidle");
+    await expect(page).toHaveURL(/.*mine.*/);
 
     // Navigate back to saved replies to test auth persistence
     await page.goto("/saved-replies");
-    await page.waitForLoadState("networkidle");
+    await navigateToSavedReplies(page);
 
     // Should remain authenticated and stay on the saved replies page
     await expect(page).toHaveURL(/.*saved-replies.*/);
@@ -503,14 +486,11 @@ test.describe("Saved Replies Management", () => {
   test("should navigate between conversations and saved replies", async ({ page }) => {
     // Test direct navigation to conversations page
     await page.goto("/mine");
-    await page.waitForLoadState("networkidle");
     await expect(page).toHaveURL(/.*mine.*/);
 
     // Navigate back to saved replies
     await page.goto("/saved-replies");
-    await page.waitForLoadState("networkidle");
-    await expect(page).toHaveURL(/.*saved-replies.*/);
-    await expectPageVisible(page);
+    await navigateToSavedReplies(page);
 
     await takeDebugScreenshot(page, "saved-replies-navigation.png");
   });
@@ -540,7 +520,7 @@ test.describe("Saved Replies Management", () => {
 
     // Escape should close dialog
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(300);
+    await debugWait(page, 300);
 
     // Verify dialog is closed
     await expect(page.locator('[role="dialog"]:has-text("New saved reply")')).not.toBeVisible();
@@ -582,7 +562,7 @@ test.describe("Saved Replies Stress Testing", () => {
 
     for (const data of testData) {
       await createSavedReply(page, data.name, data.content);
-      await debugWait(page, 200); // Small delay between creations
+      await debugWait(page, 300); // Small delay between creations
     }
 
     const finalCount = await getSavedReplyCount(page);
@@ -599,16 +579,8 @@ test.describe("Saved Replies Stress Testing", () => {
 
 test.describe("Saved Replies Rich Text Editor", () => {
   test.beforeEach(async ({ page }) => {
-    await page.waitForTimeout(1000);
-
-    try {
-      await navigateToSavedReplies(page);
-      await page.waitForLoadState("networkidle", { timeout: 10000 });
-    } catch (error) {
-      console.log("Initial navigation failed, retrying...", error);
-      await navigateToSavedReplies(page);
-      await page.waitForLoadState("domcontentloaded", { timeout: 10000 });
-    }
+    // Navigate to saved replies and wait for deterministic page readiness
+    await navigateToSavedReplies(page);
   });
 
   test("should display TipTap editor in create dialog", async ({ page }) => {
@@ -620,11 +592,11 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await expect(editor).toBeVisible();
 
     // Wait for editor to be fully loaded
-    await page.waitForTimeout(1000);
+    await waitForEditorReady(page);
 
     // Check for toolbar elements - need to focus editor first to make toolbar visible
     await editor.click();
-    await page.waitForTimeout(500);
+    await waitForEditorReady(page);
 
     // Check for clear formatting button which should always be there
     const toolbar = page.locator('button[aria-label="Clear formatting"]');
@@ -647,11 +619,11 @@ test.describe("Saved Replies Rich Text Editor", () => {
     // Focus editor and add content
     const editor = page.locator('[role="textbox"][contenteditable="true"]');
     await editor.click();
-    await page.waitForTimeout(500); // Wait for editor to be ready
+    await waitForEditorReady(page); // Wait for editor to be ready
     await editor.fill(testContent);
 
-    // Wait for toolbar to be visible
-    await page.waitForTimeout(500);
+    // Wait for toolbar to be visible (no-op in CI)
+    await debugWait(page, 500);
 
     // Select all text and make it bold
     await page.keyboard.press("Control+a");
@@ -659,7 +631,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
 
     // Save the reply
     await clickSaveButton(page);
-    await page.waitForTimeout(1000);
+    await waitForSaveComplete(page);
 
     // Verify the reply was created
     await expectSavedRepliesVisible(page);
@@ -680,11 +652,11 @@ test.describe("Saved Replies Rich Text Editor", () => {
     // Focus editor and add content
     const editor = page.locator('[role="textbox"][contenteditable="true"]');
     await editor.click();
-    await page.waitForTimeout(500);
+    await waitForEditorReady(page);
     await editor.fill(testContent);
 
-    // Wait for toolbar to be visible
-    await page.waitForTimeout(500);
+    // Wait for toolbar to be visible (no-op in CI)
+    await debugWait(page, 500);
 
     // Select all text and make it italic
     await page.keyboard.press("Control+a");
@@ -692,7 +664,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
 
     // Save the reply
     await clickSaveButton(page);
-    await page.waitForTimeout(1000);
+    await waitForSaveComplete(page);
 
     await takeDebugScreenshot(page, "saved-reply-italic-text.png");
     await deleteSavedReplyByName(testName);
@@ -710,14 +682,14 @@ test.describe("Saved Replies Rich Text Editor", () => {
     // Focus editor
     const editor = page.locator('[role="textbox"][contenteditable="true"]');
     await editor.click();
-    await page.waitForTimeout(500);
+    await waitForEditorReady(page);
 
     // Add some text
     await editor.fill("Here are the steps:");
     await page.keyboard.press("Enter");
 
-    // Wait for toolbar to be visible
-    await page.waitForTimeout(500);
+    // Wait for toolbar to be visible (no-op in CI)
+    await debugWait(page, 500);
 
     // Create bullet list
     await page.click('button[aria-label="Bullet list"]');
@@ -729,7 +701,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
 
     // Save the reply
     await clickSaveButton(page);
-    await page.waitForTimeout(1000);
+    await waitForSaveComplete(page);
 
     await takeDebugScreenshot(page, "saved-reply-bullet-list.png");
     await deleteSavedReplyByName(testName);
@@ -748,11 +720,11 @@ test.describe("Saved Replies Rich Text Editor", () => {
     // Focus editor and add content
     const editor = page.locator('[role="textbox"][contenteditable="true"]');
     await editor.click();
-    await page.waitForTimeout(500);
+    await waitForEditorReady(page);
     await editor.fill(testContent);
 
-    // Wait for toolbar to be visible
-    await page.waitForTimeout(500);
+    // Wait for toolbar to be visible (no-op in CI)
+    await debugWait(page, 500);
 
     // Select the text and create a link
     await page.keyboard.press("Control+a");
@@ -768,7 +740,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
 
     // Save the reply
     await clickSaveButton(page);
-    await page.waitForTimeout(1000);
+    await waitForSaveComplete(page);
 
     await takeDebugScreenshot(page, "saved-reply-with-link.png");
     await deleteSavedReplyByName(testName);
@@ -786,18 +758,18 @@ test.describe("Saved Replies Rich Text Editor", () => {
 
     const editor = page.locator('[role="textbox"][contenteditable="true"]');
     await editor.click();
-    await page.waitForTimeout(500);
+    await waitForEditorReady(page);
     await editor.fill(originalContent);
 
-    // Wait for toolbar to be visible
-    await page.waitForTimeout(500);
+    // Wait for toolbar to be visible (no-op in CI)
+    await debugWait(page, 500);
 
     // Make text bold
     await page.keyboard.press("Control+a");
     await page.click('button[aria-label="Bold"]');
 
     await clickSaveButton(page);
-    await page.waitForTimeout(1000);
+    await waitForSaveComplete(page);
 
     // Now edit the saved reply
     await page.locator('[data-testid="saved-reply-card"]').first().click();
@@ -808,15 +780,15 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await page.keyboard.press("Control+a");
     await editor.fill(updatedContent);
 
-    // Wait for toolbar to be visible
-    await page.waitForTimeout(500);
+    // Wait for toolbar to be visible (no-op in CI)
+    await debugWait(page, 500);
 
     // Make new text italic instead
     await page.keyboard.press("Control+a");
     await page.click('button[aria-label="Italic"]');
 
     await clickSaveButton(page);
-    await page.waitForTimeout(1000);
+    await waitForSaveComplete(page);
 
     await takeDebugScreenshot(page, "edited-formatted-reply.png");
     await deleteSavedReplyByName(testName);
@@ -833,18 +805,18 @@ test.describe("Saved Replies Rich Text Editor", () => {
 
     const editor = page.locator('[role="textbox"][contenteditable="true"]');
     await editor.click();
-    await page.waitForTimeout(500);
+    await waitForEditorReady(page);
     await editor.fill(testContent);
 
-    // Wait for toolbar to be visible
-    await page.waitForTimeout(500);
+    // Wait for toolbar to be visible (no-op in CI)
+    await debugWait(page, 500);
 
     // Make text bold
     await page.keyboard.press("Control+a");
     await page.click('button[aria-label="Bold"]');
 
     await clickSaveButton(page);
-    await page.waitForTimeout(1000);
+    await waitForSaveComplete(page);
 
     // Verify the saved reply was created with formatted content
     await expectSavedRepliesVisible(page);
@@ -871,13 +843,13 @@ test.describe("Saved Replies Rich Text Editor", () => {
 
     const editor = page.locator('[role="textbox"][contenteditable="true"]');
     await editor.click();
-    await page.waitForTimeout(500);
+    await waitForEditorReady(page);
 
     // Add mixed content with different formatting
     await editor.fill("Bold text and italic text and normal text");
 
-    // Wait for toolbar to be visible
-    await page.waitForTimeout(500);
+    // Wait for toolbar to be visible (no-op in CI)
+    await debugWait(page, 500);
 
     // Select first part and make bold
     await page.keyboard.press("Control+Home");
@@ -901,7 +873,7 @@ test.describe("Saved Replies Rich Text Editor", () => {
     await page.click('button[aria-label="Italic"]');
 
     await clickSaveButton(page);
-    await page.waitForTimeout(1000);
+    await waitForSaveComplete(page);
 
     await takeDebugScreenshot(page, "mixed-formatting-reply.png");
     await deleteSavedReplyByName(testName);
@@ -912,11 +884,11 @@ test.describe("Saved Replies Rich Text Editor", () => {
 
     const editor = page.locator('[role="textbox"][contenteditable="true"]');
     await editor.click();
-    await page.waitForTimeout(500);
+    await waitForEditorReady(page);
 
     // Add some content to make toolbar visible
     await editor.fill("Test content");
-    await page.waitForTimeout(500);
+    await debugWait(page, 500);
 
     // Check that all expected toolbar buttons are visible
     await expect(page.locator('button[aria-label="Bold"]')).toBeVisible();

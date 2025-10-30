@@ -3,7 +3,8 @@ import { eq, or } from "drizzle-orm";
 import { db } from "../../../db/client";
 import { savedReplies } from "../../../db/schema";
 import { createSavedReply } from "../utils/replyHelpers";
-import { generateRandomString, takeDebugScreenshot } from "../utils/test-helpers";
+import { debugWait, generateRandomString, takeDebugScreenshot } from "../utils/test-helpers";
+import { waitForPageTitle } from "../utils/wait-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
@@ -27,25 +28,24 @@ test.describe("New Message with Saved Replies", () => {
       // Navigate with retry logic for improved reliability
       try {
         await page.goto("/saved-replies");
-        await page.waitForLoadState("networkidle", { timeout: 30000 });
+        // wait deterministically for the page title
+        await waitForPageTitle(page, "Saved replies");
       } catch (error) {
         console.log("Initial navigation failed, retrying...", error);
         await page.goto("/saved-replies");
-        await page.waitForLoadState("domcontentloaded", { timeout: 30000 });
+        await waitForPageTitle(page, "Saved replies");
       }
-
-      await expect(page.locator('h1:has-text("Saved replies")')).toBeVisible();
-      await page.waitForTimeout(1000);
 
       // Create first test saved reply
       const firstContent = `Hello! Thank you for contacting us. How can I help you today? - ${uniqueId}`;
       await createSavedReply(page, firstTestReplyName, firstContent);
-      await page.waitForTimeout(1000);
+      // Wait for the created saved reply to appear in the list
+      await expect(page.getByText(firstTestReplyName)).toBeVisible({ timeout: 5000 });
 
       // Create second test saved reply
       const secondContent = `This is a different saved reply for testing search functionality - ${uniqueId}`;
       await createSavedReply(page, secondTestReplyName, secondContent);
-      await page.waitForTimeout(1000);
+      await expect(page.getByText(secondTestReplyName)).toBeVisible({ timeout: 5000 });
     } catch (error) {
       console.error("Failed to create test saved replies:", error);
       // Take screenshot before closing context
@@ -73,10 +73,7 @@ test.describe("New Message with Saved Replies", () => {
           waitUntil: "domcontentloaded",
         });
 
-        // Wait for any loading states to complete
-        await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {
-          // Continue even if networkidle times out
-        });
+        // No global networkidle — rely on specific element checks below
 
         // Wait for the new message button - use multiple possible selectors
         const buttonSelectors = [
@@ -110,7 +107,8 @@ test.describe("New Message with Saved Replies", () => {
         if (retries >= maxRetries) {
           throw new Error(`Failed to navigate after ${maxRetries} attempts: ${error}`);
         }
-        await page.waitForTimeout(3000);
+        // short no-op in CI, helpful locally for headed debugging
+        await debugWait(page, 300);
       }
     }
   });
@@ -273,13 +271,7 @@ test.describe("New Message with Saved Replies", () => {
     // Navigate to the page
     await page.goto("/mine", { waitUntil: "domcontentloaded" });
 
-    // Wait for network to stabilize
-    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {
-      // Continue even if networkidle times out
-    });
-
-    // Wait for page to stabilize on mobile
-    await page.waitForTimeout(2000);
+    // Rely on element waits below instead of a global networkidle
 
     // Use multiple selectors for the new message button
     const newMessageButton = page
@@ -292,8 +284,7 @@ test.describe("New Message with Saved Replies", () => {
     const modal = page.getByRole("dialog");
     await expect(modal).toBeVisible({ timeout: 5000 });
 
-    // Wait for modal content to load on mobile
-    await page.waitForTimeout(2000);
+    // Modal visibility is already asserted above; proceed to find controls
 
     // Look for saved reply selector
     const savedReplySelector = modal.locator('button[role="combobox"]:has-text("Use saved reply")');
@@ -302,7 +293,7 @@ test.describe("New Message with Saved Replies", () => {
     await expect(savedReplySelector).toBeVisible({ timeout: 15000 });
 
     await savedReplySelector.click();
-    await page.waitForTimeout(800);
+    await debugWait(page, 300);
 
     // Check search input appears
     const searchInput = page.getByPlaceholder("Search saved replies...");
@@ -327,13 +318,7 @@ test.describe("New Message with Saved Replies", () => {
         waitUntil: "domcontentloaded",
       });
 
-      // Wait for network to stabilize
-      await newPage.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {
-        // Continue even if networkidle times out
-      });
-
-      // Wait for the page to be fully loaded
-      await newPage.waitForTimeout(2000);
+      // Rely on specific element checks instead of networkidle or fixed waits
 
       // Use multiple selectors for the new message button
       const newMessageButton = newPage
@@ -345,13 +330,12 @@ test.describe("New Message with Saved Replies", () => {
       // Wait for modal and content to load
       const modal = newPage.getByRole("dialog");
       await expect(modal).toBeVisible({ timeout: 5000 });
-      await newPage.waitForTimeout(1500);
 
       // Click saved reply selector
       const savedReplySelector = modal.locator('button[role="combobox"]:has-text("Use saved reply")');
       await expect(savedReplySelector).toBeVisible({ timeout: 10000 });
       await savedReplySelector.click();
-      await newPage.waitForTimeout(500);
+      await debugWait(newPage, 300);
 
       // Check we have multiple options initially
       const replyOptions = newPage.locator('[role="option"]');
@@ -362,11 +346,10 @@ test.describe("New Message with Saved Replies", () => {
       // Search for "Test Reply" which should match both our pre-created saved replies
       const searchInput = newPage.getByPlaceholder("Search saved replies...");
       await searchInput.fill("Test Reply");
-      await newPage.waitForTimeout(800);
 
       // Check filtered results - should find both our test saved replies
       const filteredOptions = newPage.locator('[role="option"]');
-      await expect(filteredOptions.first()).toBeVisible();
+      await expect(filteredOptions.first()).toBeVisible({ timeout: 5000 });
 
       // Verify we have both saved replies in the results
       const filteredCount = await filteredOptions.count();

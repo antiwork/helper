@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { takeDebugScreenshot } from "../utils/test-helpers";
+import { takeDebugScreenshot, debugWait } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
@@ -26,7 +26,8 @@ test.describe("Unread Messages Filter", () => {
     await expect(filterButton).toHaveClass(/bright/);
     await expect(page).toHaveURL(/hasUnreadMessages=true/);
 
-    await page.waitForLoadState("networkidle");
+    // Wait for filter to be applied and conversation list to update
+    await debugWait(page, 200);
 
     const unreadBadge = page.locator('[data-testid="unread-messages-badge"]');
     const badgeCount = await unreadBadge.count();
@@ -53,7 +54,8 @@ test.describe("Unread Messages Filter", () => {
     await expect(todayOption).toBeVisible();
     await todayOption.click();
 
-    await page.waitForTimeout(1000);
+    // Wait for date filter to be applied
+    await debugWait(page, 200);
 
     await expect(dateFilter).toHaveClass(/bright/);
 

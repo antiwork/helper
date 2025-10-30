@@ -1,22 +1,22 @@
 import { expect, test, type Page } from "@playwright/test";
-import { generateRandomString } from "../utils/test-helpers";
+import { generateRandomString, debugWait } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
 test.describe("Conversation Details", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/conversations");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/conversations", { waitUntil: "domcontentloaded" });
 
+    // Wait for conversation list to load
     const firstConversation = page
       .locator("div")
       .filter({ has: page.locator("a[href*='/conversations?id=']") })
       .first();
     const conversationLink = firstConversation.locator("a[href*='/conversations?id=']").first();
+    await expect(conversationLink).toBeVisible({ timeout: 10000 });
     await conversationLink.click();
 
-    await page.waitForLoadState("networkidle");
-
+    // Wait for URL to update to conversation detail
     await page.waitForFunction(
       () => {
         const url = new URL(window.location.href);
@@ -27,7 +27,7 @@ test.describe("Conversation Details", () => {
   });
 
   async function setupConversation(page: Page) {
-    await page.waitForLoadState("networkidle");
+    // Wait for conversation header to be visible
     await expect(page.getByTestId("conversation-header")).toBeVisible({ timeout: 10000 });
 
     await page.waitForFunction(
@@ -61,13 +61,17 @@ test.describe("Conversation Details", () => {
   }
 
   async function goToNextConversation(page: Page) {
-    await page.locator("button[aria-label='Next conversation']").click();
-    await page.waitForLoadState("networkidle");
+    const nextButton = page.locator("button[aria-label='Next conversation']");
+    await nextButton.click();
+    // Wait for URL to change
+    await page.waitForFunction(() => new URL(window.location.href).searchParams.has("id"), { timeout: 5000 });
   }
 
   async function goToPreviousConversation(page: Page) {
-    await page.locator("button[aria-label='Previous conversation']").click();
-    await page.waitForLoadState("networkidle");
+    const prevButton = page.locator("button[aria-label='Previous conversation']");
+    await prevButton.click();
+    // Wait for URL to change
+    await page.waitForFunction(() => new URL(window.location.href).searchParams.has("id"), { timeout: 5000 });
   }
 
   async function closeConversation(page: Page) {
@@ -140,7 +144,8 @@ test.describe("Conversation Details", () => {
         const submitButton = page.getByRole("button", { name: "Save" });
         await submitButton.click();
 
-        await page.waitForLoadState("networkidle");
+        // Wait for note to appear in message list
+        await expect(page.locator("[data-message-item]").filter({ hasText: testNote })).toBeVisible({ timeout: 5000 });
         await expectMessageExists(page, testNote);
         return true;
       }
@@ -188,10 +193,9 @@ test.describe("Conversation Details", () => {
 
     await closeConversation(page);
 
-    await page.waitForLoadState("networkidle");
+    // Wait for conversation list to be visible
+    await expect(page.locator("a[href*='/conversations?id=']").first()).toBeVisible({ timeout: 5000 });
     expect(page.url()).toContain("/conversations");
-
-    await expect(page.locator("a[href*='/conversations?id=']").first()).toBeVisible();
   });
 
   test("should handle conversation navigation properly", async ({ page }) => {
@@ -231,10 +235,9 @@ test.describe("Conversation Details", () => {
 
     await closeConversation(page);
 
-    await page.waitForLoadState("networkidle");
+    // Wait for conversation list to be visible
+    await expect(page.locator("a[href*='/conversations?id=']").first()).toBeVisible({ timeout: 5000 });
     expect(page.url()).toContain("/conversations");
-
-    await expect(page.locator("a[href*='/conversations?id=']").first()).toBeVisible();
   });
 
   test("should handle conversation counter display correctly", async ({ page }) => {
@@ -273,7 +276,6 @@ test.describe("Conversation Details", () => {
     await expect(nextConversationPreview.locator(`text=${originalSubject}`)).not.toBeVisible();
 
     await nextConversationPreview.click();
-    await page.waitForLoadState("networkidle");
     await setupConversation(page);
 
     const newSubject = await getConversationSubject(page);

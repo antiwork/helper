@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { cleanupTestMembers } from "../utils/cleaupTestMembers";
-import { generateTestEmail, takeDebugScreenshot } from "../utils/test-helpers";
+import { generateTestEmail, takeDebugScreenshot, debugWait } from "../utils/test-helpers";
 
 type UserRole = "admin" | "member";
 
@@ -9,22 +9,18 @@ test.use({ storageState: "tests/e2e/.auth/user.json" });
 test.describe("Team Settings", () => {
   async function navigateToTeamSettings(page: any) {
     if (page.url().includes("/settings/team")) {
-      await page.waitForLoadState("networkidle");
+      // Wait for team settings header to be visible
+      await expect(page.locator(`h2:has-text("Manage Team Members")`)).toBeVisible({ timeout: 10000 });
       return;
     }
 
-    await page.goto("/settings/team");
-    await page.waitForLoadState("domcontentloaded");
-    await page.waitForSelector(`h2:has-text("Manage Team Members")`, {
-      timeout: 10000,
-    });
+    await page.goto("/settings/team", { waitUntil: "domcontentloaded" });
+    await expect(page.locator(`h2:has-text("Manage Team Members")`)).toBeVisible({ timeout: 10000 });
   }
 
   async function expectTeamSettingsPage(page: any) {
     await expect(page).toHaveURL(/.*settings\/team.*/);
-    await page.waitForSelector(`h2:has-text("Manage Team Members")`, {
-      timeout: 10000,
-    });
+    await expect(page.locator(`h2:has-text("Manage Team Members")`)).toBeVisible({ timeout: 10000 });
   }
 
   function getInviteForm(page: any) {
@@ -131,7 +127,7 @@ test.describe("Team Settings", () => {
     await expect(roleOption).toBeVisible();
     await roleOption.click();
 
-    await page.waitForLoadState("networkidle");
+    // Wait for role change to be reflected
     const updatedSelector = memberRow
       .getByRole("combobox")
       .filter({ has: page.locator("span").filter({ hasText: roleText }) });
@@ -205,8 +201,8 @@ test.describe("Team Settings", () => {
   }
 
   async function inviteDuplicateMember(page: any, email: string) {
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
+    // Wait for form to be ready
+    await debugWait(page, 300);
 
     await fillInviteForm(page, email, "Duplicate User");
     await selectRole(page, "Member");

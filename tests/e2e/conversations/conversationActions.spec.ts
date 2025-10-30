@@ -36,15 +36,18 @@ async function sendReplyMessage(page: Page, message: string, { close }: { close?
     ? page.locator('button:has-text("Reply and close")')
     : page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
   await replyButton.click();
-  await page.waitForLoadState("networkidle");
+  
+  // Wait for the message to appear in the thread
+  await expect(page.getByTestId("message-thread")).toContainText(message, { timeout: 5000 });
 }
 
 test.describe("Conversation Actions", () => {
   test.beforeEach(async ({ page }) => {
     const openConversation = await getOpenConversation();
 
-    await page.goto(`/conversations?id=${openConversation.slug}`);
-    await page.waitForLoadState("networkidle");
+    await page.goto(`/conversations?id=${openConversation.slug}`, { waitUntil: "domcontentloaded" });
+    // Wait for conversation to be loaded
+    await expect(page.getByTestId("message-item").first()).toBeVisible({ timeout: 10000 });
   });
 
   test.describe("Message Composition", () => {
@@ -133,7 +136,8 @@ test.describe("Conversation Actions", () => {
       const replyButton = page.locator('button:has-text("Reply"):not(:has-text("close")):not(:has-text("Close"))');
       await expect(replyButton).toBeEnabled();
       await replyButton.click();
-      await page.waitForLoadState("networkidle");
+      // Wait for the message to appear
+      await expect(page.getByTestId("message-thread")).toContainText("Test message", { timeout: 5000 });
     });
   });
 
@@ -154,7 +158,9 @@ test.describe("Conversation Actions", () => {
         await expect(closeButton).toBeVisible();
         await expect(closeButton).toBeEnabled();
         await closeButton.click();
-        await page.waitForLoadState("networkidle");
+        
+        // Wait for status change to be reflected
+        await expect(page.locator("text=closed")).toBeVisible({ timeout: 5000 });
 
         const statusAfterClose = await getConversationStatusFromDb(openConversation.id);
 
@@ -164,8 +170,8 @@ test.describe("Conversation Actions", () => {
 
           const reopenButton = page.locator('button:has-text("Reopen")');
           await reopenButton.click();
-          await page.waitForLoadState("networkidle");
-          await expect(page.locator("text=open")).toBeVisible();
+          // Wait for status change
+          await expect(page.locator("text=open")).toBeVisible({ timeout: 5000 });
           await expect(closeButton).toBeEnabled();
           await expect(reopenButton).not.toBeVisible();
         } else {
@@ -174,13 +180,12 @@ test.describe("Conversation Actions", () => {
       } else if (initialStatus === "closed") {
         const reopenButton = page.locator('button:has-text("Reopen")');
         await reopenButton.click();
-        await page.waitForLoadState("networkidle");
-        await expect(page.locator("text=open")).toBeVisible();
+        // Wait for status change
+        await expect(page.locator("text=open")).toBeVisible({ timeout: 5000 });
 
         const closeButton = page.locator('button:has-text("Close"):not(:has-text("Reply"))');
         await closeButton.click();
-        await page.waitForLoadState("networkidle");
-        await expect(page.locator("text=closed")).toBeVisible();
+        await expect(page.locator("text=closed")).toBeVisible({ timeout: 5000 });
       }
     });
 
@@ -192,7 +197,7 @@ test.describe("Conversation Actions", () => {
       if (status === "closed") {
         const reopenButton = page.locator('button:has-text("Reopen")');
         await reopenButton.click();
-        await page.waitForLoadState("networkidle");
+        await expect(page.locator("text=open")).toBeVisible({ timeout: 5000 });
       }
 
       const composer = page.locator('[aria-label="Conversation editor"] .tiptap.ProseMirror');
@@ -214,8 +219,9 @@ test.describe("Conversation Actions", () => {
         const replyAndCloseButton = page.locator('button:has-text("Reply and close")');
         await expect(replyAndCloseButton).toBeVisible();
         await replyAndCloseButton.click();
-        await page.waitForLoadState("networkidle");
-        await expect(page.locator("text=closed")).toBeVisible();
+        // Wait for message and status change
+        await expect(page.getByTestId("message-thread")).toContainText(testMessage, { timeout: 5000 });
+        await expect(page.locator("text=closed")).toBeVisible({ timeout: 5000 });
       } catch (error) {
         try {
           await composer.evaluate((el) => {
