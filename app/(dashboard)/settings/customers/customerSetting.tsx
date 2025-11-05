@@ -12,7 +12,6 @@ import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { useOnChange } from "@/components/useOnChange";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
-import { SlackChannels } from "../integrations/slackSetting";
 import { SwitchSectionWrapper } from "../sectionWrapper";
 
 const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"] }) => {
@@ -45,7 +44,6 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
     } else {
       update({
         vipThreshold: null,
-        vipChannelId: null,
         vipExpectedResponseHours: null,
       });
     }
@@ -105,36 +103,6 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
                     onChange={(e) => setResponseHours(e.target.value)}
                   />
                   <span className="text-sm text-muted-foreground whitespace-nowrap">hours</span>
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-4">
-              <div className="max-w-2xl">
-                <Label htmlFor="vipChannel" className="text-base font-medium">
-                  Slack Notifications
-                </Label>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Choose a Slack channel to receive notifications about VIP customer messages
-                </p>
-                <div className="mt-4">
-                  {mailbox.slackConnected ? (
-                    <SlackChannels
-                      id="vipChannel"
-                      selectedChannelId={mailbox.vipChannelId ?? undefined}
-                      mailbox={mailbox}
-                      onChange={(vipChannelId) => update({ vipChannelId })}
-                    />
-                  ) : (
-                    <Alert>
-                      <AlertDescription>
-                        Slack integration is required for VIP channel notifications. Please configure Slack in the
-                        Integrations tab.
-                      </AlertDescription>
-                    </Alert>
-                  )}
                 </div>
               </div>
             </div>

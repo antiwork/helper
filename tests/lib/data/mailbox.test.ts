@@ -15,7 +15,6 @@ test("getMailboxInfo", async () => {
     widgetDisplayMinValue: null,
     widgetHost: null,
     vipThreshold: null,
-    vipChannelId: null,
     vipExpectedResponseHours: null,
     githubConnectUrl: null,
     githubConnected: false,
