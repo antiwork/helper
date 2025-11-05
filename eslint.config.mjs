@@ -205,7 +205,7 @@ const nextjsConfig = tseslint.config(
 /** @type {import('typescript-eslint').Config} */
 export default [
   {
-    ignores: [".next/**", ".source/**", "tests/e2e/**"],
+    ignores: [".next/**", ".source/**", "tests/e2e/**", "docker/**", "apps/**"],
   },
   ...baseConfig,
   ...reactConfig,

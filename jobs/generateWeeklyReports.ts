@@ -1,12 +1,17 @@
 import { endOfWeek, startOfWeek, subWeeks } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
-import { assertDefined } from "@/components/utils/assert";
-import { mailboxes } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { Resend } from "resend";
+import { db } from "@/db/client";
+import { mailboxes, userProfiles } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { TIME_ZONE } from "@/jobs/generateDailyReports";
 import { triggerEvent } from "@/jobs/trigger";
 import { getMailbox } from "@/lib/data/mailbox";
 import { getMemberStats, MemberStats } from "@/lib/data/stats";
-import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
+import WeeklyReportEmail from "@/lib/emails/weeklyReport";
+import { env } from "@/lib/env";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 const formatDateRange = (start: Date, end: Date) => {
   return `Week of ${start.toISOString().split("T")[0]} to ${end.toISOString().split("T")[0]}`;
@@ -14,7 +19,7 @@ const formatDateRange = (start: Date, end: Date) => {
 
 export async function generateWeeklyReports() {
   const mailbox = await getMailbox();
-  if (!mailbox?.slackBotToken || !mailbox.slackAlertChannel) return;
+  if (!mailbox) return;
 
   await triggerEvent("reports/weekly", {});
 }
@@ -25,30 +30,18 @@ export const generateMailboxWeeklyReport = async () => {
     return;
   }
 
-  // drizzle doesn't appear to do any type narrowing, even though we've filtered for non-null values
-  // @see https://github.com/drizzle-team/drizzle-orm/issues/2956
-  if (!mailbox.slackBotToken || !mailbox.slackAlertChannel) {
-    return;
+  if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) {
+    return { skipped: true, reason: "Email not configured" };
   }
 
   const result = await generateMailboxReport({
     mailbox,
-    slackBotToken: mailbox.slackBotToken,
-    slackAlertChannel: mailbox.slackAlertChannel,
   });
 
   return result;
 };
 
-export async function generateMailboxReport({
-  mailbox,
-  slackBotToken,
-  slackAlertChannel,
-}: {
-  mailbox: typeof mailboxes.$inferSelect;
-  slackBotToken: string;
-  slackAlertChannel: string;
-}) {
+export async function generateMailboxReport({ mailbox }: { mailbox: typeof mailboxes.$inferSelect }) {
   const now = toZonedTime(new Date(), TIME_ZONE);
   const lastWeekStart = subWeeks(startOfWeek(now, { weekStartsOn: 0 }), 1);
   const lastWeekEnd = subWeeks(endOfWeek(now, { weekStartsOn: 0 }), 1);
@@ -62,20 +55,16 @@ export async function generateMailboxReport({
     return "No stats found";
   }
 
-  const slackUsersByEmail = await getSlackUsersByEmail(slackBotToken);
+  const allMembersData = processAllMembers(stats);
 
-  const allMembersData = processAllMembers(stats, slackUsersByEmail);
-
-  const tableData: { name: string; count: number; slackUserId?: string }[] = [];
+  const tableData: { name: string; count: number }[] = [];
 
   for (const member of stats) {
-    const name = member.displayName || `Unnamed user: ${member.id}`;
-    const slackUserId = slackUsersByEmail.get(assertDefined(member.email));
+    const name = member.displayName || member.email || `Unnamed user: ${member.id}`;
 
     tableData.push({
       name,
       count: member.replyCount,
-      slackUserId,
     });
   }
 
@@ -83,97 +72,67 @@ export async function generateMailboxReport({
   const totalTicketsResolved = tableData.reduce((sum, agent) => sum + agent.count, 0);
   const activeUserCount = humanUsers.filter((user) => user.count > 0).length;
 
-  const peopleText = activeUserCount === 1 ? "person" : "people";
+  const teamMembers = await db
+    .select({
+      email: authUsers.email,
+      displayName: userProfiles.displayName,
+    })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+    .limit(100);
 
-  const blocks: any[] = [
-    {
-      type: "section",
-      text: {
-        type: "plain_text",
-        text: `Last week in the ${mailbox.name} mailbox:`,
-        emoji: true,
-      },
-    },
-  ];
-
-  if (allMembersData.activeLines.length > 0) {
-    blocks.push({
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: "*Team members:*",
-      },
-    });
-
-    blocks.push({
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: allMembersData.activeLines.join("\n"),
-      },
-    });
+  if (teamMembers.length === 0) {
+    return { skipped: true, reason: "No team members found" };
   }
 
-  if (allMembersData.inactiveList) {
-    blocks.push({
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: `*No tickets answered:* ${allMembersData.inactiveList}`,
-      },
-    });
-  }
+  const resend = new Resend(env.RESEND_API_KEY);
+  const dateRange = formatDateRange(lastWeekStart, lastWeekEnd);
 
-  blocks.push({ type: "divider" });
+  const emailPromises = teamMembers.map(async (member) => {
+    if (!member.email) return { success: false, reason: "No email address" };
 
-  const summaryParts = [];
-  if (totalTicketsResolved > 0) {
-    summaryParts.push("*Total replies:*");
-    summaryParts.push(`${totalTicketsResolved.toLocaleString()} from ${activeUserCount} ${peopleText}`);
-  }
-
-  if (summaryParts.length > 0) {
-    blocks.push({
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: summaryParts.join("\n"),
-      },
-    });
-  }
-
-  await postSlackMessage(slackBotToken, {
-    channel: slackAlertChannel,
-    text: formatDateRange(lastWeekStart, lastWeekEnd),
-    blocks,
+    try {
+      await resend.emails.send({
+        from: env.RESEND_FROM_ADDRESS!,
+        to: member.email,
+        subject: `Weekly report for ${mailbox.name}`,
+        react: WeeklyReportEmail({
+          mailboxName: mailbox.name,
+          dateRange,
+          teamMembers: allMembersData.activeMembers,
+          inactiveMembers: allMembersData.inactiveMembers,
+          totalReplies: totalTicketsResolved,
+          activeUserCount,
+        }),
+      });
+      return { success: true };
+    } catch (error) {
+      captureExceptionAndLog(error);
+      return { success: false, error };
+    }
   });
 
-  return "Report sent";
+  const emailResults = await Promise.all(emailPromises);
+
+  return {
+    success: true,
+    emailsSent: emailResults.filter((r) => r.success).length,
+    totalRecipients: teamMembers.length,
+  };
 }
 
-function processAllMembers(members: MemberStats, slackUsersByEmail: Map<string, string>) {
-  const activeMembers = members.filter((member) => member.replyCount > 0).sort((a, b) => b.replyCount - a.replyCount);
-  const inactiveMembers = members.filter((member) => member.replyCount === 0);
+function processAllMembers(members: MemberStats) {
+  const activeMembers = members
+    .filter((member) => member.replyCount > 0)
+    .sort((a, b) => b.replyCount - a.replyCount)
+    .map((member) => ({
+      name: member.displayName || member.email || "Unknown",
+      count: member.replyCount,
+    }));
 
-  const activeLines = activeMembers.map((member) => {
-    const formattedCount = member.replyCount.toLocaleString();
-    const slackUserId = slackUsersByEmail.get(member.email!);
-    const userName = slackUserId ? `<@${slackUserId}>` : member.displayName || member.email || "Unknown";
+  const inactiveMembers = members
+    .filter((member) => member.replyCount === 0)
+    .map((member) => member.displayName || member.email || "Unknown");
 
-    return `• ${userName}: ${formattedCount}`;
-  });
-
-  const inactiveList =
-    inactiveMembers.length > 0
-      ? inactiveMembers
-          .map((member) => {
-            const slackUserId = slackUsersByEmail.get(member.email!);
-            const userName = slackUserId ? `<@${slackUserId}>` : member.displayName || member.email || "Unknown";
-
-            return userName;
-          })
-          .join(", ")
-      : "";
-
-  return { activeLines, inactiveList };
+  return { activeMembers, inactiveMembers };
 }

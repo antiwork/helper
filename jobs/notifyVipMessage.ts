@@ -1,11 +1,15 @@
 import { eq } from "drizzle-orm";
+import { Resend } from "resend";
 import { db } from "@/db/client";
-import { conversationMessages, conversations } from "@/db/schema";
+import { conversationMessages, conversations, userProfiles } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { ensureCleanedUpText } from "@/lib/data/conversationMessage";
 import { getMailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { getBasicProfileById } from "@/lib/data/user";
-import { postVipMessageToSlack, updateVipMessageInSlack } from "@/lib/slack/vipNotifications";
+import VipNotificationEmail from "@/lib/emails/vipNotification";
+import { env } from "@/lib/env";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
 type MessageWithConversationAndMailbox = typeof conversationMessages.$inferSelect & {
@@ -35,74 +39,107 @@ async function fetchConversationMessage(messageId: number): Promise<MessageWithC
   return message;
 }
 
-async function handleVipSlackMessage(message: MessageWithConversationAndMailbox) {
+async function handleVipEmailNotification(message: MessageWithConversationAndMailbox) {
   const conversation = assertDefinedOrRaiseNonRetriableError(message.conversation);
-  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
+  assertDefinedOrRaiseNonRetriableError(await getMailbox());
 
   if (conversation.isPrompt) {
-    return "Not posted, prompt conversation";
+    return "Not sent, prompt conversation";
   }
   if (!conversation.emailFrom) {
-    return "Not posted, anonymous conversation";
+    return "Not sent, anonymous conversation";
+  }
+
+  if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) {
+    return "Not sent, email not configured";
   }
 
   const platformCustomer = await getPlatformCustomer(conversation.emailFrom);
 
-  // Early return if not VIP or Slack config missing
-  if (!platformCustomer?.isVip) return "Not posted, not a VIP customer";
-  if (!mailbox.slackBotToken || !mailbox.vipChannelId) {
-    return "Not posted, mailbox not linked to Slack";
-  }
+  if (!platformCustomer?.isVip) return "Not sent, not a VIP customer";
 
-  // If it's an agent reply updating an existing Slack message
+  const customerName = platformCustomer.name ?? conversation.emailFrom ?? "Unknown";
+  const conversationLink = `${env.AUTH_URL}/conversations?id=${conversation.slug}`;
+  const customerLinks = platformCustomer.links
+    ? Object.entries(platformCustomer.links).map(([key, value]) => ({ label: key, url: value }))
+    : undefined;
+
+  let originalMessage = "";
+  let replyMessage: string | undefined;
+  let closedBy: string | undefined;
+
   if (message.role !== "user" && message.responseToId) {
-    const originalMessage = await db.query.conversationMessages.findFirst({
+    const originalMsg = await db.query.conversationMessages.findFirst({
       where: eq(conversationMessages.id, message.responseToId),
     });
 
-    if (originalMessage?.slackMessageTs) {
-      const originalCleanedUpText = originalMessage ? await ensureCleanedUpText(originalMessage) : "";
-      const replyCleanedUpText = await ensureCleanedUpText(message);
-
-      await updateVipMessageInSlack({
-        conversation,
-        mailbox,
-        originalMessage: originalCleanedUpText,
-        replyMessage: replyCleanedUpText,
-        slackBotToken: mailbox.slackBotToken,
-        slackChannel: mailbox.vipChannelId,
-        slackMessageTs: originalMessage.slackMessageTs,
-        user: message.userId ? await getBasicProfileById(message.userId) : null,
-        email: true,
-        closed: conversation.status === "closed",
-      });
-      return "Updated";
+    if (originalMsg) {
+      originalMessage = await ensureCleanedUpText(originalMsg);
+      replyMessage = await ensureCleanedUpText(message);
+      if (message.userId) {
+        const user = await getBasicProfileById(message.userId);
+        closedBy = user?.displayName || user?.email || undefined;
+      }
+    } else {
+      return "Not sent, original message not found";
     }
+  } else if (message.role === "user") {
+    originalMessage = await ensureCleanedUpText(message);
+  } else {
+    return "Not sent, not a user message and not a reply to a user message";
   }
 
-  if (message.role !== "user") {
-    return "Not posted, not a user message and not a reply to a user message";
+  const teamMembers = await db
+    .select({
+      email: authUsers.email,
+      displayName: userProfiles.displayName,
+    })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+    .limit(100);
+
+  if (teamMembers.length === 0) {
+    return "Not sent, no team members found";
   }
 
-  const cleanedUpText = await ensureCleanedUpText(message);
+  const resend = new Resend(env.RESEND_API_KEY);
 
-  const slackMessageTs = await postVipMessageToSlack({
-    conversation,
-    mailbox,
-    message: cleanedUpText,
-    platformCustomer,
-    slackBotToken: mailbox.slackBotToken,
-    slackChannel: mailbox.vipChannelId,
+  const emailPromises = teamMembers.map(async (member) => {
+    if (!member.email) return { success: false, reason: "No email address" };
+
+    try {
+      await resend.emails.send({
+        from: env.RESEND_FROM_ADDRESS!,
+        to: member.email,
+        subject: `VIP Customer: ${customerName}`,
+        react: VipNotificationEmail({
+          customerName,
+          customerEmail: conversation.emailFrom!,
+          originalMessage,
+          replyMessage,
+          conversationLink,
+          customerLinks,
+          closed: conversation.status === "closed",
+          closedBy,
+        }),
+      });
+      return { success: true };
+    } catch (error) {
+      captureExceptionAndLog(error);
+      return { success: false, error };
+    }
   });
 
-  await db
-    .update(conversationMessages)
-    .set({ slackMessageTs, slackChannel: mailbox.vipChannelId })
-    .where(eq(conversationMessages.id, message.id));
-  return "Posted";
+  const emailResults = await Promise.all(emailPromises);
+
+  return {
+    sent: true,
+    emailsSent: emailResults.filter((r) => r.success).length,
+    totalRecipients: teamMembers.length,
+  };
 }
 
 export const notifyVipMessage = async ({ messageId }: { messageId: number }) => {
   const message = assertDefinedOrRaiseNonRetriableError(await fetchConversationMessage(messageId));
-  return await handleVipSlackMessage(message);
+  return await handleVipEmailNotification(message);
 };
