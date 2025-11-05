@@ -43,9 +43,9 @@ export const searchSchema = z.object({
   closed: z
     .object({
       by: z
-        .enum(["human", "slack_bot"])
+        .enum(["human"])
         .optional()
-        .describe("Filter tickets closed by a human or the Helper Slack agent"),
+        .describe("Filter tickets closed by a human"),
       byUserId: z.array(z.string().uuid()).optional().describe("Filter tickets closed by specific team members"),
       before: z.string().datetime().optional().describe("Tickets closed before this date"),
       after: z.string().datetime().optional().describe("Tickets closed after this date"),
@@ -56,22 +56,22 @@ export const searchSchema = z.object({
   reopened: z
     .object({
       by: z
-        .enum(["human", "slack_bot"])
+        .enum(["human"])
         .optional()
-        .describe("Filter tickets reopened by a human or the Helper Slack agent"),
+        .describe("Filter tickets reopened by a human"),
       byUserId: z.array(z.string().uuid()).optional().describe("Filter tickets reopened by specific team members"),
       before: z.string().datetime().optional().describe("Tickets reopened before this date"),
       after: z.string().datetime().optional().describe("Tickets reopened after this date"),
     })
     .optional()
-    .describe("Filter tickets reopened by the Helper Slack agent or by human agents"),
+    .describe("Filter tickets reopened by human agents"),
 
   markedAsSpam: z
     .object({
       by: z
-        .enum(["human", "slack_bot"])
+        .enum(["human"])
         .optional()
-        .describe("Filter tickets marked as spam by a human or the Helper Slack agent"),
+        .describe("Filter tickets marked as spam by a human"),
       byUserId: z
         .array(z.string().uuid())
         .optional()
@@ -80,7 +80,7 @@ export const searchSchema = z.object({
       after: z.string().datetime().optional().describe("Tickets marked as spam after this date"),
     })
     .optional()
-    .describe("Filter tickets marked as spam by the Helper Slack agent or by human agents"),
+    .describe("Filter tickets marked as spam by human agents"),
 
   issueGroupId: z.number().optional().describe("Filter tickets by issue group ID"),
   hasUnreadMessages: z.boolean().optional().describe("Filter conversations with unread user messages"),
