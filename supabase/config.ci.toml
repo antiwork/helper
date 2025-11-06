@@ -23,7 +23,7 @@ enabled = false
 sql_paths = []
 
 [realtime]
-enabled = true
+enabled = false
 
 [studio]
 enabled = false
@@ -32,7 +32,7 @@ enabled = false
 enabled = false
 
 [storage]
-enabled = true
+enabled = false
 
 [auth]
 enabled = true
