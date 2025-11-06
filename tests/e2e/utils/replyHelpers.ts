@@ -49,51 +49,19 @@ export async function fillSavedReplyForm(page: Page, name: string, content: stri
 }
 
 // Clicks the save button in the create or edit dialog
-export async function clickSaveButton(page: Page) {
-  const addBtn = page.locator('button:has-text("Add")');
-  const updateBtn = page.locator('button:has-text("Update")');
-  const saveBtn = page.locator('button:has-text("Save")');
+ export async function clickSaveButton(page: Page) {
   const createDialog = page.locator('[role="dialog"]:has-text("New saved reply")');
   const editDialog = page.locator('[role="dialog"]:has-text("Edit saved reply")');
 
-  // Map each button to its waitFor promise, returning the button when visible
-  const buttonPromises = [
-    updateBtn
-      .waitFor({ state: "visible", timeout: 5000 })
-      .then(() => updateBtn)
-      .catch(() => null),
-    addBtn
-      .waitFor({ state: "visible", timeout: 5000 })
-      .then(() => addBtn)
-      .catch(() => null),
-    saveBtn
-      .waitFor({ state: "visible", timeout: 5000 })
-      .then(() => saveBtn)
-      .catch(() => null),
-  ];
+  const [isCreateContext, isEditContext] = await Promise.all([
+    createDialog.isVisible({ timeout: 500 }).catch(() => false),
+    editDialog.isVisible({ timeout: 500 }).catch(() => false)
+  ]);
 
-  // Wait for any button to become visible
-  const buttons = await Promise.all(buttonPromises);
-  const visibleButton = buttons.find((btn) => btn !== null);
-
-  if (visibleButton) {
-    await visibleButton.click();
-  } else {
-    // Fallback logic for context-specific buttons
-    const isCreateContext = await createDialog.isVisible().catch(() => false);
-    const isEditContext = await editDialog.isVisible().catch(() => false);
-
-    if (isCreateContext) {
-      const fallbackAddBtn = createDialog.locator('button:has-text("Add")');
-      await expect(fallbackAddBtn).toBeVisible({ timeout: 5000 });
-      await fallbackAddBtn.click();
-    } else if (isEditContext) {
-      const fallbackUpdateBtn = editDialog.locator('button:has-text("Update")');
-      await expect(fallbackUpdateBtn).toBeVisible({ timeout: 5000 });
-      await fallbackUpdateBtn.click();
-    } else {
-      throw new Error("No save button found in current context");
-    }
+  if (isCreateContext) {
+    await createDialog.locator('button:has-text("Add")').click();
+  } else if (isEditContext) {
+    await editDialog.locator('button:has-text("Update")').click();
   }
 }
 
