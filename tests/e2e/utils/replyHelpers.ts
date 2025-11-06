@@ -49,13 +49,13 @@ export async function fillSavedReplyForm(page: Page, name: string, content: stri
 }
 
 // Clicks the save button in the create or edit dialog
- export async function clickSaveButton(page: Page) {
+export async function clickSaveButton(page: Page) {
   const createDialog = page.locator('[role="dialog"]:has-text("New saved reply")');
   const editDialog = page.locator('[role="dialog"]:has-text("Edit saved reply")');
 
   const [isCreateContext, isEditContext] = await Promise.all([
     createDialog.isVisible({ timeout: 500 }).catch(() => false),
-    editDialog.isVisible({ timeout: 500 }).catch(() => false)
+    editDialog.isVisible({ timeout: 500 }).catch(() => false),
   ]);
 
   if (isCreateContext) {
