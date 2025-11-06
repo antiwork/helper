@@ -11,7 +11,6 @@ beforeAll(() => {
       POSTGRES_URL: inject("TEST_DATABASE_URL"),
       CRYPTO_SECRET: "secret",
       AUTH_URL: "http://localhost:1234",
-      SLACK_CLIENT_ID: "client-id",
       NODE_ENV: "test",
       GOOGLE_PUBSUB_CLAIM_EMAIL: "service-push-authentication@helper-ai-413611.iam.gserviceaccount.com",
       OPENAI_API_KEY: "test-openai-api-key",
