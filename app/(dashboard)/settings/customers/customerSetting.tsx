@@ -44,7 +44,6 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
     } else {
       update({
         vipThreshold: null,
-        vipChannelId: null,
         vipExpectedResponseHours: null,
       });
     }
