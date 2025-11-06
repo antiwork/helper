@@ -317,7 +317,7 @@ test.describe("Conversation Actions", () => {
 
       await sendReplyMessage(page, "Auto-assign off test reply message");
 
-      await expect(page.getByRole("button", { name: "Assign yourself" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Unassigned" })).toBeVisible();
 
       await page.goto("/settings/preferences");
       await page.locator('[aria-label="Auto-assign on reply Switch"]').click();
@@ -328,7 +328,7 @@ test.describe("Conversation Actions", () => {
 
       await sendReplyMessage(page, "Auto-assign on test reply message");
       await expect(page.getByTestId("message-thread")).toContainText("Auto-assign on test reply message");
-      await expect(page.getByRole("button", { name: "Assign yourself" })).not.toBeVisible();
+      await expect(page.getByRole("button", { name: "support@gumroad.com" })).toBeVisible();
     });
   });
 });
