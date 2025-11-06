@@ -21,29 +21,6 @@ vi.mock("@/lib/data/user", async (importOriginal) => ({
 }));
 
 describe("mailboxRouter", () => {
-  describe("update", () => {
-    it("updates slack settings", async () => {
-      const { user, mailbox } = await userFactory.createRootUser();
-
-      const caller = createCaller(await createTestTRPCContext(user));
-
-      const promptUpdatedAtBefore = mailbox.promptUpdatedAt;
-
-      const updateData = {
-        slackAlertChannel: "#another-channel",
-      };
-
-      await caller.mailbox.update({ ...updateData });
-
-      const updatedMailbox = await db.query.mailboxes.findFirst({
-        where: eq(mailboxes.id, mailbox.id),
-      });
-
-      expect(updatedMailbox).toMatchObject(updateData);
-      expect(updatedMailbox?.promptUpdatedAt).toEqual(promptUpdatedAtBefore);
-    });
-  });
-
   describe("members", () => {
     it("returns a list of mailbox members", async () => {
       const { user } = await userFactory.createRootUser();

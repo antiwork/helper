@@ -8,6 +8,7 @@ import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import DailyReportEmail from "@/lib/emails/dailyReport";
 import WeeklyReportEmail from "@/lib/emails/weeklyReport";
 import VipNotificationEmail from "@/lib/emails/vipNotification";
+import TicketAlertEmail from "@/lib/emails/ticketAlert";
 
 type DailyReportData = {
   mailboxName: string;
@@ -40,7 +41,24 @@ type VipNotificationData = {
   conversationStatus: "open" | "closed";
 };
 
-async function getTeamMembersWithEmailPref(preferenceKey: "dailyReports" | "weeklyReports" | "vipAlerts") {
+type TicketAlertData = {
+  alertType: "vip" | "assigned";
+  mailboxName: string;
+  overdueCount: number;
+  expectedHours?: number;
+  tickets: Array<{
+    subject: string;
+    slug: string;
+    assignee?: string;
+    timeSinceLastReply: string;
+    customerName?: string;
+    customerValue?: string;
+  }>;
+};
+
+async function getTeamMembersWithEmailPref(
+  preferenceKey: "dailyReports" | "weeklyReports" | "vipAlerts" | "ticketAlerts",
+) {
   const allUsers = await db.query.userProfiles.findMany({
     columns: {
       id: true,
@@ -213,6 +231,65 @@ export async function sendVipNotificationEmail(data: VipNotificationData) {
             replyText: data.replyText,
             repliedBy: data.repliedBy,
             conversationStatus: data.conversationStatus,
+          }),
+        });
+        return { success: true };
+      } catch (error) {
+        captureExceptionAndLog(error);
+        return { success: false, error };
+      }
+    });
+
+    const emailResults = await Promise.all(emailPromises);
+    const successCount = emailResults.filter((r) => r.success).length;
+
+    return {
+      success: true,
+      totalRecipients: teamMembers.length,
+      successCount,
+      emailResults,
+    };
+  } catch (error) {
+    captureExceptionAndLog(error);
+    throw error;
+  }
+}
+
+export async function sendTicketAlertEmail(data: TicketAlertData) {
+  try {
+    if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) {
+      console.log("Resend not configured, skipping ticket alert email");
+      return { success: false, reason: "Resend not configured" };
+    }
+
+    const teamMembers = await getTeamMembersWithEmailPref("ticketAlerts");
+
+    if (teamMembers.length === 0) {
+      return { success: false, reason: "No team members to notify" };
+    }
+
+    const resend = new Resend(env.RESEND_API_KEY);
+    const dashboardLink = `${env.AUTH_URL}/dashboard`;
+
+    const subject =
+      data.alertType === "vip"
+        ? `VIP Response Time Alert for ${data.mailboxName}`
+        : `Ticket Response Time Alert for ${data.mailboxName}`;
+
+    const emailPromises = teamMembers.map(async (member) => {
+      const email = member.user?.email;
+      if (!email) {
+        return { success: false, reason: "No email address" };
+      }
+
+      try {
+        await resend.emails.send({
+          from: env.RESEND_FROM_ADDRESS!,
+          to: assertDefined(email),
+          subject,
+          react: TicketAlertEmail({
+            ...data,
+            dashboardLink,
           }),
         });
         return { success: true };

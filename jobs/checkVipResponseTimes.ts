@@ -1,19 +1,13 @@
-import { KnownBlock } from "@slack/web-api";
 import { and, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { formatDuration } from "@/jobs/checkAssignedTicketResponseTimes";
-import { postSlackMessage } from "@/lib/slack/client";
+import { sendTicketAlertEmail } from "@/lib/emails/teamNotifications";
 
 export const checkVipResponseTimes = async () => {
   const mailboxesList = await db.query.mailboxes.findMany({
-    where: and(
-      isNotNull(mailboxes.vipThreshold),
-      isNotNull(mailboxes.vipExpectedResponseHours),
-      isNotNull(mailboxes.vipChannelId),
-      isNotNull(mailboxes.slackBotToken),
-    ),
+    where: and(isNotNull(mailboxes.vipThreshold), isNotNull(mailboxes.vipExpectedResponseHours)),
   });
 
   if (!mailboxesList.length) return;
@@ -22,6 +16,7 @@ export const checkVipResponseTimes = async () => {
     const overdueVipConversations = await db
       .select({
         name: platformCustomers.name,
+        value: platformCustomers.value,
         subject: conversations.subject,
         slug: conversations.slug,
         lastUserEmailCreatedAt: conversations.lastUserEmailCreatedAt,
@@ -44,31 +39,20 @@ export const checkVipResponseTimes = async () => {
 
     if (!overdueVipConversations.length) continue;
 
-    const blocks: KnownBlock[] = [
-      {
-        type: "section" as const,
-        text: {
-          type: "mrkdwn",
-          text: [
-            `🚨 *${overdueVipConversations.length} ${overdueVipConversations.length === 1 ? "VIP" : "VIPs"} ${overdueVipConversations.length === 1 ? "has" : "have"} been waiting over ${
-              mailbox.vipExpectedResponseHours ?? 0
-            } ${mailbox.vipExpectedResponseHours === 1 ? "hour" : "hours"}*\n`,
-            ...overdueVipConversations
-              .slice(0, 10)
-              .map(
-                (conversation) =>
-                  `• <${getBaseUrl()}/conversations?id=${conversation.slug}|${conversation.subject?.replace(/\|<>/g, "") ?? "No subject"}> (${conversation.name}, ${formatDuration(conversation.lastUserEmailCreatedAt!)} since last reply)`,
-              ),
-            ...(overdueVipConversations.length > 10 ? [`(and ${overdueVipConversations.length - 10} more)`] : []),
-          ].join("\n"),
-        },
-      },
-    ];
+    const tickets = overdueVipConversations.map((conversation) => ({
+      subject: conversation.subject?.replace(/\|<>/g, "") ?? "No subject",
+      slug: conversation.slug,
+      customerName: conversation.name ?? undefined,
+      customerValue: conversation.value ? `$${(conversation.value / 100).toLocaleString()}` : undefined,
+      timeSinceLastReply: formatDuration(conversation.lastUserEmailCreatedAt!),
+    }));
 
-    await postSlackMessage(mailbox.slackBotToken!, {
-      channel: mailbox.vipChannelId!,
-      text: `VIP Response Time Alert for ${mailbox.name}`,
-      blocks,
+    await sendTicketAlertEmail({
+      alertType: "vip",
+      mailboxName: mailbox.name,
+      overdueCount: overdueVipConversations.length,
+      expectedHours: mailbox.vipExpectedResponseHours!,
+      tickets,
     });
   }
 
