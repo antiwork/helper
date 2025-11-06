@@ -12,6 +12,7 @@ import {
   Frown,
   Info,
   Mail,
+  MailQuestion,
   MessageSquare,
   MoreHorizontal,
   Paperclip,
@@ -31,6 +32,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useMembers } from "@/components/useMembers";
 import { useSession } from "@/components/useSession";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
+import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { renderMessageBody } from "./renderMessageBody";
 
@@ -156,10 +158,16 @@ const MessageItem = ({
   };
 
   const messageLabels: JSX.Element[] = [];
+  const isFromDifferentEmail = message.type === "message" && message.from !== conversation.emailFrom;
   messageLabels.push(
-    <span key={`${message.id}-from`} className="flex items-center gap-1">
+    <span
+      key={`${message.id}-from`}
+      className={cn("flex items-center gap-1", userMessage && isFromDifferentEmail && "text-bright")}
+    >
       {userMessage ? (
-        conversation.source === "email" ? (
+        isFromDifferentEmail ? (
+          <MailQuestion className="h-3 w-3" />
+        ) : conversation.source === "email" ? (
           <Mail className="h-3 w-3" />
         ) : (
           <MessageSquare className="h-3 w-3" />
