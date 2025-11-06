@@ -34,7 +34,7 @@ jobs:
       - name: Install supabase-cli
         uses: supabase/setup-cli@v1
         with:
-          version: 'latest'
+          version: "latest"
 
       - name: Build Packages
         uses: ./.github/common/build-packages/
