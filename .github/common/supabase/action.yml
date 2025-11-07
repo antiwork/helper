@@ -22,4 +22,3 @@ runs:
       shell: bash
       run: |
         pnpm run with-test-env pnpm tsx --conditions=react-server ./db/seeds/seedDatabase.ts
-
