@@ -1,0 +1,25 @@
+name: Setup Supabase and Seed Database
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Supabase CLI
+      uses: supabase/setup-cli@v1
+      with:
+        version: "latest"
+
+    - name: Start Supabase Services
+      shell: bash
+      run: |
+        pnpm run with-test-env pnpm supabase start -x=realtime,logflare,postgres-meta,mailpit,edge-runtime,studio,vector
+
+    - name: Run Database Migrations
+      shell: bash
+      run: |
+        pnpm run with-test-env drizzle-kit migrate --config ./db/drizzle.config.ts
+
+    - name: Seed Database
+      shell: bash
+      run: |
+        pnpm run with-test-env pnpm tsx --conditions=react-server ./db/seeds/seedDatabase.ts
+
