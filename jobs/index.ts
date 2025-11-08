@@ -10,8 +10,10 @@ import { crawlWebsite } from "./crawlWebsite";
 import { embeddingConversation } from "./embeddingConversation";
 import { embeddingFaq } from "./embeddingFaq";
 import { generateConversationSummaryEmbeddings } from "./generateConversationSummaryEmbeddings";
+import { generateDailyEmailReports, generateMailboxDailyEmailReport } from "./generateDailyEmailReports";
 import { generateDailyReports, generateMailboxDailyReport } from "./generateDailyReports";
 import { generateFilePreview } from "./generateFilePreview";
+import { generateMailboxWeeklyEmailReport, generateWeeklyEmailReports } from "./generateWeeklyEmailReports";
 import { generateMailboxWeeklyReport, generateWeeklyReports } from "./generateWeeklyReports";
 import { handleAutoResponse } from "./handleAutoResponse";
 import { handleGmailWebhookEvent } from "./handleGmailWebhookEvent";
@@ -21,6 +23,7 @@ import { importRecentGmailThreads } from "./importRecentGmailThreads";
 import { indexConversationMessage } from "./indexConversation";
 import { mergeSimilarConversations } from "./mergeSimilarConversations";
 import { notifyVipMessage } from "./notifyVipMessage";
+import { notifyVipMessageEmail } from "./notifyVipMessageByEmail";
 import { postEmailToGmail } from "./postEmailToGmail";
 import { publishNewMessageEvent } from "./publishNewMessageEvent";
 import { publishRequestHumanSupport } from "./publishRequestHumanSupport";
@@ -39,6 +42,7 @@ export const eventJobs = {
   mergeSimilarConversations,
   publishNewMessageEvent,
   notifyVipMessage,
+  notifyVipMessageEmail,
   postEmailToGmail,
   handleAutoResponse,
   bulkUpdateConversations,
@@ -48,7 +52,9 @@ export const eventJobs = {
   importRecentGmailThreads,
   importGmailThreads,
   generateMailboxWeeklyReport,
+  generateMailboxWeeklyEmailReport,
   generateMailboxDailyReport,
+  generateMailboxDailyEmailReport,
   crawlWebsite,
   suggestKnowledgeBankChanges,
   closeInactiveConversations,
@@ -72,6 +78,6 @@ export const cronJobs = {
   },
   "0 0 * * *": { renewMailboxWatches },
   "0 0 * * 0": { scheduledWebsiteCrawl },
-  "0 16 * * 0,2-6": { generateDailyReports },
-  "0 16 * * 1": { generateWeeklyReports },
+  "0 16 * * 0,2-6": { generateDailyReports, generateDailyEmailReports },
+  "0 16 * * 1": { generateWeeklyReports, generateWeeklyEmailReports },
 };
