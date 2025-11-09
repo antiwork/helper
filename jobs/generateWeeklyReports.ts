@@ -1,12 +1,11 @@
 import { endOfWeek, startOfWeek, subWeeks } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
-import { assertDefined } from "@/components/utils/assert";
 import { mailboxes } from "@/db/schema";
 import { TIME_ZONE } from "@/jobs/generateDailyReports";
 import { triggerEvent } from "@/jobs/trigger";
 import { getMailbox } from "@/lib/data/mailbox";
 import { getMemberStats, MemberStats } from "@/lib/data/stats";
-import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
+import { sendWeeklyReportEmail } from "@/lib/email/notifications";
 
 const formatDateRange = (start: Date, end: Date) => {
   return `Week of ${start.toISOString().split("T")[0]} to ${end.toISOString().split("T")[0]}`;
@@ -14,7 +13,7 @@ const formatDateRange = (start: Date, end: Date) => {
 
 export async function generateWeeklyReports() {
   const mailbox = await getMailbox();
-  if (!mailbox?.slackBotToken || !mailbox.slackAlertChannel) return;
+  if (!mailbox) return;
 
   await triggerEvent("reports/weekly", {});
 }
@@ -25,16 +24,8 @@ export const generateMailboxWeeklyReport = async () => {
     return;
   }
 
-  // drizzle doesn't appear to do any type narrowing, even though we've filtered for non-null values
-  // @see https://github.com/drizzle-team/drizzle-orm/issues/2956
-  if (!mailbox.slackBotToken || !mailbox.slackAlertChannel) {
-    return;
-  }
-
   const result = await generateMailboxReport({
     mailbox,
-    slackBotToken: mailbox.slackBotToken,
-    slackAlertChannel: mailbox.slackAlertChannel,
   });
 
   return result;
@@ -42,12 +33,8 @@ export const generateMailboxWeeklyReport = async () => {
 
 export async function generateMailboxReport({
   mailbox,
-  slackBotToken,
-  slackAlertChannel,
 }: {
   mailbox: typeof mailboxes.$inferSelect;
-  slackBotToken: string;
-  slackAlertChannel: string;
 }) {
   const now = toZonedTime(new Date(), TIME_ZONE);
   const lastWeekStart = subWeeks(startOfWeek(now, { weekStartsOn: 0 }), 1);
@@ -62,103 +49,46 @@ export async function generateMailboxReport({
     return "No stats found";
   }
 
-  const slackUsersByEmail = await getSlackUsersByEmail(slackBotToken);
+  const allMembersData = processAllMembers(stats, new Map());
 
-  const allMembersData = processAllMembers(stats, slackUsersByEmail);
-
-  const tableData: { name: string; count: number; slackUserId?: string }[] = [];
-
-  for (const member of stats) {
-    const name = member.displayName || `Unnamed user: ${member.id}`;
-    const slackUserId = slackUsersByEmail.get(assertDefined(member.email));
-
-    tableData.push({
-      name,
+  const activeMembers = stats
+    .filter((member) => member.replyCount > 0)
+    .sort((a, b) => b.replyCount - a.replyCount)
+    .map((member) => ({
+      name: member.displayName || member.email || `Unnamed user: ${member.id}`,
       count: member.replyCount,
-      slackUserId,
-    });
-  }
+    }));
 
-  const humanUsers = tableData.sort((a, b) => b.count - a.count);
-  const totalTicketsResolved = tableData.reduce((sum, agent) => sum + agent.count, 0);
-  const activeUserCount = humanUsers.filter((user) => user.count > 0).length;
+  const inactiveMembers = stats
+    .filter((member) => member.replyCount === 0)
+    .map((member) => member.displayName || member.email || `Unnamed user: ${member.id}`);
 
-  const peopleText = activeUserCount === 1 ? "person" : "people";
+  const totalTicketsResolved = stats.reduce((sum, member) => sum + member.replyCount, 0);
+  const activeUserCount = activeMembers.length;
 
-  const blocks: any[] = [
-    {
-      type: "section",
-      text: {
-        type: "plain_text",
-        text: `Last week in the ${mailbox.name} mailbox:`,
-        emoji: true,
-      },
-    },
-  ];
-
-  if (allMembersData.activeLines.length > 0) {
-    blocks.push({
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: "*Team members:*",
-      },
-    });
-
-    blocks.push({
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: allMembersData.activeLines.join("\n"),
-      },
-    });
-  }
-
-  if (allMembersData.inactiveList) {
-    blocks.push({
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: `*No tickets answered:* ${allMembersData.inactiveList}`,
-      },
-    });
-  }
-
-  blocks.push({ type: "divider" });
-
-  const summaryParts = [];
-  if (totalTicketsResolved > 0) {
-    summaryParts.push("*Total replies:*");
-    summaryParts.push(`${totalTicketsResolved.toLocaleString()} from ${activeUserCount} ${peopleText}`);
-  }
-
-  if (summaryParts.length > 0) {
-    blocks.push({
-      type: "section",
-      text: {
-        type: "mrkdwn",
-        text: summaryParts.join("\n"),
-      },
-    });
-  }
-
-  await postSlackMessage(slackBotToken, {
-    channel: slackAlertChannel,
-    text: formatDateRange(lastWeekStart, lastWeekEnd),
-    blocks,
+  const result = await sendWeeklyReportEmail({
+    mailboxName: mailbox.name,
+    weekRange: formatDateRange(lastWeekStart, lastWeekEnd),
+    activeMembers,
+    inactiveMembers,
+    totalTicketsResolved,
+    activeUserCount,
   });
 
-  return "Report sent";
+  if (!result || typeof result.success !== "boolean") {
+    return "Failed to send report";
+  }
+  return result.success ? "Report sent" : "Failed to send report";
 }
 
-function processAllMembers(members: MemberStats, slackUsersByEmail: Map<string, string>) {
+function processAllMembers(members: MemberStats, _slackUsersByEmail: Map<string, string>) {
+  // This function is kept for compatibility but no longer uses Slack
   const activeMembers = members.filter((member) => member.replyCount > 0).sort((a, b) => b.replyCount - a.replyCount);
   const inactiveMembers = members.filter((member) => member.replyCount === 0);
 
   const activeLines = activeMembers.map((member) => {
     const formattedCount = member.replyCount.toLocaleString();
-    const slackUserId = slackUsersByEmail.get(member.email!);
-    const userName = slackUserId ? `<@${slackUserId}>` : member.displayName || member.email || "Unknown";
+    const userName = member.displayName || member.email || "Unknown";
 
     return `• ${userName}: ${formattedCount}`;
   });
@@ -167,9 +97,7 @@ function processAllMembers(members: MemberStats, slackUsersByEmail: Map<string, 
     inactiveMembers.length > 0
       ? inactiveMembers
           .map((member) => {
-            const slackUserId = slackUsersByEmail.get(member.email!);
-            const userName = slackUserId ? `<@${slackUserId}>` : member.displayName || member.email || "Unknown";
-
+            const userName = member.displayName || member.email || "Unknown";
             return userName;
           })
           .join(", ")

@@ -51,7 +51,8 @@
     "generate-ssl-certificates": "bash scripts/generate-ssl-certificates.sh",
     "run-on-packages": "pnpm run --filter=!helperai --if-present --workspace-concurrency=1",
     "with-dev-env": "dotenv -e ./.env.development -e ./.env.development.local -e ./.env.local --",
-    "with-test-env": "dotenv -e ./.env.test -e ./.env.test.local --"
+    "with-test-env": "dotenv -e ./.env.test -e ./.env.test.local --",
+    "test:email": "pnpm run with-dev-env pnpm tsx scripts/test-email-notifications-standalone.ts"
   },
   "dependencies": {
     "@ai-sdk/fireworks": "^0.1.10",

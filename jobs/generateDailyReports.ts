@@ -1,18 +1,16 @@
-import { KnownBlock } from "@slack/web-api";
 import { subHours } from "date-fns";
 import { aliasedTable, and, eq, gt, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { getMailbox } from "@/lib/data/mailbox";
-import { postSlackMessage } from "@/lib/slack/client";
+import { sendDailyReportEmail } from "@/lib/email/notifications";
 
 export const TIME_ZONE = "America/New_York";
 
 export async function generateDailyReports() {
   const mailboxesList = await db.query.mailboxes.findMany({
     columns: { id: true },
-    where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackAlertChannel)),
   });
 
   if (!mailboxesList.length) return;
@@ -22,18 +20,7 @@ export async function generateDailyReports() {
 
 export async function generateMailboxDailyReport() {
   const mailbox = await getMailbox();
-  if (!mailbox?.slackBotToken || !mailbox.slackAlertChannel) return;
-
-  const blocks: KnownBlock[] = [
-    {
-      type: "section",
-      text: {
-        type: "plain_text",
-        text: `Daily summary for ${mailbox.name}:`,
-        emoji: true,
-      },
-    },
-  ];
+  if (!mailbox) return;
 
   const endTime = new Date();
   const startTime = subHours(endTime, 24);
@@ -123,13 +110,9 @@ export async function generateMailboxDailyReport() {
         lt(conversationMessages.createdAt, endTime),
       ),
     );
-  const avgReplyTimeMessage = avgReplyTimeResult?.average
-    ? `• Average reply time: ${formatTime(avgReplyTimeResult.average)}`
-    : null;
-
-  let vipAvgReplyTimeMessage = null;
+  let vipReplyTimeResult: { average: number } | undefined;
   if (mailbox.vipThreshold) {
-    const [vipReplyTimeResult] = await db
+    const [result] = await db
       .select({
         average: sql<number>`ROUND(AVG(
           EXTRACT(EPOCH FROM (${conversationMessages.createdAt} - ${userMessages.createdAt}))
@@ -150,9 +133,7 @@ export async function generateMailboxDailyReport() {
           gt(sql`CAST(${platformCustomers.value} AS INTEGER)`, (mailbox.vipThreshold ?? 0) * 100),
         ),
       );
-    vipAvgReplyTimeMessage = vipReplyTimeResult?.average
-      ? `• VIP average reply time: ${formatTime(vipReplyTimeResult.average)}`
-      : null;
+    vipReplyTimeResult = result;
   }
 
   const [avgWaitTimeResult] = await db
@@ -170,41 +151,33 @@ export async function generateMailboxDailyReport() {
       ),
     );
   const avgWaitTimeMessage = avgWaitTimeResult?.average
-    ? `• Average time existing open tickets have been open: ${formatTime(avgWaitTimeResult.average)}`
-    : null;
+    ? formatTime(avgWaitTimeResult.average)
+    : undefined;
 
-  blocks.push({
-    type: "section",
-    text: {
-      type: "mrkdwn",
-      text: [
-        openCountMessage,
-        answeredCountMessage,
-        openTicketsOverZeroMessage,
-        answeredTicketsOverZeroMessage,
-        avgReplyTimeMessage,
-        vipAvgReplyTimeMessage,
-        avgWaitTimeMessage,
-      ]
-        .filter(Boolean)
-        .join("\n"),
-    },
+  const result = await sendDailyReportEmail({
+    mailboxName: mailbox.name,
+    openTickets: openTicketCount,
+    ticketsAnswered: answeredTicketCount,
+    openTicketsOverZero: openTicketsOverZeroCount > 0 ? openTicketsOverZeroCount : undefined,
+    ticketsAnsweredOverZero: answeredTicketsOverZeroCount > 0 ? answeredTicketsOverZeroCount : undefined,
+    averageReplyTime: avgReplyTimeResult?.average ? formatTime(avgReplyTimeResult.average) : undefined,
+    vipAverageReplyTime: vipReplyTimeResult?.average ? formatTime(vipReplyTimeResult.average) : undefined,
+    averageWaitTime: avgWaitTimeMessage,
   });
 
-  await postSlackMessage(mailbox.slackBotToken, {
-    channel: mailbox.slackAlertChannel,
-    text: `Daily summary for ${mailbox.name}`,
-    blocks,
-  });
+  if (!result || !("sentTo" in result)) {
+    return {
+      success: false,
+      sentTo: 0,
+      openTickets: openTicketCount,
+      ticketsAnswered: answeredTicketCount,
+    };
+  }
 
   return {
-    success: true,
-    openCountMessage,
-    answeredCountMessage,
-    openTicketsOverZeroMessage,
-    answeredTicketsOverZeroMessage,
-    avgReplyTimeMessage,
-    vipAvgReplyTimeMessage,
-    avgWaitTimeMessage,
+    success: result.success,
+    sentTo: result.sentTo,
+    openTickets: openTicketCount,
+    ticketsAnswered: answeredTicketCount,
   };
 }
