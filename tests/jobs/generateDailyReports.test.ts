@@ -6,14 +6,14 @@ import { subHours } from "date-fns";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateMailboxDailyReport } from "@/jobs/generateDailyReports";
 import { getMailbox } from "@/lib/data/mailbox";
-import { postSlackMessage } from "@/lib/slack/client";
+import { sendDailyReportEmail } from "@/lib/email/notifications";
 
 vi.mock("@/lib/data/mailbox", () => ({
   getMailbox: vi.fn(),
 }));
 
-vi.mock("@/lib/slack/client", () => ({
-  postSlackMessage: vi.fn(),
+vi.mock("@/lib/email/notifications", () => ({
+  sendDailyReportEmail: vi.fn(),
 }));
 
 describe("generateMailboxDailyReport", () => {
@@ -21,28 +21,17 @@ describe("generateMailboxDailyReport", () => {
     vi.clearAllMocks();
   });
 
-  it("skips when mailbox has no slack configuration", async () => {
-    vi.mocked(getMailbox).mockResolvedValue({
-      id: 1,
-      name: "Test Mailbox",
-      slackBotToken: null,
-      slackAlertChannel: null,
-      vipThreshold: null,
-    } as any);
+  it("skips when there is no mailbox", async () => {
+    vi.mocked(getMailbox).mockResolvedValue(null);
 
     const result = await generateMailboxDailyReport();
 
     expect(result).toBeUndefined();
-    expect(postSlackMessage).not.toHaveBeenCalled();
+    expect(sendDailyReportEmail).not.toHaveBeenCalled();
   });
 
   it("skips when there are no open tickets", async () => {
-    const { mailbox } = await userFactory.createRootUser({
-      mailboxOverrides: {
-        slackBotToken: "test-token",
-        slackAlertChannel: "test-channel",
-      },
-    });
+    const { mailbox } = await userFactory.createRootUser();
 
     vi.mocked(getMailbox).mockResolvedValue(mailbox);
 
@@ -52,16 +41,11 @@ describe("generateMailboxDailyReport", () => {
       skipped: true,
       reason: "No open tickets",
     });
-    expect(postSlackMessage).not.toHaveBeenCalled();
+    expect(sendDailyReportEmail).not.toHaveBeenCalled();
   });
 
   it("calculates correct metrics for basic scenarios", async () => {
-    const { mailbox, user } = await userFactory.createRootUser({
-      mailboxOverrides: {
-        slackBotToken: "test-token",
-        slackAlertChannel: "test-channel",
-      },
-    });
+    const { mailbox, user } = await userFactory.createRootUser();
 
     vi.mocked(getMailbox).mockResolvedValue(mailbox);
 
@@ -96,31 +80,35 @@ describe("generateMailboxDailyReport", () => {
       responseToId: userMsg2.id,
     });
 
+    vi.mocked(sendDailyReportEmail).mockResolvedValue({
+      success: true,
+      results: [],
+      sentTo: 1,
+    });
+
     const result = await generateMailboxDailyReport();
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       success: true,
-      openCountMessage: "• Open tickets: 2",
-      answeredCountMessage: "• Tickets answered: 2",
-      openTicketsOverZeroMessage: null,
-      answeredTicketsOverZeroMessage: null,
-      avgReplyTimeMessage: "• Average reply time: 1h 30m",
-      vipAvgReplyTimeMessage: null,
-      avgWaitTimeMessage: "• Average time existing open tickets have been open: 12h 0m",
+      sentTo: 1,
+      openTickets: 2,
+      ticketsAnswered: 2,
     });
 
-    expect(postSlackMessage).toHaveBeenCalledWith("test-token", {
-      channel: "test-channel",
-      text: `Daily summary for ${mailbox.name}`,
-      blocks: expect.any(Array),
-    });
+    expect(sendDailyReportEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mailboxName: mailbox.name,
+        openTickets: 2,
+        ticketsAnswered: 2,
+        averageReplyTime: "1h 30m",
+        averageWaitTime: "12h 0m",
+      }),
+    );
   });
 
   it("calculates correct metrics with VIP customers", async () => {
     const { mailbox, user } = await userFactory.createRootUser({
       mailboxOverrides: {
-        slackBotToken: "test-token",
-        slackAlertChannel: "test-channel",
         vipThreshold: 100,
       },
     });
@@ -169,27 +157,37 @@ describe("generateMailboxDailyReport", () => {
       responseToId: vipUserMsg.id,
     });
 
+    vi.mocked(sendDailyReportEmail).mockResolvedValue({
+      success: true,
+      results: [],
+      sentTo: 1,
+    });
+
     const result = await generateMailboxDailyReport();
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       success: true,
-      openCountMessage: "• Open tickets: 2",
-      answeredCountMessage: "• Tickets answered: 2",
-      openTicketsOverZeroMessage: "• Open tickets over $0: 2",
-      answeredTicketsOverZeroMessage: "• Tickets answered over $0: 2",
-      avgReplyTimeMessage: "• Average reply time: 0h 45m",
-      vipAvgReplyTimeMessage: "• VIP average reply time: 0h 30m",
-      avgWaitTimeMessage: "• Average time existing open tickets have been open: 12h 0m",
+      sentTo: 1,
+      openTickets: 2,
+      ticketsAnswered: 2,
     });
+
+    expect(sendDailyReportEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mailboxName: mailbox.name,
+        openTickets: 2,
+        ticketsAnswered: 2,
+        openTicketsOverZero: 2,
+        ticketsAnsweredOverZero: 2,
+        averageReplyTime: "0h 45m",
+        vipAverageReplyTime: "0h 30m",
+        averageWaitTime: "12h 0m",
+      }),
+    );
   });
 
   it("handles scenarios with no platform customers", async () => {
-    const { mailbox, user } = await userFactory.createRootUser({
-      mailboxOverrides: {
-        slackBotToken: "test-token",
-        slackAlertChannel: "test-channel",
-      },
-    });
+    const { mailbox, user } = await userFactory.createRootUser();
 
     vi.mocked(getMailbox).mockResolvedValue(mailbox);
 
@@ -210,27 +208,34 @@ describe("generateMailboxDailyReport", () => {
       responseToId: userMsg.id,
     });
 
+    vi.mocked(sendDailyReportEmail).mockResolvedValue({
+      success: true,
+      results: [],
+      sentTo: 1,
+    });
+
     const result = await generateMailboxDailyReport();
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       success: true,
-      openCountMessage: "• Open tickets: 1",
-      answeredCountMessage: "• Tickets answered: 1",
-      openTicketsOverZeroMessage: null,
-      answeredTicketsOverZeroMessage: null,
-      avgReplyTimeMessage: "• Average reply time: 1h 0m",
-      vipAvgReplyTimeMessage: null,
-      avgWaitTimeMessage: "• Average time existing open tickets have been open: 12h 0m",
+      sentTo: 1,
+      openTickets: 1,
+      ticketsAnswered: 1,
     });
+
+    expect(sendDailyReportEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mailboxName: mailbox.name,
+        openTickets: 1,
+        ticketsAnswered: 1,
+        averageReplyTime: "1h 0m",
+        averageWaitTime: "12h 0m",
+      }),
+    );
   });
 
   it("handles zero-value platform customers correctly", async () => {
-    const { mailbox, user } = await userFactory.createRootUser({
-      mailboxOverrides: {
-        slackBotToken: "test-token",
-        slackAlertChannel: "test-channel",
-      },
-    });
+    const { mailbox, user } = await userFactory.createRootUser();
 
     vi.mocked(getMailbox).mockResolvedValue(mailbox);
 
@@ -259,27 +264,24 @@ describe("generateMailboxDailyReport", () => {
       responseToId: userMsg.id,
     });
 
+    vi.mocked(sendDailyReportEmail).mockResolvedValue({
+      success: true,
+      results: [],
+      sentTo: 1,
+    });
+
     const result = await generateMailboxDailyReport();
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       success: true,
-      openCountMessage: "• Open tickets: 1",
-      answeredCountMessage: "• Tickets answered: 1",
-      openTicketsOverZeroMessage: null,
-      answeredTicketsOverZeroMessage: null,
-      avgReplyTimeMessage: "• Average reply time: 1h 0m",
-      vipAvgReplyTimeMessage: null,
-      avgWaitTimeMessage: "• Average time existing open tickets have been open: 12h 0m",
+      sentTo: 1,
+      openTickets: 1,
+      ticketsAnswered: 1,
     });
   });
 
   it("excludes merged conversations from counts", async () => {
-    const { mailbox, user } = await userFactory.createRootUser({
-      mailboxOverrides: {
-        slackBotToken: "test-token",
-        slackAlertChannel: "test-channel",
-      },
-    });
+    const { mailbox, user } = await userFactory.createRootUser();
 
     vi.mocked(getMailbox).mockResolvedValue(mailbox);
 
@@ -305,27 +307,24 @@ describe("generateMailboxDailyReport", () => {
       responseToId: userMsg.id,
     });
 
+    vi.mocked(sendDailyReportEmail).mockResolvedValue({
+      success: true,
+      results: [],
+      sentTo: 1,
+    });
+
     const result = await generateMailboxDailyReport();
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       success: true,
-      openCountMessage: "• Open tickets: 1",
-      answeredCountMessage: "• Tickets answered: 1",
-      openTicketsOverZeroMessage: null,
-      answeredTicketsOverZeroMessage: null,
-      avgReplyTimeMessage: "• Average reply time: 1h 0m",
-      vipAvgReplyTimeMessage: null,
-      avgWaitTimeMessage: "• Average time existing open tickets have been open: 12h 0m",
+      sentTo: 1,
+      openTickets: 1,
+      ticketsAnswered: 1,
     });
   });
 
   it("only counts messages within the 24-hour window", async () => {
-    const { mailbox, user } = await userFactory.createRootUser({
-      mailboxOverrides: {
-        slackBotToken: "test-token",
-        slackAlertChannel: "test-channel",
-      },
-    });
+    const { mailbox, user } = await userFactory.createRootUser();
 
     vi.mocked(getMailbox).mockResolvedValue(mailbox);
 
@@ -352,17 +351,19 @@ describe("generateMailboxDailyReport", () => {
       responseToId: userMsg.id,
     });
 
+    vi.mocked(sendDailyReportEmail).mockResolvedValue({
+      success: true,
+      results: [],
+      sentTo: 1,
+    });
+
     const result = await generateMailboxDailyReport();
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       success: true,
-      openCountMessage: "• Open tickets: 1",
-      answeredCountMessage: "• Tickets answered: 1",
-      openTicketsOverZeroMessage: null,
-      answeredTicketsOverZeroMessage: null,
-      avgReplyTimeMessage: "• Average reply time: 1h 0m",
-      vipAvgReplyTimeMessage: null,
-      avgWaitTimeMessage: "• Average time existing open tickets have been open: 12h 0m",
+      sentTo: 1,
+      openTickets: 1,
+      ticketsAnswered: 1,
     });
   });
 });

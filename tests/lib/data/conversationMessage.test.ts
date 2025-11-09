@@ -22,11 +22,6 @@ import {
   serializeResponseAiDraft,
 } from "@/lib/data/conversationMessage";
 import { getFileUrl } from "@/lib/data/files";
-import { getSlackPermalink } from "@/lib/slack/client";
-
-vi.mock("@/lib/slack/client", () => ({
-  getSlackPermalink: vi.fn().mockResolvedValue(null),
-}));
 vi.mock("@/lib/data/files", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/data/files")>();
   return {
@@ -191,23 +186,6 @@ describe("getMessages", () => {
       previewKey: null,
       previewUrl: null,
     });
-  });
-
-  it("generates Slack links", async () => {
-    const { mailbox } = await mailboxFactory.create({ slackBotToken: "test-token" });
-    const { conversation } = await conversationFactory.create();
-    await conversationMessagesFactory.create(conversation.id, {
-      slackChannel: "test-channel",
-      slackMessageTs: "1234567890.123456",
-    });
-
-    vi.mocked(getSlackPermalink).mockResolvedValueOnce("https://slack.com/permalink");
-
-    const result = await getMessages(conversation.id, mailbox);
-
-    assert(result[0]?.type === "message");
-    expect(result[0].slackUrl).toBe("https://slack.com/permalink");
-    expect(getSlackPermalink).toHaveBeenCalledWith("test-token", "test-channel", "1234567890.123456");
   });
 
   it("sanitizes message bodies", async () => {
@@ -510,28 +488,6 @@ describe("createReply", () => {
       body: "Test message",
       emailCc: ["cc@example.com"],
       emailBcc: ["bcc@example.com"],
-    });
-  });
-
-  it("creates a reply with Slack information", async () => {
-    const { profile } = await userFactory.createRootUser();
-    const { conversation } = await conversationFactory.create();
-
-    const result = await createReply({
-      conversationId: conversation.id,
-      message: "Test message",
-      user: profile,
-      slack: {
-        channel: "C12345",
-        messageTs: "1234567890.123456",
-      },
-    });
-
-    const createdMessage = await getConversationMessageById(result);
-    expect(createdMessage).toMatchObject({
-      body: "Test message",
-      slackChannel: "C12345",
-      slackMessageTs: "1234567890.123456",
     });
   });
 

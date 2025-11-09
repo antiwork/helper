@@ -18,8 +18,6 @@ export const faqs = pgTable(
     suggested: boolean().notNull().default(false),
     suggestedReplacementForId: bigint({ mode: "number" }),
     messageId: bigint({ mode: "number" }),
-    slackChannel: text(),
-    slackMessageTs: text(),
   },
   (table) => [
     index("faqs_mailbox_created_at_idx").on(table.createdAt),

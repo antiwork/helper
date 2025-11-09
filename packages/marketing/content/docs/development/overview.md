@@ -29,7 +29,7 @@ The codebase is Next.js app which also contains individual SDK packages.
 - **`content`:** Markdown content for the help center.
 - **`db`:** Database migrations and schema definitions.
 - **`jobs`:** Background functions powered by Supabase Cron and Queues, responsible for tasks like email processing, AI response generation, and data updates.
-- **`lib`:** Core business logic, data access, and integrations with external services (Gmail, Slack, etc.). This is where you'll find the code that interacts with these services, processes data, and generates AI responses.
+- **`lib`:** Core business logic, data access, and integrations with external services (Gmail, etc.). This is where you'll find the code that interacts with these services, processes data, and generates AI responses.
 - **`lib/ai`:** AI-related functionality including chat completion, response generation, embeddings, and tools. Contains core AI logic for:
   - Chat message generation and streaming
   - Response generation with custom prompts
@@ -109,9 +109,9 @@ Helper uses Supabase Cron and Queues for managing background jobs and event-driv
 - File preview generation
 - Conversation embedding and indexing
 - Scheduled cleanup tasks
-- Webhook handling (Gmail, Slack)
+- Webhook handling (Gmail)
 - Report generation
-- Notification delivery (Slack, email)
+- Notification delivery (email)
 
 ## Development Workflow
 

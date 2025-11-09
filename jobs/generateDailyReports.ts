@@ -1,183 +1,356 @@
+import { faker } from "@faker-js/faker";
+import { conversationFactory } from "@tests/support/factories/conversations";
+import { platformCustomerFactory } from "@tests/support/factories/platformCustomers";
+import { userFactory } from "@tests/support/factories/users";
 import { subHours } from "date-fns";
-import { aliasedTable, and, eq, gt, isNotNull, isNull, lt, sql } from "drizzle-orm";
-import { db } from "@/db/client";
-import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
-import { triggerEvent } from "@/jobs/trigger";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { generateMailboxDailyReport } from "@/jobs/generateDailyReports";
 import { getMailbox } from "@/lib/data/mailbox";
 import { sendDailyReportEmail } from "@/lib/email/notifications";
 
-export const TIME_ZONE = "America/New_York";
+vi.mock("@/lib/data/mailbox", () => ({
+  getMailbox: vi.fn(),
+}));
 
-export async function generateDailyReports() {
-  const mailboxesList = await db.query.mailboxes.findMany({
-    columns: { id: true },
+vi.mock("@/lib/email/notifications", () => ({
+  sendDailyReportEmail: vi.fn(),
+}));
+
+describe("generateMailboxDailyReport", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  if (!mailboxesList.length) return;
+  it("skips when there is no mailbox", async () => {
+    vi.mocked(getMailbox).mockResolvedValue(null);
 
-  await triggerEvent("reports/daily", {});
-}
+    const result = await generateMailboxDailyReport();
 
-export async function generateMailboxDailyReport() {
-  const mailbox = await getMailbox();
-  if (!mailbox) return;
-
-  const endTime = new Date();
-  const startTime = subHours(endTime, 24);
-
-  const openTicketCount = await db.$count(
-    conversations,
-    and(eq(conversations.status, "open"), isNull(conversations.mergedIntoId)),
-  );
-
-  if (openTicketCount === 0) return { skipped: true, reason: "No open tickets" };
-
-  const openCountMessage = `• Open tickets: ${openTicketCount.toLocaleString()}`;
-
-  const answeredTicketCount = await db
-    .select({ count: sql`count(DISTINCT ${conversations.id})` })
-    .from(conversationMessages)
-    .innerJoin(conversations, eq(conversationMessages.conversationId, conversations.id))
-    .where(
-      and(
-        eq(conversationMessages.role, "staff"),
-        gt(conversationMessages.createdAt, startTime),
-        lt(conversationMessages.createdAt, endTime),
-        isNull(conversations.mergedIntoId),
-      ),
-    )
-    .then((result) => Number(result[0]?.count || 0));
-
-  const answeredCountMessage = `• Tickets answered: ${answeredTicketCount.toLocaleString()}`;
-
-  const openTicketsOverZeroCount = await db
-    .select({ count: sql`count(*)` })
-    .from(conversations)
-    .leftJoin(platformCustomers, and(eq(conversations.emailFrom, platformCustomers.email)))
-    .where(
-      and(
-        eq(conversations.status, "open"),
-        isNull(conversations.mergedIntoId),
-        gt(sql`CAST(${platformCustomers.value} AS INTEGER)`, 0),
-      ),
-    )
-    .then((result) => Number(result[0]?.count || 0));
-
-  const openTicketsOverZeroMessage = openTicketsOverZeroCount
-    ? `• Open tickets over $0: ${openTicketsOverZeroCount.toLocaleString()}`
-    : null;
-
-  const answeredTicketsOverZeroCount = await db
-    .select({ count: sql`count(DISTINCT ${conversations.id})` })
-    .from(conversationMessages)
-    .innerJoin(conversations, eq(conversationMessages.conversationId, conversations.id))
-    .leftJoin(platformCustomers, and(eq(conversations.emailFrom, platformCustomers.email)))
-    .where(
-      and(
-        eq(conversationMessages.role, "staff"),
-        gt(conversationMessages.createdAt, startTime),
-        lt(conversationMessages.createdAt, endTime),
-        isNull(conversations.mergedIntoId),
-        gt(sql`CAST(${platformCustomers.value} AS INTEGER)`, 0),
-      ),
-    )
-    .then((result) => Number(result[0]?.count || 0));
-
-  const answeredTicketsOverZeroMessage = answeredTicketsOverZeroCount
-    ? `• Tickets answered over $0: ${answeredTicketsOverZeroCount.toLocaleString()}`
-    : null;
-
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours}h ${minutes}m`;
-  };
-
-  const userMessages = aliasedTable(conversationMessages, "userMessages");
-  const [avgReplyTimeResult] = await db
-    .select({
-      average: sql<number>`ROUND(AVG(
-        EXTRACT(EPOCH FROM (${conversationMessages.createdAt} - ${userMessages.createdAt}))
-      ))::integer`,
-    })
-    .from(conversationMessages)
-    .innerJoin(conversations, eq(conversationMessages.conversationId, conversations.id))
-    .innerJoin(userMessages, and(eq(conversationMessages.responseToId, userMessages.id), eq(userMessages.role, "user")))
-    .where(
-      and(
-        eq(conversationMessages.role, "staff"),
-        gt(conversationMessages.createdAt, startTime),
-        lt(conversationMessages.createdAt, endTime),
-      ),
-    );
-  let vipReplyTimeResult: { average: number } | undefined;
-  if (mailbox.vipThreshold) {
-    const [result] = await db
-      .select({
-        average: sql<number>`ROUND(AVG(
-          EXTRACT(EPOCH FROM (${conversationMessages.createdAt} - ${userMessages.createdAt}))
-        ))::integer`,
-      })
-      .from(conversationMessages)
-      .innerJoin(conversations, eq(conversationMessages.conversationId, conversations.id))
-      .innerJoin(platformCustomers, eq(conversations.emailFrom, platformCustomers.email))
-      .innerJoin(
-        userMessages,
-        and(eq(conversationMessages.responseToId, userMessages.id), eq(userMessages.role, "user")),
-      )
-      .where(
-        and(
-          eq(conversationMessages.role, "staff"),
-          gt(conversationMessages.createdAt, startTime),
-          lt(conversationMessages.createdAt, endTime),
-          gt(sql`CAST(${platformCustomers.value} AS INTEGER)`, (mailbox.vipThreshold ?? 0) * 100),
-        ),
-      );
-    vipReplyTimeResult = result;
-  }
-
-  const [avgWaitTimeResult] = await db
-    .select({
-      average: sql<number>`ROUND(AVG(
-        EXTRACT(EPOCH FROM (${endTime.toISOString()}::timestamp - ${conversations.lastUserEmailCreatedAt}))
-      ))::integer`,
-    })
-    .from(conversations)
-    .where(
-      and(
-        eq(conversations.status, "open"),
-        isNull(conversations.mergedIntoId),
-        isNotNull(conversations.lastUserEmailCreatedAt),
-      ),
-    );
-  const avgWaitTimeMessage = avgWaitTimeResult?.average
-    ? formatTime(avgWaitTimeResult.average)
-    : undefined;
-
-  const result = await sendDailyReportEmail({
-    mailboxName: mailbox.name,
-    openTickets: openTicketCount,
-    ticketsAnswered: answeredTicketCount,
-    openTicketsOverZero: openTicketsOverZeroCount > 0 ? openTicketsOverZeroCount : undefined,
-    ticketsAnsweredOverZero: answeredTicketsOverZeroCount > 0 ? answeredTicketsOverZeroCount : undefined,
-    averageReplyTime: avgReplyTimeResult?.average ? formatTime(avgReplyTimeResult.average) : undefined,
-    vipAverageReplyTime: vipReplyTimeResult?.average ? formatTime(vipReplyTimeResult.average) : undefined,
-    averageWaitTime: avgWaitTimeMessage,
+    expect(result).toBeUndefined();
+    expect(sendDailyReportEmail).not.toHaveBeenCalled();
   });
 
-  if (!result || !("sentTo" in result)) {
-    return {
-      success: false,
-      sentTo: 0,
-      openTickets: openTicketCount,
-      ticketsAnswered: answeredTicketCount,
-    };
-  }
+  it("skips when there are no open tickets", async () => {
+    const { mailbox } = await userFactory.createRootUser();
 
-  return {
-    success: result.success,
-    sentTo: result.sentTo,
-    openTickets: openTicketCount,
-    ticketsAnswered: answeredTicketCount,
-  };
-}
+    vi.mocked(getMailbox).mockResolvedValue(mailbox);
+
+    const result = await generateMailboxDailyReport();
+
+    expect(result).toEqual({
+      skipped: true,
+      reason: "No open tickets",
+    });
+    expect(sendDailyReportEmail).not.toHaveBeenCalled();
+  });
+
+  it("calculates correct metrics for basic scenarios", async () => {
+    const { mailbox, user } = await userFactory.createRootUser();
+
+    vi.mocked(getMailbox).mockResolvedValue(mailbox);
+
+    const endTime = new Date();
+    const midTime = subHours(endTime, 12);
+
+    const { conversation: openConv1 } = await conversationFactory.create({
+      status: "open",
+      lastUserEmailCreatedAt: midTime,
+    });
+    const { conversation: openConv2 } = await conversationFactory.create({
+      status: "open",
+      lastUserEmailCreatedAt: midTime,
+    });
+    const { conversation: _closedConv } = await conversationFactory.create({
+      status: "closed",
+    });
+
+    const userMsg1 = await conversationFactory.createUserEmail(openConv1.id, {
+      createdAt: midTime,
+    });
+    const userMsg2 = await conversationFactory.createUserEmail(openConv2.id, {
+      createdAt: midTime,
+    });
+
+    await conversationFactory.createStaffEmail(openConv1.id, user.id, {
+      createdAt: new Date(midTime.getTime() + 3600000),
+      responseToId: userMsg1.id,
+    });
+    await conversationFactory.createStaffEmail(openConv2.id, user.id, {
+      createdAt: new Date(midTime.getTime() + 7200000),
+      responseToId: userMsg2.id,
+    });
+
+    vi.mocked(sendDailyReportEmail).mockResolvedValue({
+      success: true,
+      results: [],
+      sentTo: 1,
+    });
+
+    const result = await generateMailboxDailyReport();
+
+    expect(result).toMatchObject({
+      success: true,
+      sentTo: 1,
+      openTickets: 2,
+      ticketsAnswered: 2,
+    });
+
+    expect(sendDailyReportEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mailboxName: mailbox.name,
+        openTickets: 2,
+        ticketsAnswered: 2,
+        averageReplyTime: "1h 30m",
+        averageWaitTime: "12h 0m",
+      }),
+    );
+  });
+
+  it("calculates correct metrics with VIP customers", async () => {
+    const { mailbox, user } = await userFactory.createRootUser({
+      mailboxOverrides: {
+        vipThreshold: 100,
+      },
+    });
+
+    vi.mocked(getMailbox).mockResolvedValue(mailbox);
+
+    const endTime = new Date();
+    const midTime = subHours(endTime, 12);
+
+    const customerEmail = faker.internet.email();
+    const vipCustomerEmail = faker.internet.email();
+
+    await platformCustomerFactory.create({
+      email: customerEmail,
+      value: "50.00",
+    });
+    await platformCustomerFactory.create({
+      email: vipCustomerEmail,
+      value: "25000.00",
+    });
+
+    const { conversation: normalConv } = await conversationFactory.create({
+      status: "open",
+      emailFrom: customerEmail,
+      lastUserEmailCreatedAt: midTime,
+    });
+    const { conversation: vipConv } = await conversationFactory.create({
+      status: "open",
+      emailFrom: vipCustomerEmail,
+      lastUserEmailCreatedAt: midTime,
+    });
+
+    const normalUserMsg = await conversationFactory.createUserEmail(normalConv.id, {
+      createdAt: midTime,
+    });
+    const vipUserMsg = await conversationFactory.createUserEmail(vipConv.id, {
+      createdAt: midTime,
+    });
+
+    await conversationFactory.createStaffEmail(normalConv.id, user.id, {
+      createdAt: new Date(midTime.getTime() + 3600000),
+      responseToId: normalUserMsg.id,
+    });
+    await conversationFactory.createStaffEmail(vipConv.id, user.id, {
+      createdAt: new Date(midTime.getTime() + 1800000),
+      responseToId: vipUserMsg.id,
+    });
+
+    const result = await generateMailboxDailyReport();
+
+    expect(result).toEqual({
+      success: true,
+      openCountMessage: "• Open tickets: 2",
+      answeredCountMessage: "• Tickets answered: 2",
+      openTicketsOverZeroMessage: "• Open tickets over $0: 2",
+      answeredTicketsOverZeroMessage: "• Tickets answered over $0: 2",
+      avgReplyTimeMessage: "• Average reply time: 0h 45m",
+      vipAvgReplyTimeMessage: "• VIP average reply time: 0h 30m",
+      avgWaitTimeMessage: "• Average time existing open tickets have been open: 12h 0m",
+    });
+  });
+
+  it("handles scenarios with no platform customers", async () => {
+    const { mailbox, user } = await userFactory.createRootUser({
+      mailboxOverrides: {
+        slackBotToken: "test-token",
+        slackAlertChannel: "test-channel",
+      },
+    });
+
+    vi.mocked(getMailbox).mockResolvedValue(mailbox);
+
+    const endTime = new Date();
+    const midTime = subHours(endTime, 12);
+
+    const { conversation: openConv } = await conversationFactory.create({
+      status: "open",
+      lastUserEmailCreatedAt: midTime,
+    });
+
+    const userMsg = await conversationFactory.createUserEmail(openConv.id, {
+      createdAt: midTime,
+    });
+
+    await conversationFactory.createStaffEmail(openConv.id, user.id, {
+      createdAt: new Date(midTime.getTime() + 3600000),
+      responseToId: userMsg.id,
+    });
+
+    const result = await generateMailboxDailyReport();
+
+    expect(result).toEqual({
+      success: true,
+      openCountMessage: "• Open tickets: 1",
+      answeredCountMessage: "• Tickets answered: 1",
+      openTicketsOverZeroMessage: null,
+      answeredTicketsOverZeroMessage: null,
+      avgReplyTimeMessage: "• Average reply time: 1h 0m",
+      vipAvgReplyTimeMessage: null,
+      avgWaitTimeMessage: "• Average time existing open tickets have been open: 12h 0m",
+    });
+  });
+
+  it("handles zero-value platform customers correctly", async () => {
+    const { mailbox, user } = await userFactory.createRootUser({
+      mailboxOverrides: {
+        slackBotToken: "test-token",
+        slackAlertChannel: "test-channel",
+      },
+    });
+
+    vi.mocked(getMailbox).mockResolvedValue(mailbox);
+
+    const endTime = new Date();
+    const midTime = subHours(endTime, 12);
+
+    const customerEmail = faker.internet.email();
+
+    await platformCustomerFactory.create({
+      email: customerEmail,
+      value: "0.00",
+    });
+
+    const { conversation: openConv } = await conversationFactory.create({
+      status: "open",
+      emailFrom: customerEmail,
+      lastUserEmailCreatedAt: midTime,
+    });
+
+    const userMsg = await conversationFactory.createUserEmail(openConv.id, {
+      createdAt: midTime,
+    });
+
+    await conversationFactory.createStaffEmail(openConv.id, user.id, {
+      createdAt: new Date(midTime.getTime() + 3600000),
+      responseToId: userMsg.id,
+    });
+
+    const result = await generateMailboxDailyReport();
+
+    expect(result).toEqual({
+      success: true,
+      openCountMessage: "• Open tickets: 1",
+      answeredCountMessage: "• Tickets answered: 1",
+      openTicketsOverZeroMessage: null,
+      answeredTicketsOverZeroMessage: null,
+      avgReplyTimeMessage: "• Average reply time: 1h 0m",
+      vipAvgReplyTimeMessage: null,
+      avgWaitTimeMessage: "• Average time existing open tickets have been open: 12h 0m",
+    });
+  });
+
+  it("excludes merged conversations from counts", async () => {
+    const { mailbox, user } = await userFactory.createRootUser({
+      mailboxOverrides: {
+        slackBotToken: "test-token",
+        slackAlertChannel: "test-channel",
+      },
+    });
+
+    vi.mocked(getMailbox).mockResolvedValue(mailbox);
+
+    const endTime = new Date();
+    const midTime = subHours(endTime, 12);
+
+    const { conversation: openConv } = await conversationFactory.create({
+      status: "open",
+      lastUserEmailCreatedAt: midTime,
+    });
+    const { conversation: _mergedConv } = await conversationFactory.create({
+      status: "open",
+      mergedIntoId: openConv.id,
+      lastUserEmailCreatedAt: midTime,
+    });
+
+    const userMsg = await conversationFactory.createUserEmail(openConv.id, {
+      createdAt: midTime,
+    });
+
+    await conversationFactory.createStaffEmail(openConv.id, user.id, {
+      createdAt: new Date(midTime.getTime() + 3600000),
+      responseToId: userMsg.id,
+    });
+
+    const result = await generateMailboxDailyReport();
+
+    expect(result).toEqual({
+      success: true,
+      openCountMessage: "• Open tickets: 1",
+      answeredCountMessage: "• Tickets answered: 1",
+      openTicketsOverZeroMessage: null,
+      answeredTicketsOverZeroMessage: null,
+      avgReplyTimeMessage: "• Average reply time: 1h 0m",
+      vipAvgReplyTimeMessage: null,
+      avgWaitTimeMessage: "• Average time existing open tickets have been open: 12h 0m",
+    });
+  });
+
+  it("only counts messages within the 24-hour window", async () => {
+    const { mailbox, user } = await userFactory.createRootUser({
+      mailboxOverrides: {
+        slackBotToken: "test-token",
+        slackAlertChannel: "test-channel",
+      },
+    });
+
+    vi.mocked(getMailbox).mockResolvedValue(mailbox);
+
+    const endTime = new Date();
+    const beforeWindow = subHours(endTime, 30);
+    const withinWindow = subHours(endTime, 12);
+
+    const { conversation: openConv } = await conversationFactory.create({
+      status: "open",
+      lastUserEmailCreatedAt: withinWindow,
+    });
+
+    const userMsg = await conversationFactory.createUserEmail(openConv.id, {
+      createdAt: withinWindow,
+    });
+
+    await conversationFactory.createStaffEmail(openConv.id, user.id, {
+      createdAt: beforeWindow,
+      responseToId: userMsg.id,
+    });
+
+    await conversationFactory.createStaffEmail(openConv.id, user.id, {
+      createdAt: new Date(withinWindow.getTime() + 3600000),
+      responseToId: userMsg.id,
+    });
+
+    const result = await generateMailboxDailyReport();
+
+    expect(result).toEqual({
+      success: true,
+      openCountMessage: "• Open tickets: 1",
+      answeredCountMessage: "• Tickets answered: 1",
+      openTicketsOverZeroMessage: null,
+      answeredTicketsOverZeroMessage: null,
+      avgReplyTimeMessage: "• Average reply time: 1h 0m",
+      vipAvgReplyTimeMessage: null,
+      avgWaitTimeMessage: "• Average time existing open tickets have been open: 12h 0m",
+    });
+  });
+});

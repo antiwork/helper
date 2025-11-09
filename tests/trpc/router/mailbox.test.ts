@@ -22,7 +22,7 @@ vi.mock("@/lib/data/user", async (importOriginal) => ({
 
 describe("mailboxRouter", () => {
   describe("update", () => {
-    it("updates slack settings", async () => {
+    it("updates mailbox settings", async () => {
       const { user, mailbox } = await userFactory.createRootUser();
 
       const caller = createCaller(await createTestTRPCContext(user));
@@ -30,7 +30,7 @@ describe("mailboxRouter", () => {
       const promptUpdatedAtBefore = mailbox.promptUpdatedAt;
 
       const updateData = {
-        slackAlertChannel: "#another-channel",
+        name: "Updated Mailbox Name",
       };
 
       await caller.mailbox.update({ ...updateData });

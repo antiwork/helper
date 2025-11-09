@@ -14,12 +14,10 @@ export const agentMessages = pgTable(
     role: text().$type<AgentMessageRole>().notNull(),
     content: text().notNull(),
     metadata: jsonb().$type<{ toolName: string; parameters: Record<string, unknown> }>(),
-    slackChannel: text(),
     messageTs: text(),
   },
   (table) => [
     index("agent_messages_agent_thread_id_idx").on(table.agentThreadId),
-    uniqueIndex("agent_messages_slack_unique_idx").on(table.slackChannel, table.messageTs),
   ],
 ).enableRLS();
 

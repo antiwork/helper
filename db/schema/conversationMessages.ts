@@ -54,8 +54,6 @@ export const conversationMessages = pgTable(
     isPinned: boolean()
       .notNull()
       .$defaultFn(() => false),
-    slackChannel: text(),
-    slackMessageTs: text(),
     isPerfect: boolean().notNull(),
 
     isFlaggedAsBad: boolean().notNull(),
@@ -80,7 +78,6 @@ export const conversationMessages = pgTable(
     index("conversations_email_clerk_user_id").on(table.userId.asc().nullsLast()),
     index("search_index_idx").using("gin", sql`string_to_array(${table.searchIndex}, ' ') array_ops`),
     index("messages_reason_idx").using("btree", table.reason).concurrently(),
-    index("messages_slack_message_ts_idx").using("btree", table.slackMessageTs).concurrently(),
     index("messages_reaction_count_idx")
       .on(table.reactionType, table.reactionCreatedAt)
       .where(isNull(table.deletedAt))

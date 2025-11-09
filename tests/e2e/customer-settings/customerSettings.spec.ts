@@ -33,7 +33,6 @@ test.describe("Customer Settings", () => {
     await expect(page.getByText("Customer Value Threshold", { exact: true })).toBeVisible();
     await expect(thresholdInput).toBeVisible();
     await expect(responseHoursInput).toBeVisible();
-    await expect(page.getByText("Slack Notifications", { exact: true })).toBeVisible();
 
     await thresholdInput.fill("500");
     await responseHoursInput.fill("2");

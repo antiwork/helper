@@ -1,108 +1,104 @@
-import { intervalToDuration, isWeekend } from "date-fns";
-import { and, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
-import { db } from "@/db/client";
-import { conversations, userProfiles } from "@/db/schema";
-import { authUsers } from "@/db/supabaseSchema/auth";
-import { getMailbox } from "@/lib/data/mailbox";
+import { conversationFactory } from "@tests/support/factories/conversations";
+import { userFactory } from "@tests/support/factories/users";
+import { subDays, subHours } from "date-fns";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { checkAssignedTicketResponseTimes } from "@/jobs/checkAssignedTicketResponseTimes";
 import { sendResponseTimeAlertEmail } from "@/lib/email/notifications";
 
-export function formatDuration(start: Date): string {
-  const duration = intervalToDuration({ start, end: new Date() });
+vi.mock("@/lib/email/notifications", () => ({
+  sendResponseTimeAlertEmail: vi.fn(),
+}));
 
-  const parts: string[] = [];
+vi.mock("@/lib/data/user", async (importOriginal) => ({
+  ...(await importOriginal()),
+  getClerkUserList: vi.fn(),
+}));
 
-  if (duration.days && duration.days > 0) {
-    parts.push(`${duration.days} ${duration.days === 1 ? "day" : "days"}`);
-  }
+describe("checkAssignedTicketResponseTimes", () => {
+  const now = new Date("2024-01-15T10:00:00Z");
 
-  if (duration.hours && duration.hours > 0) {
-    parts.push(`${duration.hours} ${duration.hours === 1 ? "hour" : "hours"}`);
-  }
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.setSystemTime(now);
+  });
 
-  if (duration.minutes && duration.minutes > 0) {
-    parts.push(`${duration.minutes} ${duration.minutes === 1 ? "minute" : "minutes"}`);
-  }
-
-  return parts.join(" ");
-}
-
-export const checkAssignedTicketResponseTimes = async (now = new Date()) => {
-  if (isWeekend(now)) return { success: true, skipped: "weekend" };
-
-  const mailbox = await getMailbox();
-  if (!mailbox) return;
-
-  const failedMailboxes: { id: number; name: string; slug: string; error: string }[] = [];
-
-  const users = await db
-    .select({
-      id: userProfiles.id,
-      displayName: userProfiles.displayName,
-      email: authUsers.email,
-      permissions: userProfiles.permissions,
-      access: userProfiles.access,
-    })
-    .from(userProfiles)
-    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id));
-
-  const usersById = Object.fromEntries(users.map((user) => [user.id, user]));
-
-  if (mailbox.preferences?.disableTicketResponseTimeAlerts) return { success: true, skipped: "disabled" };
-
-  try {
-    const overdueAssignedConversations = await db
-      .select({
-        subject: conversations.subject,
-        slug: conversations.slug,
-        assignedToId: conversations.assignedToId,
-        lastUserEmailCreatedAt: conversations.lastUserEmailCreatedAt,
-      })
-      .from(conversations)
-      .where(
-        and(
-          isNotNull(conversations.assignedToId),
-          isNull(conversations.mergedIntoId),
-          eq(conversations.status, "open"),
-          gt(
-            sql`EXTRACT(EPOCH FROM (${now.toISOString()}::timestamp - ${conversations.lastUserEmailCreatedAt})) / 3600`,
-            24, // 24 hours threshold
-          ),
-        ),
-      )
-      .orderBy(desc(conversations.lastUserEmailCreatedAt));
-
-    if (!overdueAssignedConversations.length) return { success: true, skipped: "no_overdue" };
-
-    const tickets = overdueAssignedConversations.slice(0, 10).map((conversation) => {
-      const assignee = usersById[conversation.assignedToId!];
-      const assigneeName = assignee?.displayName || assignee?.email || "Unknown";
-      const timeSinceLastReply = formatDuration(conversation.lastUserEmailCreatedAt!);
-      return {
-        subject: conversation.subject?.replace(/\|<>/g, "") ?? "No subject",
-        slug: conversation.slug,
-        assignee: assigneeName,
-        timeSinceLastReply,
-      };
+  it("sends an email alert for overdue assigned tickets", async () => {
+    const { user } = await userFactory.createRootUser({
+      mailboxOverrides: {
+        preferences: {},
+      },
     });
 
-    await sendResponseTimeAlertEmail({
-      alertType: "assigned",
-      mailboxName: mailbox.name,
-      overdueCount: overdueAssignedConversations.length,
-      tickets,
-      threshold: "24 hours",
+    const overdueDate = subDays(now, 2);
+    await conversationFactory.create({
+      assignedToId: user.id,
+      lastUserEmailCreatedAt: overdueDate,
+      status: "open",
+      subject: "Test Ticket",
     });
-  } catch (error) {
-    failedMailboxes.push({
-      id: mailbox.id,
-      name: mailbox.name,
-      slug: mailbox.slug,
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
 
-  return {
-    success: failedMailboxes.length === 0,
-    failedMailboxes,
-  };
-};
+    vi.mocked(sendResponseTimeAlertEmail).mockResolvedValue({
+      success: true,
+      results: [],
+      sentTo: 1,
+    });
+
+    await checkAssignedTicketResponseTimes(now);
+
+    expect(sendResponseTimeAlertEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        alertType: "assigned",
+        mailboxName: expect.any(String),
+        overdueCount: 1,
+        threshold: "24 hours",
+        tickets: expect.arrayContaining([
+          expect.objectContaining({
+            subject: "Test Ticket",
+            assignee: expect.any(String),
+            timeSinceLastReply: expect.any(String),
+          }),
+        ]),
+      }),
+    );
+  });
+
+  it("does not send an email alert for non-overdue assigned tickets", async () => {
+    const { user } = await userFactory.createRootUser({
+      mailboxOverrides: {
+        preferences: {},
+      },
+    });
+
+    const recentDate = subHours(now, 12); // Only 12 hours ago, under the 24 hour threshold
+    await conversationFactory.create({
+      assignedToId: user.id,
+      lastUserEmailCreatedAt: recentDate,
+      status: "open",
+    });
+
+    await checkAssignedTicketResponseTimes(now);
+
+    expect(sendResponseTimeAlertEmail).not.toHaveBeenCalled();
+  });
+
+  it("does not send an email alert when notifications are disabled", async () => {
+    const { user } = await userFactory.createRootUser({
+      mailboxOverrides: {
+        preferences: {
+          disableTicketResponseTimeAlerts: true,
+        },
+      },
+    });
+
+    const overdueDate = subDays(now, 2);
+    await conversationFactory.create({
+      assignedToId: user.id,
+      lastUserEmailCreatedAt: overdueDate,
+      status: "open",
+    });
+
+    await checkAssignedTicketResponseTimes();
+
+    expect(sendResponseTimeAlertEmail).not.toHaveBeenCalled();
+  });
+});

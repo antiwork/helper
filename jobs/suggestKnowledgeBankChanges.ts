@@ -7,8 +7,6 @@ import { conversationMessages, faqs, mailboxes } from "@/db/schema";
 import { assertDefinedOrRaiseNonRetriableError } from "@/jobs/utils";
 import { generateKnowledgeBankSuggestion } from "@/lib/ai/knowledgeBankSuggestions";
 import { getMailbox } from "@/lib/data/mailbox";
-import { postSlackMessage } from "@/lib/slack/client";
-import { getSuggestedEditButtons } from "@/lib/slack/shared";
 
 export const suggestKnowledgeBankChanges = async ({
   messageId,
@@ -90,43 +88,6 @@ export const suggestKnowledgeBankChanges = async ({
 };
 
 const notifySuggestedEdit = async (faq: typeof faqs.$inferSelect, mailbox: typeof mailboxes.$inferSelect) => {
-  if (!mailbox.slackBotToken || !mailbox.slackAlertChannel) {
-    return "Not posted, mailbox not linked to Slack or missing alert channel";
-  }
-
-  let originalContent = "";
-  if (faq.suggestedReplacementForId) {
-    const replacementFaq = await db.query.faqs.findFirst({
-      where: eq(faqs.id, faq.suggestedReplacementForId),
-    });
-    originalContent = replacementFaq?.content ?? "";
-  }
-
-  const messageTs = await postSlackMessage(mailbox.slackBotToken, {
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: originalContent
-            ? `💡 New suggested edit for the knowledge bank\n\n*Suggested content:*\n${faq.content}\n\n*This will overwrite the current entry:*\n${originalContent}`
-            : `💡 New suggested addition to the knowledge bank\n\n*Suggested content:*\n${faq.content}`,
-        },
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `<${getBaseUrl()}/settings/knowledge|View knowledge bank>`,
-        },
-      },
-      getSuggestedEditButtons(faq.id),
-    ],
-    channel: mailbox.slackAlertChannel,
-  });
-
-  await db
-    .update(faqs)
-    .set({ slackChannel: mailbox.slackAlertChannel, slackMessageTs: messageTs })
-    .where(eq(faqs.id, faq.id));
+  // Slack integration removed - knowledge bank suggestions are now managed via email notifications
+  // This function is kept for API compatibility but no longer sends notifications
 };

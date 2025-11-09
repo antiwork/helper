@@ -1,107 +1,137 @@
-import { endOfWeek, startOfWeek, subWeeks } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
-import { mailboxes } from "@/db/schema";
-import { TIME_ZONE } from "@/jobs/generateDailyReports";
-import { triggerEvent } from "@/jobs/trigger";
-import { getMailbox } from "@/lib/data/mailbox";
-import { getMemberStats, MemberStats } from "@/lib/data/stats";
+import { userFactory } from "@tests/support/factories/users";
+import { mockJobs } from "@tests/support/jobsUtils";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { generateMailboxReport, generateWeeklyReports } from "@/jobs/generateWeeklyReports";
+import { getMemberStats } from "@/lib/data/stats";
 import { sendWeeklyReportEmail } from "@/lib/email/notifications";
 
-const formatDateRange = (start: Date, end: Date) => {
-  return `Week of ${start.toISOString().split("T")[0]} to ${end.toISOString().split("T")[0]}`;
-};
+// Mock dependencies
+vi.mock("@/lib/data/stats", () => ({
+  getMemberStats: vi.fn(),
+}));
 
-export async function generateWeeklyReports() {
-  const mailbox = await getMailbox();
-  if (!mailbox) return;
+vi.mock("@/lib/email/notifications", () => ({
+  sendWeeklyReportEmail: vi.fn(),
+}));
 
-  await triggerEvent("reports/weekly", {});
-}
+vi.mock("@/lib/data/user", async (importOriginal) => ({
+  ...(await importOriginal()),
+  UserRoles: {
+    CORE: "core",
+    NON_CORE: "nonCore",
+    AFK: "afk",
+  },
+}));
 
-export const generateMailboxWeeklyReport = async () => {
-  const mailbox = await getMailbox();
-  if (!mailbox) {
-    return;
-  }
+const jobsMock = mockJobs();
 
-  const result = await generateMailboxReport({
-    mailbox,
+describe("generateWeeklyReports", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  return result;
-};
+  it("sends weekly report events", async () => {
+    await userFactory.createRootUser();
+    await userFactory.createRootUser();
 
-export async function generateMailboxReport({
-  mailbox,
-}: {
-  mailbox: typeof mailboxes.$inferSelect;
-}) {
-  const now = toZonedTime(new Date(), TIME_ZONE);
-  const lastWeekStart = subWeeks(startOfWeek(now, { weekStartsOn: 0 }), 1);
-  const lastWeekEnd = subWeeks(endOfWeek(now, { weekStartsOn: 0 }), 1);
+    await generateWeeklyReports();
 
-  const stats = await getMemberStats({
-    startDate: lastWeekStart,
-    endDate: lastWeekEnd,
+    expect(jobsMock.triggerEvent).toHaveBeenCalledTimes(1);
+    expect(jobsMock.triggerEvent).toHaveBeenCalledWith("reports/weekly", {});
+  });
+});
+
+describe("generateMailboxWeeklyReport", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  if (!stats.length) {
-    return "No stats found";
-  }
+  it("generates and sends report email when there are stats", async () => {
+    const { mailbox } = await userFactory.createRootUser();
 
-  const allMembersData = processAllMembers(stats, new Map());
+    vi.mocked(getMemberStats).mockResolvedValue([
+      { id: "user1", email: "john@example.com", displayName: "John Doe", replyCount: 5 },
+    ]);
 
-  const activeMembers = stats
-    .filter((member) => member.replyCount > 0)
-    .sort((a, b) => b.replyCount - a.replyCount)
-    .map((member) => ({
-      name: member.displayName || member.email || `Unnamed user: ${member.id}`,
-      count: member.replyCount,
-    }));
+    vi.mocked(sendWeeklyReportEmail).mockResolvedValue({
+      success: true,
+      results: [],
+      sentTo: 1,
+    });
 
-  const inactiveMembers = stats
-    .filter((member) => member.replyCount === 0)
-    .map((member) => member.displayName || member.email || `Unnamed user: ${member.id}`);
+    const result = await generateMailboxReport({
+      mailbox,
+    });
 
-  const totalTicketsResolved = stats.reduce((sum, member) => sum + member.replyCount, 0);
-  const activeUserCount = activeMembers.length;
+    expect(sendWeeklyReportEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mailboxName: mailbox.name,
+        weekRange: expect.stringMatching(/Week of \d{4}-\d{2}-\d{2} to \d{4}-\d{2}-\d{2}/),
+        activeMembers: [{ name: "John Doe", count: 5 }],
+        inactiveMembers: [],
+        totalTicketsResolved: 5,
+        activeUserCount: 1,
+      }),
+    );
 
-  const result = await sendWeeklyReportEmail({
-    mailboxName: mailbox.name,
-    weekRange: formatDateRange(lastWeekStart, lastWeekEnd),
-    activeMembers,
-    inactiveMembers,
-    totalTicketsResolved,
-    activeUserCount,
+    expect(result).toBe("Report sent");
   });
 
-  if (!result || typeof result.success !== "boolean") {
-    return "Failed to send report";
-  }
-  return result.success ? "Report sent" : "Failed to send report";
-}
+  it("generates and sends report email with both active and inactive members", async () => {
+    const { mailbox } = await userFactory.createRootUser();
 
-function processAllMembers(members: MemberStats, _slackUsersByEmail: Map<string, string>) {
-  // This function is kept for compatibility but no longer uses Slack
-  const activeMembers = members.filter((member) => member.replyCount > 0).sort((a, b) => b.replyCount - a.replyCount);
-  const inactiveMembers = members.filter((member) => member.replyCount === 0);
+    // Create mock data with both active and inactive members
+    vi.mocked(getMemberStats).mockResolvedValue([
+      // Active members
+      { id: "user1", email: "john@example.com", displayName: "John Doe", replyCount: 10 },
+      { id: "user2", email: "jane@example.com", displayName: "Jane Smith", replyCount: 5 },
+      { id: "user3", email: "sam@example.com", displayName: "Sam Wilson", replyCount: 8 },
+      { id: "user4", email: "pat@example.com", displayName: "Pat Brown", replyCount: 3 },
+      // Inactive members
+      { id: "user5", email: "alex@example.com", displayName: "Alex Johnson", replyCount: 0 },
+      { id: "user6", email: "chris@example.com", displayName: "Chris Lee", replyCount: 0 },
+      { id: "user7", email: "bob@example.com", displayName: "Bob White", replyCount: 0 },
+    ]);
 
-  const activeLines = activeMembers.map((member) => {
-    const formattedCount = member.replyCount.toLocaleString();
-    const userName = member.displayName || member.email || "Unknown";
+    vi.mocked(sendWeeklyReportEmail).mockResolvedValue({
+      success: true,
+      results: [],
+      sentTo: 7,
+    });
 
-    return `• ${userName}: ${formattedCount}`;
+    const result = await generateMailboxReport({
+      mailbox,
+    });
+
+    expect(sendWeeklyReportEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mailboxName: mailbox.name,
+        weekRange: expect.stringMatching(/Week of \d{4}-\d{2}-\d{2} to \d{4}-\d{2}-\d{2}/),
+        activeMembers: [
+          { name: "John Doe", count: 10 },
+          { name: "Sam Wilson", count: 8 },
+          { name: "Jane Smith", count: 5 },
+          { name: "Pat Brown", count: 3 },
+        ],
+        inactiveMembers: ["Alex Johnson", "Chris Lee", "Bob White"],
+        totalTicketsResolved: 26,
+        activeUserCount: 4,
+      }),
+    );
+
+    expect(result).toBe("Report sent");
   });
 
-  const inactiveList =
-    inactiveMembers.length > 0
-      ? inactiveMembers
-          .map((member) => {
-            const userName = member.displayName || member.email || "Unknown";
-            return userName;
-          })
-          .join(", ")
-      : "";
+  it("skips report generation when there are no stats", async () => {
+    const { mailbox } = await userFactory.createRootUser();
 
-  return { activeLines, inactiveList };
-}
+    vi.mocked(getMemberStats).mockResolvedValue([]);
+
+    const result = await generateMailboxReport({
+      mailbox,
+    });
+
+    expect(sendWeeklyReportEmail).not.toHaveBeenCalled();
+    expect(result).toBe("No stats found");
+  });
+});
