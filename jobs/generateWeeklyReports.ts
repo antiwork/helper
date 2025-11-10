@@ -5,7 +5,7 @@ import { Resend } from "resend";
 import { db } from "@/db/client";
 import { mailboxes, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
-import { TIME_ZONE } from "@/jobs/generateDailyEmailReports";
+import { TIME_ZONE } from "@/jobs/generateDailyReports";
 import { triggerEvent } from "@/jobs/trigger";
 import { getMemberStats, MemberStats } from "@/lib/data/stats";
 import { WeeklyEmailReportTemplate } from "@/lib/emails/weeklyEmailReportTemplate";

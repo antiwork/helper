@@ -23,7 +23,6 @@ const events = {
       "generateConversationSummaryEmbeddings",
       "mergeSimilarConversations",
       "publishNewMessageEvent",
-      "notifyVipMessage",
       "notifyVipMessageEmail",
       "categorizeConversationToIssueGroup",
     ],
@@ -88,11 +87,11 @@ const events = {
   },
   "reports/weekly": {
     data: z.object({}),
-    jobs: ["generateMailboxWeeklyReport", "generateMailboxWeeklyEmailReport"],
+    jobs: ["generateMailboxWeeklyEmailReport"],
   },
   "reports/daily": {
     data: z.object({}),
-    jobs: ["generateMailboxDailyReport", "generateMailboxDailyEmailReport"],
+    jobs: ["generateMailboxDailyEmailReport"],
   },
   "websites/crawl.create": {
     data: z.object({
