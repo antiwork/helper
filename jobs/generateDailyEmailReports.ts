@@ -171,7 +171,6 @@ export async function generateMailboxDailyEmailReport() {
     if (!member.email) return { success: false, reason: "No email address" };
 
     try {
-
       await resend.emails.send({
         from: env.RESEND_FROM_ADDRESS!,
         to: member.email,
