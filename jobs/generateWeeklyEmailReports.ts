@@ -1,6 +1,6 @@
 import { endOfWeek, startOfWeek, subWeeks } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
-import { eq, isNull, sql } from "drizzle-orm";
+import { eq, isNull, or, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { db } from "@/db/client";
 import { mailboxes, userProfiles } from "@/db/schema";
@@ -8,7 +8,7 @@ import { authUsers } from "@/db/supabaseSchema/auth";
 import { TIME_ZONE } from "@/jobs/generateDailyEmailReports";
 import { triggerEvent } from "@/jobs/trigger";
 import { getMemberStats, MemberStats } from "@/lib/data/stats";
-import { WeeklyReportEmail } from "@/lib/emails/weeklyReports";
+import { WeeklyEmailReportTemplate } from "@/lib/emails/weeklyEmailReportTemplate";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
@@ -26,22 +26,23 @@ export async function generateWeeklyEmailReports() {
 }
 
 export const generateMailboxWeeklyEmailReport = async () => {
-  const mailbox = await db.query.mailboxes.findFirst({
-    where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
-  });
-  if (!mailbox) {
-    return;
+  try {
+    const mailbox = await db.query.mailboxes.findFirst({
+      where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
+    });
+
+    if (!mailbox) return { skipped: true, reason: "No mailbox found" };
+
+    if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) {
+      return { skipped: true, reason: "Email not configured" };
+    }
+
+    const result = await generateMailboxEmailReport({ mailbox });
+    return result;
+  } catch (error) {
+    captureExceptionAndLog(error);
+    throw error;
   }
-
-  if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) {
-    return { skipped: true, reason: "Email not configured" };
-  }
-
-  const result = await generateMailboxEmailReport({
-    mailbox,
-  });
-
-  return result;
 };
 
 export async function generateMailboxEmailReport({ mailbox }: { mailbox: typeof mailboxes.$inferSelect }) {
@@ -82,7 +83,7 @@ export async function generateMailboxEmailReport({ mailbox }: { mailbox: typeof 
     })
     .from(userProfiles)
     .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-    .limit(100);
+    .where(or(isNull(userProfiles.preferences), sql`${userProfiles.preferences}->>'allowWeeklyEmail' != 'false'`));
 
   if (teamMembers.length === 0) {
     return { skipped: true, reason: "No team members found" };
@@ -99,7 +100,7 @@ export async function generateMailboxEmailReport({ mailbox }: { mailbox: typeof 
         from: env.RESEND_FROM_ADDRESS!,
         to: member.email,
         subject: `Weekly report for ${mailbox.name}`,
-        react: WeeklyReportEmail({
+        react: WeeklyEmailReportTemplate({
           mailboxName: mailbox.name,
           dateRange,
           teamMembers: allMembersData.activeMembers,

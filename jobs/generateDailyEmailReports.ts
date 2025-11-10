@@ -1,12 +1,11 @@
 import { subHours } from "date-fns";
-import { aliasedTable, and, eq, gt, isNotNull, isNull, lt, sql } from "drizzle-orm";
-import React from "react";
+import { aliasedTable, and, eq, gt, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, platformCustomers, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
-import { DailyReportEmail } from "@/lib/emails/dailyReports";
+import { DailyEmailReportTemplate } from "@/lib/emails/dailyEmailReportTemplate";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
@@ -23,7 +22,6 @@ export async function generateDailyEmailReports() {
 }
 
 export async function generateMailboxDailyEmailReport() {
-  // Inline getMailbox() to avoid importing a module that uses `server-only` (which breaks in tsx runtime)
   const mailbox = await db.query.mailboxes.findFirst({
     where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
   });
@@ -161,7 +159,7 @@ export async function generateMailboxDailyEmailReport() {
     })
     .from(userProfiles)
     .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-    .limit(100);
+    .where(or(isNull(userProfiles.preferences), sql`${userProfiles.preferences}->>'allowDailyEmail' != 'false'`));
 
   if (teamMembers.length === 0) {
     return { skipped: true, reason: "No team members found" };
@@ -173,11 +171,12 @@ export async function generateMailboxDailyEmailReport() {
     if (!member.email) return { success: false, reason: "No email address" };
 
     try {
+
       await resend.emails.send({
         from: env.RESEND_FROM_ADDRESS!,
         to: member.email,
         subject: `Daily summary for ${mailbox.name}`,
-        react: React.createElement(DailyReportEmail, {
+        react: DailyEmailReportTemplate({
           mailboxName: mailbox.name,
           openTickets: openTicketCount,
           ticketsAnswered: answeredTicketCount,

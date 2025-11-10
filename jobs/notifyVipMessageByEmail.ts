@@ -1,11 +1,12 @@
-import { eq, isNull, sql } from "drizzle-orm";
+import { eq, isNull, or, sql } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
 import { Resend } from "resend";
+import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, platformCustomers, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getBasicProfileById } from "@/lib/data/user";
-import { VipNotificationEmail } from "@/lib/emails/vipNotification";
+import { VipNotificationEmailTemplate } from "@/lib/emails/vipNotificationEmailTemplate";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
@@ -14,7 +15,11 @@ type MessageWithConversationAndMailbox = typeof conversationMessages.$inferSelec
   conversation: typeof conversations.$inferSelect;
 };
 
-// Local copy of cleaned-up text helpers (avoid importing conversationMessage.ts which pulls in server-only modules)
+const determineVipStatus = (customerValue: string | number | null, vipThreshold: number | null) => {
+  if (!customerValue || !vipThreshold) return false;
+  return Number(customerValue) / 100 >= vipThreshold;
+};
+
 const generateCleanedUpText = (html: string) => {
   if (!html?.trim()) return "";
   const paragraphs = htmlToText(html, {
@@ -29,7 +34,7 @@ const generateCleanedUpText = (html: string) => {
   return paragraphs.join("\n\n");
 };
 
-const ensureCleanedUpTextLocal = async (m: typeof conversationMessages.$inferSelect) => {
+const ensureCleanedUpText = async (m: typeof conversationMessages.$inferSelect) => {
   if (m.cleanedUpText !== null) return m.cleanedUpText;
   const cleaned = generateCleanedUpText(m.body ?? "");
   await db.update(conversationMessages).set({ cleanedUpText: cleaned }).where(eq(conversationMessages.id, m.id));
@@ -61,7 +66,6 @@ async function fetchConversationMessage(messageId: number): Promise<MessageWithC
 
 async function handleVipEmailNotification(message: MessageWithConversationAndMailbox) {
   const conversation = assertDefinedOrRaiseNonRetriableError(message.conversation);
-  // Inline mailbox fetch to avoid importing server-only module
   const mailbox = await db.query.mailboxes.findFirst({
     where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
   });
@@ -71,17 +75,15 @@ async function handleVipEmailNotification(message: MessageWithConversationAndMai
   if (!conversation.emailFrom) return "Not sent, anonymous conversation";
   if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) return "Not sent, email not configured";
 
-  // Inline platform customer fetch logic to avoid indirect server-only mailbox import
   const platformCustomerRecord = await db.query.platformCustomers.findFirst({
     where: eq(platformCustomers.email, conversation.emailFrom),
   });
-  const numericValue = platformCustomerRecord?.value != null ? Number(platformCustomerRecord.value) : null;
-  const vipThreshold = mailbox?.vipThreshold ?? 0;
-  const isVip = numericValue != null ? numericValue / 100 >= vipThreshold : false;
+
+  const isVip = determineVipStatus(platformCustomerRecord?.value ?? null, mailbox?.vipThreshold ?? null);
   if (!isVip) return "Not sent, not a VIP customer";
 
   const customerName = platformCustomerRecord?.name ?? conversation.emailFrom ?? "Unknown";
-  const conversationLink = `${env.AUTH_URL}/conversations?id=${conversation.slug}`;
+  const conversationLink = `${getBaseUrl()}/conversations?id=${conversation.slug}`;
   const customerLinks = platformCustomerRecord?.links
     ? Object.entries(platformCustomerRecord.links).map(([key, value]) => ({ label: key, url: value }))
     : undefined;
@@ -94,16 +96,19 @@ async function handleVipEmailNotification(message: MessageWithConversationAndMai
     const originalMsg = await db.query.conversationMessages.findFirst({
       where: eq(conversationMessages.id, message.responseToId),
     });
-    if (!originalMsg) return "Not sent, original message not found";
 
-    originalMessage = await ensureCleanedUpTextLocal(originalMsg);
-    replyMessage = await ensureCleanedUpTextLocal(message);
-    if (message.userId) {
-      const user = await getBasicProfileById(message.userId);
-      closedBy = user?.displayName || user?.email || undefined;
+    if (originalMsg) {
+      originalMessage = await ensureCleanedUpText(originalMsg);
+      replyMessage = await ensureCleanedUpText(message);
+      if (message.userId) {
+        const user = await getBasicProfileById(message.userId);
+        closedBy = user?.displayName || user?.email || undefined;
+      }
+    } else {
+      return "Not sent, original message not found";
     }
   } else if (message.role === "user") {
-    originalMessage = await ensureCleanedUpTextLocal(message);
+    originalMessage = await ensureCleanedUpText(message);
   } else {
     return "Not sent, not a user message and not a reply to a user message";
   }
@@ -115,7 +120,7 @@ async function handleVipEmailNotification(message: MessageWithConversationAndMai
     })
     .from(userProfiles)
     .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
-    .limit(100);
+    .where(or(isNull(userProfiles.preferences), sql`${userProfiles.preferences}->>'allowVipMessageEmail' != 'false'`));
 
   if (teamMembers.length === 0) return "Not sent, no team members found";
 
@@ -127,7 +132,7 @@ async function handleVipEmailNotification(message: MessageWithConversationAndMai
         from: env.RESEND_FROM_ADDRESS!,
         to: member.email,
         subject: `VIP Customer: ${customerName}`,
-        react: VipNotificationEmail({
+        react: VipNotificationEmailTemplate({
           customerName,
           customerEmail: conversation.emailFrom!,
           originalMessage,

@@ -27,6 +27,9 @@ export const userProfiles = pgTable("user_profiles", {
     confetti?: boolean;
     disableNextTicketPreview?: boolean;
     autoAssignOnReply?: boolean;
+    allowDailyEmail?: boolean;
+    allowWeeklyEmail?: boolean;
+    allowVipMessageEmail?: boolean;
   }>(),
 }).enableRLS();
 
