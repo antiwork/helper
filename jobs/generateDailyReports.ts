@@ -1,18 +1,19 @@
-import { KnownBlock } from "@slack/web-api";
 import { subHours } from "date-fns";
-import { aliasedTable, and, eq, gt, isNotNull, isNull, lt, sql } from "drizzle-orm";
+import { aliasedTable, and, eq, gt, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
+import { Resend } from "resend";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
+import { conversationMessages, conversations, mailboxes, platformCustomers, userProfiles } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
-import { getMailbox } from "@/lib/data/mailbox";
-import { postSlackMessage } from "@/lib/slack/client";
+import { DailyEmailReportTemplate } from "@/lib/emails/dailyEmailReportTemplate";
+import { env } from "@/lib/env";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export const TIME_ZONE = "America/New_York";
 
-export async function generateDailyReports() {
+export async function generateDailyEmailReports() {
   const mailboxesList = await db.query.mailboxes.findMany({
     columns: { id: true },
-    where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackAlertChannel)),
   });
 
   if (!mailboxesList.length) return;
@@ -20,20 +21,15 @@ export async function generateDailyReports() {
   await triggerEvent("reports/daily", {});
 }
 
-export async function generateMailboxDailyReport() {
-  const mailbox = await getMailbox();
-  if (!mailbox?.slackBotToken || !mailbox.slackAlertChannel) return;
+export async function generateMailboxDailyEmailReport() {
+  const mailbox = await db.query.mailboxes.findFirst({
+    where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
+  });
+  if (!mailbox) return;
 
-  const blocks: KnownBlock[] = [
-    {
-      type: "section",
-      text: {
-        type: "plain_text",
-        text: `Daily summary for ${mailbox.name}:`,
-        emoji: true,
-      },
-    },
-  ];
+  if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) {
+    return { skipped: true, reason: "Email not configured" };
+  }
 
   const endTime = new Date();
   const startTime = subHours(endTime, 24);
@@ -44,8 +40,6 @@ export async function generateMailboxDailyReport() {
   );
 
   if (openTicketCount === 0) return { skipped: true, reason: "No open tickets" };
-
-  const openCountMessage = `• Open tickets: ${openTicketCount.toLocaleString()}`;
 
   const answeredTicketCount = await db
     .select({ count: sql`count(DISTINCT ${conversations.id})` })
@@ -61,8 +55,6 @@ export async function generateMailboxDailyReport() {
     )
     .then((result) => Number(result[0]?.count || 0));
 
-  const answeredCountMessage = `• Tickets answered: ${answeredTicketCount.toLocaleString()}`;
-
   const openTicketsOverZeroCount = await db
     .select({ count: sql`count(*)` })
     .from(conversations)
@@ -75,10 +67,6 @@ export async function generateMailboxDailyReport() {
       ),
     )
     .then((result) => Number(result[0]?.count || 0));
-
-  const openTicketsOverZeroMessage = openTicketsOverZeroCount
-    ? `• Open tickets over $0: ${openTicketsOverZeroCount.toLocaleString()}`
-    : null;
 
   const answeredTicketsOverZeroCount = await db
     .select({ count: sql`count(DISTINCT ${conversations.id})` })
@@ -95,10 +83,6 @@ export async function generateMailboxDailyReport() {
       ),
     )
     .then((result) => Number(result[0]?.count || 0));
-
-  const answeredTicketsOverZeroMessage = answeredTicketsOverZeroCount
-    ? `• Tickets answered over $0: ${answeredTicketsOverZeroCount.toLocaleString()}`
-    : null;
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -123,9 +107,6 @@ export async function generateMailboxDailyReport() {
         lt(conversationMessages.createdAt, endTime),
       ),
     );
-  const avgReplyTimeMessage = avgReplyTimeResult?.average
-    ? `• Average reply time: ${formatTime(avgReplyTimeResult.average)}`
-    : null;
 
   let vipAvgReplyTimeMessage = null;
   if (mailbox.vipThreshold) {
@@ -169,42 +150,57 @@ export async function generateMailboxDailyReport() {
         isNotNull(conversations.lastUserEmailCreatedAt),
       ),
     );
-  const avgWaitTimeMessage = avgWaitTimeResult?.average
-    ? `• Average time existing open tickets have been open: ${formatTime(avgWaitTimeResult.average)}`
-    : null;
+  const avgWaitTimeMessage = avgWaitTimeResult?.average ? formatTime(avgWaitTimeResult.average) : undefined;
 
-  blocks.push({
-    type: "section",
-    text: {
-      type: "mrkdwn",
-      text: [
-        openCountMessage,
-        answeredCountMessage,
-        openTicketsOverZeroMessage,
-        answeredTicketsOverZeroMessage,
-        avgReplyTimeMessage,
-        vipAvgReplyTimeMessage,
-        avgWaitTimeMessage,
-      ]
-        .filter(Boolean)
-        .join("\n"),
-    },
+  const teamMembers = await db
+    .select({
+      email: authUsers.email,
+      displayName: userProfiles.displayName,
+    })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+    .where(or(isNull(userProfiles.preferences), sql`${userProfiles.preferences}->>'allowDailyEmail' != 'false'`));
+
+  if (teamMembers.length === 0) {
+    return { skipped: true, reason: "No team members found" };
+  }
+
+  const resend = new Resend(env.RESEND_API_KEY);
+
+  const emailPromises = teamMembers.map(async (member) => {
+    if (!member.email) return { success: false, reason: "No email address" };
+
+    try {
+      await resend.emails.send({
+        from: env.RESEND_FROM_ADDRESS!,
+        to: member.email,
+        subject: `Daily summary for ${mailbox.name}`,
+        react: DailyEmailReportTemplate({
+          mailboxName: mailbox.name,
+          openTickets: openTicketCount,
+          ticketsAnswered: answeredTicketCount,
+          openTicketsOverZero: openTicketsOverZeroCount || undefined,
+          ticketsAnsweredOverZero: answeredTicketsOverZeroCount || undefined,
+          avgReplyTime: avgReplyTimeResult?.average ? formatTime(avgReplyTimeResult.average) : undefined,
+          vipAvgReplyTime: vipAvgReplyTimeMessage
+            ? vipAvgReplyTimeMessage.replace("• VIP average reply time: ", "")
+            : undefined,
+          avgWaitTime: avgWaitTimeMessage,
+        }),
+      });
+
+      return { success: true };
+    } catch (error) {
+      captureExceptionAndLog(error);
+      return { success: false, error };
+    }
   });
 
-  await postSlackMessage(mailbox.slackBotToken, {
-    channel: mailbox.slackAlertChannel,
-    text: `Daily summary for ${mailbox.name}`,
-    blocks,
-  });
+  const emailResults = await Promise.all(emailPromises);
 
   return {
     success: true,
-    openCountMessage,
-    answeredCountMessage,
-    openTicketsOverZeroMessage,
-    answeredTicketsOverZeroMessage,
-    avgReplyTimeMessage,
-    vipAvgReplyTimeMessage,
-    avgWaitTimeMessage,
+    emailsSent: emailResults.filter((r) => r.success).length,
+    totalRecipients: teamMembers.length,
   };
 }
