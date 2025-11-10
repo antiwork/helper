@@ -162,4 +162,3 @@ export const notifyVipMessageEmail = async ({ messageId }: { messageId: number }
   const message = assertDefinedOrRaiseNonRetriableError(await fetchConversationMessage(messageId));
   return await handleVipEmailNotification(message);
 };
-
