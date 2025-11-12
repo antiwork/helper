@@ -63,11 +63,11 @@ export const DailyEmailReportTemplate = ({
               <SummaryRow label="Tickets answered" value={ticketsAnswered.toLocaleString()} />
               <SummaryRow
                 label="Open tickets over $0"
-                value={openTicketsOverZero !== undefined ? openTicketsOverZero.toLocaleString() : "—"}
+                value={openTicketsOverZero !== undefined ? openTicketsOverZero.toLocaleString() : "0"}
               />
               <SummaryRow
                 label="Tickets answered over $0"
-                value={ticketsAnsweredOverZero !== undefined ? ticketsAnsweredOverZero.toLocaleString() : "—"}
+                value={ticketsAnsweredOverZero !== undefined ? ticketsAnsweredOverZero.toLocaleString() : "0"}
               />
               <SummaryRow label="Average reply time" value={avgReplyTime ?? "—"} />
               <SummaryRow label="VIP average reply time" value={vipAvgReplyTime ?? "—"} />
