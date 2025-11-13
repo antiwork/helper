@@ -185,10 +185,10 @@ export async function generateMailboxDailyEmailReport(): Promise<{ skipped: true
   });
   const failures = emailResults.filter((r) => !r.success);
   if (failures.length > 0) {
-    captureExceptionAndLog({
-      error: `Daily report : failed to send ${failures.length}/${emailResults.length} daily emails`,
-      hint: failures,
-    });
+    captureExceptionAndLog(
+      new Error(`Daily report: failed to send ${failures.length}/${emailResults.length} daily emails`),
+      { extra: { failures } },
+    );
   }
 
   return "Email sent";

@@ -145,10 +145,10 @@ async function handleVipEmailNotification(message: MessageWithConversationAndMai
 
   const failures = vipResults.filter((r) => !r.success);
   if (failures.length > 0) {
-    captureExceptionAndLog({
-      error: `Daily report : failed to send ${failures.length}/${vipResults.length} daily emails`,
-      hint: failures,
-    });
+    captureExceptionAndLog(
+      new Error(`VIP notification: failed to send ${failures.length}/${vipResults.length} emails`),
+      { extra: { failures } },
+    );
   }
 
   return "Email sent";

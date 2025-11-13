@@ -111,10 +111,10 @@ export async function generateMailboxEmailReport({
   });
   const failures = emailResults.filter((r) => !r.success);
   if (failures.length > 0) {
-    captureExceptionAndLog({
-      error: `Weekly report : failed to send ${failures.length}/${emailResults.length} emails`,
-      hint: failures,
-    });
+    captureExceptionAndLog(
+      new Error(`Weekly report: failed to send ${failures.length}/${emailResults.length} emails`),
+      { extra: { failures } },
+    );
   }
 
   return "Email sent";
