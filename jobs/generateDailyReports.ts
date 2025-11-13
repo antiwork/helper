@@ -9,6 +9,20 @@ import { env } from "@/lib/env";
 import { sentEmailViaResend } from "@/lib/resend/client";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
+type DailyReportSkipped = { skipped: true; reason: string };
+type MailboxDailyReportSuccess = {
+  success: true;
+  openTicketCount: number;
+  answeredTicketCount: number;
+  openTicketsOverZeroCount: number;
+  answeredTicketsOverZeroCount: number;
+  avgReplyTimeResult?: string;
+  vipAvgReplyTime: string | null;
+  avgWaitTime?: string;
+};
+
+export type MailboxDailyEmailReportResult = DailyReportSkipped | MailboxDailyReportSuccess;
+
 export const TIME_ZONE = "America/New_York";
 
 export async function generateDailyEmailReports() {
@@ -21,16 +35,29 @@ export async function generateDailyEmailReports() {
   await triggerEvent("reports/daily", {});
 }
 
-export async function generateMailboxDailyEmailReport(): Promise<{ skipped: true; reason: string } | "Email sent"> {
-  const mailbox = await db.query.mailboxes.findFirst({
-    where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
-  });
-  if (!mailbox) return { skipped: true, reason: "No mailbox found" };
+export async function generateMailboxDailyEmailReport(): Promise<MailboxDailyEmailReportResult> {
+  try {
+    const mailbox = await db.query.mailboxes.findFirst({
+      where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
+    });
+    if (!mailbox) return { skipped: true, reason: "No mailbox found" };
 
-  if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) {
-    return { skipped: true, reason: "Email not configured" };
+    if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) {
+      return { skipped: true, reason: "Email not configured" };
+    }
+    const result = await generateMailboxEmailReport({ mailbox });
+    return result;
+  } catch (error) {
+    captureExceptionAndLog(error);
+    throw error;
   }
+}
 
+export async function generateMailboxEmailReport({
+  mailbox,
+}: {
+  mailbox: typeof mailboxes.$inferSelect;
+}): Promise<MailboxDailyEmailReportResult> {
   const endTime = new Date();
   const startTime = subHours(endTime, 24);
 
@@ -107,8 +134,9 @@ export async function generateMailboxDailyEmailReport(): Promise<{ skipped: true
         lt(conversationMessages.createdAt, endTime),
       ),
     );
+  const avgReplyTime = avgReplyTimeResult?.average ? formatTime(avgReplyTimeResult.average) : undefined;
 
-  let vipAvgReplyTimeMessage = null;
+  let vipAvgReplyTime = null;
   if (mailbox.vipThreshold) {
     const [vipReplyTimeResult] = await db
       .select({
@@ -131,9 +159,7 @@ export async function generateMailboxDailyEmailReport(): Promise<{ skipped: true
           gt(sql`CAST(${platformCustomers.value} AS INTEGER)`, (mailbox.vipThreshold ?? 0) * 100),
         ),
       );
-    vipAvgReplyTimeMessage = vipReplyTimeResult?.average
-      ? `• VIP average reply time: ${formatTime(vipReplyTimeResult.average)}`
-      : null;
+    vipAvgReplyTime = vipReplyTimeResult?.average ? formatTime(vipReplyTimeResult.average) : null;
   }
 
   const [avgWaitTimeResult] = await db
@@ -150,7 +176,7 @@ export async function generateMailboxDailyEmailReport(): Promise<{ skipped: true
         isNotNull(conversations.lastUserEmailCreatedAt),
       ),
     );
-  const avgWaitTimeMessage = avgWaitTimeResult?.average ? formatTime(avgWaitTimeResult.average) : undefined;
+  const avgWaitTime = avgWaitTimeResult?.average ? formatTime(avgWaitTimeResult.average) : undefined;
 
   const teamMembers = await db
     .select({
@@ -167,15 +193,13 @@ export async function generateMailboxDailyEmailReport(): Promise<{ skipped: true
 
   const reactTemplate = DailyEmailReportTemplate({
     mailboxName: mailbox.name,
-    openTickets: openTicketCount,
-    ticketsAnswered: answeredTicketCount,
-    openTicketsOverZero: openTicketsOverZeroCount || undefined,
-    ticketsAnsweredOverZero: answeredTicketsOverZeroCount || undefined,
-    avgReplyTime: avgReplyTimeResult?.average ? formatTime(avgReplyTimeResult.average) : undefined,
-    vipAvgReplyTime: vipAvgReplyTimeMessage
-      ? vipAvgReplyTimeMessage.replace("• VIP average reply time: ", "")
-      : undefined,
-    avgWaitTime: avgWaitTimeMessage,
+    openTickets: openTicketCount || 0,
+    ticketsAnswered: answeredTicketCount || 0,
+    openTicketsOverZero: openTicketsOverZeroCount || 0,
+    ticketsAnsweredOverZero: answeredTicketsOverZeroCount || 0,
+    avgReplyTime: avgReplyTime || undefined,
+    vipAvgReplyTime: vipAvgReplyTime || undefined,
+    avgWaitTime: avgWaitTime || undefined,
   });
 
   const emailResults = await sentEmailViaResend({
@@ -191,5 +215,14 @@ export async function generateMailboxDailyEmailReport(): Promise<{ skipped: true
     );
   }
 
-  return "Email sent";
+  return {
+    success: true,
+    openTicketCount,
+    answeredTicketCount,
+    openTicketsOverZeroCount,
+    answeredTicketsOverZeroCount,
+    avgReplyTimeResult: avgReplyTimeResult?.average ? formatTime(avgReplyTimeResult.average) : undefined,
+    vipAvgReplyTime,
+    avgWaitTime,
+  };
 }

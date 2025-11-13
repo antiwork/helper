@@ -6,8 +6,8 @@ type Props = {
   mailboxName: string;
   openTickets: number;
   ticketsAnswered: number;
-  openTicketsOverZero?: number;
-  ticketsAnsweredOverZero?: number;
+  openTicketsOverZero: number;
+  ticketsAnsweredOverZero: number;
   avgReplyTime?: string;
   vipAvgReplyTime?: string;
   avgWaitTime?: string;
@@ -61,14 +61,8 @@ export const DailyEmailReportTemplate = ({
             <tbody>
               <SummaryRow label="Open tickets" value={openTickets.toLocaleString()} />
               <SummaryRow label="Tickets answered" value={ticketsAnswered.toLocaleString()} />
-              <SummaryRow
-                label="Open tickets over $0"
-                value={openTicketsOverZero !== undefined ? openTicketsOverZero.toLocaleString() : "0"}
-              />
-              <SummaryRow
-                label="Tickets answered over $0"
-                value={ticketsAnsweredOverZero !== undefined ? ticketsAnsweredOverZero.toLocaleString() : "0"}
-              />
+              <SummaryRow label="Open tickets over $0" value={openTicketsOverZero.toLocaleString()} />
+              <SummaryRow label="Tickets answered over $0" value={ticketsAnsweredOverZero.toLocaleString()} />
               <SummaryRow label="Average reply time" value={avgReplyTime ?? "—"} />
               <SummaryRow label="VIP average reply time" value={vipAvgReplyTime ?? "—"} />
               <SummaryRow label="Average time existing open tickets have been open" value={avgWaitTime ?? "—"} last />
