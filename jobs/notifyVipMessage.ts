@@ -128,7 +128,7 @@ async function handleVipEmailNotification(message: MessageWithConversationAndMai
 
   const reactTemplate = VipNotificationEmailTemplate({
     customerName,
-    customerEmail: conversation.emailFrom!,
+    customerEmail: conversation.emailFrom,
     originalMessage,
     replyMessage,
     conversationLink,
