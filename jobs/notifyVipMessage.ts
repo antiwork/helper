@@ -75,7 +75,6 @@ async function handleVipEmailNotification(message: MessageWithConversationAndMai
 
   if (conversation.isPrompt) return { skipped: true, reason: "Prompt conversation" };
   if (!conversation.emailFrom) return { skipped: true, reason: "Anonymous conversation" };
-  if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) return { skipped: true, reason: "Email not configured" };
 
   const platformCustomerRecord = await db.query.platformCustomers.findFirst({
     where: eq(platformCustomers.email, conversation.emailFrom),
