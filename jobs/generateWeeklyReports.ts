@@ -1,7 +1,6 @@
 import { endOfWeek, startOfWeek, subWeeks } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { eq, isNull, or, sql } from "drizzle-orm";
-import { Resend } from "resend";
 import { db } from "@/db/client";
 import { mailboxes, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
@@ -10,6 +9,7 @@ import { triggerEvent } from "@/jobs/trigger";
 import { getMemberStats, MemberStats } from "@/lib/data/stats";
 import { WeeklyEmailReportTemplate } from "@/lib/emails/weeklyEmailReportTemplate";
 import { env } from "@/lib/env";
+import { sentEmailViaResend } from "@/lib/resend/client";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 const formatDateRange = (start: Date, end: Date) => {
@@ -25,7 +25,8 @@ export async function generateWeeklyEmailReports() {
   await triggerEvent("reports/weekly", {});
 }
 
-export const generateMailboxWeeklyEmailReport = async () => {
+type GenerateMailboxWeeklyEmailReportReturn = { skipped: true; reason: string } | "Email sent";
+export const generateMailboxWeeklyEmailReport = async (): Promise<GenerateMailboxWeeklyEmailReportReturn> => {
   try {
     const mailbox = await db.query.mailboxes.findFirst({
       where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
@@ -45,7 +46,11 @@ export const generateMailboxWeeklyEmailReport = async () => {
   }
 };
 
-export async function generateMailboxEmailReport({ mailbox }: { mailbox: typeof mailboxes.$inferSelect }) {
+export async function generateMailboxEmailReport({
+  mailbox,
+}: {
+  mailbox: typeof mailboxes.$inferSelect;
+}): Promise<GenerateMailboxWeeklyEmailReportReturn> {
   const now = toZonedTime(new Date(), TIME_ZONE);
   const lastWeekStart = subWeeks(startOfWeek(now, { weekStartsOn: 0 }), 1);
   const lastWeekEnd = subWeeks(endOfWeek(now, { weekStartsOn: 0 }), 1);
@@ -56,7 +61,7 @@ export async function generateMailboxEmailReport({ mailbox }: { mailbox: typeof 
   });
 
   if (!stats.length) {
-    return "No stats found";
+    return { skipped: true, reason: "No stats found" };
   }
 
   const allMembersData = processAllMembers(stats);
@@ -89,40 +94,30 @@ export async function generateMailboxEmailReport({ mailbox }: { mailbox: typeof 
     return { skipped: true, reason: "No team members found" };
   }
 
-  const resend = new Resend(env.RESEND_API_KEY);
   const dateRange = formatDateRange(lastWeekStart, lastWeekEnd);
-
-  const emailPromises = teamMembers.map(async (member) => {
-    if (!member.email) return { success: false, reason: "No email address" };
-
-    try {
-      await resend.emails.send({
-        from: env.RESEND_FROM_ADDRESS!,
-        to: member.email,
-        subject: `Weekly report for ${mailbox.name}`,
-        react: WeeklyEmailReportTemplate({
-          mailboxName: mailbox.name,
-          dateRange,
-          teamMembers: allMembersData.activeMembers,
-          inactiveMembers: allMembersData.inactiveMembers,
-          totalReplies: totalTicketsResolved,
-          activeUserCount,
-        }),
-      });
-      return { success: true };
-    } catch (error) {
-      captureExceptionAndLog(error);
-      return { success: false, error };
-    }
+  const reactTemplate = WeeklyEmailReportTemplate({
+    mailboxName: mailbox.name,
+    dateRange,
+    teamMembers: allMembersData.activeMembers,
+    inactiveMembers: allMembersData.inactiveMembers,
+    totalReplies: totalTicketsResolved,
+    activeUserCount,
   });
 
-  const emailResults = await Promise.all(emailPromises);
+  const emailResults = await sentEmailViaResend({
+    memberList: teamMembers.filter((m) => !!m.email).map((m) => ({ email: m.email! })),
+    subject: `Weekly report for ${mailbox.name}`,
+    react: reactTemplate,
+  });
+  const failures = emailResults.filter((r) => !r.success);
+  if (failures.length > 0) {
+    captureExceptionAndLog({
+      error: `Weekly report : failed to send ${failures.length}/${emailResults.length} emails`,
+      hint: failures,
+    });
+  }
 
-  return {
-    success: true,
-    emailsSent: emailResults.filter((r) => r.success).length,
-    totalRecipients: teamMembers.length,
-  };
+  return "Email sent";
 }
 
 function processAllMembers(members: MemberStats) {

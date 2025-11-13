@@ -1,6 +1,5 @@
 import { eq, isNull, or, sql } from "drizzle-orm";
 import { htmlToText } from "html-to-text";
-import { Resend } from "resend";
 import { getBaseUrl } from "@/components/constants";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, platformCustomers, userProfiles } from "@/db/schema";
@@ -8,6 +7,7 @@ import { authUsers } from "@/db/supabaseSchema/auth";
 import { getBasicProfileById } from "@/lib/data/user";
 import { VipNotificationEmailTemplate } from "@/lib/emails/vipNotificationEmailTemplate";
 import { env } from "@/lib/env";
+import { sentEmailViaResend } from "@/lib/resend/client";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
@@ -64,23 +64,25 @@ async function fetchConversationMessage(messageId: number): Promise<MessageWithC
   return message;
 }
 
-async function handleVipEmailNotification(message: MessageWithConversationAndMailbox) {
+type NotifyVipReturn = { skipped: true; reason: string } | "Email sent";
+
+async function handleVipEmailNotification(message: MessageWithConversationAndMailbox): Promise<NotifyVipReturn> {
   const conversation = assertDefinedOrRaiseNonRetriableError(message.conversation);
   const mailbox = await db.query.mailboxes.findFirst({
     where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
   });
-  assertDefinedOrRaiseNonRetriableError(mailbox);
+  const mailboxRecord = assertDefinedOrRaiseNonRetriableError(mailbox);
 
-  if (conversation.isPrompt) return "Not sent, prompt conversation";
-  if (!conversation.emailFrom) return "Not sent, anonymous conversation";
-  if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) return "Not sent, email not configured";
+  if (conversation.isPrompt) return { skipped: true, reason: "Prompt conversation" };
+  if (!conversation.emailFrom) return { skipped: true, reason: "Anonymous conversation" };
+  if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) return { skipped: true, reason: "Email not configured" };
 
   const platformCustomerRecord = await db.query.platformCustomers.findFirst({
     where: eq(platformCustomers.email, conversation.emailFrom),
   });
 
-  const isVip = determineVipStatus(platformCustomerRecord?.value ?? null, mailbox?.vipThreshold ?? null);
-  if (!isVip) return "Not sent, not a VIP customer";
+  const isVip = determineVipStatus(platformCustomerRecord?.value ?? null, mailboxRecord.vipThreshold ?? null);
+  if (!isVip) return { skipped: true, reason: "Not a VIP customer" };
 
   const customerName = platformCustomerRecord?.name ?? conversation.emailFrom ?? "Unknown";
   const conversationLink = `${getBaseUrl()}/conversations?id=${conversation.slug}`;
@@ -105,12 +107,12 @@ async function handleVipEmailNotification(message: MessageWithConversationAndMai
         closedBy = user?.displayName || user?.email || undefined;
       }
     } else {
-      return "Not sent, original message not found";
+      return { skipped: true, reason: "Original message not found" };
     }
   } else if (message.role === "user") {
     originalMessage = await ensureCleanedUpText(message);
   } else {
-    return "Not sent, not a user message and not a reply to a user message";
+    return { skipped: true, reason: "Not a user message or reply to user" };
   }
 
   const teamMembers = await db
@@ -122,43 +124,37 @@ async function handleVipEmailNotification(message: MessageWithConversationAndMai
     .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
     .where(or(isNull(userProfiles.preferences), sql`${userProfiles.preferences}->>'allowVipMessageEmail' != 'false'`));
 
-  if (teamMembers.length === 0) return "Not sent, no team members found";
+  if (teamMembers.length === 0) return { skipped: true, reason: "No team members found" };
 
-  const resend = new Resend(env.RESEND_API_KEY);
-  const emailPromises = teamMembers.map(async (member) => {
-    if (!member.email) return { success: false, reason: "No email address" } as const;
-    try {
-      await resend.emails.send({
-        from: env.RESEND_FROM_ADDRESS!,
-        to: member.email,
-        subject: `VIP Customer: ${customerName}`,
-        react: VipNotificationEmailTemplate({
-          customerName,
-          customerEmail: conversation.emailFrom!,
-          originalMessage,
-          replyMessage,
-          conversationLink,
-          customerLinks,
-          closed: conversation.status === "closed",
-          closedBy,
-        }),
-      });
-      return { success: true } as const;
-    } catch (error) {
-      captureExceptionAndLog(error);
-      return { success: false, error } as const;
-    }
+  const reactTemplate = VipNotificationEmailTemplate({
+    customerName,
+    customerEmail: conversation.emailFrom!,
+    originalMessage,
+    replyMessage,
+    conversationLink,
+    customerLinks,
+    closed: conversation.status === "closed",
+    closedBy,
   });
 
-  const emailResults = await Promise.all(emailPromises);
-  return {
-    sent: true as const,
-    emailsSent: emailResults.filter((r) => r.success).length,
-    totalRecipients: teamMembers.length,
-  };
+  const vipResults = await sentEmailViaResend({
+    memberList: teamMembers.filter((m) => !!m.email).map((m) => ({ email: m.email! })),
+    subject: `VIP Customer: ${customerName}`,
+    react: reactTemplate,
+  });
+
+  const failures = vipResults.filter((r) => !r.success);
+  if (failures.length > 0) {
+    captureExceptionAndLog({
+      error: `Daily report : failed to send ${failures.length}/${vipResults.length} daily emails`,
+      hint: failures,
+    });
+  }
+
+  return "Email sent";
 }
 
-export const notifyVipMessageEmail = async ({ messageId }: { messageId: number }) => {
+export const notifyVipMessageEmail = async ({ messageId }: { messageId: number }): Promise<NotifyVipReturn> => {
   const message = assertDefinedOrRaiseNonRetriableError(await fetchConversationMessage(messageId));
   return await handleVipEmailNotification(message);
 };

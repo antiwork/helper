@@ -1,12 +1,12 @@
 import { subHours } from "date-fns";
 import { aliasedTable, and, eq, gt, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
-import { Resend } from "resend";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, platformCustomers, userProfiles } from "@/db/schema";
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
 import { DailyEmailReportTemplate } from "@/lib/emails/dailyEmailReportTemplate";
 import { env } from "@/lib/env";
+import { sentEmailViaResend } from "@/lib/resend/client";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
 export const TIME_ZONE = "America/New_York";
@@ -21,11 +21,11 @@ export async function generateDailyEmailReports() {
   await triggerEvent("reports/daily", {});
 }
 
-export async function generateMailboxDailyEmailReport() {
+export async function generateMailboxDailyEmailReport(): Promise<{ skipped: true; reason: string } | "Email sent"> {
   const mailbox = await db.query.mailboxes.findFirst({
     where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
   });
-  if (!mailbox) return;
+  if (!mailbox) return { skipped: true, reason: "No mailbox found" };
 
   if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) {
     return { skipped: true, reason: "Email not configured" };
@@ -165,42 +165,31 @@ export async function generateMailboxDailyEmailReport() {
     return { skipped: true, reason: "No team members found" };
   }
 
-  const resend = new Resend(env.RESEND_API_KEY);
-
-  const emailPromises = teamMembers.map(async (member) => {
-    if (!member.email) return { success: false, reason: "No email address" };
-
-    try {
-      await resend.emails.send({
-        from: env.RESEND_FROM_ADDRESS!,
-        to: member.email,
-        subject: `Daily summary for ${mailbox.name}`,
-        react: DailyEmailReportTemplate({
-          mailboxName: mailbox.name,
-          openTickets: openTicketCount,
-          ticketsAnswered: answeredTicketCount,
-          openTicketsOverZero: openTicketsOverZeroCount || undefined,
-          ticketsAnsweredOverZero: answeredTicketsOverZeroCount || undefined,
-          avgReplyTime: avgReplyTimeResult?.average ? formatTime(avgReplyTimeResult.average) : undefined,
-          vipAvgReplyTime: vipAvgReplyTimeMessage
-            ? vipAvgReplyTimeMessage.replace("• VIP average reply time: ", "")
-            : undefined,
-          avgWaitTime: avgWaitTimeMessage,
-        }),
-      });
-
-      return { success: true };
-    } catch (error) {
-      captureExceptionAndLog(error);
-      return { success: false, error };
-    }
+  const reactTemplate = DailyEmailReportTemplate({
+    mailboxName: mailbox.name,
+    openTickets: openTicketCount,
+    ticketsAnswered: answeredTicketCount,
+    openTicketsOverZero: openTicketsOverZeroCount || undefined,
+    ticketsAnsweredOverZero: answeredTicketsOverZeroCount || undefined,
+    avgReplyTime: avgReplyTimeResult?.average ? formatTime(avgReplyTimeResult.average) : undefined,
+    vipAvgReplyTime: vipAvgReplyTimeMessage
+      ? vipAvgReplyTimeMessage.replace("• VIP average reply time: ", "")
+      : undefined,
+    avgWaitTime: avgWaitTimeMessage,
   });
 
-  const emailResults = await Promise.all(emailPromises);
+  const emailResults = await sentEmailViaResend({
+    memberList: teamMembers.filter((m) => !!m.email).map((m) => ({ email: m.email! })),
+    subject: `Daily summary for ${mailbox.name}`,
+    react: reactTemplate,
+  });
+  const failures = emailResults.filter((r) => !r.success);
+  if (failures.length > 0) {
+    captureExceptionAndLog({
+      error: `Daily report : failed to send ${failures.length}/${emailResults.length} daily emails`,
+      hint: failures,
+    });
+  }
 
-  return {
-    success: true,
-    emailsSent: emailResults.filter((r) => r.success).length,
-    totalRecipients: teamMembers.length,
-  };
+  return "Email sent";
 }
