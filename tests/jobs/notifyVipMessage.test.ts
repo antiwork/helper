@@ -79,7 +79,7 @@ describe("notifyVipMessageEmail", () => {
   });
 
   it("sends a VIP email for a staff reply and shows Closed by", async () => {
-    const { user: teamUser } = await userFactory.createRootUser({ userOverrides: { email: "team@example.com" } });
+    await userFactory.createRootUser({ userOverrides: { email: "team@example.com" } });
     const { user: staffUser } = await userFactory.createRootUser({ userOverrides: { email: "staff@example.com" } });
 
     await db.update(userProfiles).set({ displayName: "Agent Smith" }).where(eq(userProfiles.id, staffUser.id));
@@ -131,7 +131,7 @@ describe("notifyVipMessageEmail", () => {
   it("excludes users with allowVipMessageEmail=false from recipients", async () => {
     const { user: u1 } = await userFactory.createRootUser({ userOverrides: { email: "a@example.com" } });
     const { user: u2 } = await userFactory.createRootUser({ userOverrides: { email: "b@example.com" } });
-    const { user: u3 } = await userFactory.createRootUser({ userOverrides: { email: "c@example.com" } });
+    await userFactory.createRootUser({ userOverrides: { email: "c@example.com" } });
 
     // u1 and u2 opt out; u3 should receive
     await db

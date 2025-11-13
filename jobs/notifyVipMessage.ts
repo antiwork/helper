@@ -6,7 +6,6 @@ import { conversationMessages, conversations, mailboxes, platformCustomers, user
 import { authUsers } from "@/db/supabaseSchema/auth";
 import { getBasicProfileById } from "@/lib/data/user";
 import { VipNotificationEmailTemplate } from "@/lib/emails/vipNotificationEmailTemplate";
-import { env } from "@/lib/env";
 import { sentEmailViaResend } from "@/lib/resend/client";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
