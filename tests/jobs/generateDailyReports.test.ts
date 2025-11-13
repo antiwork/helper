@@ -100,10 +100,6 @@ describe("generateMailboxEmailReport", () => {
     );
     const call = vi.mocked(sentEmailViaResend).mock.calls[0]![0];
     const html = await render(call.react);
-    const normalized = html
-      .replace(/<!--.*?-->/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
     expectEmailTableRow(html, "Open tickets", 2);
     expectEmailTableRow(html, "Tickets answered", 2);
     expectEmailTableRow(html, "Open tickets over $0", 0);
@@ -173,10 +169,6 @@ describe("generateMailboxEmailReport", () => {
 
     const call = vi.mocked(sentEmailViaResend).mock.calls[0]![0];
     const html = await render(call.react);
-    const normalized = html
-      .replace(/<!--.*?-->/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
     expectEmailTableRow(html, "Open tickets", 2);
     expectEmailTableRow(html, "Tickets answered", 2);
     expectEmailTableRow(html, "Open tickets over $0", 2);
@@ -221,10 +213,6 @@ describe("generateMailboxEmailReport", () => {
 
     const call = vi.mocked(sentEmailViaResend).mock.calls[0]![0];
     const html = await render(call.react);
-    const normalized = html
-      .replace(/<!--.*?-->/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
     expectEmailTableRow(html, "Open tickets", 1);
     expectEmailTableRow(html, "Tickets answered", 1);
     expectEmailTableRow(html, "Open tickets over $0", 0);
@@ -277,10 +265,6 @@ describe("generateMailboxEmailReport", () => {
 
     const call = vi.mocked(sentEmailViaResend).mock.calls[0]![0];
     const html = await render(call.react);
-    const normalized = html
-      .replace(/<!--.*?-->/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
     expectEmailTableRow(html, "Open tickets", 1);
     expectEmailTableRow(html, "Tickets answered", 1);
     expectEmailTableRow(html, "Open tickets over $0", 0);
@@ -330,10 +314,6 @@ describe("generateMailboxEmailReport", () => {
 
     const call = vi.mocked(sentEmailViaResend).mock.calls[0]![0];
     const html = await render(call.react);
-    const normalized = html
-      .replace(/<!--.*?-->/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
     expectEmailTableRow(html, "Open tickets", 1);
     expectEmailTableRow(html, "Tickets answered", 1);
     expectEmailTableRow(html, "Open tickets over $0", 0);
@@ -384,10 +364,6 @@ describe("generateMailboxEmailReport", () => {
 
     const call = vi.mocked(sentEmailViaResend).mock.calls[0]![0];
     const html = await render(call.react);
-    const normalized = html
-      .replace(/<!--.*?-->/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
     expectEmailTableRow(html, "Open tickets", 1);
     expectEmailTableRow(html, "Tickets answered", 1);
     expectEmailTableRow(html, "Open tickets over $0", 0);
@@ -404,7 +380,7 @@ describe("generateMailboxEmailReport", () => {
     const { user: u2 } = await userFactory.createRootUser({
       userOverrides: { email: "b@example.com" },
     });
-    const { user: u3 } = await userFactory.createRootUser({
+    await userFactory.createRootUser({
       userOverrides: { email: "c@example.com" },
     });
 
