@@ -20,8 +20,8 @@ export const sentEmailViaResend = async ({
       await resend.emails.send({
         from: env.RESEND_FROM_ADDRESS!,
         to: member.email,
-        subject: subject,
-        react: react,
+        subject,
+        react,
       });
       return { success: true };
     } catch (error) {
