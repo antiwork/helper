@@ -9,6 +9,7 @@ import { VipNotificationEmailTemplate } from "@/lib/emails/vipNotificationEmailT
 import { sentEmailViaResend } from "@/lib/resend/client";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
+import { env } from "@/lib/env";
 
 type MessageWithConversationAndMailbox = typeof conversationMessages.$inferSelect & {
   conversation: typeof conversations.$inferSelect;
@@ -74,6 +75,7 @@ async function handleVipEmailNotification(message: MessageWithConversationAndMai
 
   if (conversation.isPrompt) return { skipped: true, reason: "Prompt conversation" };
   if (!conversation.emailFrom) return { skipped: true, reason: "Anonymous conversation" };
+  if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) return { skipped: true, reason: "Email not configured" };
 
   const platformCustomerRecord = await db.query.platformCustomers.findFirst({
     where: eq(platformCustomers.email, conversation.emailFrom),

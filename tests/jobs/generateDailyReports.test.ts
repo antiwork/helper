@@ -2,19 +2,21 @@ import { faker } from "@faker-js/faker";
 import { render } from "@react-email/render";
 import { conversationFactory } from "@tests/support/factories/conversations";
 import { platformCustomerFactory } from "@tests/support/factories/platformCustomers";
+import { mockJobs } from "@tests/support/jobsUtils";
 import { userFactory } from "@tests/support/factories/users";
 import { subHours } from "date-fns";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { userProfiles } from "@/db/schema";
-import { generateMailboxEmailReport } from "@/jobs/generateDailyReports";
+import { generateDailyEmailReports, generateMailboxEmailReport } from "@/jobs/generateDailyReports";
 import { sentEmailViaResend } from "@/lib/resend/client";
 
 vi.mock("@/lib/resend/client", () => ({
   sentEmailViaResend: vi.fn(),
 }));
 vi.mocked(sentEmailViaResend).mockResolvedValue([{ success: true }]);
+const jobsMock = mockJobs();
 
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -26,6 +28,23 @@ const expectEmailTableRow = (html: string, label: string, value: string | number
   );
   expect(rx.test(html)).toBe(true);
 };
+
+describe("generateDailyReports", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("sends daily email reports for mailboxes", async () => {
+    await userFactory.createRootUser();
+
+    await userFactory.createRootUser();
+
+    await generateDailyEmailReports();
+
+    expect(jobsMock.triggerEvent).toHaveBeenCalledTimes(1);
+    expect(jobsMock.triggerEvent).toHaveBeenCalledWith("reports/daily", {});
+  });
+});
 
 describe("generateMailboxEmailReport", () => {
   beforeEach(() => {

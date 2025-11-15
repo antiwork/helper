@@ -3,11 +3,20 @@ import { conversationFactory } from "@tests/support/factories/conversations";
 import { platformCustomerFactory } from "@tests/support/factories/platformCustomers";
 import { userFactory } from "@tests/support/factories/users";
 import { eq } from "drizzle-orm";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, inject, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { mailboxes, userProfiles } from "@/db/schema";
 import { notifyVipMessageEmail } from "@/jobs/notifyVipMessage";
 import { sentEmailViaResend } from "@/lib/resend/client";
+
+vi.mock("@/lib/env", () => ({
+  env: {
+    POSTGRES_URL: inject("TEST_DATABASE_URL"),
+    RESEND_API_KEY: "test-api-key",
+    RESEND_FROM_ADDRESS: "test@example.com",
+    AUTH_URL: "https://helperai.dev",
+  },
+}));
 
 // Mock email sender
 vi.mock("@/lib/resend/client", () => ({
