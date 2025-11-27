@@ -36,6 +36,7 @@ export function validateAttachment(attachment: AttachmentData): AttachmentValida
   // Validate file type
   if (attachment.type && !SUPPORTED_MIME_TYPES.includes(attachment.type)) {
     errors.push(`${attachment.name}: Only image files are supported`);
+    return { isValid: false, errors };
   }
 
   // Validate data URL format

@@ -60,6 +60,16 @@ export class HelperClient {
     this.supabaseParams = { url: supabaseUrl, anonKey: supabaseAnonKey };
   }
 
+  private async handleErrorResponse(response: Response): Promise<never> {
+    if (response.headers.get("content-type")?.includes("application/json")) {
+      const errorData = await response.json();
+      if (errorData && typeof errorData === "object" && "error" in errorData) {
+        throw new Error(errorData.error);
+      }
+    }
+    throw new Error(`Request failed: ${response.statusText}`);
+  }
+
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = await this.getToken();
     const response = await fetch(`${this.host}${endpoint}`, {
@@ -71,9 +81,7 @@ export class HelperClient {
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`Request failed: ${response.statusText}`);
-    }
+    if (!response.ok) await this.handleErrorResponse(response);
 
     return response.json();
   }
@@ -92,9 +100,7 @@ export class HelperClient {
         body: JSON.stringify(params),
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to create session: ${response.statusText}`);
-      }
+      if (!response.ok) await this.handleErrorResponse(response);
 
       const data = await response.json();
       return data;
