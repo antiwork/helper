@@ -1,6 +1,6 @@
 {
   "name": "@helperai/client",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "Helper API client for integrating customer support features",
   "keywords": [
     "helper",
