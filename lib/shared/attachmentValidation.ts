@@ -1,7 +1,7 @@
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_FILE_COUNT = 5;
-const SUPPORTED_MIME_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+const SUPPORTED_MIME_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp", "application/pdf"];
 
 export interface AttachmentValidationResult {
   isValid: boolean;
@@ -35,11 +35,12 @@ export function validateAttachment(attachment: AttachmentData): AttachmentValida
 
   // Validate file type
   if (attachment.type && !SUPPORTED_MIME_TYPES.includes(attachment.type)) {
-    errors.push(`${attachment.name}: Only image files are supported`);
+    errors.push(`${attachment.name}: Only image and PDF files are supported`);
+    return { isValid: false, errors };
   }
 
   // Validate data URL format
-  if (!/^data:image\/(png|jpeg|gif|webp);base64,.+/.test(attachment.url)) {
+  if (!/^data:(image\/(png|jpeg|gif|webp)|application\/pdf);base64,.+/.test(attachment.url)) {
     errors.push(`${attachment.name}: Invalid data URL format`);
   }
 
@@ -84,7 +85,7 @@ export function validateClientAttachments(
   // Validate each attachment (skip URL validation for client files)
   for (const attachment of attachments) {
     if (attachment.type && !SUPPORTED_MIME_TYPES.includes(attachment.type)) {
-      errors.push(`${attachment.name}: Only image files are supported`);
+      errors.push(`${attachment.name}: Only image and PDF files are supported`);
     }
 
     const fileSize = attachment.size || 0;
