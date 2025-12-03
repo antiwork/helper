@@ -547,6 +547,7 @@ export const createUserMessage = async (
         createAndUploadFile({
           data: Buffer.from(attachment.data, "base64"),
           fileName: attachment.name,
+          mimetype: attachment.contentType,
           prefix: `attachments/${conversationId}`,
           messageId: message.id,
         }),

@@ -1,6 +1,6 @@
 {
   "name": "@helperai/react",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "React/Next.js integration for Helper chat widget",
   "keywords": [
     "helper",
