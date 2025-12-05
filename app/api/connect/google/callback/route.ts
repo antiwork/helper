@@ -8,9 +8,8 @@ import { api } from "@/trpc/server";
 export async function GET(request: Request) {
   const searchParams = new URL(request.url).searchParams;
   const code = searchParams.get("code");
-  const state = searchParams.get("state");
 
-  if (!code || !state) return NextResponse.redirect(`${getBaseUrl()}/settings/integrations?error=missing_oauth_params`);
+  if (!code) return NextResponse.redirect(`${getBaseUrl()}/settings/integrations?error=missing_oauth_code`);
 
   try {
     const { tokens } = await auth.getToken(code);
