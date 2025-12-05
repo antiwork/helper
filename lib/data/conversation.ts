@@ -13,7 +13,6 @@ import { MINI_MODEL } from "@/lib/ai/core";
 import { extractAddresses } from "@/lib/emails";
 import { conversationChannelId, conversationsListChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
-import { updateVipMessageOnClose } from "@/lib/slack/vipNotifications";
 import { emailKeywordsExtractor } from "../emailKeywordsExtractor";
 import { searchEmailsByKeywords } from "../emailSearchService/searchEmailsByKeywords";
 import { captureExceptionAndLog } from "../shared/sentry";
@@ -136,8 +135,6 @@ export const updateConversation = async (
   }
 
   if (current.status !== "closed" && updatedConversation?.status === "closed") {
-    await updateVipMessageOnClose(updatedConversation.id, byUserId);
-
     await triggerEvent("conversations/embedding.create", { conversationSlug: updatedConversation.slug });
   }
 

@@ -15,7 +15,6 @@ import { generateFilePreview } from "./generateFilePreview";
 import { generateMailboxWeeklyReport, generateWeeklyReports } from "./generateWeeklyReports";
 import { handleAutoResponse } from "./handleAutoResponse";
 import { handleGmailWebhookEvent } from "./handleGmailWebhookEvent";
-import { handleSlackAgentMessage } from "./handleSlackAgentMessage";
 import { importGmailThreads } from "./importGmailThreads";
 import { importRecentGmailThreads } from "./importRecentGmailThreads";
 import { indexConversationMessage } from "./indexConversation";
@@ -56,7 +55,6 @@ export const eventJobs = {
   autoAssignConversation,
   categorizeConversationToIssueGroup,
   publishRequestHumanSupport,
-  handleSlackAgentMessage,
   sendFollowerNotification,
 };
 

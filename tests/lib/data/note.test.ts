@@ -16,8 +16,6 @@ describe("addNote", () => {
       conversationId: conversation.id,
       message: "Test note",
       user: profile,
-      slackChannel: "C123456",
-      slackMessageTs: "1234567890.123456",
     });
 
     expect(note).toEqual(
@@ -26,8 +24,6 @@ describe("addNote", () => {
         body: "Test note",
         userId: profile.id,
         role: "staff",
-        slackChannel: "C123456",
-        slackMessageTs: "1234567890.123456",
       }),
     );
   });
@@ -48,8 +44,6 @@ describe("addNote", () => {
         body: "Anonymous note",
         userId: null,
         role: "staff",
-        slackChannel: null,
-        slackMessageTs: null,
       }),
     );
   });

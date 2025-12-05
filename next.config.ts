@@ -58,12 +58,6 @@ let nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "avatars.slack-edge.com",
-        port: "",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
         hostname: "avatars.githubusercontent.com",
         port: "",
         pathname: "/**",

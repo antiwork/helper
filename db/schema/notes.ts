@@ -13,8 +13,6 @@ export const notes = pgTable(
     userId: text("clerk_user_id"),
     role: text(),
     conversationId: bigint({ mode: "number" }).notNull(),
-    slackMessageTs: text(),
-    slackChannel: text(),
   },
   (table) => [
     index("conversatio_created_5ad461_idx").on(table.createdAt),

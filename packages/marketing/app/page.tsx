@@ -21,7 +21,6 @@ import { Button } from "../components/ui/button";
 import ComparisonHistogram from "./comparisonHistogram";
 import { ContactModal } from "./contactModal";
 import { MarketingHeader } from "./marketingHeader";
-import SlackInterface from "./slackInterface";
 
 export default function Home() {
   const [customerQuestions] = useState([
@@ -158,17 +157,6 @@ export default function Home() {
                     <Mail className="w-4 h-4" style={{ color: activeTab === "inbox" ? "#FF90E8" : "#FFE6B0" }} />
                     Inbox
                   </button>
-                  <button
-                    onClick={() => setActiveTab("slack")}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${
-                      activeTab === "slack"
-                        ? "bg-[#2B0808] border-2 border-[#FF4343] text-[#FFE6B0]"
-                        : "bg-[#3B1B1B] text-[#FFE6B0] hover:bg-[#4B2B2B]"
-                    }`}
-                  >
-                    <img src="slack-logo-icon.png" alt="Slack" className="w-4 h-4" />
-                    Slack
-                  </button>
                 </div>
               </div>
 
@@ -197,11 +185,6 @@ export default function Home() {
                         className="block md:hidden w-full h-full object-contain"
                       />
                     </div>
-                  </div>
-                )}
-                {activeTab === "slack" && (
-                  <div className="h-full flex items-center justify-center p-4">
-                    <SlackInterface />
                   </div>
                 )}
               </div>

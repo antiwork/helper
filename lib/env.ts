@@ -63,10 +63,6 @@ export const env = createEnv({
 
     // Other optional integrations
 
-    // Slack OAuth client credentials from https://api.slack.com/apps
-    SLACK_CLIENT_ID: z.string().min(1).optional(),
-    SLACK_CLIENT_SECRET: z.string().min(1).optional(),
-    SLACK_SIGNING_SECRET: z.string().min(1).optional(),
     // GitHub app credentials from https://github.com/apps
     GITHUB_APP_SLUG: z.string().min(1).optional(),
     GITHUB_APP_ID: z.string().min(1).optional(),

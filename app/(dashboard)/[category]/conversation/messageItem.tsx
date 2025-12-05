@@ -355,13 +355,6 @@ const MessageItem = ({
           <div className="flex flex-1 items-center gap-2">
             <div className="flex flex-1 items-center gap-2">
               <HumanizedTime time={message.createdAt} />
-              {message.type === "message" && message.slackUrl && (
-                <span>
-                  <a target="_blank" href={message.slackUrl}>
-                    &nbsp;{message.role === "user" ? "alerted on Slack" : "via Slack"}
-                  </a>
-                </span>
-              )}
               {onViewDraftedReply && (
                 <span>
                   &nbsp;·{" "}

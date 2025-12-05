@@ -10,15 +10,11 @@ export const addNote = async ({
   conversationId,
   message,
   user,
-  slackChannel,
-  slackMessageTs,
   fileSlugs = [],
 }: {
   conversationId: number;
   message: string;
   user: BasicUserProfile | null;
-  slackChannel?: string | null;
-  slackMessageTs?: string | null;
   fileSlugs?: string[];
 }) => {
   return await db.transaction(async (tx) => {
@@ -29,8 +25,6 @@ export const addNote = async ({
         body: message,
         userId: user?.id,
         role: "staff",
-        slackChannel,
-        slackMessageTs,
       })
       .returning()
       .then(takeUniqueOrThrow);

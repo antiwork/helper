@@ -22,11 +22,6 @@ import { db } from "@/db/client";
 import { conversationEvents, conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { serializeConversation } from "@/lib/data/conversation";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
-import {
-  CLOSED_BY_AGENT_MESSAGE,
-  MARKED_AS_SPAM_BY_AGENT_MESSAGE,
-  REOPENED_BY_AGENT_MESSAGE,
-} from "@/lib/slack/constants";
 import "server-only";
 import { z } from "zod";
 import { searchEmailsByKeywords } from "../../emailSearchService/searchEmailsByKeywords";
@@ -114,13 +109,9 @@ export const searchConversations = async (
         }
       : {}),
     ...(filters.events?.length ? { events: hasEvent(inArray(conversationEvents.type, filters.events)) } : {}),
-    ...(filters.closed ? { closed: hasStatusChangeEvent("closed", filters.closed, CLOSED_BY_AGENT_MESSAGE) } : {}),
-    ...(filters.reopened
-      ? { reopened: hasStatusChangeEvent("open", filters.reopened, REOPENED_BY_AGENT_MESSAGE) }
-      : {}),
-    ...(filters.markedAsSpam
-      ? { markedAsSpam: hasStatusChangeEvent("spam", filters.markedAsSpam, MARKED_AS_SPAM_BY_AGENT_MESSAGE) }
-      : {}),
+    ...(filters.closed ? { closed: hasStatusChangeEvent("closed", filters.closed) } : {}),
+    ...(filters.reopened ? { reopened: hasStatusChangeEvent("open", filters.reopened) } : {}),
+    ...(filters.markedAsSpam ? { markedAsSpam: hasStatusChangeEvent("spam", filters.markedAsSpam) } : {}),
     ...(filters.hasUnreadMessages
       ? {
           hasUnreadMessages: and(
@@ -289,15 +280,12 @@ const hasEvent = (where?: SQL) =>
 
 const hasStatusChangeEvent = (
   status: (typeof conversations.$inferSelect)["status"],
-  filters: { by?: "slack_bot" | "human"; byUserId?: string[]; before?: string; after?: string },
-  slackBotReason: string,
+  filters: { by?: "human"; byUserId?: string[]; before?: string; after?: string },
 ) =>
   hasEvent(
     and(
       eq(conversationEvents.conversationId, conversations.id),
-      filters.by === "slack_bot"
-        ? eq(conversationEvents.reason, slackBotReason)
-        : isNotNull(conversationEvents.byUserId),
+      isNotNull(conversationEvents.byUserId),
       filters.byUserId?.length ? inArray(conversationEvents.byUserId, filters.byUserId) : undefined,
       eq(sql`${conversationEvents.changes}->>'status'`, status),
       filters.before ? lt(conversationEvents.createdAt, new Date(filters.before)) : undefined,

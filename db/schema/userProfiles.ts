@@ -27,6 +27,12 @@ export const userProfiles = pgTable("user_profiles", {
     confetti?: boolean;
     disableNextTicketPreview?: boolean;
     autoAssignOnReply?: boolean;
+    emailNotifications?: {
+      dailyReports?: boolean;
+      weeklyReports?: boolean;
+      vipAlerts?: boolean;
+      ticketAlerts?: boolean;
+    };
   }>(),
 }).enableRLS();
 

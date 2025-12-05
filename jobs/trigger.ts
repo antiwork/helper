@@ -121,16 +121,6 @@ const events = {
     }),
     jobs: ["autoAssignConversation", "publishRequestHumanSupport"],
   },
-  "slack/agent.message": {
-    data: z.object({
-      slackUserId: z.string().nullable(),
-      statusMessageTs: z.string(),
-      agentThreadId: z.number(),
-      confirmedReplyText: z.string().nullish(),
-      confirmedKnowledgeBaseEntry: z.string().nullish(),
-    }),
-    jobs: ["handleSlackAgentMessage"],
-  },
   "conversations/send-follower-notification": {
     data: z.object({
       conversationId: z.number(),

@@ -12,10 +12,6 @@ import { conversationFollowers, conversations, mailboxes } from "@/db/schema";
 import type { authUsers } from "@/db/supabaseSchema/auth";
 import { createCaller } from "@/trpc";
 
-vi.mock("@/lib/slack/client", () => ({
-  getSlackPermalink: vi.fn().mockResolvedValue("https://slack.com/mock-permalink"),
-}));
-
 vi.mock("@/lib/data/conversationMessage", () => ({
   createReply: vi.fn(),
 }));
@@ -31,12 +27,7 @@ beforeEach(async () => {
   await db.delete(conversationFollowers);
   await db.delete(conversations);
   await db.delete(mailboxes);
-  ({ user } = await userFactory.createRootUser({
-    mailboxOverrides: {
-      slackBotToken: "slackBotToken",
-      slackAlertChannel: "slackAlertChannel",
-    },
-  }));
+  ({ user } = await userFactory.createRootUser());
 });
 
 const defaultParams = {
