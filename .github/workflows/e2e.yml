@@ -71,8 +71,8 @@ jobs:
         run: pnpm playwright install --with-deps chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
 
-      - name: Setup E2E test environment
-        run: ./scripts/setup-e2e-tests.sh
+      - name: Setup Supabase and Seed
+        uses: ./.github/common/supabase
 
       - name: Build next
         run: pnpm with-test-env next build
