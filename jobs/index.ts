@@ -10,9 +10,9 @@ import { crawlWebsite } from "./crawlWebsite";
 import { embeddingConversation } from "./embeddingConversation";
 import { embeddingFaq } from "./embeddingFaq";
 import { generateConversationSummaryEmbeddings } from "./generateConversationSummaryEmbeddings";
-import { generateDailyReports, generateMailboxDailyReport } from "./generateDailyReports";
+import { generateDailyEmailReports, generateMailboxDailyEmailReport } from "./generateDailyReports";
 import { generateFilePreview } from "./generateFilePreview";
-import { generateMailboxWeeklyReport, generateWeeklyReports } from "./generateWeeklyReports";
+import { generateMailboxWeeklyEmailReport, generateWeeklyEmailReports } from "./generateWeeklyReports";
 import { handleAutoResponse } from "./handleAutoResponse";
 import { handleGmailWebhookEvent } from "./handleGmailWebhookEvent";
 import { handleSlackAgentMessage } from "./handleSlackAgentMessage";
@@ -20,7 +20,7 @@ import { importGmailThreads } from "./importGmailThreads";
 import { importRecentGmailThreads } from "./importRecentGmailThreads";
 import { indexConversationMessage } from "./indexConversation";
 import { mergeSimilarConversations } from "./mergeSimilarConversations";
-import { notifyVipMessage } from "./notifyVipMessage";
+import { notifyVipMessageEmail } from "./notifyVipMessage";
 import { postEmailToGmail } from "./postEmailToGmail";
 import { publishNewMessageEvent } from "./publishNewMessageEvent";
 import { publishRequestHumanSupport } from "./publishRequestHumanSupport";
@@ -38,7 +38,7 @@ export const eventJobs = {
   generateConversationSummaryEmbeddings,
   mergeSimilarConversations,
   publishNewMessageEvent,
-  notifyVipMessage,
+  notifyVipMessageEmail,
   postEmailToGmail,
   handleAutoResponse,
   bulkUpdateConversations,
@@ -47,8 +47,8 @@ export const eventJobs = {
   embeddingFaq,
   importRecentGmailThreads,
   importGmailThreads,
-  generateMailboxWeeklyReport,
-  generateMailboxDailyReport,
+  generateMailboxWeeklyEmailReport,
+  generateMailboxDailyEmailReport,
   crawlWebsite,
   suggestKnowledgeBankChanges,
   closeInactiveConversations,
@@ -72,6 +72,6 @@ export const cronJobs = {
   },
   "0 0 * * *": { renewMailboxWatches },
   "0 0 * * 0": { scheduledWebsiteCrawl },
-  "0 16 * * 0,2-6": { generateDailyReports },
-  "0 16 * * 1": { generateWeeklyReports },
+  "0 16 * * 0,2-6": { generateDailyEmailReports },
+  "0 16 * * 1": { generateWeeklyEmailReports },
 };

@@ -1,18 +1,33 @@
-import { KnownBlock } from "@slack/web-api";
 import { subHours } from "date-fns";
-import { aliasedTable, and, eq, gt, isNotNull, isNull, lt, sql } from "drizzle-orm";
+import { aliasedTable, and, eq, gt, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
+import { conversationMessages, conversations, mailboxes, platformCustomers, userProfiles } from "@/db/schema";
+import { authUsers } from "@/db/supabaseSchema/auth";
 import { triggerEvent } from "@/jobs/trigger";
-import { getMailbox } from "@/lib/data/mailbox";
-import { postSlackMessage } from "@/lib/slack/client";
+import { DailyEmailReportTemplate } from "@/lib/emails/dailyEmailReportTemplate";
+import { env } from "@/lib/env";
+import { sentEmailViaResend } from "@/lib/resend/client";
+import { captureExceptionAndLog } from "@/lib/shared/sentry";
+
+type DailyReportSkipped = { skipped: true; reason: string };
+type MailboxDailyReportSuccess = {
+  success: true;
+  openTicketCount: number;
+  answeredTicketCount: number;
+  openTicketsOverZeroCount: number;
+  answeredTicketsOverZeroCount: number;
+  avgReplyTimeResult?: string;
+  vipAvgReplyTime: string | null;
+  avgWaitTime?: string;
+};
+
+export type MailboxDailyEmailReportResult = DailyReportSkipped | MailboxDailyReportSuccess;
 
 export const TIME_ZONE = "America/New_York";
 
-export async function generateDailyReports() {
+export async function generateDailyEmailReports() {
   const mailboxesList = await db.query.mailboxes.findMany({
     columns: { id: true },
-    where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackAlertChannel)),
   });
 
   if (!mailboxesList.length) return;
@@ -20,21 +35,29 @@ export async function generateDailyReports() {
   await triggerEvent("reports/daily", {});
 }
 
-export async function generateMailboxDailyReport() {
-  const mailbox = await getMailbox();
-  if (!mailbox?.slackBotToken || !mailbox.slackAlertChannel) return;
+export async function generateMailboxDailyEmailReport(): Promise<MailboxDailyEmailReportResult> {
+  try {
+    const mailbox = await db.query.mailboxes.findFirst({
+      where: isNull(sql`${mailboxes.preferences}->>'disabled'`),
+    });
+    if (!mailbox) return { skipped: true, reason: "No mailbox found" };
 
-  const blocks: KnownBlock[] = [
-    {
-      type: "section",
-      text: {
-        type: "plain_text",
-        text: `Daily summary for ${mailbox.name}:`,
-        emoji: true,
-      },
-    },
-  ];
+    if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) {
+      return { skipped: true, reason: "Email not configured" };
+    }
+    const result = await generateMailboxEmailReport({ mailbox });
+    return result;
+  } catch (error) {
+    captureExceptionAndLog(error);
+    throw error;
+  }
+}
 
+export async function generateMailboxEmailReport({
+  mailbox,
+}: {
+  mailbox: typeof mailboxes.$inferSelect;
+}): Promise<MailboxDailyEmailReportResult> {
   const endTime = new Date();
   const startTime = subHours(endTime, 24);
 
@@ -44,8 +67,6 @@ export async function generateMailboxDailyReport() {
   );
 
   if (openTicketCount === 0) return { skipped: true, reason: "No open tickets" };
-
-  const openCountMessage = `• Open tickets: ${openTicketCount.toLocaleString()}`;
 
   const answeredTicketCount = await db
     .select({ count: sql`count(DISTINCT ${conversations.id})` })
@@ -61,8 +82,6 @@ export async function generateMailboxDailyReport() {
     )
     .then((result) => Number(result[0]?.count || 0));
 
-  const answeredCountMessage = `• Tickets answered: ${answeredTicketCount.toLocaleString()}`;
-
   const openTicketsOverZeroCount = await db
     .select({ count: sql`count(*)` })
     .from(conversations)
@@ -75,10 +94,6 @@ export async function generateMailboxDailyReport() {
       ),
     )
     .then((result) => Number(result[0]?.count || 0));
-
-  const openTicketsOverZeroMessage = openTicketsOverZeroCount
-    ? `• Open tickets over $0: ${openTicketsOverZeroCount.toLocaleString()}`
-    : null;
 
   const answeredTicketsOverZeroCount = await db
     .select({ count: sql`count(DISTINCT ${conversations.id})` })
@@ -95,10 +110,6 @@ export async function generateMailboxDailyReport() {
       ),
     )
     .then((result) => Number(result[0]?.count || 0));
-
-  const answeredTicketsOverZeroMessage = answeredTicketsOverZeroCount
-    ? `• Tickets answered over $0: ${answeredTicketsOverZeroCount.toLocaleString()}`
-    : null;
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -123,11 +134,9 @@ export async function generateMailboxDailyReport() {
         lt(conversationMessages.createdAt, endTime),
       ),
     );
-  const avgReplyTimeMessage = avgReplyTimeResult?.average
-    ? `• Average reply time: ${formatTime(avgReplyTimeResult.average)}`
-    : null;
+  const avgReplyTime = avgReplyTimeResult?.average ? formatTime(avgReplyTimeResult.average) : undefined;
 
-  let vipAvgReplyTimeMessage = null;
+  let vipAvgReplyTime = null;
   if (mailbox.vipThreshold) {
     const [vipReplyTimeResult] = await db
       .select({
@@ -150,9 +159,7 @@ export async function generateMailboxDailyReport() {
           gt(sql`CAST(${platformCustomers.value} AS INTEGER)`, (mailbox.vipThreshold ?? 0) * 100),
         ),
       );
-    vipAvgReplyTimeMessage = vipReplyTimeResult?.average
-      ? `• VIP average reply time: ${formatTime(vipReplyTimeResult.average)}`
-      : null;
+    vipAvgReplyTime = vipReplyTimeResult?.average ? formatTime(vipReplyTimeResult.average) : null;
   }
 
   const [avgWaitTimeResult] = await db
@@ -169,42 +176,53 @@ export async function generateMailboxDailyReport() {
         isNotNull(conversations.lastUserEmailCreatedAt),
       ),
     );
-  const avgWaitTimeMessage = avgWaitTimeResult?.average
-    ? `• Average time existing open tickets have been open: ${formatTime(avgWaitTimeResult.average)}`
-    : null;
+  const avgWaitTime = avgWaitTimeResult?.average ? formatTime(avgWaitTimeResult.average) : undefined;
 
-  blocks.push({
-    type: "section",
-    text: {
-      type: "mrkdwn",
-      text: [
-        openCountMessage,
-        answeredCountMessage,
-        openTicketsOverZeroMessage,
-        answeredTicketsOverZeroMessage,
-        avgReplyTimeMessage,
-        vipAvgReplyTimeMessage,
-        avgWaitTimeMessage,
-      ]
-        .filter(Boolean)
-        .join("\n"),
-    },
+  const teamMembers = await db
+    .select({
+      email: authUsers.email,
+      displayName: userProfiles.displayName,
+    })
+    .from(userProfiles)
+    .innerJoin(authUsers, eq(userProfiles.id, authUsers.id))
+    .where(or(isNull(userProfiles.preferences), sql`${userProfiles.preferences}->>'allowDailyEmail' != 'false'`));
+
+  if (teamMembers.length === 0) {
+    return { skipped: true, reason: "No team members found" };
+  }
+
+  const reactTemplate = DailyEmailReportTemplate({
+    mailboxName: mailbox.name,
+    openTickets: openTicketCount || 0,
+    ticketsAnswered: answeredTicketCount || 0,
+    openTicketsOverZero: openTicketsOverZeroCount || 0,
+    ticketsAnsweredOverZero: answeredTicketsOverZeroCount || 0,
+    avgReplyTime: avgReplyTime || undefined,
+    vipAvgReplyTime: vipAvgReplyTime || undefined,
+    avgWaitTime: avgWaitTime || undefined,
   });
 
-  await postSlackMessage(mailbox.slackBotToken, {
-    channel: mailbox.slackAlertChannel,
-    text: `Daily summary for ${mailbox.name}`,
-    blocks,
+  const emailResults = await sentEmailViaResend({
+    memberList: teamMembers.filter((m) => !!m.email).map((m) => ({ email: m.email! })),
+    subject: `Daily summary for ${mailbox.name}`,
+    react: reactTemplate,
   });
+  const failures = emailResults.filter((r) => !r.success);
+  if (failures.length > 0) {
+    captureExceptionAndLog(
+      new Error(`Daily report: failed to send ${failures.length}/${emailResults.length} daily emails`),
+      { extra: { failures } },
+    );
+  }
 
   return {
     success: true,
-    openCountMessage,
-    answeredCountMessage,
-    openTicketsOverZeroMessage,
-    answeredTicketsOverZeroMessage,
-    avgReplyTimeMessage,
-    vipAvgReplyTimeMessage,
-    avgWaitTimeMessage,
+    openTicketCount,
+    answeredTicketCount,
+    openTicketsOverZeroCount,
+    answeredTicketsOverZeroCount,
+    avgReplyTimeResult: avgReplyTimeResult?.average ? formatTime(avgReplyTimeResult.average) : undefined,
+    vipAvgReplyTime,
+    avgWaitTime,
   };
 }

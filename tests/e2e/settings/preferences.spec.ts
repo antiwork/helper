@@ -69,4 +69,55 @@ test.describe("Settings - User preferences", () => {
     await waitForSettingsSaved(page);
     await expect(autoAssignSwitch).toBeChecked({ checked: isEnabled });
   });
+
+  test("should allow toggling Daily Email Reports on/off", async ({ page }) => {
+    const dailySetting = page.locator('section:has(h2:text("Daily Email Reports"))');
+    const dailySwitch = page.locator('[aria-label="Daily Email Reports Switch"]');
+
+    await expect(dailySetting).toBeVisible();
+
+    const initiallyEnabled = await dailySwitch.isChecked();
+    await dailySwitch.click();
+    await waitForSettingsSaved(page);
+    await expect(dailySwitch).toBeChecked({ checked: !initiallyEnabled });
+
+    // Toggle back to original state to avoid test pollution
+    await dailySwitch.click();
+    await waitForSettingsSaved(page);
+    await expect(dailySwitch).toBeChecked({ checked: initiallyEnabled });
+  });
+
+  test("should allow toggling Weekly Email Reports on/off", async ({ page }) => {
+    const weeklySetting = page.locator('section:has(h2:text("Weekly Email Reports"))');
+    const weeklySwitch = page.locator('[aria-label="Weekly Email Reports Switch"]');
+
+    await expect(weeklySetting).toBeVisible();
+
+    const initiallyEnabled = await weeklySwitch.isChecked();
+    await weeklySwitch.click();
+    await waitForSettingsSaved(page);
+    await expect(weeklySwitch).toBeChecked({ checked: !initiallyEnabled });
+
+    // Toggle back to original state to avoid test pollution
+    await weeklySwitch.click();
+    await waitForSettingsSaved(page);
+    await expect(weeklySwitch).toBeChecked({ checked: initiallyEnabled });
+  });
+
+  test("should allow toggling VIP Message Email Alerts on/off", async ({ page }) => {
+    const vipSetting = page.locator('section:has(h2:text("VIP Message Email Alerts"))');
+    const vipSwitch = page.locator('[aria-label="VIP Message Email Alerts Switch"]');
+
+    await expect(vipSetting).toBeVisible();
+
+    const initiallyEnabled = await vipSwitch.isChecked();
+    await vipSwitch.click();
+    await waitForSettingsSaved(page);
+    await expect(vipSwitch).toBeChecked({ checked: !initiallyEnabled });
+
+    // Toggle back to original state to avoid test pollution
+    await vipSwitch.click();
+    await waitForSettingsSaved(page);
+    await expect(vipSwitch).toBeChecked({ checked: initiallyEnabled });
+  });
 });

@@ -193,6 +193,9 @@ export const userRouter = {
             confetti: z.boolean().optional(),
             disableNextTicketPreview: z.boolean().optional(),
             autoAssignOnReply: z.boolean().optional(),
+            allowDailyEmail: z.boolean().optional(),
+            allowWeeklyEmail: z.boolean().optional(),
+            allowVipMessageEmail: z.boolean().optional(),
           })
           .optional(),
       }),
