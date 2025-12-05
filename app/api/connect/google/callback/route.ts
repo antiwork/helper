@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const state = searchParams.get("state");
 
-  if (!code || !state) return NextResponse.redirect(`${getBaseUrl()}/settings/integrations?error=invalid_code`);
+  if (!code || !state) return NextResponse.redirect(`${getBaseUrl()}/settings/integrations?error=missing_oauth_params`);
 
   try {
     const { tokens } = await auth.getToken(code);
