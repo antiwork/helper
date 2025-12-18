@@ -76,24 +76,4 @@ describe("triggerEvent", () => {
       "publishNewMessageEvent",
     ]);
   });
-
-  it("creates jobs in an inner transaction that rolls back with outer transaction", async () => {
-    await expect(
-      db.transaction(async (tx) => {
-        await triggerEvent("files/preview.generate", { fileId: 789 }, { tx });
-
-        const runsInTx = await tx.query.jobRuns.findMany();
-        expect(runsInTx).toHaveLength(1);
-        expect(runsInTx[0]).toMatchObject({ data: { fileId: 789 } });
-
-        throw new Error("Rollback");
-      }),
-    ).rejects.toThrow("Rollback");
-
-    const runs = await db.query.jobRuns.findMany();
-    expect(runs).toHaveLength(0);
-
-    const messages = await readPgmqMessages();
-    expect(messages).toHaveLength(0);
-  });
 });

@@ -3,7 +3,7 @@ import superjson from "superjson";
 import { z } from "zod";
 import { toolBodySchema } from "@helperai/client";
 import { assertDefined } from "@/components/utils/assert";
-import { db, TransactionOrDb } from "@/db/client";
+import { db } from "@/db/client";
 import { jobRuns } from "@/db/schema/jobRuns";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 
@@ -157,27 +157,24 @@ export type EventData<T extends EventName> = z.infer<(typeof events)[T]["data"]>
 export const triggerEvent = async <T extends EventName>(
   event: T,
   data: EventData<T>,
-  { sleepSeconds = 0, tx = db }: { sleepSeconds?: number; tx?: TransactionOrDb } = {},
+  { sleepSeconds = 0 }: { sleepSeconds?: number } = {},
+  tx = db,
 ) => {
-  await tx.transaction(async (tx2) => {
-    const runs = await tx
-      .insert(jobRuns)
-      .values(
-        events[event].jobs.map((job) => ({
-          job,
-          event,
-          data,
-        })),
-      )
-      .returning();
-    const payloads = events[event].jobs.map((job) => ({
-      event,
-      job,
-      data: superjson.serialize(data),
-      jobRunId: assertDefined(runs.find((run) => run.job === job)).id,
-    }));
-    await tx2.execute(
-      sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`,
-    );
-  });
+  const runs = await tx
+    .insert(jobRuns)
+    .values(
+      events[event].jobs.map((job) => ({
+        job,
+        event,
+        data,
+      })),
+    )
+    .returning();
+  const payloads = events[event].jobs.map((job) => ({
+    event,
+    job,
+    data: superjson.serialize(data),
+    jobRunId: assertDefined(runs.find((run) => run.job === job)).id,
+  }));
+  await tx.execute(sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`);
 };

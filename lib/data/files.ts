@@ -119,7 +119,7 @@ export const finishFileUpload = async (
   });
 
   if (fileIdsForPreview.length > 0) {
-    await Promise.all(fileIdsForPreview.map((fileId) => triggerEvent("files/preview.generate", { fileId }, { tx })));
+    await Promise.all(fileIdsForPreview.map((fileId) => triggerEvent("files/preview.generate", { fileId })));
   }
 };
 
