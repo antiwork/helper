@@ -128,17 +128,21 @@ export const updateConversation = async (
     });
     if (message?.role === "user") {
       const mailbox = assertDefined(await getMailbox());
-      await triggerEvent("conversations/auto-response.create", {
-        messageId: message.id,
-        customerInfoUrl: mailbox.customerInfoUrl,
-      });
+      await triggerEvent(
+        "conversations/auto-response.create",
+        {
+          messageId: message.id,
+          customerInfoUrl: mailbox.customerInfoUrl,
+        },
+        { tx },
+      );
     }
   }
 
   if (current.status !== "closed" && updatedConversation?.status === "closed") {
     await updateVipMessageOnClose(updatedConversation.id, byUserId);
 
-    await triggerEvent("conversations/embedding.create", { conversationSlug: updatedConversation.slug });
+    await triggerEvent("conversations/embedding.create", { conversationSlug: updatedConversation.slug }, { tx });
   }
 
   if (updatedConversation && !skipRealtimeEvents) {
@@ -187,15 +191,19 @@ export const updateConversation = async (
 
       if (current.status !== updatedConversation.status && updatedConversation.status !== "spam") {
         notificationEvents.push(
-          triggerEvent("conversations/send-follower-notification", {
-            conversationId: updatedConversation.id,
-            eventType: "status_change" as const,
-            triggeredByUserId: byUserId,
-            eventDetails: {
-              oldStatus: current.status || "open",
-              newStatus: updatedConversation.status || "open",
+          triggerEvent(
+            "conversations/send-follower-notification",
+            {
+              conversationId: updatedConversation.id,
+              eventType: "status_change" as const,
+              triggeredByUserId: byUserId,
+              eventDetails: {
+                oldStatus: current.status || "open",
+                newStatus: updatedConversation.status || "open",
+              },
             },
-          }),
+            { tx },
+          ),
         );
       }
 
@@ -207,15 +215,19 @@ export const updateConversation = async (
           .where(eq(conversations.id, updatedConversation.id));
 
         notificationEvents.push(
-          triggerEvent("conversations/send-follower-notification", {
-            conversationId: updatedConversation.id,
-            eventType: "assignment_change" as const,
-            triggeredByUserId: byUserId,
-            eventDetails: {
-              oldAssignee: current.assignedToId || undefined,
-              newAssignee: updatedConversation.assignedToId || undefined,
+          triggerEvent(
+            "conversations/send-follower-notification",
+            {
+              conversationId: updatedConversation.id,
+              eventType: "assignment_change" as const,
+              triggeredByUserId: byUserId,
+              eventDetails: {
+                oldAssignee: current.assignedToId || undefined,
+                newAssignee: updatedConversation.assignedToId || undefined,
+              },
             },
-          }),
+            { tx },
+          ),
         );
       }
 

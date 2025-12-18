@@ -473,7 +473,7 @@ export const createConversationMessage = async (
   if (eventsToSend.length > 0) {
     await Promise.all(
       eventsToSend.map((event) =>
-        triggerEvent(event.name, event.data, event.sleepSeconds ? { sleepSeconds: event.sleepSeconds } : {}),
+        triggerEvent(event.name, event.data, event.sleepSeconds ? { sleepSeconds: event.sleepSeconds, tx } : { tx }),
       ),
     );
   }

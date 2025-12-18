@@ -27,7 +27,7 @@ export const approveSuggestedEdit = async (
 
     await resetMailboxPromptUpdatedAt(tx);
 
-    await triggerEvent("faqs/embedding.create", { faqId: knowledge.id });
+    await triggerEvent("faqs/embedding.create", { faqId: knowledge.id }, { tx });
   });
 
   if (knowledge.slackChannel && knowledge.slackMessageTs && mailbox.slackBotToken) {
