@@ -5,11 +5,10 @@ import { ConversationEvent } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
 import { useMembers } from "@/components/useMembers";
 
-const eventDescriptions = {
+const eventDescriptions: Partial<Record<ConversationEvent["eventType"], string>> = {
   request_human_support: "Human support requested",
+  email_auto_ignored: "Email auto ignored",
 };
-const hasEventDescription = (eventType: ConversationEvent["eventType"]): eventType is keyof typeof eventDescriptions =>
-  eventType in eventDescriptions;
 
 const statusVerbs = {
   open: "opened",
@@ -48,16 +47,15 @@ export const EventItem = ({ event }: { event: ConversationEvent }) => {
     return "assigned to unknown user";
   };
 
-  const description = hasEventDescription(event.eventType)
-    ? eventDescriptions[event.eventType]
-    : [
-        event.changes.status ? statusVerbs[event.changes.status] : null,
-        getAssignmentDescription(),
-        event.changes.assignedToAI ? "assigned to Helper agent" : null,
-        event.changes.assignedToAI === false ? "unassigned Helper agent" : null,
-      ]
-        .filter(Boolean)
-        .join(" and ");
+  const description = [
+    eventDescriptions[event.eventType],
+    event.changes.status ? statusVerbs[event.changes.status] : null,
+    getAssignmentDescription(),
+    event.changes.assignedToAI ? "assigned to Helper agent" : null,
+    event.changes.assignedToAI === false ? "unassigned Helper agent" : null,
+  ]
+    .filter(Boolean)
+    .join(" and ");
 
   const hasDetails = event.byUserId || event.reason;
   const byUserName = getUserDisplayName(event.byUserId);

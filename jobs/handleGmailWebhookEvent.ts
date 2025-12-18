@@ -12,6 +12,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import {
   BasicUserProfile,
+  conversationEvents,
   conversationMessages,
   conversations,
   files,
@@ -249,15 +250,15 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
         if (isAutomatedResponseOrThankYou) ignoreReason = "Message is an automated response or thank you";
       }
 
-      const createNewConversation = async () => {
-        const conversation = await db
+      const createNewConversation = () =>
+        db
           .insert(conversations)
           .values({
             emailFrom: parsedEmailFrom.address,
             emailFromName: parsedEmailFrom.name,
             subject: parsedEmail.subject,
-            status: "open",
-            closedAt: null,
+            status: ignoreReason ? "closed" : "open",
+            closedAt: ignoreReason ? new Date() : null,
             conversationProvider: "gmail",
             source: "email",
             isPrompt: false,
@@ -272,11 +273,6 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
             assignedToAI: conversations.assignedToAI,
           })
           .then(takeUniqueOrThrow);
-        if (ignoreReason) {
-          return await updateConversation(conversation.id, { set: { status: "closed" }, message: ignoreReason });
-        }
-        return conversation;
-      };
 
       let conversation;
       if (isNewThread(gmailMessageId, gmailThreadId)) {
@@ -320,7 +316,14 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
         await updateConversation(conversation.id, { set: { status: "open" }, message: "Email received" });
       }
 
-      if (!ignoreReason) {
+      if (ignoreReason) {
+        await db.insert(conversationEvents).values({
+          conversationId: conversation.id,
+          type: "email_auto_ignored",
+          changes: { status: "closed" },
+          reason: ignoreReason,
+        });
+      } else {
         await triggerEvent("conversations/auto-response.create", {
           messageId: newEmail.id,
           customerInfoUrl: mailbox.customerInfoUrl,

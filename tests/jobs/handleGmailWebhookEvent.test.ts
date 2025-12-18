@@ -12,7 +12,7 @@ import { count, eq } from "drizzle-orm";
 import { OAuth2Client } from "google-auth-library";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
-import { conversationMessages } from "@/db/schema";
+import { conversationEvents, conversationMessages } from "@/db/schema";
 import { generateFilePreview } from "@/jobs/generateFilePreview";
 import { handleGmailWebhookEvent } from "@/jobs/handleGmailWebhookEvent";
 import { runAIQuery } from "@/lib/ai";
@@ -239,6 +239,15 @@ describe("handleGmailWebhookEvent", () => {
       expect(conversation).toMatchObject({
         status: "closed",
       });
+
+      const event = await db.query.conversationEvents.findFirst({
+        where: eq(conversationEvents.conversationId, conversation!.id),
+      });
+      expect(event).toMatchObject({
+        type: "email_auto_ignored",
+        changes: { status: "closed" },
+        reason: "Message is in an ignored category",
+      });
     });
 
     it("does not generate a response for transactional emails", async () => {
@@ -263,6 +272,15 @@ describe("handleGmailWebhookEvent", () => {
       const conversation = await db.query.conversations.findFirst();
       expect(conversation).toMatchObject({
         status: "closed",
+      });
+
+      const event = await db.query.conversationEvents.findFirst({
+        where: eq(conversationEvents.conversationId, conversation!.id),
+      });
+      expect(event).toMatchObject({
+        type: "email_auto_ignored",
+        changes: { status: "closed" },
+        reason: "Message is a transactional email",
       });
     });
 
