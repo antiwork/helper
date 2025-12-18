@@ -96,7 +96,10 @@ export const handleAutoResponse = async ({
         if (!humanSupportRequested) {
           await updateConversation(
             message.conversationId,
-            { set: { conversationProvider: "chat", status: "closed" } },
+            {
+              set: { conversationProvider: "chat", status: "closed" },
+              message: "Automated reply sent (auto-response)",
+            },
             tx,
           );
         }

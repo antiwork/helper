@@ -312,7 +312,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
         (!conversation.assignedToAI || mailbox.preferences?.autoRespondEmailToChat === "draft") &&
         !shouldIgnore
       ) {
-        await updateConversation(conversation.id, { set: { status: "open" } });
+        await updateConversation(conversation.id, { set: { status: "open" }, message: "Email received" });
       }
 
       if (!shouldIgnore) {

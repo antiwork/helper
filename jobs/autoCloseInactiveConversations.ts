@@ -92,11 +92,7 @@ export async function closeInactiveConversationsForMailbox(): Promise<MailboxAut
 
   for (const conversation of conversationsToClose) {
     await updateConversation(conversation.id, {
-      set: {
-        status: "closed",
-        closedAt: now,
-        updatedAt: now,
-      },
+      set: { status: "closed" },
       type: "auto_closed_due_to_inactivity",
       message: "Auto-closed due to inactivity",
     });

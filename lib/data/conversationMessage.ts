@@ -357,7 +357,7 @@ export const createReply = async (
     if (shouldAutoAssign && user && !conversation.assignedToId) {
       await updateConversation(
         conversationId,
-        { set: { assignedToId: user.id, assignedToAI: false }, byUserId: null },
+        { set: { assignedToId: user.id, assignedToAI: false }, byUserId: null, message: "Auto-assigned" },
         tx,
       );
     }
@@ -383,7 +383,15 @@ export const createReply = async (
     await finishFileUpload({ fileSlugs, messageId: createdMessage.id }, tx);
 
     if (close && conversation.status !== "spam") {
-      await updateConversation(conversationId, { set: { status: "closed" }, byUserId: user?.id ?? null }, tx);
+      await updateConversation(
+        conversationId,
+        {
+          set: { status: "closed" },
+          byUserId: user?.id ?? null,
+          message: user?.id ? "Reply sent" : "Automated reply sent",
+        },
+        tx,
+      );
     }
 
     const lastAiDraft = await getLastAiGeneratedDraft(conversationId, tx);

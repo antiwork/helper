@@ -641,7 +641,10 @@ export const respondWithAI = async ({
     reasoning: string | null = null,
   ) => {
     if (!humanSupportRequested) {
-      await updateOriginalConversation(conversation.id, { set: { assignedToAI: true } });
+      await updateOriginalConversation(conversation.id, {
+        set: { assignedToAI: true },
+        message: "Automated reply sent",
+      });
     }
 
     const assistantMessage = await createAssistantMessage(conversation.id, messageId, text, {
@@ -660,7 +663,10 @@ export const respondWithAI = async ({
   };
 
   if (!conversation.assignedToAI && (!isPromptConversation || !isFirstMessage)) {
-    await updateOriginalConversation(conversation.id, { set: { status: "open" } });
+    await updateOriginalConversation(conversation.id, {
+      set: { status: "open" },
+      message: "Escalated to human support",
+    });
     if (
       messages.length === 1 ||
       (isPromptConversation && messages.filter((message) => message.role === "user").length === 2)
