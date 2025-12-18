@@ -2,7 +2,9 @@ import { sql } from "drizzle-orm";
 import superjson from "superjson";
 import { z } from "zod";
 import { toolBodySchema } from "@helperai/client";
+import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
+import { jobRuns } from "@/db/schema/jobRuns";
 import { searchSchema } from "@/lib/data/conversation/searchSchema";
 
 const events = {
@@ -156,7 +158,23 @@ export const triggerEvent = async <T extends EventName>(
   event: T,
   data: EventData<T>,
   { sleepSeconds = 0 }: { sleepSeconds?: number } = {},
+  tx = db,
 ) => {
-  const payloads = events[event].jobs.map((job) => ({ event, job, data: superjson.serialize(data) }));
-  await db.execute(sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`);
+  const runs = await tx
+    .insert(jobRuns)
+    .values(
+      events[event].jobs.map((job) => ({
+        job,
+        event,
+        data,
+      })),
+    )
+    .returning();
+  const payloads = events[event].jobs.map((job) => ({
+    event,
+    job,
+    data: superjson.serialize(data),
+    jobRunId: assertDefined(runs.find((run) => run.job === job)).id,
+  }));
+  await tx.execute(sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`);
 };
