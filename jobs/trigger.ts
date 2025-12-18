@@ -159,25 +159,21 @@ export const triggerEvent = async <T extends EventName>(
   data: EventData<T>,
   { sleepSeconds = 0 }: { sleepSeconds?: number } = {},
 ) => {
-  await db.transaction(async (tx) => {
-    const runs = await tx
-      .insert(jobRuns)
-      .values(
-        events[event].jobs.map((job) => ({
-          job,
-          event,
-          data,
-        })),
-      )
-      .returning();
-    const payloads = events[event].jobs.map((job) => ({
-      event,
-      job,
-      data: superjson.serialize(data),
-      jobRunId: assertDefined(runs.find((run) => run.job === job)).id,
-    }));
-    await tx.execute(
-      sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`,
-    );
-  });
+  const runs = await db
+    .insert(jobRuns)
+    .values(
+      events[event].jobs.map((job) => ({
+        job,
+        event,
+        data,
+      })),
+    )
+    .returning();
+  const payloads = events[event].jobs.map((job) => ({
+    event,
+    job,
+    data: superjson.serialize(data),
+    jobRunId: assertDefined(runs.find((run) => run.job === job)).id,
+  }));
+  await db.execute(sql`SELECT pgmq.send_batch('jobs', ARRAY[${sql.join(payloads, sql`,`)}]::jsonb[], ${sleepSeconds})`);
 };
