@@ -50,7 +50,10 @@ export const handleAutoResponse = async ({
   const mailbox = await getMailbox();
   if (!mailbox) return { message: "Skipped - mailbox not found" };
 
-  if (!conversation.assignedToAI) return { message: "Skipped - not assigned to AI" };
+  if (!conversation.assignedToAI) {
+    await updateConversation(conversation.id, { set: { status: "open" } });
+    return { message: "Skipped - not assigned to AI" };
+  }
 
   if (mailbox?.preferences?.autoRespondEmailToChat === "draft") {
     const aiDraft = await generateDraftResponse(conversation.id, mailbox, tools);
