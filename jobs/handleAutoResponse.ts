@@ -51,7 +51,7 @@ export const handleAutoResponse = async ({
   if (!mailbox) return { message: "Skipped - mailbox not found" };
 
   if (!conversation.assignedToAI) {
-    await updateConversation(conversation.id, { set: { status: "open" } });
+    await updateConversation(conversation.id, { set: { status: "open" }, message: "Not assigned to AI" });
     return { message: "Skipped - not assigned to AI" };
   }
 
