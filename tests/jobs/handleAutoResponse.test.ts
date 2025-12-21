@@ -154,4 +154,26 @@ describe("handleAutoResponse", () => {
     expect(aiChat.generateDraftResponse).not.toHaveBeenCalled();
     expect(aiChat.respondWithAI).not.toHaveBeenCalled();
   });
+
+  it("sets conversation to open when AI response times out", async () => {
+    await mailboxFactory.create({ preferences: { autoRespondEmailToChat: "reply" } });
+    const { conversation } = await conversationFactory.create({ assignedToAI: true });
+    const { message } = await conversationMessagesFactory.create(conversation.id, {
+      role: "user",
+      body: "Test email body",
+    });
+
+    vi.mocked(aiChat.respondWithAI).mockImplementation(
+      () => new Promise(() => {}), // Never resolves
+    );
+
+    const result = await handleAutoResponse({ messageId: message.id, responseTimeoutMs: 10 });
+
+    expect(result).toEqual({ message: "Timeout - conversation set to open" });
+
+    const updatedConversation = await db.query.conversations.findFirst({
+      where: eq(conversations.id, conversation.id),
+    });
+    expect(updatedConversation?.status).toBe("open");
+  });
 });

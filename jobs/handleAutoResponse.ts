@@ -10,14 +10,18 @@ import { ensureCleanedUpText, getTextWithConversationSubject } from "@/lib/data/
 import { getMailbox } from "@/lib/data/mailbox";
 import { createMessageNotification } from "@/lib/data/messageNotifications";
 
+class AITimeoutError extends Error {}
+
 export const handleAutoResponse = async ({
   messageId,
   tools,
   customerInfoUrl,
+  responseTimeoutMs = 50_000,
 }: {
   messageId: number;
   tools?: Record<string, ToolRequestBody>;
   customerInfoUrl?: string | null;
+  responseTimeoutMs?: number;
 }) => {
   const message = await db.query.conversationMessages
     .findFirst({
@@ -68,62 +72,78 @@ export const handleAutoResponse = async ({
   );
   const processedText = await checkTokenCountAndSummarizeIfNeeded(messageText);
 
-  const response = await respondWithAI({
-    conversation,
-    mailbox,
-    tools,
-    customerInfoUrl,
-    userEmail: message.emailFrom,
-    message: {
-      id: message.id.toString(),
-      content: processedText,
-      role: "user",
-    },
-    messageId: message.id,
-    readPageTool: null,
-    sendEmail: true,
-    guideEnabled: false,
-    reasoningEnabled: false,
-    onResponse: async ({ platformCustomer, humanSupportRequested }) => {
-      await db.transaction(async (tx) => {
-        if (platformCustomer && !humanSupportRequested) {
-          await createMessageNotification({
-            messageId: message.id,
-            conversationId: message.conversationId,
-            platformCustomerId: platformCustomer.id,
-            notificationText: `You have a new reply for ${conversation.subject ?? "(no subject)"}`,
-            tx,
-          });
-        }
+  const sendResponse = async () => {
+    const response = await respondWithAI({
+      conversation,
+      mailbox,
+      tools,
+      customerInfoUrl,
+      userEmail: message.emailFrom,
+      message: {
+        id: message.id.toString(),
+        content: processedText,
+        role: "user",
+      },
+      messageId: message.id,
+      readPageTool: null,
+      sendEmail: true,
+      guideEnabled: false,
+      reasoningEnabled: false,
+      onResponse: async ({ platformCustomer, humanSupportRequested }) => {
+        await db.transaction(async (tx) => {
+          if (platformCustomer && !humanSupportRequested) {
+            await createMessageNotification({
+              messageId: message.id,
+              conversationId: message.conversationId,
+              platformCustomerId: platformCustomer.id,
+              notificationText: `You have a new reply for ${conversation.subject ?? "(no subject)"}`,
+              tx,
+            });
+          }
 
-        if (!humanSupportRequested) {
-          await updateConversation(
-            message.conversationId,
-            { set: { conversationProvider: "chat", status: "closed" } },
-            tx,
-          );
-        }
-      });
-    },
+          if (!humanSupportRequested) {
+            await updateConversation(
+              message.conversationId,
+              { set: { conversationProvider: "chat", status: "closed" } },
+              tx,
+            );
+          }
+        });
+      },
+    });
+
+    // Consume the response to make sure we wait for the AI to generate it
+    const reader = assertDefined(response.body).getReader();
+    const decoder = new TextDecoder();
+    let responseContent = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      if (value) {
+        const chunk = decoder.decode(value, { stream: true });
+        responseContent += chunk;
+      }
+    }
+
+    // eslint-disable-next-line no-console
+    console.log("Auto response content:", responseContent);
+
+    return { message: "Auto response sent", messageId };
+  };
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new AITimeoutError()), responseTimeoutMs);
   });
 
-  // Consume the response to make sure we wait for the AI to generate it
-  const reader = assertDefined(response.body).getReader();
-  const decoder = new TextDecoder();
-  let responseContent = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    if (value) {
-      const chunk = decoder.decode(value, { stream: true });
-      responseContent += chunk;
+  try {
+    return await Promise.race([sendResponse(), timeoutPromise]);
+  } catch (error) {
+    if (error instanceof AITimeoutError) {
+      await updateConversation(conversation.id, { set: { status: "open" }, message: "AI response timeout" });
+      return { message: "Timeout - conversation set to open" };
     }
+    throw error;
   }
-
-  // eslint-disable-next-line no-console
-  console.log("Auto response content:", responseContent);
-
-  return { message: "Auto response sent", messageId };
 };
