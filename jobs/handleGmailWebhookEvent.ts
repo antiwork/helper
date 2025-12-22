@@ -242,9 +242,9 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
       if (!!staffUser && !isFirstMessage) {
         ignoreReason = "Message is from staff";
       } else if (labelIds.some((id) => IGNORED_GMAIL_CATEGORIES.includes(id))) {
-        ignoreReason = "Message is in an ignored category";
+        ignoreReason = `Message is in an ignored category (${labelIds.filter((id) => IGNORED_GMAIL_CATEGORIES.includes(id)).join(", ")})`;
       } else if (matchesTransactionalEmailAddress(parsedEmailFrom.address)) {
-        ignoreReason = "Message is a transactional email";
+        ignoreReason = `Email address is transactional (${parsedEmailFrom.address})`;
       } else {
         const isAutomatedResponseOrThankYou = await isThankYouOrAutoResponse(mailbox, cleanedUpText);
         if (isAutomatedResponseOrThankYou) ignoreReason = "Message is an automated response or thank you";

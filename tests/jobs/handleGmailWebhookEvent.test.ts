@@ -246,7 +246,7 @@ describe("handleGmailWebhookEvent", () => {
       expect(event).toMatchObject({
         type: "email_auto_ignored",
         changes: { status: "closed" },
-        reason: "Message is in an ignored category",
+        reason: "Message is in an ignored category (CATEGORY_PROMOTIONS)",
       });
     });
 
@@ -280,7 +280,7 @@ describe("handleGmailWebhookEvent", () => {
       expect(event).toMatchObject({
         type: "email_auto_ignored",
         changes: { status: "closed" },
-        reason: "Message is a transactional email",
+        reason: "Email address is transactional (noreply@example.com)",
       });
     });
 

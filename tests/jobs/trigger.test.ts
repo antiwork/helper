@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db/client";
 import { triggerEvent } from "@/jobs/trigger";
 
@@ -75,5 +75,21 @@ describe("triggerEvent", () => {
       "notifyVipMessage",
       "publishNewMessageEvent",
     ]);
+  });
+
+  it("does not create job runs if send_batch fails", async () => {
+    const originalTransaction = db.transaction.bind(db);
+
+    vi.spyOn(db, "transaction").mockImplementationOnce((callback) => {
+      return originalTransaction((tx) => {
+        vi.spyOn(tx, "execute").mockRejectedValueOnce(new Error("send_batch failed"));
+        return callback(tx);
+      });
+    });
+
+    await expect(triggerEvent("files/preview.generate", { fileId: 123 })).rejects.toThrow("send_batch failed");
+
+    const runs = await db.query.jobRuns.findMany();
+    expect(runs).toHaveLength(0);
   });
 });
