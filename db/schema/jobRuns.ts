@@ -17,6 +17,7 @@ export const jobRuns = pgTable(
   },
   (table) => [
     index("job_runs_created_at_idx").on(table.createdAt),
+    index("job_runs_updated_at_idx").on(table.updatedAt),
     index("job_runs_job_idx").on(table.job),
     index("job_runs_status_idx").on(table.status),
   ],

@@ -103,6 +103,20 @@ describe("handleAutoResponse", () => {
     expect(aiChat.respondWithAI).not.toHaveBeenCalled();
   });
 
+  it("ensures the conversation is open when it's not assigned to AI", async () => {
+    await mailboxFactory.create();
+    const { conversation } = await conversationFactory.create({ assignedToAI: false, status: "closed" });
+    const { message } = await conversationMessagesFactory.create(conversation.id, { role: "user" });
+
+    const result = await handleAutoResponse({ messageId: message.id });
+    expect(result).toEqual({ message: "Skipped - not assigned to AI" });
+
+    const updatedConversation = await db.query.conversations.findFirst({
+      where: eq(conversations.id, conversation.id),
+    });
+    expect(updatedConversation?.status).toBe("open");
+  });
+
   it("skips if email text is empty after cleaning", async () => {
     await mailboxFactory.create();
     const { conversation } = await conversationFactory.create({ assignedToAI: true, subject: "" });
@@ -139,5 +153,27 @@ describe("handleAutoResponse", () => {
     expect(result).toEqual({ message: "Skipped - newer message exists" });
     expect(aiChat.generateDraftResponse).not.toHaveBeenCalled();
     expect(aiChat.respondWithAI).not.toHaveBeenCalled();
+  });
+
+  it("sets conversation to open when AI response times out", async () => {
+    await mailboxFactory.create({ preferences: { autoRespondEmailToChat: "reply" } });
+    const { conversation } = await conversationFactory.create({ assignedToAI: true });
+    const { message } = await conversationMessagesFactory.create(conversation.id, {
+      role: "user",
+      body: "Test email body",
+    });
+
+    vi.mocked(aiChat.respondWithAI).mockImplementation(
+      () => new Promise(() => {}), // Never resolves
+    );
+
+    const result = await handleAutoResponse({ messageId: message.id, responseTimeoutMs: 10 });
+
+    expect(result).toEqual({ message: "Timeout - conversation set to open" });
+
+    const updatedConversation = await db.query.conversations.findFirst({
+      where: eq(conversations.id, conversation.id),
+    });
+    expect(updatedConversation?.status).toBe("open");
   });
 });

@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import * as Sentry from "@sentry/nextjs";
 import { waitUntil } from "@vercel/functions";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import superjson from "superjson";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
@@ -10,7 +10,7 @@ import { db } from "@/db/client";
 import { jobRuns } from "@/db/schema";
 import { cronJobs, eventJobs } from "@/jobs";
 import { EventData, EventName } from "@/jobs/trigger";
-import { NonRetriableError } from "@/jobs/utils";
+import { failJob } from "@/jobs/utils";
 import { getSecret, SECRET_NAMES } from "@/lib/secrets";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
@@ -34,19 +34,13 @@ const verifyHmac = async (body: string, providedHmac: string, timestamp: string)
   }
 };
 
-const retrySeconds: Record<number, number> = {
-  0: 5,
-  1: 60,
-  2: 5 * 60,
-  3: 60 * 60,
-};
-
 const handleJob = async (jobRun: typeof jobRuns.$inferSelect, handler: Promise<any>) => {
   try {
     Sentry.setTag("job", jobRun.job);
     Sentry.setExtra("data", jobRun.data);
     // eslint-disable-next-line no-console
     console.log(`Running job ${jobRun.id} (${jobRun.job} ${JSON.stringify(jobRun.data)})`);
+    await db.update(jobRuns).set({ status: "running" }).where(eq(jobRuns.id, jobRun.id));
     const result = await handler;
     await db.update(jobRuns).set({ status: "success", result }).where(eq(jobRuns.id, jobRun.id));
     // eslint-disable-next-line no-console
@@ -55,20 +49,7 @@ const handleJob = async (jobRun: typeof jobRuns.$inferSelect, handler: Promise<a
     // eslint-disable-next-line no-console
     console.log(`Job ${jobRun.id} (${jobRun.job}) failed`);
     captureExceptionAndLog(error);
-    await db.transaction(async (tx) => {
-      if (retrySeconds[jobRun.attempts] && !(error instanceof NonRetriableError)) {
-        const payload = { job: jobRun.job, data: jobRun.data, event: jobRun.event, jobRunId: jobRun.id };
-        await tx.execute(sql`SELECT pgmq.send('jobs', ${payload}::jsonb, ${retrySeconds[jobRun.attempts]})`);
-      }
-      await tx
-        .update(jobRuns)
-        .set({
-          status: "error",
-          error: error instanceof Error ? error.message : `${error}`,
-          attempts: jobRun.attempts + 1,
-        })
-        .where(eq(jobRuns.id, jobRun.id));
-    });
+    await failJob(jobRun, error);
   }
 };
 

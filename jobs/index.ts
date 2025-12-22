@@ -4,6 +4,7 @@ import { bulkEmbeddingClosedConversations } from "./bulkEmbeddingClosedConversat
 import { bulkUpdateConversations } from "./bulkUpdateConversations";
 import { categorizeConversationToIssueGroup } from "./categorizeConversationToIssueGroup";
 import { checkAssignedTicketResponseTimes } from "./checkAssignedTicketResponseTimes";
+import { checkStaleJobs } from "./checkStaleJobs";
 import { checkVipResponseTimes } from "./checkVipResponseTimes";
 import { cleanupDanglingFiles } from "./cleanupDanglingFiles";
 import { crawlWebsite } from "./crawlWebsite";
@@ -61,6 +62,7 @@ export const eventJobs = {
 };
 
 export const cronJobs = {
+  "*/5 * * * *": { checkStaleJobs },
   "0 19 * * *": { bulkEmbeddingClosedConversations },
   "0 * * * *": {
     cleanupDanglingFiles,
