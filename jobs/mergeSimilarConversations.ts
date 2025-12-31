@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, not } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationEvents } from "@/db/schema";
@@ -61,8 +61,12 @@ export const mergeSimilarConversations = async ({ messageId }: { messageId: numb
 
   const otherConversations = await db.query.conversations.findMany({
     where: and(
+      // Only consider conversations with lower IDs (≈ older conversations) as merge targets.
+      // This prevents a race condition where two concurrent jobs could each merge into the other,
+      // creating a circular reference. With this constraint, newer conversations always merge
+      // into older ones, so only one of the concurrent jobs will find a merge target.
+      lt(conversations.id, conversation.id),
       eq(conversations.emailFrom, conversation.emailFrom),
-      not(eq(conversations.id, conversation.id)),
       isNull(conversations.mergedIntoId),
       eq(conversations.status, "open"),
     ),

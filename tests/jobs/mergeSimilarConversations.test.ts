@@ -185,4 +185,26 @@ describe("mergeSimilarConversations", () => {
     const unchanged = await db.query.conversations.findFirst({ where: eq(conversations.id, conversation.id) });
     expect(unchanged?.mergedIntoId).toBeNull();
   });
+
+  it("only considers older conversations as merge targets to prevent circular merges", async () => {
+    const email = "customer@example.com";
+
+    const { conversation: older } = await conversationFactory.create({ emailFrom: email });
+    const { message: olderMessage } = await conversationMessagesFactory.create(older.id, { role: "user" });
+
+    const { conversation: newer } = await conversationFactory.create({ emailFrom: email });
+    await conversationMessagesFactory.create(newer.id, { role: "user" });
+
+    // When running merge on the older conversation, it should NOT find the newer one
+    // because we only look at conversations with lower IDs (to prevent race conditions)
+    const result = await mergeSimilarConversations({ messageId: olderMessage.id });
+
+    expect(result).toEqual({ message: "No other conversations from this customer found" });
+    expect(runAIObjectQuery).not.toHaveBeenCalled();
+
+    const unchangedOlder = await db.query.conversations.findFirst({ where: eq(conversations.id, older.id) });
+    const unchangedNewer = await db.query.conversations.findFirst({ where: eq(conversations.id, newer.id) });
+    expect(unchangedOlder?.mergedIntoId).toBeNull();
+    expect(unchangedNewer?.mergedIntoId).toBeNull();
+  });
 });
