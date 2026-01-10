@@ -160,6 +160,7 @@ export const triggerEvent = async <T extends EventName>(
   { sleepSeconds = 0 }: { sleepSeconds?: number } = {},
 ) => {
   await db.transaction(async (tx) => {
+    const scheduledAt = new Date(Date.now() + sleepSeconds * 1000);
     const runs = await tx
       .insert(jobRuns)
       .values(
@@ -167,6 +168,7 @@ export const triggerEvent = async <T extends EventName>(
           job,
           event,
           data,
+          scheduledAt,
         })),
       )
       .returning();

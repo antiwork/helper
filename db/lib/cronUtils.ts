@@ -98,9 +98,13 @@ export const setupJobFunctions = async () => {
 
         job_count := job_count + 1;
         
-        response := call_job_endpoint(message_record.message::text, message_record.msg_id::text);
-  
-        raise notice 'Processed job %, response: %', message_record.msg_id, response;
+        begin
+          response := call_job_endpoint(message_record.message::text, message_record.msg_id::text);
+          raise notice 'Processed job %, response: %', message_record.msg_id, response;
+        exception when others then
+          raise notice 'Job % failed with error: %, re-queuing', message_record.msg_id, sqlerrm;
+          -- The job will be picked up and retried by a cron if Vercel didn't complete the request
+        end;
       end loop;
       
       return format('Processed %s jobs in %s seconds', job_count, round(extract(epoch from (clock_timestamp() - start_time))::numeric, 2));

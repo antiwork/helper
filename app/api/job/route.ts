@@ -4,7 +4,6 @@ import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import superjson from "superjson";
-import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { jobRuns } from "@/db/schema";
@@ -34,14 +33,14 @@ const verifyHmac = async (body: string, providedHmac: string, timestamp: string)
   }
 };
 
-const handleJob = async (jobRun: typeof jobRuns.$inferSelect, handler: Promise<any>) => {
+const handleJob = async (jobRun: typeof jobRuns.$inferSelect, handler: () => Promise<any>) => {
   try {
     Sentry.setTag("job", jobRun.job);
     Sentry.setExtra("data", jobRun.data);
     // eslint-disable-next-line no-console
     console.log(`Running job ${jobRun.id} (${jobRun.job} ${JSON.stringify(jobRun.data)})`);
     await db.update(jobRuns).set({ status: "running" }).where(eq(jobRuns.id, jobRun.id));
-    const result = await handler;
+    const result = await handler();
     await db.update(jobRuns).set({ status: "success", result }).where(eq(jobRuns.id, jobRun.id));
     // eslint-disable-next-line no-console
     console.log(`Job ${jobRun.id} (${jobRun.job}) completed with:`, result);
@@ -70,22 +69,17 @@ export const POST = async (request: NextRequest) => {
     }
 
     const data = JSON.parse(body) as
-      | { event: EventName; job: string; jobRunId?: number; data: any }
-      | { job: string; jobRunId?: number; event?: undefined; data?: undefined };
+      | { event: EventName; job: string; jobRunId: number; data: any }
+      | { job: string; jobRunId: number; event?: undefined; data?: undefined };
     const queueMessageId = request.headers.get("X-Queue-Message-Id");
 
-    const jobRun = data.jobRunId
-      ? assertDefined(await db.query.jobRuns.findFirst({ where: eq(jobRuns.id, data.jobRunId) }))
-      : await db
-          .insert(jobRuns)
-          .values({
-            job: data.job,
-            event: data.event,
-            data: data.data ?? {},
-            queueMessageId: queueMessageId ? parseInt(queueMessageId) : undefined,
-          })
-          .returning()
-          .then(takeUniqueOrThrow);
+    const jobRun = assertDefined(await db.query.jobRuns.findFirst({ where: eq(jobRuns.id, data.jobRunId) }));
+    if (queueMessageId) {
+      await db
+        .update(jobRuns)
+        .set({ queueMessageId: parseInt(queueMessageId, 10) })
+        .where(eq(jobRuns.id, jobRun.id));
+    }
 
     if (data.event) {
       const handler = eventJobs[data.job as keyof typeof eventJobs] as (data: EventData<EventName>) => Promise<any>;
@@ -93,14 +87,14 @@ export const POST = async (request: NextRequest) => {
         await db.update(jobRuns).set({ status: "error", error: "Job not found" }).where(eq(jobRuns.id, jobRun.id));
         return new Response("Not found", { status: 404 });
       }
-      waitUntil(handleJob(jobRun, handler(data.data?.json ? superjson.deserialize(data.data) : data.data)));
+      waitUntil(handleJob(jobRun, () => handler(data.data?.json ? superjson.deserialize(data.data) : data.data)));
     } else {
       const handler = Object.assign({}, ...Object.values(cronJobs))[data.job] as () => Promise<any>;
       if (!handler) {
         await db.update(jobRuns).set({ status: "error", error: "Job not found" }).where(eq(jobRuns.id, jobRun.id));
         return new Response("Not found", { status: 404 });
       }
-      waitUntil(handleJob(jobRun, handler()));
+      waitUntil(handleJob(jobRun, handler));
     }
 
     // eslint-disable-next-line no-console

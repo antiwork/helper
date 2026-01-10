@@ -34,6 +34,10 @@ export const failJob = async (jobRun: typeof jobRuns.$inferSelect, error: unknow
     if (!(error instanceof NonRetriableError) && delay) {
       const payload = { job: jobRun.job, data: jobRun.data, event: jobRun.event, jobRunId: jobRun.id };
       await tx.execute(sql`SELECT pgmq.send('jobs', ${payload}::jsonb, ${delay})`);
+      await tx
+        .update(jobRuns)
+        .set({ scheduledAt: new Date(Date.now() + delay * 1000) })
+        .where(eq(jobRuns.id, jobRun.id));
       retryScheduled = true;
     }
     await tx

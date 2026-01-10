@@ -7,6 +7,7 @@ import { checkAssignedTicketResponseTimes } from "./checkAssignedTicketResponseT
 import { checkStaleJobs } from "./checkStaleJobs";
 import { checkVipResponseTimes } from "./checkVipResponseTimes";
 import { cleanupDanglingFiles } from "./cleanupDanglingFiles";
+import { cleanupOldJobRuns } from "./cleanupOldJobRuns";
 import { crawlWebsite } from "./crawlWebsite";
 import { embeddingConversation } from "./embeddingConversation";
 import { embeddingFaq } from "./embeddingFaq";
@@ -26,6 +27,7 @@ import { postEmailToGmail } from "./postEmailToGmail";
 import { publishNewMessageEvent } from "./publishNewMessageEvent";
 import { publishRequestHumanSupport } from "./publishRequestHumanSupport";
 import { renewMailboxWatches } from "./renewMailboxWatches";
+import { requeuePendingJobs } from "./requeuePendingJobs";
 import { scheduledWebsiteCrawl } from "./scheduledWebsiteCrawl";
 import { sendFollowerNotification } from "./sendFollowerNotification";
 import { suggestKnowledgeBankChanges } from "./suggestKnowledgeBankChanges";
@@ -62,10 +64,11 @@ export const eventJobs = {
 };
 
 export const cronJobs = {
-  "*/5 * * * *": { checkStaleJobs },
+  "*/5 * * * *": { checkStaleJobs, requeuePendingJobs },
   "0 19 * * *": { bulkEmbeddingClosedConversations },
   "0 * * * *": {
     cleanupDanglingFiles,
+    cleanupOldJobRuns,
     closeInactiveConversations,
   },
   "0 14 * * 1-5": {

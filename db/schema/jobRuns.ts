@@ -1,4 +1,4 @@
-import { bigint, index, integer, jsonb, pgTable, text } from "drizzle-orm/pg-core";
+import { bigint, index, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { withTimestamps } from "../lib/with-timestamps";
 
 export const jobRuns = pgTable(
@@ -14,11 +14,13 @@ export const jobRuns = pgTable(
     result: jsonb(),
     error: text(),
     attempts: integer().notNull().default(0),
+    scheduledAt: timestamp({ withTimezone: true }),
   },
   (table) => [
     index("job_runs_created_at_idx").on(table.createdAt),
     index("job_runs_updated_at_idx").on(table.updatedAt),
     index("job_runs_job_idx").on(table.job),
     index("job_runs_status_idx").on(table.status),
+    index("job_runs_scheduled_at_idx").on(table.scheduledAt),
   ],
 ).enableRLS();
