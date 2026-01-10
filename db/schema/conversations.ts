@@ -57,9 +57,11 @@ export const conversations = pgTable(
     >(),
   },
   (table) => [
+    index("conversations_conversation_status_idx").on(table.status),
     index("conversations_conversation_assigned_to_clerk_id").on(table.assignedToId),
     index("conversations_conversation_closed_at_16474e94").on(table.closedAt),
     index("conversations_conversation_created_at_1ec48787").on(table.createdAt),
+    index("conversations_conversation_updated_at_idx").on(table.updatedAt),
     index("conversations_conversation_email_from_aab3d292").on(table.emailFrom),
     // Drizzle doesn't generate migrations with `text_pattern_ops`; they only have `text_ops`
     index("conversations_conversation_email_from_aab3d292_like").on(table.emailFrom),
@@ -73,6 +75,7 @@ export const conversations = pgTable(
     index("conversations_merged_into_id_idx").on(table.mergedIntoId),
     index("conversations_issue_group_id_idx").on(table.issueGroupId),
     index("conversations_last_message_at_idx").on(table.lastMessageAt),
+    index("conversations_conversation_is_prompt_idx").on(table.isPrompt),
     // Optimized index for closed tickets ordering/filtering
     index("idx_conversations_closed")
       .on(table.closedAt.desc().nullsLast())
