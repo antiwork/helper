@@ -54,6 +54,9 @@ export const setupJobFunctions = async () => {
         timestamp_str := extract(epoch from now())::text;
         hmac_payload := timestamp_str || '.' || job_body;
         
+        perform http_set_curlopt('CURLOPT_TIMEOUT', '1');
+        perform http_set_curlopt('CURLOPT_CONNECTTIMEOUT', '1');
+        
         select content into response from http((
           'POST',
           endpoint_url,
