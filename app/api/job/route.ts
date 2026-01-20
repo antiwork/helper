@@ -4,6 +4,7 @@ import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import superjson from "superjson";
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { jobRuns } from "@/db/schema";
@@ -73,7 +74,19 @@ export const POST = async (request: NextRequest) => {
       | { job: string; jobRunId: number; event?: undefined; data?: undefined };
     const queueMessageId = request.headers.get("X-Queue-Message-Id");
 
-    const jobRun = assertDefined(await db.query.jobRuns.findFirst({ where: eq(jobRuns.id, data.jobRunId) }));
+    // For events we insert on trigger, but for cron jobs we insert here
+    const jobRun = data.jobRunId
+      ? assertDefined(await db.query.jobRuns.findFirst({ where: eq(jobRuns.id, data.jobRunId) }))
+      : await db
+          .insert(jobRuns)
+          .values({
+            job: data.job,
+            event: data.event,
+            data: data.data ?? {},
+            queueMessageId: queueMessageId ? parseInt(queueMessageId) : undefined,
+          })
+          .returning()
+          .then(takeUniqueOrThrow);
     if (queueMessageId) {
       await db
         .update(jobRuns)
