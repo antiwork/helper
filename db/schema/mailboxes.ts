@@ -16,6 +16,7 @@ export const mailboxes = pgTable(
     slackBotToken: text(),
     slackBotUserId: text(),
     slackTeamId: text(),
+    googleChatWebhookUrl: text(),
     githubInstallationId: text(),
     githubRepoOwner: text(),
     githubRepoName: text(),
