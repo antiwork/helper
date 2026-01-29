@@ -41,7 +41,6 @@ export const env = createEnv({
     GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
     GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1).optional(), // Google PubSub for Gmail sync
     GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1).optional(),
-    GOOGLE_CHAT_WEBHOOK_URL: z.string().url().optional(), // Google Chat webhook URL for sending notifications
 
     // Set these when deploying if you're not using Vercel with the Supabase integration
     AUTH_URL: z.string().url().default(defaultRootUrl), // The root URL of the app; legacy name which was required by next-auth
