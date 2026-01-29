@@ -93,6 +93,8 @@ export const env = createEnv({
       .default("")
       .transform((v) => (v ? v.split(",").map((d) => d.trim()) : [])),
 
+
+
     // Log SQL queries to the console
     DRIZZLE_LOGGING: z.string().optional(),
 
