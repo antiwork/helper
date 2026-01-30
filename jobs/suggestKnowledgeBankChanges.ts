@@ -7,7 +7,7 @@ import { conversationMessages, faqs, mailboxes } from "@/db/schema";
 import { assertDefinedOrRaiseNonRetriableError } from "@/jobs/utils";
 import { generateKnowledgeBankSuggestion } from "@/lib/ai/knowledgeBankSuggestions";
 import { getMailbox } from "@/lib/data/mailbox";
-import { postSlackMessage } from "@/lib/slack/client";
+import { postGoogleChatMessage } from "@/lib/googleChat/client";
 import { getSuggestedEditButtons } from "@/lib/slack/shared";
 
 export const suggestKnowledgeBankChanges = async ({
@@ -90,8 +90,8 @@ export const suggestKnowledgeBankChanges = async ({
 };
 
 const notifySuggestedEdit = async (faq: typeof faqs.$inferSelect, mailbox: typeof mailboxes.$inferSelect) => {
-  if (!mailbox.slackBotToken || !mailbox.slackAlertChannel) {
-    return "Not posted, mailbox not linked to Slack or missing alert channel";
+  if (!mailbox.googleChatWebhookUrl) {
+    return "Not posted, mailbox not linked to Google Chat webhook";
   }
 
   let originalContent = "";
@@ -102,31 +102,15 @@ const notifySuggestedEdit = async (faq: typeof faqs.$inferSelect, mailbox: typeo
     originalContent = replacementFaq?.content ?? "";
   }
 
-  const messageTs = await postSlackMessage(mailbox.slackBotToken, {
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: originalContent
-            ? `💡 New suggested edit for the knowledge bank\n\n*Suggested content:*\n${faq.content}\n\n*This will overwrite the current entry:*\n${originalContent}`
-            : `💡 New suggested addition to the knowledge bank\n\n*Suggested content:*\n${faq.content}`,
-        },
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `<${getBaseUrl()}/settings/knowledge|View knowledge bank>`,
-        },
-      },
-      getSuggestedEditButtons(faq.id),
-    ],
-    channel: mailbox.slackAlertChannel,
-  });
+  const text = originalContent
+    ? `💡 New suggested edit for the knowledge bank\n\nSuggested content:\n${faq.content}\n\nThis will overwrite the current entry:\n${originalContent}\n\nView knowledge bank: ${getBaseUrl()}/settings/knowledge`
+    : `💡 New suggested addition to the knowledge bank\n\nSuggested content:\n${faq.content}\n\nView knowledge bank: ${getBaseUrl()}/settings/knowledge`;
 
-  await db
-    .update(faqs)
-    .set({ slackChannel: mailbox.slackAlertChannel, slackMessageTs: messageTs })
-    .where(eq(faqs.id, faq.id));
+  await postGoogleChatMessage(mailbox.googleChatWebhookUrl, text);
+
+  // Optionally, store Google Chat info if needed
+  // await db
+  //   .update(faqs)
+  //   .set({ googleChatWebhookUrl: mailbox.googleChatWebhookUrl })
+  //   .where(eq(faqs.id, faq.id));
 };

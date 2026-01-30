@@ -50,49 +50,26 @@ export const verifySlackRequest = (body: string, headers: Headers) => {
   return Promise.resolve(crypto.timingSafeEqual(Buffer.from(computedSignature), Buffer.from(slackSignature)));
 };
 
-export const postSlackMessage = async (
-  token: string,
-  {
-    ephemeralUserId,
-    ...options
-  }: ChatPostMessageArguments & {
-    ephemeralUserId?: string;
-  },
-) => {
-  const client = new WebClient(token);
-  const postMessage = async () => {
-    if (ephemeralUserId) {
-      const response = await client.chat.postEphemeral({
-        ...options,
-        user: ephemeralUserId,
-      } as ChatPostEphemeralArguments);
-      if (!response.message_ts) {
-        throw new Error(`Failed to post Slack message: ${response.error}`);
-      }
-      return response.message_ts;
+
+  import { postGoogleChatMessage } from "@/lib/googleChat/client";
+
+  // Wrapper for posting a message (Slack API signature, Google Chat implementation)
+  export const postSlackMessage = async (
+    _token: string,
+    { channel, text, blocks, attachments, ...rest }: any
+  ) => {
+    // Compose message for Google Chat
+    let message = text;
+    if (blocks) {
+      // TODO: Convert Slack blocks to Google Chat cards if needed
+      message = typeof text === "string" ? text : JSON.stringify(blocks);
     }
-    const response = await client.chat.postMessage(options);
-    if (!response.message?.ts) {
-      throw new Error(`Failed to post Slack message: ${response.error}`);
+    if (attachments) {
+      // TODO: Convert Slack attachments to Google Chat format
     }
-    return response.message.ts;
+    // The webhook URL should be passed as 'channel' for Google Chat
+    return postGoogleChatMessage(channel, message);
   };
-
-  const addBotToSlackChannel = async () => {
-    await client.conversations.join({ channel: options.channel });
-  };
-
-  try {
-    return await postMessage();
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("not_in_channel")) {
-      await addBotToSlackChannel();
-      return await postMessage();
-    }
-    throw error;
-  }
-};
-
 export const updateSlackMessage = async ({
   token,
   channel,
