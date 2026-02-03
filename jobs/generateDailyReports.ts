@@ -1,18 +1,17 @@
-import { KnownBlock } from "@slack/web-api";
 import { subHours } from "date-fns";
 import { aliasedTable, and, eq, gt, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, mailboxes, platformCustomers } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { getMailbox } from "@/lib/data/mailbox";
-import { postSlackMessage } from "@/lib/slack/client";
+import { postGoogleChatWebhookMessage } from "@/lib/googleChat/webhook";
 
 export const TIME_ZONE = "America/New_York";
 
 export async function generateDailyReports() {
   const mailboxesList = await db.query.mailboxes.findMany({
     columns: { id: true },
-    where: and(isNotNull(mailboxes.slackBotToken), isNotNull(mailboxes.slackAlertChannel)),
+    where: isNotNull(mailboxes.googleChatWebhookUrl),
   });
 
   if (!mailboxesList.length) return;
@@ -22,18 +21,7 @@ export async function generateDailyReports() {
 
 export async function generateMailboxDailyReport() {
   const mailbox = await getMailbox();
-  if (!mailbox?.slackBotToken || !mailbox.slackAlertChannel) return;
-
-  const blocks: KnownBlock[] = [
-    {
-      type: "section",
-      text: {
-        type: "plain_text",
-        text: `Daily summary for ${mailbox.name}:`,
-        emoji: true,
-      },
-    },
-  ];
+  if (!mailbox?.googleChatWebhookUrl) return;
 
   const endTime = new Date();
   const startTime = subHours(endTime, 24);
@@ -173,29 +161,19 @@ export async function generateMailboxDailyReport() {
     ? `• Average time existing open tickets have been open: ${formatTime(avgWaitTimeResult.average)}`
     : null;
 
-  blocks.push({
-    type: "section",
-    text: {
-      type: "mrkdwn",
-      text: [
-        openCountMessage,
-        answeredCountMessage,
-        openTicketsOverZeroMessage,
-        answeredTicketsOverZeroMessage,
-        avgReplyTimeMessage,
-        vipAvgReplyTimeMessage,
-        avgWaitTimeMessage,
-      ]
-        .filter(Boolean)
-        .join("\n"),
-    },
-  });
+  const lines = [
+    `Daily summary for ${mailbox.name}`,
+    "",
+    openCountMessage,
+    answeredCountMessage,
+    openTicketsOverZeroMessage,
+    answeredTicketsOverZeroMessage,
+    avgReplyTimeMessage,
+    vipAvgReplyTimeMessage,
+    avgWaitTimeMessage,
+  ].filter(Boolean);
 
-  await postSlackMessage(mailbox.slackBotToken, {
-    channel: mailbox.slackAlertChannel,
-    text: `Daily summary for ${mailbox.name}`,
-    blocks,
-  });
+  await postGoogleChatWebhookMessage(mailbox.googleChatWebhookUrl, { text: lines.join("\n") });
 
   return {
     success: true,

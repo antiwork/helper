@@ -3,11 +3,10 @@ import { userFactory } from "@tests/support/factories/users";
 import { subDays, subHours } from "date-fns";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { checkAssignedTicketResponseTimes } from "@/jobs/checkAssignedTicketResponseTimes";
-import { getSlackUsersByEmail, postSlackMessage } from "@/lib/slack/client";
+import { postGoogleChatWebhookMessage } from "@/lib/googleChat/webhook";
 
-vi.mock("@/lib/slack/client", () => ({
-  postSlackMessage: vi.fn(),
-  getSlackUsersByEmail: vi.fn(),
+vi.mock("@/lib/googleChat/webhook", () => ({
+  postGoogleChatWebhookMessage: vi.fn(),
 }));
 
 vi.mock("@/lib/data/user", async (importOriginal) => ({
@@ -23,11 +22,10 @@ describe("checkAssignedTicketResponseTimes", () => {
     vi.setSystemTime(now);
   });
 
-  it("sends a Slack alert for overdue assigned tickets", async () => {
+  it("sends a Google Chat alert for overdue assigned tickets", async () => {
     const { user } = await userFactory.createRootUser({
       mailboxOverrides: {
-        slackBotToken: "valid-token",
-        slackAlertChannel: "channel-id",
+        googleChatWebhookUrl: "https://chat.googleapis.com/v1/spaces/test/messages?key=key&token=token",
         preferences: {},
       },
     });
@@ -39,33 +37,20 @@ describe("checkAssignedTicketResponseTimes", () => {
       status: "open",
     });
 
-    vi.mocked(getSlackUsersByEmail).mockResolvedValue(new Map([[user.email!, "SLACK123"]]));
-
     await checkAssignedTicketResponseTimes(now);
 
-    expect(postSlackMessage).toHaveBeenCalledWith(
-      "valid-token",
+    expect(postGoogleChatWebhookMessage).toHaveBeenCalledWith(
+      "https://chat.googleapis.com/v1/spaces/test/messages?key=key&token=token",
       expect.objectContaining({
-        channel: "channel-id",
-        text: expect.stringContaining("Assigned Ticket Response Time Alert"),
-        blocks: expect.arrayContaining([
-          expect.objectContaining({
-            type: "section",
-            text: expect.objectContaining({
-              type: "mrkdwn",
-              text: expect.stringContaining("assigned tickets have been waiting over 24 hours without a response"),
-            }),
-          }),
-        ]),
+        text: expect.stringContaining("assigned tickets have been waiting over 24 hours"),
       }),
     );
   });
 
-  it("does not send a Slack alert for non-overdue assigned tickets", async () => {
+  it("does not send a Google Chat alert for non-overdue assigned tickets", async () => {
     const { user } = await userFactory.createRootUser({
       mailboxOverrides: {
-        slackBotToken: "valid-token",
-        slackAlertChannel: "channel-id",
+        googleChatWebhookUrl: "https://chat.googleapis.com/v1/spaces/test/messages?key=key&token=token",
         preferences: {},
       },
     });
@@ -77,18 +62,15 @@ describe("checkAssignedTicketResponseTimes", () => {
       status: "open",
     });
 
-    vi.mocked(getSlackUsersByEmail).mockResolvedValue(new Map([[user.email!, "SLACK123"]]));
-
     await checkAssignedTicketResponseTimes(now);
 
-    expect(postSlackMessage).not.toHaveBeenCalled();
+    expect(postGoogleChatWebhookMessage).not.toHaveBeenCalled();
   });
 
-  it("does not send a Slack alert when notifications are disabled", async () => {
+  it("does not send a Google Chat alert when notifications are disabled", async () => {
     const { user } = await userFactory.createRootUser({
       mailboxOverrides: {
-        slackBotToken: "valid-token",
-        slackAlertChannel: "channel-id",
+        googleChatWebhookUrl: "https://chat.googleapis.com/v1/spaces/test/messages?key=key&token=token",
         preferences: {
           disableTicketResponseTimeAlerts: true,
         },
@@ -102,10 +84,8 @@ describe("checkAssignedTicketResponseTimes", () => {
       status: "open",
     });
 
-    vi.mocked(getSlackUsersByEmail).mockResolvedValue(new Map([[user.email!, "SLACK123"]]));
-
     await checkAssignedTicketResponseTimes();
 
-    expect(postSlackMessage).not.toHaveBeenCalled();
+    expect(postGoogleChatWebhookMessage).not.toHaveBeenCalled();
   });
 });

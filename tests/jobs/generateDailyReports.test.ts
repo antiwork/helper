@@ -6,14 +6,14 @@ import { subHours } from "date-fns";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateMailboxDailyReport } from "@/jobs/generateDailyReports";
 import { getMailbox } from "@/lib/data/mailbox";
-import { postSlackMessage } from "@/lib/slack/client";
+import { postGoogleChatWebhookMessage } from "@/lib/googleChat/webhook";
 
 vi.mock("@/lib/data/mailbox", () => ({
   getMailbox: vi.fn(),
 }));
 
-vi.mock("@/lib/slack/client", () => ({
-  postSlackMessage: vi.fn(),
+vi.mock("@/lib/googleChat/webhook", () => ({
+  postGoogleChatWebhookMessage: vi.fn(),
 }));
 
 describe("generateMailboxDailyReport", () => {
@@ -21,26 +21,24 @@ describe("generateMailboxDailyReport", () => {
     vi.clearAllMocks();
   });
 
-  it("skips when mailbox has no slack configuration", async () => {
+  it("skips when mailbox has no Google Chat webhook configured", async () => {
     vi.mocked(getMailbox).mockResolvedValue({
       id: 1,
       name: "Test Mailbox",
-      slackBotToken: null,
-      slackAlertChannel: null,
+      googleChatWebhookUrl: null,
       vipThreshold: null,
     } as any);
 
     const result = await generateMailboxDailyReport();
 
     expect(result).toBeUndefined();
-    expect(postSlackMessage).not.toHaveBeenCalled();
+    expect(postGoogleChatWebhookMessage).not.toHaveBeenCalled();
   });
 
   it("skips when there are no open tickets", async () => {
     const { mailbox } = await userFactory.createRootUser({
       mailboxOverrides: {
-        slackBotToken: "test-token",
-        slackAlertChannel: "test-channel",
+        googleChatWebhookUrl: "https://chat.googleapis.com/v1/spaces/test/messages?key=key&token=token",
       },
     });
 
@@ -52,14 +50,13 @@ describe("generateMailboxDailyReport", () => {
       skipped: true,
       reason: "No open tickets",
     });
-    expect(postSlackMessage).not.toHaveBeenCalled();
+    expect(postGoogleChatWebhookMessage).not.toHaveBeenCalled();
   });
 
   it("calculates correct metrics for basic scenarios", async () => {
     const { mailbox, user } = await userFactory.createRootUser({
       mailboxOverrides: {
-        slackBotToken: "test-token",
-        slackAlertChannel: "test-channel",
+        googleChatWebhookUrl: "https://chat.googleapis.com/v1/spaces/test/messages?key=key&token=token",
       },
     });
 
@@ -109,18 +106,18 @@ describe("generateMailboxDailyReport", () => {
       avgWaitTimeMessage: "• Average time existing open tickets have been open: 12h 0m",
     });
 
-    expect(postSlackMessage).toHaveBeenCalledWith("test-token", {
-      channel: "test-channel",
-      text: `Daily summary for ${mailbox.name}`,
-      blocks: expect.any(Array),
-    });
+    expect(postGoogleChatWebhookMessage).toHaveBeenCalledWith(
+      "https://chat.googleapis.com/v1/spaces/test/messages?key=key&token=token",
+      expect.objectContaining({
+        text: expect.stringContaining(`Daily summary for ${mailbox.name}`),
+      }),
+    );
   });
 
   it("calculates correct metrics with VIP customers", async () => {
     const { mailbox, user } = await userFactory.createRootUser({
       mailboxOverrides: {
-        slackBotToken: "test-token",
-        slackAlertChannel: "test-channel",
+        googleChatWebhookUrl: "https://chat.googleapis.com/v1/spaces/test/messages?key=key&token=token",
         vipThreshold: 100,
       },
     });
@@ -186,8 +183,7 @@ describe("generateMailboxDailyReport", () => {
   it("handles scenarios with no platform customers", async () => {
     const { mailbox, user } = await userFactory.createRootUser({
       mailboxOverrides: {
-        slackBotToken: "test-token",
-        slackAlertChannel: "test-channel",
+        googleChatWebhookUrl: "https://chat.googleapis.com/v1/spaces/test/messages?key=key&token=token",
       },
     });
 
@@ -227,8 +223,7 @@ describe("generateMailboxDailyReport", () => {
   it("handles zero-value platform customers correctly", async () => {
     const { mailbox, user } = await userFactory.createRootUser({
       mailboxOverrides: {
-        slackBotToken: "test-token",
-        slackAlertChannel: "test-channel",
+        googleChatWebhookUrl: "https://chat.googleapis.com/v1/spaces/test/messages?key=key&token=token",
       },
     });
 
@@ -276,8 +271,7 @@ describe("generateMailboxDailyReport", () => {
   it("excludes merged conversations from counts", async () => {
     const { mailbox, user } = await userFactory.createRootUser({
       mailboxOverrides: {
-        slackBotToken: "test-token",
-        slackAlertChannel: "test-channel",
+        googleChatWebhookUrl: "https://chat.googleapis.com/v1/spaces/test/messages?key=key&token=token",
       },
     });
 
@@ -322,8 +316,7 @@ describe("generateMailboxDailyReport", () => {
   it("only counts messages within the 24-hour window", async () => {
     const { mailbox, user } = await userFactory.createRootUser({
       mailboxOverrides: {
-        slackBotToken: "test-token",
-        slackAlertChannel: "test-channel",
+        googleChatWebhookUrl: "https://chat.googleapis.com/v1/spaces/test/messages?key=key&token=token",
       },
     });
 

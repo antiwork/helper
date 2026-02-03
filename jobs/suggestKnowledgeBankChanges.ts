@@ -1,14 +1,12 @@
 import { eq } from "drizzle-orm";
 import { getBaseUrl } from "@/components/constants";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
-import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, faqs, mailboxes } from "@/db/schema";
 import { assertDefinedOrRaiseNonRetriableError } from "@/jobs/utils";
 import { generateKnowledgeBankSuggestion } from "@/lib/ai/knowledgeBankSuggestions";
 import { getMailbox } from "@/lib/data/mailbox";
-import { postSlackMessage } from "@/lib/slack/client";
-import { getSuggestedEditButtons } from "@/lib/slack/shared";
+import { postGoogleChatWebhookMessage } from "@/lib/googleChat/webhook";
 
 export const suggestKnowledgeBankChanges = async ({
   messageId,
@@ -28,7 +26,7 @@ export const suggestKnowledgeBankChanges = async ({
     }),
   );
 
-  const mailbox = assertDefined(await getMailbox());
+  const mailbox = assertDefinedOrRaiseNonRetriableError(await getMailbox());
   const messageContent = message.body || message.cleanedUpText || "";
   const flagReason = reason || "No reason provided";
 
@@ -54,7 +52,7 @@ export const suggestKnowledgeBankChanges = async ({
       .returning()
       .then(takeUniqueOrThrow);
 
-    notifySuggestedEdit(newFaq, mailbox);
+    await notifySuggestedEdit(newFaq, mailbox);
   } else if (suggestion.action === "update_entry" && suggestion.entryId) {
     const suggestionToUpdate =
       existingSuggestions.find((faq) => faq.id === suggestion.entryId) ||
@@ -82,7 +80,7 @@ export const suggestKnowledgeBankChanges = async ({
         .returning()
         .then(takeUniqueOrThrow);
 
-      notifySuggestedEdit(newFaq, mailbox);
+      await notifySuggestedEdit(newFaq, mailbox);
     }
   }
 
@@ -90,9 +88,7 @@ export const suggestKnowledgeBankChanges = async ({
 };
 
 const notifySuggestedEdit = async (faq: typeof faqs.$inferSelect, mailbox: typeof mailboxes.$inferSelect) => {
-  if (!mailbox.slackBotToken || !mailbox.slackAlertChannel) {
-    return "Not posted, mailbox not linked to Slack or missing alert channel";
-  }
+  if (!mailbox.googleChatWebhookUrl) return;
 
   let originalContent = "";
   if (faq.suggestedReplacementForId) {
@@ -102,31 +98,17 @@ const notifySuggestedEdit = async (faq: typeof faqs.$inferSelect, mailbox: typeo
     originalContent = replacementFaq?.content ?? "";
   }
 
-  const messageTs = await postSlackMessage(mailbox.slackBotToken, {
-    blocks: [
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: originalContent
-            ? `💡 New suggested edit for the knowledge bank\n\n*Suggested content:*\n${faq.content}\n\n*This will overwrite the current entry:*\n${originalContent}`
-            : `💡 New suggested addition to the knowledge bank\n\n*Suggested content:*\n${faq.content}`,
-        },
-      },
-      {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `<${getBaseUrl()}/settings/knowledge|View knowledge bank>`,
-        },
-      },
-      getSuggestedEditButtons(faq.id),
-    ],
-    channel: mailbox.slackAlertChannel,
-  });
+  const lines = [
+    originalContent ? "New suggested edit for the knowledge bank" : "New suggested addition to the knowledge bank",
+    "",
+    "Suggested content:",
+    faq.content,
+    ...(originalContent
+      ? ["", "This will overwrite the current entry:", originalContent]
+      : []),
+    "",
+    `Review in Helper: ${getBaseUrl()}/settings/knowledge`,
+  ];
 
-  await db
-    .update(faqs)
-    .set({ slackChannel: mailbox.slackAlertChannel, slackMessageTs: messageTs })
-    .where(eq(faqs.id, faq.id));
+  await postGoogleChatWebhookMessage(mailbox.googleChatWebhookUrl, { text: lines.join("\n") });
 };
