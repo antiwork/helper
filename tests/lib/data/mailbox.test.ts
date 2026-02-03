@@ -27,6 +27,7 @@ test("getMailboxInfo", async () => {
     slackConnected: false,
     slackConnectUrl: expect.any(String),
     slackAlertChannel: null,
+    googleChatWebhookUrl: null,
     widgetHMACSecret: mailbox.widgetHMACSecret,
     widgetDisplayMode: "always",
     widgetDisplayMinValue: null,

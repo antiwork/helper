@@ -50,6 +50,7 @@ export const mailboxRouter = {
     .input(
       z.object({
         slackAlertChannel: z.string().nullable().optional(),
+        googleChatWebhookUrl: z.string().url().nullable().optional(),
         githubRepoOwner: z.string().optional(),
         githubRepoName: z.string().optional(),
         widgetDisplayMode: z.enum(["off", "always", "revenue_based"]).optional(),
